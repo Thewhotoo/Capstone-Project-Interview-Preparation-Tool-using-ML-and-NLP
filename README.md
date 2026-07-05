@@ -1,10 +1,10 @@
-# 🎓 Capstone Interview System - Integrated Platform
+# 🎓 Subject-Based Interview Preparation Tool
 
 > **Latest Update**: Folder "for mayo" has been renamed to **"rag_system"** and fully integrated with the capstone application.
 
 ## 📌 Quick Summary
 
-This is a complete **AI-powered Interview Preparation & Evaluation System** that integrates:
+This is a complete **AI-powered Subject-Based Interview Preparation Tool** that integrates:
 
 1. **Resume Classifier** - Analyzes resumes & classifies candidate domains
 2. **RAG System** - Generates domain-specific interview questions from PDF knowledge bases

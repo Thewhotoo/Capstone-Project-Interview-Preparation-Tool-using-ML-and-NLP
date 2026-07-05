@@ -1,0 +1,19 @@
+# PDF Processing
+PyMuPDF==1.23.8
+
+# Vector Database & Similarity
+faiss-cpu==1.7.4
+sentence-transformers==2.2.2
+
+# LLM & NLP
+transformers==4.35.2
+torch==2.1.1
+
+# Utilities
+numpy==1.24.3
+tqdm==4.66.1
+requests==2.31.0
+beautifulsoup4==4.12.2
+
+# For interactive shell support
+ipython==8.17.2

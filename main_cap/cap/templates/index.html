@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Pure black and ultra-dark grays for that sleek look */
+            --bg-base: #000000;
+            --bg-elevated: #0a0a0a;
+            --bot-bubble: rgba(20, 20, 20, 0.8);
+            --user-bubble: rgba(255, 255, 255, 0.05);
+            --accent: #3b82f6;
+            --text-main: #fcfcfc;
+            --text-muted: #888888;
+            --border-subtle: rgba(255, 255, 255, 0.06);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            height: 100vh;
+            color: var(--text-main);
+            background-color: var(--bg-base);
+            /* Subtle top-down glow so it's not totally flat */
+            background-image: radial-gradient(circle at 50% -20%, rgba(29, 78, 216, 0.15), transparent 50%);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- LANDING PAGE --- */
+        #landing-container {
+            width: 100%;
+            max-width: 500px;
+            margin: auto; /* Centers it perfectly */
+            text-align: center;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            padding: 40px;
+        }
+
+        .landing-title { 
+            font-size: 3rem; 
+            font-weight: 700; 
+            margin-bottom: 8px; 
+            letter-spacing: -1px;
+            color: #ffffff;
+        }
+        
+        .landing-sub { color: var(--text-muted); margin-bottom: 40px; font-size: 1.1rem; font-weight: 300; }
+
+        .form-group { text-align: left; margin-bottom: 24px; }
+        .form-group label { 
+            display: block; 
+            font-size: 0.75rem; 
+            color: #666; 
+            margin-bottom: 12px; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            font-weight: 600; 
+        }
+        
+        select {
+            width: 100%; 
+            padding: 16px 20px; 
+            border-radius: 12px; 
+            background: var(--bg-elevated); 
+            border: 1px solid var(--border-subtle); 
+            color: white; 
+            font-size: 1rem; 
+            outline: none; 
+            transition: all 0.3s ease;
+            appearance: none;
+        }
+        select:focus { border-color: #555; }
+        option { background: var(--bg-elevated); color: white; }
+
+        .start-btn {
+            width: 100%; 
+            padding: 18px; 
+            margin-top: 20px; 
+            background: white; 
+            color: black; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 1.1rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        .start-btn:hover { transform: scale(1.02); background: #f0f0f0; box-shadow: 0 0 30px rgba(255,255,255,0.1); }
+
+        /* --- CHAT CONTAINER (FULL SCREEN LAYOUT) --- */
+        #chat-container { 
+            display: none; 
+            width: 100%; 
+            height: 100vh; 
+            flex-direction: column; 
+            align-items: center; /* Centers the inner content */
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .chat-header { 
+            width: 100%;
+            padding: 24px; 
+            text-align: center; 
+            border-bottom: 1px solid var(--border-subtle); 
+            font-weight: 500; 
+            font-size: 0.9rem; 
+            letter-spacing: 2px; 
+            text-transform: uppercase;
+            color: var(--text-muted);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+        
+        /* Restricting the width of the messages to look like a neat column */
+        #messages { 
+            width: 100%; 
+            max-width: 800px; 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding: 40px 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 24px; 
+            scroll-behavior: smooth; 
+        }
+        #messages::-webkit-scrollbar { display: none; } /* Clean, hidden scrollbar */
+
+        .msg-wrapper { display: flex; gap: 16px; max-width: 85%; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .bot-wrapper { align-self: flex-start; }
+        .user-wrapper { align-self: flex-end; flex-direction: row-reverse; }
+
+        .avatar { 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1rem; 
+            background: var(--bg-elevated); 
+            border: 1px solid var(--border-subtle); 
+            flex-shrink: 0; 
+        }
+        
+        .msg { 
+            padding: 16px 20px; 
+            border-radius: 16px; 
+            line-height: 1.6; 
+            font-size: 0.95rem; 
+            font-weight: 400;
+        }
+        
+        .bot-msg { background: var(--bot-bubble); border: 1px solid var(--border-subtle); }
+        .user-msg { background: var(--user-bubble); border: 1px solid var(--border-subtle); }
+
+        /* THE NEW EVALUATION CARD WITH GLASSMORPHISM */
+        .eval-card { 
+            background: rgba(10, 10, 10, 0.6); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin-top: 12px; 
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+
+        /* PREMIUM DYNAMIC GLOWS */
+        .glow-excellent {
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.1), inset 0 0 20px rgba(16, 185, 129, 0.05);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+        .glow-mid {
+            box-shadow: 0 0 40px rgba(245, 158, 11, 0.1), inset 0 0 20px rgba(245, 158, 11, 0.05);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+        .glow-fail {
+            box-shadow: 0 0 40px rgba(225, 29, 72, 0.1), inset 0 0 20px rgba(225, 29, 72, 0.05);
+            border-color: rgba(225, 29, 72, 0.2);
+        }
+
+        .eval-header { display: flex; justify-content: space-between; margin-bottom: 16px; font-weight: 500; }
+        .badge { 
+            background: rgba(255,255,255,0.03); 
+            padding: 6px 14px; 
+            border-radius: 8px; 
+            font-size: 0.85rem; 
+            border: 1px solid var(--border-subtle); 
+            letter-spacing: 0.5px;
+        }
+
+        .typing-indicator { display: flex; gap: 6px; padding: 18px 24px; background: var(--bot-bubble); border-radius: 16px; width: fit-content; border: 1px solid var(--border-subtle); }
+        .dot { width: 6px; height: 6px; background-color: var(--text-muted); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        /* THE NEW INPUT AREA */
+        .input-area { 
+            width: 100%; 
+            max-width: 800px; 
+            display: flex; 
+            gap: 12px; 
+            padding: 20px; 
+            padding-bottom: 40px; /* Gives it breathing room at the bottom of the screen */
+            background: transparent; 
+        }
+        
+        input[type="text"] { 
+            flex-grow: 1; 
+            padding: 16px 24px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border-subtle); 
+            background: var(--bg-elevated); 
+            color: white; 
+            font-size: 1rem; 
+            outline: none; 
+            transition: all 0.3s ease; 
+        }
+        input[type="text"]:focus { 
+            border-color: #555; 
+            background: #111; 
+        }
+        input[type="text"]:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .mic-btn, .send-btn { 
+            padding: 0 24px; 
+            background: var(--bg-elevated); 
+            color: white; 
+            border: 1px solid var(--border-subtle); 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            font-weight: 500; 
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        .mic-btn:hover:not(:disabled), .send-btn:hover:not(:disabled) { background: #1a1a1a; border-color: #555; }
+        .mic-active { color: #ef4444; border-color: rgba(239, 68, 68, 0.5) !important; background: rgba(239, 68, 68, 0.1) !important; }
+
+        /* --- DASHBOARD UI --- */
+        #dashboard-container { 
+            display: none; 
+            width: 100%; 
+            max-width: 800px; 
+            margin: auto; /* Centers it perfectly */
+            height: 90vh; 
+            flex-direction: column; 
+            overflow-y: auto; 
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+            padding: 40px 20px;
+        }
+        #dashboard-container::-webkit-scrollbar { display: none; }
+
+        .dashboard-header { 
+            font-size: 2.5rem; 
+            font-weight: 700; 
+            margin-bottom: 40px; 
+            color: #ffffff; 
+            letter-spacing: -1px;
+        }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 50px; }
+        
+        .stat-box { 
+            background: var(--bg-elevated);
+            padding: 30px 20px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border-subtle); 
+        }
+        .stat-value { font-size: 3rem; font-weight: 700; margin-bottom: 8px; line-height: 1; font-family: 'Roboto Mono', monospace; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
+        
+        .section-title { font-weight: 600; margin-bottom: 24px; font-size: 1.2rem; color: #fff; letter-spacing: 1px;}
+        .history-list { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        .history-card { 
+            background: var(--bg-elevated); 
+            padding: 24px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border-subtle); 
+        }
+        
+        .history-card-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+        .history-q { font-weight: 500; font-size: 1.1rem; margin-bottom: 16px; color: #fff; line-height: 1.6; }
+        .history-feedback { margin-top: 16px; font-size: 0.9rem; color: #aaa; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.02); }
+
+        .skill-bar-container { margin-bottom: 20px; }
+        .skill-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px; color: #ccc; }
+        .skill-bar-bg { width: 100%; height: 6px; background: #111; border-radius: 10px; overflow: hidden; }
+        .skill-bar-fill { height: 100%; background: #fff; border-radius: 10px; transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        .retry-btn { 
+            margin: 40px 0; 
+            padding: 16px 30px; 
+            background: white; 
+            color: black; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            width: fit-content;
+        }
+        .retry-btn:hover { transform: scale(1.02); background: #f0f0f0; }
+    </style>
+</head>
+<body>
+
+    <div id="landing-container">
+        <div class="landing-title">AI.interviewer</div>
+        <div class="landing-sub">System configuration</div>
+
+        <!-- STEP 1: Resume Upload -->
+        <div id="resume-upload-section">
+            <div class="form-group">
+                <label>📄 Upload Your Resume (Optional)</label>
+                <input type="file" id="resume-file" accept=".pdf,.docx" style="width: 100%; padding: 12px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-elevated); color: white; cursor: pointer;">
+            </div>
+            <button class="start-btn" onclick="uploadResume()">Start Quiz →</button>
+            <br><br>
+            <button class="start-btn" style="background: #666;" onclick="testQuizDirectly()">🧪 TEST: Load Quiz Directly</button>
+            <div id="resume-analysis" style="display: none; margin-top: 20px; padding: 20px; background: var(--bot-bubble); border-radius: 12px; border: 1px solid var(--border-subtle);">
+                <p style="color: #10b981; margin: 5px 0;"><strong>✅ Domain:</strong> <span id="classified-domain"></span></p>
+                <p style="color: #f59e0b; margin: 5px 0;"><strong>🎯 Confidence:</strong> <span id="domain-confidence"></span></p>
+                <p style="color: #3b82f6; margin: 5px 0;"><strong>💼 Experience:</strong> <span id="domain-experience"></span></p>
+            </div>
+        </div>
+
+        <!-- STEP 2: Domain Verification Quiz -->
+        <div id="quiz-section" style="display: none; margin-top: 20px; max-height: 70vh; overflow-y: auto; padding-right: 10px;">
+            <div style="background: var(--bot-bubble); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 20px; position: sticky; top: 0; z-index: 10;">
+                <p style="color: #3b82f6; margin: 0;"><strong>✓ Domain Verification Quiz</strong></p>
+                <p style="color: #888; margin: 5px 0 0 0; font-size: 0.9rem;">Mix of Easy, Medium, Hard questions based on your resume</p>
+                <div style="margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                    <p style="margin: 0 0 8px 0; color: #aaa; font-size: 0.85rem;">Progress: <span id="quiz-progress">0</span>/<span id="quiz-total">12</span></p>
+                    <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                        <div id="quiz-progress-bar" style="height: 100%; width: 0%; background: #3b82f6; transition: width 0.3s;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="quiz-questions-container" style="padding-bottom: 20px;"></div>
+        </div>
+
+        <!-- STEP 3: Subject Selection -->
+        <div id="subject-selection-section" style="display: none; margin-top: 20px;">
+            <div class="form-group">
+                <label>Subject Domain</label>
+                <select id="subject-select">
+                    <option value="">Select a Subject...</option>
+                    <option value="OS">Operating Systems</option>
+                    <option value="CN">Computer Networks</option>
+                    <option value="DBMS">Database Management Systems</option>
+                    <option value="DSA">Data Structures & Algorithms</option>
+                    <option value="OOP">Object-Oriented Programming</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Knowledge Focus Area</label>
+                <select id="topic-select">
+                    <option value="All">Mixed Topics (Comprehensive)</option>
+                    <option value="Process Management">Process Management</option>
+                    <option value="Memory Management">Memory Management</option>
+                    <option value="Deadlock">Deadlocks & Concurrency</option>
+                    <option value="Scheduling">CPU Scheduling</option>
+                    <option value="TCP">TCP/IP Protocol</option>
+                    <option value="DNS">DNS</option>
+                    <option value="IP Routing">IP Routing</option>
+                </select>
+            </div>
+
+            <button class="start-btn" onclick="startInterview()">Initialize Session</button>
+        </div>
+    </div>
+
+    <div id="chat-container">
+        <div class="chat-header" id="chat-header-title">SYSTEM ACTIVE</div>
+        <div id="messages"></div>
+        <div class="input-area" id="input-area">
+            <input type="text" id="user-input" placeholder="Enter response..." autocomplete="off">
+            <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Dictate">🎤</button>
+            <button class="send-btn" id="send-btn" onclick="handleSubmission()">Send</button>
+        </div>
+    </div>
+
+    <div id="dashboard-container"></div>
+
+    <script>
+        let askedIds = [];
+        let interviewHistory = []; 
+        let currentDifficulty = "medium";
+        let currentQuestionData = null;
+        let stage = "main_question"; 
+        let tempMainAnswer = "";
+        let selectedTopic = "All";
+
+        const landingContainer = document.getElementById("landing-container");
+        const chatContainer = document.getElementById("chat-container");
+        const dashboardContainer = document.getElementById("dashboard-container");
+        const messagesDiv = document.getElementById("messages");
+        const inputField = document.getElementById("user-input");
+        const sendBtn = document.getElementById("send-btn");
+        const micBtn = document.getElementById("mic-btn");
+        const chatHeader = document.getElementById("chat-header-title");
+
+        // --- NEW: THE PREMIUM TERMINAL SCORE DECRYPTOR ---
+        function animateScore(elementId, targetScore, cardId) {
+            const el = document.getElementById(elementId);
+            const cardElement = document.getElementById(cardId);
+            let iterations = 0;
+            const maxIterations = 20; 
+            
+            el.style.fontFamily = "'Roboto Mono', monospace"; 
+
+            const interval = setInterval(() => {
+                const randomScramble = (Math.random()).toFixed(2);
+                el.innerText = randomScramble;
+                
+                if (iterations >= maxIterations) {
+                    clearInterval(interval);
+                    el.innerText = targetScore.toFixed(2); 
+                    
+                    // Apply the glow after decryption
+                    if (targetScore >= 0.8) {
+                        cardElement.classList.add('glow-excellent');
+                        el.style.color = "#34d399";
+                    } else if (targetScore >= 0.4) {
+                        cardElement.classList.add('glow-mid');
+                        el.style.color = "#fbbf24";
+                    } else {
+                        cardElement.classList.add('glow-fail');
+                        el.style.color = "#fb7185";
+                    }
+                }
+                iterations++;
+            }, 40);
+        }
+
+        // --- SPEECH RECOGNITION LOGIC ---
+        let recognition;
+        let isRecording = false;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            recognition.onstart = function() {
+                isRecording = true;
+                micBtn.classList.add("mic-active");
+                inputField.placeholder = "Listening...";
+            };
+
+            recognition.onresult = function(event) {
+                let transcript = "";
+                for (let i = 0; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                inputField.value = transcript;
+            };
+
+            recognition.onerror = function(event) { stopMic(); };
+            recognition.onend = function() { stopMic(); };
+        } else {
+            micBtn.style.display = "none"; 
+        }
+
+        function toggleMic() {
+            if (isRecording) { stopMic(); } 
+            else { if (recognition) recognition.start(); }
+        }
+
+        function stopMic() {
+            if (recognition && isRecording) {
+                recognition.stop();
+                isRecording = false;
+                micBtn.classList.remove("mic-active");
+                inputField.placeholder = "Enter response...";
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // RESUME UPLOAD & CLASSIFICATION
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        let classifiedDomain = null;
+        let quizAnswers = [];
+        
+        let resumeSkills = [];  // Store skills from resume for quiz customization
+        
+        async function testQuizDirectly() {
+            console.log("TEST: Directly loading quiz");
+            
+            // Hide resume section
+            document.getElementById("resume-upload-section").style.display = "none";
+            document.getElementById("quiz-section").style.display = "block";
+            
+            // Directly fetch and show quiz
+            const response = await fetch("/api/get-domain-quiz", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ domain: "Software Engineer", skills: [] })
+            });
+            
+            const result = await response.json();
+            console.log("TEST: Quiz loaded:", result.quiz.length, "questions");
+            
+            displayQuiz(result.quiz);
+        }
+        
+        async function uploadResume() {
+            console.log("uploadResume clicked");
+            
+            // ALWAYS USE MOCK DATA - skip file upload entirely for now
+            const mock_domain = "Software Engineer";
+            const mock_skills = ["Python", "Java", "Docker"];
+            const mock_confidence = 0.87;
+            const mock_experience = { years: 3, level: "Mid-level" };
+            
+            classifiedDomain = mock_domain;
+            resumeSkills = mock_skills;
+            
+            console.log("Using mock data - domain:", mock_domain);
+            
+            // Show resume analysis
+            document.getElementById("classified-domain").textContent = mock_domain;
+            document.getElementById("domain-confidence").textContent = (mock_confidence * 100).toFixed(0) + "%";
+            document.getElementById("domain-experience").textContent = mock_experience.years + " years (" + mock_experience.level + ")";
+
+            // Hide resume section and show resume analysis & quiz
+            document.getElementById("resume-upload-section").style.display = "none";
+            document.getElementById("resume-analysis").style.display = "block";
+            
+            console.log("About to load quiz");
+            // Load and show quiz with skills
+            await loadDomainQuiz(mock_domain, mock_skills);
+            document.getElementById("quiz-section").style.display = "block";
+            console.log("Quiz section displayed");
+        }
+
+        async function loadDomainQuiz(domain, skills = []) {
+            try {
+                console.log("Loading quiz for domain:", domain);
+                const response = await fetch("/api/get-domain-quiz", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ domain: domain, skills: skills })
+                });
+
+                const result = await response.json();
+                console.log("Quiz API response:", result);
+                
+                if (result.status === "success" && result.quiz && result.quiz.length > 0) {
+                    // Update total questions counter
+                    const totalQs = result.total_questions || result.quiz.length;
+                    console.log("Questions loaded:", totalQs);
+                    document.getElementById("quiz-total").textContent = totalQs;
+                    // Now display the quiz
+                    displayQuiz(result.quiz);
+                } else {
+                    console.error("Invalid quiz response:", result);
+                    alert("Error loading quiz. Check console.");
+                }
+            } catch (error) {
+                console.error("Error loading quiz:", error);
+                alert("Error loading quiz: " + error);
+            }
+        }
+
+        function displayQuiz(questions) {
+            console.log("=== displayQuiz START ===");
+            console.log("Questions received:", questions.length);
+            
+            const container = document.getElementById("quiz-questions-container");
+            console.log("Container found?", !!container);
+            console.log("Container element:", container);
+            
+            if (!container) {
+                console.error("FATAL: quiz-questions-container not found!");
+                alert("ERROR: Quiz container not found in DOM");
+                return;
+            }
+            
+            container.innerHTML = "";
+            quizAnswers = [];
+
+            // Update total questions
+            document.getElementById("quiz-total").textContent = questions.length;
+            console.log("Updated quiz-total to:", questions.length);
+
+            console.log("Starting to render", questions.length, "questions...");
+            
+            let renderedCount = 0;
+            questions.forEach((q, index) => {
+                try {
+                    console.log(`Rendering Q${index + 1}:`, q.question.substring(0, 50) + "...");
+                    
+                    const questionDiv = document.createElement("div");
+                    questionDiv.style.cssText = "margin-bottom: 20px; padding: 20px; background: var(--bg-elevated); border-radius: 12px; border: 1px solid var(--border-subtle);";
+                    
+                    let optionsHtml = "";
+                    (q.options || []).forEach((opt, optIndex) => {
+                        optionsHtml += `
+                            <div style="margin: 12px 0;">
+                                <label style="display: flex; align-items: flex-start; cursor: pointer; color: #aaa;">
+                                    <input type="radio" name="q${index}" value="${optIndex}" onchange="selectAnswer(${index}, ${optIndex})" style="margin-right: 12px; margin-top: 4px; cursor: pointer;">
+                                    <span style="line-height: 1.4;">${opt}</span>
+                                </label>
+                            </div>
+                        `;
+                    });
+
+                    const difficultyColor = q.difficulty === "Hard" ? "#fb7185" : q.difficulty === "Medium" ? "#fbbf24" : "#10b981";
+                    
+                    questionDiv.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <p style="color: #3b82f6; margin: 0;"><strong>Q${index + 1}: ${q.question}</strong></p>
+                            <span style="padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 6px; border: 1px solid ${difficultyColor}; color: ${difficultyColor}; font-size: 0.75rem; font-weight: 600;">${q.difficulty}</span>
+                        </div>
+                        ${optionsHtml}
+                    `;
+                    
+                    container.appendChild(questionDiv);
+                    renderedCount++;
+                    console.log(`✓ Q${index + 1} rendered successfully`);
+                } catch (err) {
+                    console.error(`✗ Error rendering Q${index + 1}:`, err);
+                }
+            });
+
+            console.log(`Rendered ${renderedCount}/${questions.length} questions`);
+
+            // Add submit button
+            const submitBtn = document.createElement("button");
+            submitBtn.className = "start-btn";
+            submitBtn.textContent = `Submit Quiz & Continue (${questions.length} questions)`;
+            submitBtn.style.cssText = "margin-top: 20px; width: 100%;";
+            submitBtn.onclick = submitQuiz;
+            container.appendChild(submitBtn);
+            console.log("Submit button added");
+            
+            console.log("=== displayQuiz END ===");
+            console.log("Container HTML length:", container.innerHTML.length);
+        }
+
+        function selectAnswer(questionIndex, answerIndex) {
+            quizAnswers[questionIndex] = answerIndex;
+            
+            // Update progress
+            const answered = quizAnswers.filter(a => a !== undefined).length;
+            const total = parseInt(document.getElementById("quiz-total").textContent) || 12;
+            document.getElementById("quiz-progress").textContent = answered;
+            document.getElementById("quiz-progress-bar").style.width = (answered / total * 100) + "%";
+        }
+
+        async function submitQuiz() {
+            const total = parseInt(document.getElementById("quiz-total").textContent) || 12;
+            const answered = quizAnswers.filter(a => a !== undefined).length;
+            
+            if (answered < total) {
+                alert(`Please answer all ${total} questions (${answered}/${total} answered)`);
+                return;
+            }
+
+            // Calculate score (mock - in real implementation would fetch actual answers)
+            const score = quizAnswers.filter(a => a === 0 || a === 1).length / total * 100;
+            
+            // Hide quiz and show subject selection
+            document.getElementById("quiz-section").style.display = "none";
+            document.getElementById("subject-selection-section").style.display = "block";
+            
+            // Show quiz result
+            const resultDiv = document.createElement("div");
+            resultDiv.style.cssText = "margin-bottom: 20px; padding: 15px; background: var(--bot-bubble); border-radius: 12px; border: 1px solid var(--border-subtle); color: #10b981;";
+            resultDiv.innerHTML = `<strong>✅ Quiz Passed!</strong> Score: ${score.toFixed(0)}% - Your domain expertise verified. Now let's start the interview!`;
+            document.getElementById("subject-selection-section").insertBefore(resultDiv, document.getElementById("subject-selection-section").firstChild);
+        }
+
+        function startInterview() {
+            selectedTopic = document.getElementById("topic-select").value;
+            chatHeader.innerHTML = `${selectedTopic === 'All' ? 'Operating Systems' : selectedTopic} // Active Session`;
+
+            landingContainer.style.opacity = "0";
+            
+            setTimeout(() => {
+                landingContainer.style.display = "none";
+                chatContainer.style.display = "flex";
+                chatContainer.style.opacity = "1";
+                loadQuestion();
+            }, 500);
+        }
+
+        function resetInterview() {
+            askedIds = [];
+            interviewHistory = [];
+            currentDifficulty = "medium";
+            stage = "main_question";
+            
+            messagesDiv.innerHTML = "";
+            dashboardContainer.style.display = "none";
+            
+            landingContainer.style.display = "block";
+            setTimeout(() => {
+                landingContainer.style.opacity = "1";
+            }, 50);
+        }
+
+        function disableInput() {
+            stopMic(); 
+            inputField.disabled = true;
+            sendBtn.disabled = true;
+            micBtn.disabled = true; 
+            inputField.placeholder = "Processing...";
+        }
+
+        function enableInput() {
+            inputField.disabled = false;
+            sendBtn.disabled = false;
+            micBtn.disabled = false; 
+            inputField.placeholder = "Enter response...";
+            inputField.focus(); 
+        }
+
+        function addMessage(text, sender, isHtml = false) {
+            const wrapper = document.createElement("div");
+            wrapper.className = `msg-wrapper ${sender}-wrapper`;
+
+            const avatar = document.createElement("div");
+            avatar.className = "avatar";
+            avatar.innerHTML = sender === "bot" ? "AI" : "U";
+
+            const msgDiv = document.createElement("div");
+            msgDiv.className = `msg ${sender}-msg`;
+            
+            if (isHtml) {
+                msgDiv.innerHTML = text;
+            } else {
+                let formattedText = text;
+                msgDiv.innerHTML = formattedText.replace(/\n/g, "<br>");
+            }
+            
+            wrapper.appendChild(avatar);
+            wrapper.appendChild(msgDiv);
+            messagesDiv.appendChild(wrapper);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showTyping() {
+            const wrapper = document.createElement("div");
+            wrapper.className = `msg-wrapper bot-wrapper`;
+            wrapper.id = "typing-box";
+            wrapper.innerHTML = `<div class="avatar">AI</div><div class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+            messagesDiv.appendChild(wrapper);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function hideTyping() {
+            const typingBox = document.getElementById("typing-box");
+            if (typingBox) typingBox.remove();
+        }
+
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        function triggerDashboard() {
+            chatContainer.style.opacity = "0";
+
+            setTimeout(() => {
+                chatContainer.style.display = "none";
+                
+                const totalQuestions = interviewHistory.length;
+                const totalMarks = interviewHistory.reduce((sum, item) => sum + item.marks, 0);
+                const avgMarks = totalQuestions > 0 ? (totalMarks / totalQuestions).toFixed(1) : 0;
+
+                let topicScores = {};
+                interviewHistory.forEach(item => {
+                    if(!topicScores[item.topic]) topicScores[item.topic] = { total: 0, count: 0 };
+                    topicScores[item.topic].total += item.marks;
+                    topicScores[item.topic].count += 1;
+                });
+
+                let skillsHtml = "";
+                for (const [topic, data] of Object.entries(topicScores)) {
+                    let avgTopicScore = (data.total / data.count) * 10; 
+                    let color = avgTopicScore >= 80 ? "#34d399" : avgTopicScore >= 50 ? "#fbbf24" : "#fb7185";
+                    
+                    skillsHtml += `
+                        <div class="skill-bar-container">
+                            <div class="skill-header"><span style="font-family: 'Roboto Mono', monospace; text-transform: uppercase;">${topic}</span> <span>${(avgTopicScore/10).toFixed(1)}/10</span></div>
+                            <div class="skill-bar-bg"><div class="skill-bar-fill" style="width: ${avgTopicScore}%; background: ${color};"></div></div>
+                        </div>
+                    `;
+                }
+
+                let historyHtml = "";
+                interviewHistory.forEach((item, index) => {
+                    historyHtml += `
+                        <div class="history-card">
+                            <div class="history-card-header">
+                                <span>Q${index + 1} // ${item.topic} (${item.difficulty})</span>
+                                <span><strong style="color: white; font-family: 'Roboto Mono', monospace;">${item.marks}/10</strong></span>
+                            </div>
+                            <div class="history-q">${item.question}</div>
+                            <div style="font-size: 0.85rem; margin-bottom: 12px; color: #888;">
+                                Fill-Mask Check: <span style="color: white;">${item.fillCorrect ? 'Passed' : 'Failed'}</span>
+                            </div>
+                            <div class="history-feedback">${item.feedback}</div>
+                        </div>
+                    `;
+                });
+
+                dashboardContainer.innerHTML = `
+                    <div class="dashboard-header">Session Analytics</div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label" style="margin-bottom: 12px;">Questions</div>
+                            <div class="stat-value" style="color: #fff;">${totalQuestions}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label" style="margin-bottom: 12px;">Avg Score</div>
+                            <div class="stat-value" style="color: #fff;">${avgMarks}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label" style="margin-bottom: 12px;">Performance</div>
+                            <div class="stat-value" style="color: ${avgMarks >= 8 ? '#34d399' : avgMarks >= 6 ? '#fbbf24' : '#fb7185'}; font-size: 1.5rem; display: flex; height: 48px; align-items: center;">
+                                ${avgMarks >= 8 ? 'OPTIMAL' : avgMarks >= 6 ? 'ADEQUATE' : 'SUBOPTIMAL'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-title">SKILL MASTERY</div>
+                    <div style="margin-bottom: 50px;">
+                        ${skillsHtml}
+                    </div>
+
+                    <div class="section-title">EVALUATION LOGS</div>
+                    <div class="history-list">
+                        ${historyHtml}
+                    </div>
+
+                    <button class="retry-btn" onclick="resetInterview()">
+                        Initialize New Session
+                    </button>
+                `;
+
+                dashboardContainer.style.display = "flex";
+
+            }, 500); 
+        }
+
+        async function loadQuestion() {
+            disableInput(); 
+            showTyping();
+            
+            const payload = { asked_ids: askedIds, difficulty: currentDifficulty, topic: selectedTopic };
+
+            const res = await fetch("/api/next_question", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            
+            await sleep(800); 
+            hideTyping();
+
+            if (data.status === "completed" || askedIds.length >= 5) { 
+                triggerDashboard();
+                return; 
+            }
+            
+            currentQuestionData = data.data;
+            askedIds.push(currentQuestionData.sample_id); 
+            stage = "main_question";
+            
+            const diffBadge = `<span style="font-size: 0.65rem; border: 1px solid #333; padding: 4px 8px; border-radius: 4px; color: #aaa; text-transform: uppercase;">${currentDifficulty}</span>`;
+            
+            addMessage(`${diffBadge} <span style="font-size:0.65rem; color:#666; margin-left: 10px; text-transform: uppercase;">${currentQuestionData.topic}</span><br><br><strong style="font-family: 'Roboto Mono', monospace;">Q${askedIds.length}:</strong> ${currentQuestionData.question}`, "bot", true);
+            
+            enableInput(); 
+        }
+
+        async function handleSubmission() {
+            if (inputField.disabled) return; 
+
+            const text = inputField.value.trim();
+            if (!text) return;
+            
+            disableInput(); 
+            addMessage(text, "user");
+            inputField.value = "";
+
+            if (stage === "main_question") {
+                tempMainAnswer = text;
+                stage = "fill_mask";
+                
+                showTyping();
+                await sleep(1000);
+                hideTyping();
+                
+                addMessage(`<span style="font-family: 'Roboto Mono', monospace; font-size: 0.85rem; color: #888;">// SYSTEM PROMPT</span><br>Complete the following definition:<br><br>${currentQuestionData.fill_mask.question}`, "bot", true);
+                enableInput(); 
+            } 
+            else if (stage === "fill_mask") {
+                const payload = {
+                    user_answer: tempMainAnswer,
+                    reference_answer: currentQuestionData.reference_answer,
+                    question: currentQuestionData.question,
+                    user_fill_mask: text,
+                    reference_fill_mask: currentQuestionData.fill_mask.answer,
+                    fill_question: currentQuestionData.fill_mask.question
+                };
+
+                showTyping();
+
+                const res = await fetch("/api/evaluate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+
+                await sleep(1000); 
+                hideTyping();
+
+                interviewHistory.push({
+                    question: currentQuestionData.question,
+                    topic: currentQuestionData.topic,
+                    difficulty: currentDifficulty,
+                    marks: result.marks,
+                    feedback: result.feedback,
+                    fillCorrect: result.fill_correct
+                });
+
+                const fillStatus = result.fill_correct ? "<span style='color:#34d399;'>✓ Correct</span>" : "<span style='color:#fb7185;'>✗ Incorrect</span>";
+                
+                let logicMessage = "";
+                if (result.score >= 0.75) {
+                    if (currentDifficulty === "easy") { currentDifficulty = "medium"; logicMessage = "Difficulty adjusted to Medium"; }
+                    else if (currentDifficulty === "medium") { currentDifficulty = "hard"; logicMessage = "Difficulty adjusted to Hard"; }
+                } else if (result.score <= 0.45) {
+                    if (currentDifficulty === "hard") { currentDifficulty = "medium"; logicMessage = "Difficulty adjusted to Medium"; }
+                    else if (currentDifficulty === "medium") { currentDifficulty = "easy"; logicMessage = "Difficulty adjusted to Easy"; }
+                }
+
+                // Generate unique IDs for the animation targets
+                const uniqueId = Date.now();
+                const scoreSpanId = `score-val-${uniqueId}`;
+                const cardId = `eval-card-${uniqueId}`;
+
+                const resultHtml = `
+                    <div class="eval-card" id="${cardId}">
+                        <div class="eval-header">
+                            <span class="badge" style="font-family: 'Roboto Mono', monospace;">Score: <span id="${scoreSpanId}">0.00</span></span>
+                            <span class="badge" style="font-family: 'Roboto Mono', monospace;">Marks: ${result.marks}/10</span>
+                        </div>
+                        <div style="margin-bottom: 12px; color: #ddd;">
+                            <strong>Main Answer:</strong> ${result.feedback}
+                        </div>
+                        <div style="margin-bottom: 12px; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 6px; border-left: 3px solid ${result.fill_correct ? '#34d399' : '#fb7185'}; color: #ddd;">
+                            <strong>Fill-in-the-Blank:</strong> ${result.fill_feedback}
+                        </div>
+                        <div style="font-size: 0.75rem; color: #888; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                            <div>Main: ${(result.main_score * 100).toFixed(0)}%</div>
+                            <div>Blank: ${(result.fill_score * 100).toFixed(0)}%</div>
+                        </div>
+                        ${logicMessage ? `<div style="margin-top: 12px; font-size: 0.75rem; color: #666; font-family: 'Roboto Mono', monospace; text-transform: uppercase;">> Engine Log: ${logicMessage}</div>` : ''}
+                    </div>
+                `;
+                
+                addMessage(resultHtml, "bot", true);
+
+                // Trigger the sweet visual Juice
+                setTimeout(() => {
+                    animateScore(scoreSpanId, result.score, cardId);
+                }, 100);
+
+                setTimeout(() => {
+                    loadQuestion(); 
+                }, 4000); 
+            }
+        }
+
+        inputField.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") handleSubmission();
+        });
+    </script>
+</body>
+</html>

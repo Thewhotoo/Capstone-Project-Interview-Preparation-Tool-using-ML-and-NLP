@@ -1,0 +1,1102 @@
+[
+  {
+    "sample_id": "OS_001",
+    "topic": "Deadlock",
+    "difficulty": "medium",
+    "question": "What is deadlock?",
+    "reference_answer": "Deadlock is a situation where processes wait indefinitely for resources held by each other.",
+    "fill_mask": {
+      "question": "Deadlock occurs due to ___ wait.",
+      "answer": "circular"
+    }
+  },
+  {
+    "sample_id": "OS_002",
+    "topic": "Scheduling",
+    "difficulty": "easy",
+    "question": "What is CPU scheduling?",
+    "reference_answer": "CPU scheduling is the process of selecting which process gets CPU time for execution.",
+    "fill_mask": {
+      "question": "FCFS stands for ___.",
+      "answer": "first come first serve"
+    }
+  },
+  {
+    "sample_id": "OS_003",
+    "topic": "Paging",
+    "difficulty": "medium",
+    "question": "What is paging?",
+    "reference_answer": "Paging is a memory management technique that divides memory into fixed size pages.",
+    "fill_mask": {
+      "question": "Paging avoids ___ fragmentation.",
+      "answer": "external"
+    }
+  },
+  {
+    "sample_id": "OS_004",
+    "topic": "Segmentation",
+    "difficulty": "medium",
+    "question": "What is segmentation?",
+    "reference_answer": "Segmentation divides memory into variable sized segments based on logical divisions.",
+    "fill_mask": {
+      "question": "Segmentation uses ___ size memory blocks.",
+      "answer": "variable"
+    }
+  },
+  {
+    "sample_id": "OS_005",
+    "topic": "Threads",
+    "difficulty": "easy",
+    "question": "What is a thread?",
+    "reference_answer": "A thread is the smallest unit of execution within a process.",
+    "fill_mask": {
+      "question": "Threads are part of a ___.",
+      "answer": "process"
+    }
+  },
+  {
+    "sample_id": "OS_006",
+    "topic": "Semaphore",
+    "difficulty": "medium",
+    "question": "What is a semaphore?",
+    "reference_answer": "A semaphore is a synchronization tool used to control access to shared resources.",
+    "fill_mask": {
+      "question": "Semaphore is used for process ___.",
+      "answer": "synchronization"
+    }
+  },
+  {
+    "sample_id": "OS_007",
+    "topic": "Virtual Memory",
+    "difficulty": "medium",
+    "question": "What is virtual memory?",
+    "reference_answer": "Virtual memory is a technique that allows execution of processes larger than physical memory.",
+    "fill_mask": {
+      "question": "Virtual memory uses ___ as extension.",
+      "answer": "disk"
+    }
+  },
+  {
+    "sample_id": "OS_008",
+    "topic": "Context Switching",
+    "difficulty": "medium",
+    "question": "What is context switching?",
+    "reference_answer": "Context switching is the process of saving and loading process state to switch between tasks.",
+    "fill_mask": {
+      "question": "Context switching saves ___ of process.",
+      "answer": "state"
+    }
+  },
+  {
+    "sample_id": "OS_009",
+    "topic": "Multitasking",
+    "difficulty": "easy",
+    "question": "What is multitasking?",
+    "reference_answer": "Multitasking allows multiple processes to execute simultaneously by sharing CPU time.",
+    "fill_mask": {
+      "question": "Multitasking improves ___ utilization.",
+      "answer": "cpu"
+    }
+  },
+  {
+    "sample_id": "OS_010",
+    "topic": "File System",
+    "difficulty": "easy",
+    "question": "What is a file system?",
+    "reference_answer": "A file system manages how data is stored and retrieved on storage devices.",
+    "fill_mask": {
+      "question": "File system manages data on ___ devices.",
+      "answer": "storage"
+    }
+  },
+  {
+    "sample_id": "OS_011",
+    "topic": "Process Management",
+    "difficulty": "easy",
+    "question": "What is a Process Control Block (PCB)?",
+    "reference_answer": "A PCB is a data structure maintained by the OS for every process, storing information like process state, program counter, CPU registers, and memory limits.",
+    "fill_mask": {
+      "question": "The OS stores process information in a ___.",
+      "answer": "PCB"
+    }
+  },
+  {
+    "sample_id": "OS_012",
+    "topic": "Process Management",
+    "difficulty": "medium",
+    "question": "What is a zombie process?",
+    "reference_answer": "A zombie process is a process that has completed execution but still has an entry in the process table because its parent hasn't read its exit status.",
+    "fill_mask": {
+      "question": "A terminated process waiting for its parent is a ___ process.",
+      "answer": "zombie"
+    }
+  },
+  {
+    "sample_id": "OS_013",
+    "topic": "Process Management",
+    "difficulty": "medium",
+    "question": "What is an orphan process?",
+    "reference_answer": "An orphan process is a running process whose parent has terminated or finished without waiting for the child process to finish.",
+    "fill_mask": {
+      "question": "A process whose parent has terminated is called an ___ process.",
+      "answer": "orphan"
+    }
+  },
+  {
+    "sample_id": "OS_014",
+    "topic": "System Calls",
+    "difficulty": "medium",
+    "question": "What does the fork() system call do?",
+    "reference_answer": "The fork() system call creates a new child process by duplicating the calling parent process.",
+    "fill_mask": {
+      "question": "The ___ system call creates a new process.",
+      "answer": "fork"
+    }
+  },
+  {
+    "sample_id": "OS_015",
+    "topic": "System Calls",
+    "difficulty": "easy",
+    "question": "What is the purpose of a system call?",
+    "reference_answer": "A system call provides an interface for a user program to request services from the operating system kernel.",
+    "fill_mask": {
+      "question": "Programs request kernel services using a system ___.",
+      "answer": "call"
+    }
+  },
+  {
+    "sample_id": "OS_016",
+    "topic": "Process Management",
+    "difficulty": "medium",
+    "question": "What is the role of the dispatcher?",
+    "reference_answer": "The dispatcher is the module that gives control of the CPU to the process selected by the short-term scheduler.",
+    "fill_mask": {
+      "question": "The ___ gives CPU control to the scheduled process.",
+      "answer": "dispatcher"
+    }
+  },
+  {
+    "sample_id": "OS_017",
+    "topic": "Inter-Process Communication",
+    "difficulty": "easy",
+    "question": "What is IPC (Inter-Process Communication)?",
+    "reference_answer": "IPC is a mechanism that allows processes to communicate and synchronize their actions, typically through shared memory or message passing.",
+    "fill_mask": {
+      "question": "Processes share data using ___.",
+      "answer": "ipc"
+    }
+  },
+  {
+    "sample_id": "OS_018",
+    "topic": "Inter-Process Communication",
+    "difficulty": "medium",
+    "question": "What is shared memory in IPC?",
+    "reference_answer": "Shared memory is an IPC method where an OS allocates a memory segment that can be accessed by multiple processes to exchange data.",
+    "fill_mask": {
+      "question": "IPC can be achieved using ___ memory.",
+      "answer": "shared"
+    }
+  },
+  {
+    "sample_id": "OS_019",
+    "topic": "Inter-Process Communication",
+    "difficulty": "medium",
+    "question": "What is message passing?",
+    "reference_answer": "Message passing is an IPC mechanism where processes communicate by sending and receiving messages without using shared variables.",
+    "fill_mask": {
+      "question": "Sending data without shared variables is called message ___.",
+      "answer": "passing"
+    }
+  },
+  {
+    "sample_id": "OS_020",
+    "topic": "Scheduling",
+    "difficulty": "medium",
+    "question": "What is Round Robin scheduling?",
+    "reference_answer": "Round Robin is a preemptive scheduling algorithm where each process is assigned a fixed time slice or quantum in a cyclic order.",
+    "fill_mask": {
+      "question": "Round Robin uses a fixed time ___ for each process.",
+      "answer": "slice"
+    }
+  },
+  {
+    "sample_id": "OS_021",
+    "topic": "Scheduling",
+    "difficulty": "medium",
+    "question": "What is Shortest Job First (SJF) scheduling?",
+    "reference_answer": "SJF is a scheduling algorithm that selects the waiting process with the smallest execution time to execute next.",
+    "fill_mask": {
+      "question": "SJF selects the process with the ___ burst time.",
+      "answer": "shortest"
+    }
+  },
+  {
+    "sample_id": "OS_022",
+    "topic": "Scheduling",
+    "difficulty": "easy",
+    "question": "What is turnaround time?",
+    "reference_answer": "Turnaround time is the total time taken from the submission of a process until its completion.",
+    "fill_mask": {
+      "question": "Completion time minus arrival time equals ___ time.",
+      "answer": "turnaround"
+    }
+  },
+  {
+    "sample_id": "OS_023",
+    "topic": "Scheduling",
+    "difficulty": "easy",
+    "question": "What is waiting time in CPU scheduling?",
+    "reference_answer": "Waiting time is the total amount of time a process spends waiting in the ready queue before getting the CPU.",
+    "fill_mask": {
+      "question": "Time spent in the ready queue is called ___ time.",
+      "answer": "waiting"
+    }
+  },
+  {
+    "sample_id": "OS_024",
+    "topic": "Scheduling",
+    "difficulty": "medium",
+    "question": "What is preemptive scheduling?",
+    "reference_answer": "Preemptive scheduling allows the OS to interrupt a currently running process and allocate the CPU to another process.",
+    "fill_mask": {
+      "question": "Interrupting a running process is known as ___ scheduling.",
+      "answer": "preemptive"
+    }
+  },
+  {
+    "sample_id": "OS_025",
+    "topic": "Scheduling",
+    "difficulty": "medium",
+    "question": "What is starvation in OS?",
+    "reference_answer": "Starvation is a situation where a low-priority process is perpetually denied CPU time because higher-priority processes keep arriving.",
+    "fill_mask": {
+      "question": "Perpetual denial of CPU time to a process is called ___.",
+      "answer": "starvation"
+    }
+  },
+  {
+    "sample_id": "OS_026",
+    "topic": "Scheduling",
+    "difficulty": "medium",
+    "question": "What is aging in OS scheduling?",
+    "reference_answer": "Aging is a technique to prevent starvation by gradually increasing the priority of a process that has been waiting in the system for a long time.",
+    "fill_mask": {
+      "question": "Increasing priority over time to prevent starvation is called ___.",
+      "answer": "aging"
+    }
+  },
+  {
+    "sample_id": "OS_027",
+    "topic": "Scheduling",
+    "difficulty": "hard",
+    "question": "What is Multilevel Queue Scheduling?",
+    "reference_answer": "It is a scheduling algorithm that partitions the ready queue into multiple separate queues based on process priority or type, each with its own scheduling algorithm.",
+    "fill_mask": {
+      "question": "Dividing the ready queue into several separate queues is ___ queue scheduling.",
+      "answer": "multilevel"
+    }
+  },
+  {
+    "sample_id": "OS_028",
+    "topic": "Performance Metrics",
+    "difficulty": "easy",
+    "question": "What is system throughput?",
+    "reference_answer": "Throughput is the number of processes completed per unit of time by the operating system.",
+    "fill_mask": {
+      "question": "The number of processes completed per time unit is ___.",
+      "answer": "throughput"
+    }
+  },
+  {
+    "sample_id": "OS_029",
+    "topic": "Concurrency",
+    "difficulty": "medium",
+    "question": "What is a critical section?",
+    "reference_answer": "A critical section is a segment of code where shared resources or variables are accessed, and atomic execution is required to prevent race conditions.",
+    "fill_mask": {
+      "question": "Code that accesses shared variables is the ___ section.",
+      "answer": "critical"
+    }
+  },
+  {
+    "sample_id": "OS_030",
+    "topic": "Concurrency",
+    "difficulty": "medium",
+    "question": "What is a mutex?",
+    "reference_answer": "A mutex is a locking mechanism used to synchronize access to a resource, ensuring that only one thread can acquire the lock and enter the critical section at a time.",
+    "fill_mask": {
+      "question": "A lock allowing only one thread access is a ___.",
+      "answer": "mutex"
+    }
+  },
+  {
+    "sample_id": "OS_031",
+    "topic": "Concurrency",
+    "difficulty": "medium",
+    "question": "What is a spinlock?",
+    "reference_answer": "A spinlock is a type of lock where a thread continuously waits in a loop (spins) repeatedly checking if the lock becomes available.",
+    "fill_mask": {
+      "question": "A lock that causes a thread to busy-wait is a ___.",
+      "answer": "spinlock"
+    }
+  },
+  {
+    "sample_id": "OS_032",
+    "topic": "Concurrency",
+    "difficulty": "medium",
+    "question": "What is a race condition?",
+    "reference_answer": "A race condition occurs when multiple threads or processes access shared data concurrently, and the final outcome depends on the unpredictable order of execution.",
+    "fill_mask": {
+      "question": "Unpredictable outcomes from concurrent access cause a ___ condition.",
+      "answer": "race"
+    }
+  },
+  {
+    "sample_id": "OS_033",
+    "topic": "Concurrency",
+    "difficulty": "hard",
+    "question": "What is a monitor in OS?",
+    "reference_answer": "A monitor is a high-level synchronization construct that encapsulates shared variables and the procedures that operate on them, ensuring mutual exclusion.",
+    "fill_mask": {
+      "question": "An abstract data type providing synchronization is a ___.",
+      "answer": "monitor"
+    }
+  },
+  {
+    "sample_id": "OS_034",
+    "topic": "Concurrency",
+    "difficulty": "hard",
+    "question": "What is priority inversion?",
+    "reference_answer": "Priority inversion is a scenario where a high-priority task is indirectly preempted by a lower-priority task holding a shared resource required by the high-priority task.",
+    "fill_mask": {
+      "question": "A lower priority task blocking a higher priority task causes priority ___.",
+      "answer": "inversion"
+    }
+  },
+  {
+    "sample_id": "OS_035",
+    "topic": "Concurrency",
+    "difficulty": "medium",
+    "question": "What is an atomic operation?",
+    "reference_answer": "An atomic operation is an operation that completes entirely without interruption, meaning it cannot be paused or partially executed.",
+    "fill_mask": {
+      "question": "An operation that executes without interruption is ___.",
+      "answer": "atomic"
+    }
+  },
+  {
+    "sample_id": "OS_036",
+    "topic": "Deadlock",
+    "difficulty": "hard",
+    "question": "What is the Banker's Algorithm?",
+    "reference_answer": "The Banker's Algorithm is a resource allocation and deadlock avoidance algorithm that tests for safety by simulating the allocation of predetermined maximum possible amounts of all resources.",
+    "fill_mask": {
+      "question": "Deadlock avoidance is often implemented using the ___ algorithm.",
+      "answer": "bankers"
+    }
+  },
+  {
+    "sample_id": "OS_037",
+    "topic": "Deadlock",
+    "difficulty": "medium",
+    "question": "What defines a safe state in OS?",
+    "reference_answer": "A safe state exists if there is a sequence of all processes in the system such that each process can eventually get its maximum resources and terminate.",
+    "fill_mask": {
+      "question": "If a system can allocate resources without deadlocking, it is in a ___ state.",
+      "answer": "safe"
+    }
+  },
+  {
+    "sample_id": "OS_038",
+    "topic": "Memory Management",
+    "difficulty": "medium",
+    "question": "What is internal fragmentation?",
+    "reference_answer": "Internal fragmentation occurs when allocated memory is slightly larger than requested memory, leaving unused space within the allocated block.",
+    "fill_mask": {
+      "question": "Wasted space inside an allocated block is ___ fragmentation.",
+      "answer": "internal"
+    }
+  },
+  {
+    "sample_id": "OS_039",
+    "topic": "Memory Management",
+    "difficulty": "medium",
+    "question": "What is external fragmentation?",
+    "reference_answer": "External fragmentation occurs when there is enough total free memory to satisfy a request, but the memory is not contiguous.",
+    "fill_mask": {
+      "question": "Wasted space between allocated blocks is ___ fragmentation.",
+      "answer": "external"
+    }
+  },
+  {
+    "sample_id": "OS_040",
+    "topic": "Memory Management",
+    "difficulty": "medium",
+    "question": "What is compaction?",
+    "reference_answer": "Compaction is a technique used to solve external fragmentation by shuffling memory contents to place all free memory together in one large block.",
+    "fill_mask": {
+      "question": "Shuffling memory to fix external fragmentation is called ___.",
+      "answer": "compaction"
+    }
+  },
+  {
+    "sample_id": "OS_041",
+    "topic": "Memory Management",
+    "difficulty": "medium",
+    "question": "What is the Translation Lookaside Buffer (TLB)?",
+    "reference_answer": "The TLB is a high-speed hardware cache used to store recent translations of virtual memory to physical memory addresses, speeding up memory access.",
+    "fill_mask": {
+      "question": "Hardware cache for page table entries is the ___.",
+      "answer": "tlb"
+    }
+  },
+  {
+    "sample_id": "OS_042",
+    "topic": "Memory Management",
+    "difficulty": "medium",
+    "question": "What is a page fault?",
+    "reference_answer": "A page fault occurs when a program attempts to access a page of memory that is not currently mapped in the physical RAM, requiring the OS to fetch it from disk.",
+    "fill_mask": {
+      "question": "Accessing a page not in main memory causes a page ___.",
+      "answer": "fault"
+    }
+  },
+  {
+    "sample_id": "OS_043",
+    "topic": "Memory Management",
+    "difficulty": "hard",
+    "question": "What is thrashing?",
+    "reference_answer": "Thrashing is a condition where the system spends more time paging data in and out of memory than executing actual processes, severely degrading performance.",
+    "fill_mask": {
+      "question": "High paging activity leading to low CPU utilization is called ___.",
+      "answer": "thrashing"
+    }
+  },
+  {
+    "sample_id": "OS_044",
+    "topic": "Memory Management",
+    "difficulty": "medium",
+    "question": "What is demand paging?",
+    "reference_answer": "Demand paging is a memory management technique where pages are only loaded into physical memory when they are actually demanded during execution.",
+    "fill_mask": {
+      "question": "Loading pages only when needed is ___ paging.",
+      "answer": "demand"
+    }
+  },
+  {
+    "sample_id": "OS_045",
+    "topic": "Memory Management",
+    "difficulty": "hard",
+    "question": "What is Belady's Anomaly?",
+    "reference_answer": "Belady's Anomaly is a phenomenon in the FIFO page replacement algorithm where increasing the number of page frames results in an increase in the number of page faults.",
+    "fill_mask": {
+      "question": "More frames causing more page faults in FIFO is ___ anomaly.",
+      "answer": "beladys"
+    }
+  },
+  {
+    "sample_id": "OS_046",
+    "topic": "Memory Management",
+    "difficulty": "easy",
+    "question": "What is Swapping?",
+    "reference_answer": "Swapping is a mechanism where a process is temporarily moved out of main memory to secondary storage, and later brought back in for continued execution.",
+    "fill_mask": {
+      "question": "Moving a process to disk and back to memory is called ___.",
+      "answer": "swapping"
+    }
+  },
+  {
+    "sample_id": "OS_047",
+    "topic": "Memory Management",
+    "difficulty": "medium",
+    "question": "What is the LRU page replacement algorithm?",
+    "reference_answer": "LRU (Least Recently Used) is an algorithm that replaces the page that has not been used for the longest period of time.",
+    "fill_mask": {
+      "question": "Replacing the page unused for the longest time is ___.",
+      "answer": "lru"
+    }
+  },
+  {
+    "sample_id": "OS_048",
+    "topic": "Memory Management",
+    "difficulty": "hard",
+    "question": "What is the working set model?",
+    "reference_answer": "The working set model is a memory management concept that defines the set of pages a process is currently actively using to prevent thrashing.",
+    "fill_mask": {
+      "question": "The set of pages actively used by a process is its ___ set.",
+      "answer": "working"
+    }
+  },
+  {
+    "sample_id": "OS_049",
+    "topic": "File Systems",
+    "difficulty": "hard",
+    "question": "What is an inode?",
+    "reference_answer": "An inode (index node) is a data structure in a Unix-style file system that describes a file-system object such as a file or a directory, storing attributes and disk block locations.",
+    "fill_mask": {
+      "question": "In Unix, file metadata is stored in an ___.",
+      "answer": "inode"
+    }
+  },
+  {
+    "sample_id": "OS_050",
+    "topic": "File Systems",
+    "difficulty": "medium",
+    "question": "What does FAT stand for in file systems?",
+    "reference_answer": "FAT stands for File Allocation Table, which is a legacy computer file system architecture used to track the location of files on a disk.",
+    "fill_mask": {
+      "question": "FAT stands for File Allocation ___.",
+      "answer": "table"
+    }
+  },
+  {
+    "sample_id": "OS_051",
+    "topic": "File Systems",
+    "difficulty": "hard",
+    "question": "What is a journaling file system?",
+    "reference_answer": "A journaling file system keeps track of changes not yet committed to the main part of the file system by logging the intentions in a data structure known as a journal, preventing corruption during crashes.",
+    "fill_mask": {
+      "question": "A file system that logs changes before committing them is a ___ file system.",
+      "answer": "journaling"
+    }
+  },
+  {
+    "sample_id": "OS_052",
+    "topic": "File Systems",
+    "difficulty": "easy",
+    "question": "What is a directory in an OS?",
+    "reference_answer": "A directory is a file system structure that organizes and stores references to files and other directories.",
+    "fill_mask": {
+      "question": "A logical grouping of files is called a ___.",
+      "answer": "directory"
+    }
+  },
+  {
+    "sample_id": "OS_053",
+    "topic": "File Systems",
+    "difficulty": "medium",
+    "question": "What is mounting?",
+    "reference_answer": "Mounting is the process by which the operating system makes files and directories on a storage device available for users to access via the file system.",
+    "fill_mask": {
+      "question": "Attaching a file system to the main directory tree is called ___.",
+      "answer": "mounting"
+    }
+  },
+  {
+    "sample_id": "OS_054",
+    "topic": "Storage Management",
+    "difficulty": "medium",
+    "question": "What is seek time?",
+    "reference_answer": "Seek time is the time it takes for a hard disk drive's read/write head to move to the specific track or cylinder where the requested data is stored.",
+    "fill_mask": {
+      "question": "Time to move the disk head to the correct track is ___ time.",
+      "answer": "seek"
+    }
+  },
+  {
+    "sample_id": "OS_055",
+    "topic": "Storage Management",
+    "difficulty": "medium",
+    "question": "What is rotational latency?",
+    "reference_answer": "Rotational latency is the delay waiting for the rotation of the disk to bring the required disk sector under the read-write head.",
+    "fill_mask": {
+      "question": "Waiting for the disk to spin to the correct sector is rotational ___.",
+      "answer": "latency"
+    }
+  },
+  {
+    "sample_id": "OS_056",
+    "topic": "Storage Management",
+    "difficulty": "hard",
+    "question": "What is the SCAN disk scheduling algorithm?",
+    "reference_answer": "SCAN, also known as the elevator algorithm, moves the disk arm from one end of the disk to the other, servicing requests along the way, and reverses direction when it hits the end.",
+    "fill_mask": {
+      "question": "The SCAN disk scheduling algorithm is also called the ___ algorithm.",
+      "answer": "elevator"
+    }
+  },
+  {
+    "sample_id": "OS_057",
+    "topic": "Storage Management",
+    "difficulty": "medium",
+    "question": "What does RAID stand for?",
+    "reference_answer": "RAID stands for Redundant Array of Independent Disks, a data storage virtualization technology that combines multiple physical disk drive components into one or more logical units.",
+    "fill_mask": {
+      "question": "Redundant Array of Independent ___ is known as RAID.",
+      "answer": "disks"
+    }
+  },
+  {
+    "sample_id": "OS_058",
+    "topic": "I/O Management",
+    "difficulty": "hard",
+    "question": "What is DMA (Direct Memory Access)?",
+    "reference_answer": "DMA is a hardware feature that allows an I/O device to send or receive data directly to or from main memory, bypassing the CPU to speed up memory operations.",
+    "fill_mask": {
+      "question": "Bypassing the CPU for memory transfers is called ___.",
+      "answer": "dma"
+    }
+  },
+  {
+    "sample_id": "OS_059",
+    "topic": "I/O Management",
+    "difficulty": "easy",
+    "question": "What is an interrupt?",
+    "reference_answer": "An interrupt is a signal sent to the processor by hardware or software indicating an event that needs immediate attention, causing the CPU to temporarily halt its current tasks.",
+    "fill_mask": {
+      "question": "A hardware signal alerting the CPU is an ___.",
+      "answer": "interrupt"
+    }
+  },
+  {
+    "sample_id": "OS_060",
+    "topic": "I/O Management",
+    "difficulty": "medium",
+    "question": "What is polling in I/O operations?",
+    "reference_answer": "Polling is a process where the CPU repeatedly checks the status of an I/O device to see if it is ready for the next data transfer.",
+    "fill_mask": {
+      "question": "Continually checking device status by the CPU is called ___.",
+      "answer": "polling"
+    }
+  },
+  {
+    "sample_id": "OS_061",
+    "topic": "I/O Management",
+    "difficulty": "medium",
+    "question": "What is spooling?",
+    "reference_answer": "Spooling (Simultaneous Peripheral Operations On-Line) is a process in which data is temporarily held to be used and executed by a device, program, or system, commonly used for print jobs.",
+    "fill_mask": {
+      "question": "Buffering data for peripheral devices like printers is called ___.",
+      "answer": "spooling"
+    }
+  },
+  {
+    "sample_id": "OS_062",
+    "topic": "I/O Management",
+    "difficulty": "easy",
+    "question": "What is a device driver?",
+    "reference_answer": "A device driver is a specialized software program that allows the operating system to interact smoothly with a specific piece of hardware.",
+    "fill_mask": {
+      "question": "Software that controls a specific hardware device is a ___.",
+      "answer": "driver"
+    }
+  },
+  {
+    "sample_id": "OS_063",
+    "topic": "OS Architecture",
+    "difficulty": "medium",
+    "question": "What is a monolithic kernel?",
+    "reference_answer": "A monolithic kernel is an OS architecture where the entire operating system works in kernel space, offering high performance but less modularity and fault tolerance.",
+    "fill_mask": {
+      "question": "An OS where all services run in kernel space is a ___ kernel.",
+      "answer": "monolithic"
+    }
+  },
+  {
+    "sample_id": "OS_064",
+    "topic": "OS Architecture",
+    "difficulty": "medium",
+    "question": "What is a microkernel?",
+    "reference_answer": "A microkernel is an OS architecture that runs only basic core services in kernel space, moving other services like file systems and drivers to user space for better stability.",
+    "fill_mask": {
+      "question": "An OS with minimal services in the kernel space is a ___.",
+      "answer": "microkernel"
+    }
+  },
+  {
+    "sample_id": "OS_065",
+    "topic": "OS Architecture",
+    "difficulty": "medium",
+    "question": "What is dual-mode operation?",
+    "reference_answer": "Dual-mode operation provides protection by separating execution into user mode for standard applications and kernel mode for privileged OS instructions.",
+    "fill_mask": {
+      "question": "Protecting the OS using user and kernel modes is ___ operation.",
+      "answer": "dual-mode"
+    }
+  },
+  {
+    "sample_id": "OS_066",
+    "topic": "OS Architecture",
+    "difficulty": "easy",
+    "question": "What is bootstrapping?",
+    "reference_answer": "Bootstrapping is the process of loading the initial instructions into memory and initializing the operating system components when a computer is turned on.",
+    "fill_mask": {
+      "question": "Starting up the computer and loading the OS is called ___.",
+      "answer": "bootstrapping"
+    }
+  },
+  {
+    "sample_id": "OS_067",
+    "topic": "Security and Protection",
+    "difficulty": "medium",
+    "question": "What is an Access Control List (ACL)?",
+    "reference_answer": "An ACL is a list of permissions attached to an object (like a file), specifying which users or system processes are granted access to objects, and what operations are allowed.",
+    "fill_mask": {
+      "question": "A list of permissions attached to a file is an ___.",
+      "answer": "acl"
+    }
+  },
+  {
+    "sample_id": "OS_068",
+    "topic": "Security and Protection",
+    "difficulty": "easy",
+    "question": "What is the Principle of Least Privilege?",
+    "reference_answer": "The Principle of Least Privilege states that programs, users, and systems should only be granted the bare minimum permissions necessary to perform their required tasks.",
+    "fill_mask": {
+      "question": "Granting only necessary permissions is the principle of least ___.",
+      "answer": "privilege"
+    }
+  },
+  {
+    "sample_id": "OS_069",
+    "topic": "Security and Protection",
+    "difficulty": "medium",
+    "question": "What is a buffer overflow?",
+    "reference_answer": "A buffer overflow is an anomaly where a program writes more data to a buffer than it can hold, overwriting adjacent memory and potentially causing a crash or security breach.",
+    "fill_mask": {
+      "question": "Writing past the end of allocated memory is a buffer ___.",
+      "answer": "overflow"
+    }
+  },
+  {
+    "sample_id": "OS_070",
+    "topic": "Security and Protection",
+    "difficulty": "easy",
+    "question": "What is encryption?",
+    "reference_answer": "Encryption is the process of encoding information in such a way that only authorized parties can access it, using a secret key.",
+    "fill_mask": {
+      "question": "Encoding data to hide it from unauthorized users is called ___.",
+      "answer": "encryption"
+    }
+  },
+  {
+    "sample_id": "OS_071",
+    "topic": "Virtualization",
+    "difficulty": "medium",
+    "question": "What is a hypervisor?",
+    "reference_answer": "A hypervisor, or virtual machine monitor, is software that creates and runs virtual machines by isolating operating systems from the underlying computer hardware.",
+    "fill_mask": {
+      "question": "Software used to run multiple virtual machines is a ___.",
+      "answer": "hypervisor"
+    }
+  },
+  {
+    "sample_id": "OS_072",
+    "topic": "Virtualization",
+    "difficulty": "medium",
+    "question": "What is OS containerization?",
+    "reference_answer": "Containerization is an OS-level virtualization method where applications run in isolated user spaces called containers, sharing the same host OS kernel.",
+    "fill_mask": {
+      "question": "Lightweight virtualization sharing the host kernel uses ___.",
+      "answer": "containers"
+    }
+  },
+  {
+    "sample_id": "OS_073",
+    "topic": "Advanced OS",
+    "difficulty": "medium",
+    "question": "What is a Distributed Operating System?",
+    "reference_answer": "A distributed OS manages a group of independent computers and makes them appear to be a single centralized computer.",
+    "fill_mask": {
+      "question": "An OS running across multiple independent computers is a ___ OS.",
+      "answer": "distributed"
+    }
+  },
+  {
+    "sample_id": "OS_074",
+    "topic": "Advanced OS",
+    "difficulty": "medium",
+    "question": "What is a Real-Time Operating System (RTOS)?",
+    "reference_answer": "An RTOS is an operating system intended to serve real-time applications that process data as it comes in, strictly within defined time constraints.",
+    "fill_mask": {
+      "question": "An OS with strict timing constraints is a ___ OS.",
+      "answer": "real-time"
+    }
+  },
+  {
+    "sample_id": "OS_075",
+    "topic": "Advanced OS",
+    "difficulty": "medium",
+    "question": "What is a Hard Real-Time System?",
+    "reference_answer": "A hard real-time system guarantees that critical tasks complete on time, and missing a deadline leads to total system failure.",
+    "fill_mask": {
+      "question": "A system where missing a deadline causes absolute failure is ___ real-time.",
+      "answer": "hard"
+    }
+  },
+  {
+    "sample_id": "OS_076",
+    "topic": "Advanced OS",
+    "difficulty": "medium",
+    "question": "What is a Soft Real-Time System?",
+    "reference_answer": "A soft real-time system considers deadlines important, but missing a deadline only degrades the quality of service rather than causing total failure.",
+    "fill_mask": {
+      "question": "A system where missing a deadline only degrades service is ___ real-time.",
+      "answer": "soft"
+    }
+  },
+  {
+    "sample_id": "OS_077",
+    "topic": "OS Interface",
+    "difficulty": "easy",
+    "question": "What is a shell in an operating system?",
+    "reference_answer": "A shell is a computer program which exposes an operating system's services to a human user or other program, typically via a command-line interface.",
+    "fill_mask": {
+      "question": "The command interpreter interface to the OS is called a ___.",
+      "answer": "shell"
+    }
+  },
+  {
+    "sample_id": "OS_078",
+    "topic": "OS Interface",
+    "difficulty": "easy",
+    "question": "What is the difference between GUI and CLI?",
+    "reference_answer": "A GUI uses graphical elements like windows and icons for user interaction, whereas a CLI relies on text-based commands typed into a terminal.",
+    "fill_mask": {
+      "question": "A text-based OS interface is known as a ___.",
+      "answer": "cli"
+    }
+  },
+  {
+    "sample_id": "OS_079",
+    "topic": "OS Interface",
+    "difficulty": "easy",
+    "question": "What is an API in the context of an OS?",
+    "reference_answer": "An API (Application Programming Interface) is a set of functions and protocols that allows applications to access the features or data of an operating system.",
+    "fill_mask": {
+      "question": "Programs interact with OS libraries using an ___.",
+      "answer": "api"
+    }
+  },
+  {
+    "sample_id": "OS_080",
+    "topic": "Advanced OS",
+    "difficulty": "hard",
+    "question": "What is middleware?",
+    "reference_answer": "Middleware is software that lies between an operating system and the applications running on it, enabling communication and data management for distributed applications.",
+    "fill_mask": {
+      "question": "Software bridging the OS and distributed applications is ___.",
+      "answer": "middleware"
+    }
+  },
+  {
+    "sample_id": "OS_081",
+    "topic": "Concurrency",
+    "difficulty": "medium",
+    "question": "What is the Bounded Buffer Problem?",
+    "reference_answer": "Also known as the Producer-Consumer problem, it is a classic synchronization problem involving a fixed-size buffer shared by a producer adding items and a consumer removing them.",
+    "fill_mask": {
+      "question": "The producer-consumer problem uses a ___ buffer.",
+      "answer": "bounded"
+    }
+  },
+  {
+    "sample_id": "OS_082",
+    "topic": "Concurrency",
+    "difficulty": "hard",
+    "question": "What is the Readers-Writers Problem?",
+    "reference_answer": "It is a synchronization problem ensuring that multiple readers can read a shared resource simultaneously, but a writer requires exclusive access.",
+    "fill_mask": {
+      "question": "Ensuring exclusive access for writers but concurrent access for readers is the readers-writers ___.",
+      "answer": "problem"
+    }
+  },
+  {
+    "sample_id": "OS_083",
+    "topic": "Concurrency",
+    "difficulty": "hard",
+    "question": "What is the Dining Philosophers Problem?",
+    "reference_answer": "A classic synchronization problem that illustrates deadlock and starvation issues among multiple processes competing for limited resources (chopsticks).",
+    "fill_mask": {
+      "question": "A classic problem involving chopsticks and philosophers illustrates ___.",
+      "answer": "deadlock"
+    }
+  },
+  {
+    "sample_id": "OS_084",
+    "topic": "Deadlock",
+    "difficulty": "medium",
+    "question": "What is Deadlock Prevention?",
+    "reference_answer": "Deadlock prevention involves structuring the system to ensure that at least one of the four necessary conditions for deadlock (like circular wait) cannot hold.",
+    "fill_mask": {
+      "question": "Ensuring one of the four deadlock conditions never occurs is deadlock ___.",
+      "answer": "prevention"
+    }
+  },
+  {
+    "sample_id": "OS_085",
+    "topic": "Deadlock",
+    "difficulty": "medium",
+    "question": "What is Deadlock Avoidance?",
+    "reference_answer": "Deadlock avoidance requires the OS to be given in advance additional information about resource requests to dynamically decide if granting a request is safe.",
+    "fill_mask": {
+      "question": "Dynamically checking if a resource allocation keeps the system safe is deadlock ___.",
+      "answer": "avoidance"
+    }
+  },
+  {
+    "sample_id": "OS_086",
+    "topic": "Process Management",
+    "difficulty": "medium",
+    "question": "What is a context switch overhead?",
+    "reference_answer": "Context switch overhead is the time the CPU spends saving and restoring process states, during which no useful work is being done for user processes.",
+    "fill_mask": {
+      "question": "Time wasted during a context switch is called ___.",
+      "answer": "overhead"
+    }
+  },
+  {
+    "sample_id": "OS_087",
+    "topic": "File Systems",
+    "difficulty": "easy",
+    "question": "What is an absolute path?",
+    "reference_answer": "An absolute path is a path that specifies the location of a file or directory from the root directory.",
+    "fill_mask": {
+      "question": "A file path starting from the root directory is an ___ path.",
+      "answer": "absolute"
+    }
+  },
+  {
+    "sample_id": "OS_088",
+    "topic": "File Systems",
+    "difficulty": "easy",
+    "question": "What is a relative path?",
+    "reference_answer": "A relative path describes the location of a file or directory relative to the current working directory of the user or program.",
+    "fill_mask": {
+      "question": "A path starting from the current directory is a ___ path.",
+      "answer": "relative"
+    }
+  },
+  {
+    "sample_id": "OS_089",
+    "topic": "Memory Management",
+    "difficulty": "medium",
+    "question": "What is the purpose of the Page Table?",
+    "reference_answer": "The page table is a data structure used by a virtual memory system to store the mapping between virtual addresses and physical addresses.",
+    "fill_mask": {
+      "question": "Virtual to physical address mappings are stored in a page ___.",
+      "answer": "table"
+    }
+  },
+  {
+    "sample_id": "OS_090",
+    "topic": "Security and Protection",
+    "difficulty": "hard",
+    "question": "What is a capability list?",
+    "reference_answer": "A capability list is a list of objects and the operations allowed on them, associated directly with a specific process or user (the domain).",
+    "fill_mask": {
+      "question": "A list of accessible objects held by a user is a ___ list.",
+      "answer": "capability"
+    }
+  },
+  {
+    "sample_id": "OS_091",
+    "topic": "Memory Management",
+    "difficulty": "hard",
+    "question": "What is an Inverted Page Table?",
+    "reference_answer": "An inverted page table maintains one entry for each real page of physical memory, rather than an entry for each virtual page, which significantly reduces the memory required to store the table.",
+    "fill_mask": {
+      "question": "A table with one entry per physical frame is an ___ page table.",
+      "answer": "inverted"
+    }
+  },
+  {
+    "sample_id": "OS_092",
+    "topic": "Threads",
+    "difficulty": "medium",
+    "question": "What is the difference between Many-to-One and One-to-One multithreading models?",
+    "reference_answer": "The Many-to-One model maps many user-level threads to one kernel thread, whereas the One-to-One model maps each user-level thread to a separate kernel thread, allowing true concurrency.",
+    "fill_mask": {
+      "question": "Mapping each user thread to a unique kernel thread is the ___ model.",
+      "answer": "one-to-one"
+    }
+  },
+  {
+    "sample_id": "OS_093",
+    "topic": "Memory Management",
+    "difficulty": "hard",
+    "question": "How is Effective Access Time (EAT) calculated in a paging system with a TLB?",
+    "reference_answer": "EAT is calculated as (TLB Hit Ratio * Memory Access Time) + (TLB Miss Ratio * (2 * Memory Access Time)), accounting for the time to check the TLB and access physical memory.",
+    "fill_mask": {
+      "question": "The percentage of times a page number is found in the TLB is the ___ ratio.",
+      "answer": "hit"
+    }
+  },
+  {
+    "sample_id": "OS_094",
+    "topic": "OS Architecture",
+    "difficulty": "easy",
+    "question": "What is a bootloader?",
+    "reference_answer": "A bootloader is a small program stored in ROM or flash memory that is executed when the computer is powered on to load the main operating system into RAM.",
+    "fill_mask": {
+      "question": "The program that loads the OS into memory is the ___.",
+      "answer": "bootloader"
+    }
+  },
+  {
+    "sample_id": "OS_095",
+    "topic": "File Systems",
+    "difficulty": "medium",
+    "question": "What is the difference between a hard link and a soft (symbolic) link?",
+    "reference_answer": "A hard link points directly to the inode of a file, meaning the file exists as long as at least one hard link exists. A soft link points to the file name, so it becomes a dangling pointer if the original file is deleted.",
+    "fill_mask": {
+      "question": "A link that becomes a dangling pointer if the target is deleted is a ___ link.",
+      "answer": "soft"
+    }
+  },
+  {
+    "sample_id": "OS_096",
+    "topic": "Scheduling",
+    "difficulty": "easy",
+    "question": "What is the difference between an I/O-bound process and a CPU-bound process?",
+    "reference_answer": "An I/O-bound process spends more time doing I/O operations than computing, whereas a CPU-bound process spends more time doing computational work than making I/O requests.",
+    "fill_mask": {
+      "question": "A process that spends most of its time computing is ___-bound.",
+      "answer": "cpu"
+    }
+  },
+  {
+    "sample_id": "OS_097",
+    "topic": "Memory Management",
+    "difficulty": "hard",
+    "question": "What is the Page-Fault Frequency (PFF) strategy?",
+    "reference_answer": "PFF is a dynamic working-set strategy that adjusts a process's frame allocation by establishing upper and lower bounds on the acceptable page-fault rate to prevent thrashing.",
+    "fill_mask": {
+      "question": "Adjusting frame allocation based on fault rates is the page-fault ___ strategy.",
+      "answer": "frequency"
+    }
+  },
+  {
+    "sample_id": "OS_098",
+    "topic": "I/O Management",
+    "difficulty": "medium",
+    "question": "What is the difference between a trap and an interrupt?",
+    "reference_answer": "An interrupt is a hardware-generated asynchronous signal, whereas a trap (or exception) is a software-generated synchronous signal caused by an error or a specific request like a system call.",
+    "fill_mask": {
+      "question": "A software-generated interrupt caused by an error is a ___.",
+      "answer": "trap"
+    }
+  },
+  {
+    "sample_id": "OS_099",
+    "topic": "Storage Management",
+    "difficulty": "medium",
+    "question": "What is SSTF (Shortest Seek Time First) disk scheduling?",
+    "reference_answer": "SSTF is a disk scheduling algorithm that selects the request closest to the current head position before moving further away, minimizing seek time but potentially causing starvation.",
+    "fill_mask": {
+      "question": "Selecting the disk request closest to the head is ___ scheduling.",
+      "answer": "sstf"
+    }
+  },
+  {
+    "sample_id": "OS_100",
+    "topic": "Concurrency",
+    "difficulty": "hard",
+    "question": "What is Amdahl's Law?",
+    "reference_answer": "Amdahl's Law is a formula used to find the maximum expected improvement to an overall system when only part of the system is improved, specifically relating to the theoretical speedup of executing a task using multiple processors.",
+    "fill_mask": {
+      "question": "The formula calculating theoretical speedup in parallel computing is ___ law.",
+      "answer": "amdahls"
+    }
+  }
+]

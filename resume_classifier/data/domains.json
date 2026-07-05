@@ -1,0 +1,12 @@
+{
+  "Software Engineering": "Develops software applications, writes code in languages like Python, Java, C++, works with APIs, databases, cloud infrastructure, DevOps, and system design.",
+  "Data Science": "Analyzes data using statistics, machine learning, deep learning, builds predictive models, uses tools like pandas, scikit-learn, TensorFlow, and works with large datasets.",
+  "Finance": "Works in banking, investment, accounting, financial analysis, portfolio management, risk assessment, auditing, and financial modeling using Excel and Bloomberg.",
+  "Healthcare": "Works in medicine, nursing, clinical research, pharmacy, medical devices, patient care, health informatics, or public health.",
+  "Marketing": "Manages brand strategy, digital marketing, SEO, social media, content creation, campaign analytics, CRM, and growth marketing.",
+  "Law": "Practices legal work including litigation, contracts, compliance, intellectual property, corporate law, and legal research.",
+  "Education": "Works in teaching, curriculum development, academic research, instructional design, e-learning, or educational administration.",
+  "Mechanical Engineering": "Designs and manufactures mechanical systems, works with CAD tools, thermodynamics, materials science, robotics, and manufacturing processes.",
+  "Cybersecurity": "Handles network security, penetration testing, threat analysis, SIEM tools, vulnerability assessment, and security compliance.",
+  "Product Management": "Defines product roadmaps, works with cross-functional teams, conducts user research, manages sprints, and drives product strategy."
+}

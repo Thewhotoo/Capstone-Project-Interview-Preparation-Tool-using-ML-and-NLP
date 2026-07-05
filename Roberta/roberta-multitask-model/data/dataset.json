@@ -1,0 +1,1328 @@
+[
+{
+"text": "What is a process?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is a thread?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is a CPU?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is memory?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is an interrupt?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is context switching?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is a file descriptor?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is paging?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is a socket?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OS",
+"CN"
+]
+},
+{
+"text": "What is a system call?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Explain virtual memory",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Explain deadlock",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Explain CPU scheduling",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Explain multiprogramming",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Explain segmentation",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Explain critical section problem",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Explain Banker's algorithm",
+"intent": "explanation",
+"difficulty": "hard",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Explain deadlock prevention",
+"intent": "explanation",
+"difficulty": "hard",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Explain deadlock avoidance",
+"intent": "explanation",
+"difficulty": "hard",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is livelock?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is semaphore?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is mutual exclusion?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is race condition?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is demand paging?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is page replacement?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Difference between process and thread",
+"intent": "comparison",
+"difficulty": "medium",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Compare synchronous and asynchronous I/O",
+"intent": "comparison",
+"difficulty": "medium",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Compare FIFO and LRU page replacement",
+"intent": "comparison",
+"difficulty": "hard",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Compare user mode and kernel mode",
+"intent": "comparison",
+"difficulty": "hard",
+"topics": [
+"OS"
+]
+},
+{
+"text": "How would you prevent deadlock?",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Describe how context switching works",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Implement a simple semaphore",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Design a scheduler for 5 processes with different priorities",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Why should thread-safe design be used?",
+"intent": "reasoning",
+"difficulty": "hard",
+"topics": [
+"OS"
+]
+},
+{
+"text": "Why is memory protection important in OS?",
+"intent": "reasoning",
+"difficulty": "hard",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is database?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "What is DBMS?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "What is primary key?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "What is foreign key?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "What is SQL?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "What is table?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "What is index?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "What is ACID property?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "What is transaction?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "What is normalization?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "What is denormalization?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "What is view in database?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "What is stored procedure?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Explain normalization",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Explain joins in SQL",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Explain database schema",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Explain indexing strategy",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Explain B+ tree",
+"intent": "explanation",
+"difficulty": "hard",
+"topics": [
+"DBMS",
+"DSA"
+]
+},
+{
+"text": "Explain MVCC for transaction isolation",
+"intent": "explanation",
+"difficulty": "hard",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Explain query optimization",
+"intent": "explanation",
+"difficulty": "hard",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Difference between OLTP and OLAP",
+"intent": "comparison",
+"difficulty": "hard",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Compare SQL and NoSQL",
+"intent": "comparison",
+"difficulty": "hard",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Compare relational and hierarchical database",
+"intent": "comparison",
+"difficulty": "hard",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Compare primary key and unique key",
+"intent": "comparison",
+"difficulty": "medium",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Design a database schema for social media platform",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Write a query to find nth highest salary",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Describe how indexing improves query performance",
+"intent": "reasoning",
+"difficulty": "hard",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Why should you normalize database?",
+"intent": "reasoning",
+"difficulty": "hard",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "What is TCP?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"CN"
+]
+},
+{
+"text": "What is UDP?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"CN"
+]
+},
+{
+"text": "What is HTTP?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"CN"
+]
+},
+{
+"text": "What is HTTPS?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"CN"
+]
+},
+{
+"text": "What is IP address?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"CN"
+]
+},
+{
+"text": "What is port?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"CN"
+]
+},
+{
+"text": "What is DNS?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"CN"
+]
+},
+{
+"text": "What is firewall?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"CN"
+]
+},
+{
+"text": "What is router?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"CN"
+]
+},
+{
+"text": "What is gateway?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"CN"
+]
+},
+{
+"text": "What is MAC address?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"CN"
+]
+},
+{
+"text": "What is subnet?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"CN"
+]
+},
+{
+"text": "Explain DNS resolution",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"CN"
+]
+},
+{
+"text": "Explain subnetting",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"CN"
+]
+},
+{
+"text": "Explain routing",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"CN"
+]
+},
+{
+"text": "Explain OSI model",
+"intent": "explanation",
+"difficulty": "hard",
+"topics": [
+"CN"
+]
+},
+{
+"text": "Explain TCP three-way handshake",
+"intent": "explanation",
+"difficulty": "hard",
+"topics": [
+"CN"
+]
+},
+{
+"text": "Compare TCP and UDP",
+"intent": "comparison",
+"difficulty": "medium",
+"topics": [
+"CN"
+]
+},
+{
+"text": "Compare IPv4 and IPv6",
+"intent": "comparison",
+"difficulty": "hard",
+"topics": [
+"CN"
+]
+},
+{
+"text": "Compare HTTP and HTTPS",
+"intent": "comparison",
+"difficulty": "medium",
+"topics": [
+"CN"
+]
+},
+{
+"text": "Compare DNS and DHCP",
+"intent": "comparison",
+"difficulty": "hard",
+"topics": [
+"CN"
+]
+},
+{
+"text": "Design a chat protocol",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"CN"
+]
+},
+{
+"text": "Describe network topology design for company",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"CN"
+]
+},
+{
+"text": "Why is HTTPS more secure than HTTP?",
+"intent": "reasoning",
+"difficulty": "hard",
+"topics": [
+"CN"
+]
+},
+{
+"text": "What is class?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "What is object?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "What is method?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "What is constructor?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "What is inheritance?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "What is interface?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "What is abstract class?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "What is encapsulation?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "What is polymorphism?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "Explain encapsulation",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "Explain abstraction",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "Explain inheritance",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "Explain polymorphism",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "Explain SOLID principles",
+"intent": "explanation",
+"difficulty": "hard",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "Explain design patterns",
+"intent": "explanation",
+"difficulty": "hard",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "Difference between overloading and overriding",
+"intent": "comparison",
+"difficulty": "medium",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "Compare inheritance and composition",
+"intent": "comparison",
+"difficulty": "medium",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "Compare abstract class and interface",
+"intent": "comparison",
+"difficulty": "hard",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "Implement a thread-safe singleton class",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "Design a shopping cart system with OOP principles",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "Why should you use inheritance?",
+"intent": "reasoning",
+"difficulty": "medium",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "Why is interface-based design better?",
+"intent": "reasoning",
+"difficulty": "hard",
+"topics": [
+"OOP"
+]
+},
+{
+"text": "What is array?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "What is stack?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "What is queue?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "What is linked list?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "What is tree?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "What is hash table?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "What is graph?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "What is heap?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "What is trie?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "What is binary search tree?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "Explain binary search",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "Explain merge sort",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "Explain quick sort",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "Explain dynamic programming",
+"intent": "explanation",
+"difficulty": "hard",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "Explain BFS and DFS",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "Explain Dijkstra's algorithm",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "Compare array and linked list",
+"intent": "comparison",
+"difficulty": "medium",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "Compare stack and queue",
+"intent": "comparison",
+"difficulty": "easy",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "Compare binary tree and binary search tree",
+"intent": "comparison",
+"difficulty": "hard",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "Implement balanced binary search tree",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "Solve LeetCode hard problem with optimal solution",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "Why is time complexity important?",
+"intent": "reasoning",
+"difficulty": "hard",
+"topics": [
+"DSA"
+]
+},
+{
+"text": "Compare transaction locking in DBMS with semaphore synchronization",
+"intent": "comparison",
+"difficulty": "hard",
+"topics": [
+"DBMS",
+"OS"
+]
+},
+{
+"text": "Design LRU cache using hash map and doubly linked list",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"OOP",
+"DSA"
+]
+},
+{
+"text": "Explain SQL indexing using B+ trees",
+"intent": "reasoning",
+"difficulty": "hard",
+"topics": [
+"DBMS",
+"DSA"
+]
+},
+{
+"text": "Build thread-safe producer-consumer queue",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"OS",
+"OOP",
+"DSA"
+]
+},
+{
+"text": "Design a distributed chat server with load balancing",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"CN",
+"DSA"
+]
+},
+{
+"text": "Compare memory management in OS vs garbage collection in Java",
+"intent": "comparison",
+"difficulty": "hard",
+"topics": [
+"OS",
+"OOP"
+]
+},
+{
+"text": "Explain how transactions provide ACID guarantees in DBMS",
+"intent": "explanation",
+"difficulty": "hard",
+"topics": [
+"DBMS"
+]
+},
+{
+"text": "Implement concurrent hashmap with fine-grained locking",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"OS",
+"OOP",
+"DSA"
+]
+},
+{
+"text": "Design high-performance key-value store using appropriate data structures",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": [
+"DBMS",
+"DSA"
+]
+},
+{
+"text": "Explain relationship between thread scheduling and OS memory paging",
+"intent": "reasoning",
+"difficulty": "hard",
+"topics": [
+"OS"
+]
+},
+{
+"text": "What is dynamic programming?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "Explain dynamic programming with examples",
+"intent": "explanation",
+"difficulty": "hard",
+"topics": ["DSA"]
+},
+{
+"text": "What is memoization?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "Explain memoization vs tabulation",
+"intent": "comparison",
+"difficulty": "hard",
+"topics": ["DSA"]
+},
+{
+"text": "What is greedy algorithm?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "Explain greedy algorithm",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "What is backtracking?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "Explain backtracking",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "What is recursion?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": ["DSA"]
+},
+{
+"text": "Explain recursion",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "What is trie data structure?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "Explain trie data structure",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "What is a priority queue?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "Explain BFS",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "Explain DFS",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "What is tree traversal?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": ["DSA"]
+},
+{
+"text": "Explain tree traversal",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "Explain tree traversal techniques",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "What is divide and conquer?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "Explain divide and conquer",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "What is time complexity?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": ["DSA"]
+},
+{
+"text": "Explain time complexity and space complexity",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "What is sliding window technique?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "Explain sliding window technique",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "Explain tree traversal and sorting algorithms",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "Explain tree traversal and database transactions",
+"intent": "explanation",
+"difficulty": "medium",
+"topics": ["DSA", "DBMS"]
+},
+{
+"text": "What is tree traversal and sorting?",
+"intent": "definition",
+"difficulty": "easy",
+"topics": ["DSA"]
+},
+{
+"text": "What is Big O notation?",
+"intent": "definition",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "Compare BFS and DFS",
+"intent": "comparison",
+"difficulty": "medium",
+"topics": ["DSA"]
+},
+{
+"text": "Implement dynamic programming solution for knapsack problem",
+"intent": "procedure",
+"difficulty": "hard",
+"topics": ["DSA"]
+},
+{
+"text": "Why is dynamic programming efficient?",
+"intent": "reasoning",
+"difficulty": "hard",
+"topics": ["DSA"]
+}
+]

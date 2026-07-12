@@ -1,6 +1,6 @@
 import re
 import os
-from utils.helpers import clean_text
+from utils.helpers import clean_text, clean_text_structured
 
 # Lazy-loaded document parsing libraries
 _pdfplumber = None
@@ -68,10 +68,10 @@ def extract_text(path: str) -> str:
     ext = os.path.splitext(path)[-1].lower()
     if ext == ".pdf":
         text = extract_from_pdf(path)
-        return clean_text(text)
+        return clean_text_structured(text)
     elif ext in [".docx", ".doc"]:
         text = extract_from_docx(path)
-        return clean_text(text)
+        return clean_text_structured(text)
     elif ext in [".txt", ".ats"]:
         text = extract_from_ats(path)
         # For ATS files, preserve newline structure for better feature extraction
@@ -169,10 +169,21 @@ def extract_name(text: str) -> str:
         'rajasthan', 'uttar', 'madhya', 'kerala', 'punjab', 'haryana',
         'india', 'usa', 'uk', 'canada', 'australia', 'germany',
     }
+    # Section headers that should not be treated as names
+    section_headers = {
+        'summary', 'objective', 'profile', 'experience', 'education', 'skills',
+        'projects', 'certifications', 'awards', 'languages', 'interests',
+        'volunteer', 'portfolio', 'contact', 'references', 'achievements',
+        'publications', 'honors', 'additional', 'technical', 'competencies',
+        'technologies', 'work', 'professional', 'career', 'qualifications',
+    }
     name_words = []
     for w in words:
         clean = w.strip(',.').lower()
         if clean.isdigit() or clean in address_markers or re.match(r'^\d+$', clean):
+            break
+        # Skip if it looks like a section header
+        if clean in section_headers:
             break
         name_words.append(w.strip(',.'))
     

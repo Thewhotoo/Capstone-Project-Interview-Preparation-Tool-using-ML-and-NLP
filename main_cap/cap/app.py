@@ -258,13 +258,17 @@ def classify_resume():
                 return jsonify({"error": "Could not extract enough text from resume"}), 400
 
             # 2. Extract features (skills via KeyBERT, experience from job history)
+            #    Features need structured text with newlines for section detection
             from src.features import extract_features
             features = extract_features(text)
 
             # 3. Classify domain using SBERT cosine similarity against domain descriptions
+            #    SBERT gets flattened text (no newlines) — it only compares semantics
+            from utils.helpers import clean_text as _flatten
+            flat_text = _flatten(text)
             classifier = get_sbert_classifier()
             if classifier:
-                sbert_scores = classifier.predict(text)
+                sbert_scores = classifier.predict(flat_text)
 
                 # Keyword-based boost for Software Engineering
                 # Resumes with 3+ SWE-specific terms should be classified as SE
@@ -279,13 +283,27 @@ def classify_resume():
                     'api', 'web app', 'full stack', 'full-stack', 'backend', 'frontend',
                     'unity', 'blender', 'vr', 'virtual reality', 'simulation',
                     'interview platform', 'soc platform', 'dashboard',
+                    # ML/AI frameworks are still software engineering tools
+                    'tensorflow', 'pytorch', 'scikit-learn', 'keras', 'opencv',
+                    'langchain', 'langgraph', 'llamaindex', 'rag',
+                    'machine learning', 'deep learning', 'neural network',
+                    'transformers', 'hugging face', 'openai', 'llm',
+                    'data pipeline', 'mlops', 'model deployment',
+                    # General CS / SE terms
+                    'algorithms', 'data structures', 'oop', 'database',
+                    'git', 'github', 'linux', 'python', 'java',
+                    # UX/UI design that is still software engineering
+                    'figma', 'sketch', 'adobe xd', 'zeplin', 'invision',
+                    'wireframe', 'prototyping', 'user interface', 'ui design',
+                    'ux design', 'user experience', 'interaction design',
+                    'responsive design', 'accessibility', 'usability',
                 ]
-                text_lower = text.lower()
+                text_lower = flat_text.lower()
                 swe_hits = sum(1 for kw in swe_keywords if kw in text_lower)
 
                 # If resume has 3+ SWE keywords, boost SE score by a margin
                 if swe_hits >= 3:
-                    boost = min(0.08, swe_hits * 0.015)  # cap at 0.08
+                    boost = min(0.15, swe_hits * 0.015)  # cap at 0.15
                     sbert_scores["Software Engineering"] = sbert_scores.get("Software Engineering", 0) + boost
 
                 top_domain = max(sbert_scores, key=sbert_scores.get)
@@ -927,10 +945,10 @@ def adaptive_evaluate():
 
 if __name__ == "__main__":
     print("\n" + "="*70)
-    print("🎓 CAPSTONE INTERVIEW SYSTEM")
+    print("CAPSTONE INTERVIEW SYSTEM")
     print("="*70)
-    print(f"🌐 Open your browser: http://localhost:5000")
-    print(f"✅ System ready!")
+    print(f"Open your browser: http://localhost:5000")
+    print(f"System ready!")
     print("="*70 + "\n")
     
     app.run(debug=False, port=5000, threaded=True, use_reloader=False)

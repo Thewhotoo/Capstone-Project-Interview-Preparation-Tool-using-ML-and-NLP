@@ -1,0 +1,27 @@
+{
+  "name": null,
+  "email": "hello@reallygreatsite.com",
+  "phone": "123-456-7890 123",
+  "domain": "Software Engineering",
+  "confidence": 0.5538,
+  "experience": {
+    "years": 5,
+    "months": 60,
+    "level": "Senior"
+  },
+  "education": [
+    {
+      "institution": null,
+      "degree": null,
+      "major": null,
+      "graduation_year": 2015,
+      "gpa": null,
+      "high_school": [],
+      "raw": "Bachelor of Computer Science Borcelle University - Depok, Indonesia Graduated: 2015"
+    }
+  ],
+  "skills": [
+    "CI/CD"
+  ],
+  "projects_count": 0
+}

@@ -18,6 +18,35 @@
             --border-subtle: rgba(255, 255, 255, 0.06);
         }
 
+        /* --- TOAST NOTIFICATIONS --- */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #fff;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            animation: toastIn 0.3s ease forwards;
+            max-width: 360px;
+        }
+        .toast.toast-success { border-left: 3px solid #10b981; }
+        .toast.toast-error { border-left: 3px solid #ef4444; }
+        .toast.toast-info { border-left: 3px solid #3b82f6; }
+        .toast.toast-out { animation: toastOut 0.3s ease forwards; }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
+
         body { 
             font-family: 'Inter', sans-serif; 
             margin: 0; 
@@ -91,6 +120,175 @@
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
         }
         .start-btn:hover { transform: scale(1.02); background: #f0f0f0; box-shadow: 0 0 30px rgba(255,255,255,0.1); }
+
+        /* --- CANDIDATE ASSESSMENT DASHBOARD --- */
+        #candidate-dashboard {
+            display: none;
+            width: 100%;
+            height: 92vh;
+            overflow-y: auto;
+            background: var(--bg-base);
+            animation: dashFadeIn 0.6s ease forwards;
+        }
+        #candidate-dashboard::-webkit-scrollbar { display: none; }
+        @keyframes dashFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .dash-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 32px 60px;
+        }
+
+        .dash-greeting {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+        .dash-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 36px;
+            font-weight: 400;
+        }
+
+        .dash-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        .dash-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 24px;
+        }
+        .dash-card-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .dash-card-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            font-family: 'Roboto Mono', monospace;
+        }
+        .dash-card-value.small {
+            font-size: 1rem;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
+        }
+        .dash-card-value .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin: 3px 4px 3px 0;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-subtle);
+            color: #ccc;
+        }
+        .dash-card-value .tag.tag-primary {
+            background: rgba(59,130,246,0.12);
+            border-color: rgba(59,130,246,0.25);
+            color: #60a5fa;
+        }
+
+        .dash-full { grid-column: 1 / -1; }
+
+        .dash-skills-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .skill-chip {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-subtle);
+            color: #ddd;
+        }
+        .skill-chip.sk-lang { background: rgba(59,130,246,0.10); border-color: rgba(59,130,246,0.20); color: #93c5fd; }
+        .skill-chip.sk-framework { background: rgba(16,185,129,0.10); border-color: rgba(16,185,129,0.20); color: #6ee7b7; }
+        .skill-chip.sk-tool { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.20); color: #fcd34d; }
+        .skill-chip.sk-db { background: rgba(168,85,247,0.10); border-color: rgba(168,85,247,0.20); color: #c4b5fd; }
+        .skill-chip.sk-cloud { background: rgba(6,182,212,0.10); border-color: rgba(6,182,212,0.20); color: #67e8f9; }
+        .skill-chip.sk-other { background: rgba(255,255,255,0.04); border-color: var(--border-subtle); color: #aaa; }
+
+        .dash-category-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin: 12px 0 6px;
+            font-weight: 600;
+        }
+
+        .dash-preview-box {
+            background: rgba(255,255,255,0.02);
+            border: 1px dashed rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-top: 12px;
+            color: #aaa;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .dash-preview-box strong { color: #ddd; }
+
+        .dash-start-btn {
+            width: 100%;
+            padding: 18px;
+            margin-top: 10px;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .dash-start-btn:hover {
+            transform: scale(1.015);
+            box-shadow: 0 0 40px rgba(255,255,255,0.08);
+            background: #f0f0f0;
+        }
+
+        .dash-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
+            gap: 20px;
+        }
+        .dash-loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-subtle);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 700px) {
+            .dash-grid { grid-template-columns: 1fr; }
+            .dash-wrapper { padding: 24px 16px 40px; }
+            .dash-greeting { font-size: 1.5rem; }
+        }
 
         /* --- CHAT CONTAINER (FULL SCREEN LAYOUT) --- */
         #chat-container { 
@@ -331,6 +529,7 @@
                 <p style="color: #10b981; margin: 5px 0;"><strong>✅ Domain:</strong> <span id="classified-domain"></span></p>
                 <p style="color: #f59e0b; margin: 5px 0;"><strong>🎯 Confidence:</strong> <span id="domain-confidence"></span></p>
                 <p style="color: #3b82f6; margin: 5px 0;"><strong>💼 Experience:</strong> <span id="domain-experience"></span></p>
+                <button class="start-btn" style="margin-top: 12px;" onclick="startQuizFromAnalysis()">Proceed to Domain Quiz →</button>
             </div>
         </div>
 
@@ -394,6 +593,14 @@
 
     <div id="dashboard-container"></div>
 
+    <!-- CANDIDATE ASSESSMENT DASHBOARD -->
+    <div id="candidate-dashboard">
+        <div class="dash-wrapper" id="dash-wrapper"></div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container"></div>
+
     <script>
         let askedIds = [];
         let interviewHistory = []; 
@@ -402,17 +609,261 @@
         let stage = "main_question"; 
         let tempMainAnswer = "";
         let selectedTopic = "All";
+        let parsedResumeData = null;  // Stores parsed resume for dashboard
 
         const landingContainer = document.getElementById("landing-container");
         const chatContainer = document.getElementById("chat-container");
         const dashboardContainer = document.getElementById("dashboard-container");
+        const candidateDashboard = document.getElementById("candidate-dashboard");
+        const dashWrapper = document.getElementById("dash-wrapper");
         const messagesDiv = document.getElementById("messages");
         const inputField = document.getElementById("user-input");
         const sendBtn = document.getElementById("send-btn");
         const micBtn = document.getElementById("mic-btn");
         const chatHeader = document.getElementById("chat-header-title");
 
-        // --- NEW: THE PREMIUM TERMINAL SCORE DECRYPTOR ---
+        // ─── TOAST NOTIFICATION HELPER ────────────────────────────────
+        function showToast(message, type = "info", duration = 3500) {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add("toast-out");
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
+        // ─── XSS ESCAPE HELPER ────────────────────────────────────────
+        function esc(str) {
+            if (str == null) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // ─── SKILL CATEGORIZATION ─────────────────────────────────────
+        const SKILL_CATEGORIES = {
+            "Languages": {
+                exact: ["python","java","javascript","typescript","c","c++","c#","go","golang","rust","ruby","php","swift","kotlin","scala","r","matlab","perl","haskell","elixir","dart","sql","html","css","sass","scss","bash","shell","powershell","vba","objective-c","assembly","fortran","cobol","lua","groovy"],
+                substring: ["python","java","javascript","typescript","golang","c++","c#","ruby","php","swift","kotlin","scala","matlab","perl","haskell","dart","bash","shell","powershell","vba","fortran","cobol","lua","groovy","rust","go "]
+            },
+            "Frameworks": {
+                exact: ["react","reactjs","react.js","angular","angularjs","vue","vuejs","vue.js","next","nextjs","next.js","nuxt","nuxtjs","svelte","sveltejs","django","flask","fastapi","spring","spring boot","springboot"," express","expressjs","node","nodejs","node.js","rails","ruby on rails","laravel","symfony","ASP.NET","dotnet",".net","blazor","flutter","android","ios"," SwiftUI","tailwind","tailwindcss","bootstrap","jquery"],
+                substring: ["react","angular","vue","next","nuxt","svelte","django","flask","fastapi","spring","express","node","rails","laravel","symfony","asp.net","dotnet","blazor","flutter","tailwind","bootstrap","jquery"]
+            },
+            "Tools": {
+                exact: ["git","github","gitlab","bitbucket","docker","dockerfile","kubernetes","k8s","jenkins","travis","circleci","github actions","terraform","ansible","puppet","chef","vagrant","nginx","apache","tomcat","webpack","vite","npm","yarn","pip","conda","maven","gradle","ant","cmake","make","vim","neovim","emacs","vscode","intellij","eclipse","postman","swagger","figma","jira","confluence","trello","notion","slack","discord","linux","unix","macos","windows","ci/cd","devops","mlops"],
+                substring: ["git","github","gitlab","bitbucket","docker","kubernetes","k8s","jenkins","travis","circleci","terraform","ansible","puppet","chef","vagrant","nginx","apache","tomcat","webpack","vite","npm","yarn","pip","conda","maven","gradle","cmake","postman","swagger","figma","jira","confluence","trello","notion","linux","unix","ci/cd","devops","mlops"]
+            },
+            "Databases": {
+                exact: ["mysql","postgresql","postgres","sqlite","mongodb","mongo","redis","elasticsearch","elastic","cassandra","dynamodb","dynamo","couchdb","couchbase","neo4j","firebase","supabase","mariadb","oracle","sql server","mssql","cosmosdb","cosmos","influxdb","riak","memcached","etcd","cockroachdb","clickhouse","snowflake","bigquery","redshift","hbase","couchdb","realm","prisma","sequelize","typeorm","sqlalchemy","mongoose","knex","hibernate"],
+                substring: ["mysql","postgresql","postgres","sqlite","mongodb","redis","elasticsearch","cassandra","dynamodb","couchdb","couchbase","neo4j","firebase","supabase","mariadb","oracle","cosmos","influx","riak","memcached","etcd","cockroach","clickhouse","snowflake","bigquery","redshift","hbase","realm","prisma","sequelize","typeorm","sqlalchemy","mongoose","knex","hibernate"]
+            },
+            "Cloud": {
+                exact: ["aws","amazon web services","ec2","s3","lambda","ecs","eks","rds","sqs","sns","cloudfront","route53","azure","microsoft azure","gcp","google cloud","google cloud platform","heroku","netlify","vercel","digitalocean","linode","vultr","cloudflare","cloudrun","cloud functions","pubsub","bigtable","dataflow","dataproc","sagemaker","bedrock","openai api"],
+                substring: ["aws","ec2","s3","lambda","ecs","eks","rds","sqs","sns","cloudfront","route53","azure","gcp","heroku","netlify","vercel","digitalocean","linode","cloudflare","cloudrun","sagemaker","bedrock"]
+            }
+        };
+
+        function categorizeSkills(skills) {
+            const result = {
+                "Languages": [],
+                "Frameworks": [],
+                "Tools": [],
+                "Databases": [],
+                "Cloud": [],
+                "Other": []
+            };
+            if (!Array.isArray(skills)) return result;
+
+            const matched = new Set();
+
+            for (const skill of skills) {
+                const sLower = skill.toLowerCase().trim();
+                let placed = false;
+
+                // Pass 1: exact match
+                for (const [cat, rules] of Object.entries(SKILL_CATEGORIES)) {
+                    if (rules.exact.some(e => sLower === e.toLowerCase())) {
+                        result[cat].push(skill);
+                        matched.add(sLower);
+                        placed = true;
+                        break;
+                    }
+                }
+                if (placed) continue;
+
+                // Pass 2: substring match
+                for (const [cat, rules] of Object.entries(SKILL_CATEGORIES)) {
+                    if (rules.substring.some(s => sLower.includes(s) || s.includes(sLower))) {
+                        result[cat].push(skill);
+                        matched.add(sLower);
+                        placed = true;
+                        break;
+                    }
+                }
+                if (placed) continue;
+
+                result["Other"].push(skill);
+            }
+            return result;
+        }
+
+        // ─── CANDIDATE ASSESSMENT DASHBOARD RENDER FUNCTIONS ───────────
+
+        function showCandidateDashboard(data) {
+            parsedResumeData = data;
+
+            // Hide landing, show dashboard
+            landingContainer.style.opacity = "0";
+            setTimeout(() => {
+                landingContainer.style.display = "none";
+                candidateDashboard.style.display = "block";
+            }, 400);
+
+            dashWrapper.innerHTML = "";
+            dashWrapper.appendChild(renderDashGreeting(data));
+            dashWrapper.appendChild(renderDashStatsGrid(data));
+            dashWrapper.appendChild(renderDashSkills(data));
+            dashWrapper.appendChild(renderDashInterviewPreview(data));
+            dashWrapper.appendChild(renderDashStartButton());
+        }
+
+        function renderDashGreeting(data) {
+            const el = document.createElement("div");
+            const name = esc(data.name || "Candidate");
+            el.innerHTML = `
+                <div class="dash-greeting">Hello, ${name}</div>
+                <div class="dash-subtitle">Here's your candidate assessment overview</div>
+            `;
+            return el;
+        }
+
+        function renderDashStatsGrid(data) {
+            const el = document.createElement("div");
+            el.className = "dash-grid";
+
+            const domain = esc(data.predicted_domain || "N/A");
+            const confidence = data.confidence ? (data.confidence * 100).toFixed(1) + "%" : "N/A";
+            const years = data.experience ? (data.experience.years || 0) : 0;
+            const level = esc(data.experience ? (data.experience.level || "Unknown") : "Unknown");
+            const education = Array.isArray(data.education) && data.education.length > 0
+                ? data.education.map(e => esc(typeof e === "string" ? e : (e.degree || e.major || JSON.stringify(e)))).join("<br>")
+                : "N/A";
+            const contactParts = [];
+            if (data.email) contactParts.push(esc(data.email));
+            if (data.phone) contactParts.push(esc(data.phone));
+            const contact = contactParts.length > 0 ? contactParts.join("<br>") : "N/A";
+            const projectCount = data.projects_count != null ? data.projects_count : "N/A";
+
+            const cards = [
+                { label: "Domain", value: domain, primary: true },
+                { label: "Confidence", value: confidence },
+                { label: "Experience", value: `${years} years` },
+                { label: "Level", value: level },
+                { label: "Education", value: education, small: true },
+                { label: "Contact", value: contact, small: true },
+                { label: "Projects", value: projectCount },
+            ];
+
+            cards.forEach((c, i) => {
+                const card = document.createElement("div");
+                card.className = "dash-card" + (c.small ? " dash-full" : "");
+                card.innerHTML = `
+                    <div class="dash-card-label">${esc(c.label)}</div>
+                    <div class="dash-card-value${c.small ? ' small' : ''}"${c.primary ? ' style="color:#60a5fa;"' : ''}>${c.value}</div>
+                `;
+                el.appendChild(card);
+            });
+
+            return el;
+        }
+
+        function renderDashSkills(data) {
+            const el = document.createElement("div");
+            el.className = "dash-card dash-full";
+            el.style.marginBottom = "28px";
+
+            const skills = Array.isArray(data.skills) ? data.skills : [];
+            const cats = categorizeSkills(skills);
+
+            const chipClassMap = {
+                "Languages": "sk-lang",
+                "Frameworks": "sk-framework",
+                "Tools": "sk-tool",
+                "Databases": "sk-db",
+                "Cloud": "sk-cloud",
+                "Other": "sk-other"
+            };
+
+            let html = `<div class="dash-card-label">Skills (${skills.length} detected)</div>`;
+
+            if (skills.length === 0) {
+                html += `<div style="color:#666; font-size:0.9rem; margin-top:8px;">No skills detected in resume.</div>`;
+            } else {
+                for (const [cat, catSkills] of Object.entries(cats)) {
+                    if (catSkills.length === 0) continue;
+                    html += `<div class="dash-category-label">${esc(cat)}</div>`;
+                    html += `<div class="dash-skills-grid">`;
+                    for (const s of catSkills) {
+                        html += `<span class="skill-chip ${chipClassMap[cat] || ''}">${esc(s)}</span>`;
+                    }
+                    html += `</div>`;
+                }
+            }
+
+            el.innerHTML = html;
+            return el;
+        }
+
+        function renderDashInterviewPreview(data) {
+            const el = document.createElement("div");
+            el.className = "dash-card dash-full";
+            el.style.marginBottom = "28px";
+
+            const domain = esc(data.predicted_domain || "Software Engineering");
+            const quizDomain = esc(data.quiz_domain || "Software Engineer");
+            const yearExp = data.experience ? (data.experience.years || 0) : 0;
+
+            el.innerHTML = `
+                <div class="dash-card-label">Interview Preview</div>
+                <div class="dash-preview-box">
+                    <strong>Domain Quiz:</strong> ${quizDomain} &mdash; 12 multiple-choice questions covering Easy, Medium, and Hard difficulty levels.<br>
+                    <strong>Adaptive Interview:</strong> ${domain} focus with ${yearExp > 0 ? yearExp + ' years' : 'your'} experience level. Questions adapt based on your responses.<br>
+                    <strong>Evaluation:</strong> Semantic scoring + fill-in-the-blank verification. Results populate the final analytics dashboard.
+                </div>
+            `;
+            return el;
+        }
+
+        function renderDashStartButton() {
+            const el = document.createElement("div");
+            el.innerHTML = `<button class="dash-start-btn" onclick="startDomainQuizFromDashboard()">Start Domain Quiz</button>`;
+            return el;
+        }
+
+        function startDomainQuizFromDashboard() {
+            candidateDashboard.style.display = "none";
+
+            // Switch to quiz flow
+            document.getElementById("resume-upload-section").style.display = "none";
+            landingContainer.style.display = "block";
+            landingContainer.style.opacity = "0";
+            document.getElementById("quiz-section").style.display = "block";
+
+            setTimeout(() => { landingContainer.style.opacity = "1"; }, 50);
+
+            const domain = parsedResumeData ? parsedResumeData.quiz_domain : "Software Engineer";
+            const skills = parsedResumeData ? (parsedResumeData.skills || []) : [];
+            classifiedDomain = domain;
+            resumeSkills = skills;
+            loadDomainQuiz(domain, skills);
+        }
         function animateScore(elementId, targetScore, cardId) {
             const el = document.getElementById(elementId);
             const cardElement = document.getElementById(cardId);
@@ -520,31 +971,53 @@
         async function uploadResume() {
             console.log("uploadResume clicked");
             
-            // ALWAYS USE MOCK DATA - skip file upload entirely for now
-            const mock_domain = "Software Engineer";
-            const mock_skills = ["Python", "Java", "Docker"];
-            const mock_confidence = 0.87;
-            const mock_experience = { years: 3, level: "Mid-level" };
+            const fileInput = document.getElementById("resume-file");
+            const file = fileInput.files[0];
             
-            classifiedDomain = mock_domain;
-            resumeSkills = mock_skills;
-            
-            console.log("Using mock data - domain:", mock_domain);
-            
-            // Show resume analysis
-            document.getElementById("classified-domain").textContent = mock_domain;
-            document.getElementById("domain-confidence").textContent = (mock_confidence * 100).toFixed(0) + "%";
-            document.getElementById("domain-experience").textContent = mock_experience.years + " years (" + mock_experience.level + ")";
+            if (!file) {
+                showToast("Please select a resume file first.", "error");
+                return;
+            }
 
-            // Hide resume section and show resume analysis & quiz
-            document.getElementById("resume-upload-section").style.display = "none";
-            document.getElementById("resume-analysis").style.display = "block";
-            
-            console.log("About to load quiz");
-            // Load and show quiz with skills
-            await loadDomainQuiz(mock_domain, mock_skills);
+            // Show loading state
+            const startBtns = document.querySelectorAll("#resume-upload-section .start-btn");
+            startBtns.forEach(b => { b.disabled = true; b.textContent = "Analyzing..."; });
+
+            try {
+                const formData = new FormData();
+                formData.append("file", file);
+
+                const response = await fetch("/api/classify-resume", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || result.error) {
+                    showToast(result.error || "Failed to analyze resume.", "error");
+                    startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Quiz →"; });
+                    return;
+                }
+
+                if (result.status === "success") {
+                    showToast("Resume parsed successfully!", "success");
+                    showCandidateDashboard(result);
+                } else {
+                    showToast("Unexpected response from server.", "error");
+                    startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Quiz →"; });
+                }
+            } catch (err) {
+                console.error("Upload error:", err);
+                showToast("Network error. Please try again.", "error");
+                startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Quiz →"; });
+            }
+        }
+
+        function startQuizFromAnalysis() {
+            document.getElementById("resume-analysis").style.display = "none";
             document.getElementById("quiz-section").style.display = "block";
-            console.log("Quiz section displayed");
+            loadDomainQuiz(classifiedDomain, resumeSkills);
         }
 
         async function loadDomainQuiz(domain, skills = []) {
@@ -704,11 +1177,23 @@
             interviewHistory = [];
             currentDifficulty = "medium";
             stage = "main_question";
+            parsedResumeData = null;
             
             messagesDiv.innerHTML = "";
             dashboardContainer.style.display = "none";
+            candidateDashboard.style.display = "none";
+            dashWrapper.innerHTML = "";
             
             landingContainer.style.display = "block";
+            document.getElementById("resume-upload-section").style.display = "block";
+            document.getElementById("quiz-section").style.display = "none";
+            document.getElementById("subject-selection-section").style.display = "none";
+            document.getElementById("resume-analysis").style.display = "none";
+
+            // Re-enable upload buttons
+            const startBtns = document.querySelectorAll("#resume-upload-section .start-btn");
+            startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Quiz →"; });
+            
             setTimeout(() => {
                 landingContainer.style.opacity = "1";
             }, 50);

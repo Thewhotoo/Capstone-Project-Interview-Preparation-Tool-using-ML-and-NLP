@@ -63,14 +63,20 @@ def extract_job_experiences(text: str) -> list:
     experiences = []
 
     # Find the EXPERIENCE section — handle both newline and inline formats
+    _SECTION_HEADERS = (
+        r'EDUCATION|SKILLS|CERTIFICATIONS|PROJECTS|TECHNICAL\s+SKILLS|'
+        r'COMPETENCIES|SUMMARY|CONTACT|REFERENCES|OBJECTIVE|ACHIEVEMENTS|'
+        r'PUBLICATIONS|AWARDS|LANGUAGES|INTERESTS|VOLUNTEER|PORTFOLIO'
+    )
     exp_match = re.search(
-        r'(?:EXPERIENCE|WORK EXPERIENCE)[:\s]*[\s]+(.*?)(?=\n\s*(?:EDUCATION|SKILLS|CERTIFICATIONS|PROJECTS|TECHNICAL|$))',
-        text, re.IGNORECASE | re.DOTALL
+        r'(?:^|\n)\s*(?:EXPERIENCE|WORK\s+EXPERIENCE)[:\s]*[\s]+'
+        r'([\s\S]+?)(?=\n\s*(?:' + _SECTION_HEADERS + r')[:\s]*\n|\Z)',
+        text, re.IGNORECASE
     )
     # Fallback: single-line resume (no newlines between sections)
     if not exp_match:
         exp_match = re.search(
-            r'Experience\s+(.+?)(?:\s+(?:Honors|Additional|Education|Projects|Certifications|Technical Skills)|\Z)',
+            r'(?:Experience|Work\s+Experience)\s+(.+?)(?:\s+(?:Honors|Additional|Education|Projects|Certifications|Technical Skills|Skills)|\Z)',
             text, re.IGNORECASE | re.DOTALL
         )
     if not exp_match:
@@ -179,6 +185,29 @@ def calculate_total_experience(text: str) -> dict:
     jobs = extract_job_experiences(text)
     
     if not jobs:
+        # Fallback: scan EXPERIENCE section for year-span patterns
+        # to avoid counting education years (e.g. graduation 2027)
+        _SECTION_HEADERS = (
+            r'EXPERIENCE|WORK\s+EXPERIENCE|EDUCATION|SKILLS|CERTIFICATIONS|'
+            r'SUMMARY|CONTACT|REFERENCES|OBJECTIVE|PROJECTS|TECHNICAL\s+SKILLS'
+        )
+        exp_match = re.search(
+            r'(?:^|\n)\s*(?:EXPERIENCE|WORK\s+EXPERIENCE)[:\s]*[\s]+'
+            r'([\s\S]+?)(?=\n\s*(?:' + _SECTION_HEADERS + r')[:\s]*\n|\Z)',
+            text, re.IGNORECASE
+        )
+        scan_text = exp_match.group(1) if exp_match else text
+        years_found = [int(y) for y in re.findall(r'(20\d{2})', scan_text)]
+        if len(years_found) >= 2:
+            min_y, max_y = min(years_found), max(years_found)
+            if max_y > min_y:
+                total_years = max_y - min_y
+                level = "Unknown"
+                for lvl, (low, high) in EXPERIENCE_LEVELS.items():
+                    if low <= total_years < high:
+                        level = lvl
+                        break
+                return {"years": total_years, "months": total_years * 12, "level": level}
         return {"years": 0, "months": 0, "level": "Unknown"}
     
     start_years = [job['start_year'] for job in jobs if job['start_year']]
@@ -378,13 +407,19 @@ def _extract_from_skills_section(text: str) -> list:
     _SECTION_HEADERS = (
         r'EXPERIENCE|WORK\s+EXPERIENCE|EDUCATION|PROJECTS|CERTIFICATIONS|'
         r'SUMMARY|CONTACT|REFERENCES|OBJECTIVE|ACHIEVEMENTS|PUBLICATIONS|'
-        r'AWARDS|LANGUAGES|INTERESTS|VOLUNTEER|PORTFOLIO'
+        r'AWARDS|LANGUAGES|INTERESTS|VOLUNTEER|PORTFOLIO|SIDE\s+PROJECTS|'
+        r'PERSONAL\s+PROJECTS|OPEN\s+SOURCE|WORK\s+HISTORY'
     )
-    # Try multiline format first (section on its own line)
+    # Try multiline format first (section header must start on its own line)
+    # Matches: SKILLS, TECHNICAL SKILLS, KEY SKILLS, CORE COMPETENCIES,
+    # COMPETENCIES, TECHNOLOGIES, TECH STACK, ABOUT SKILLS & COMPETENCIES
     pattern = (
         r'(?:^|\n)\s*'
-        r'(?:TECHNICAL\s+SKILLS?|SKILLS?|COMPETENCIES|TECHNOLOGIES|'
-        r'TECH\s+STACK|CORE\s+COMPETENCIES)[:\s]*[\s]+'
+        r'(?:'
+        r'(?:ABOUT\s+)?(?:KEY\s+)?(?:TECHNICAL\s+|CORE\s+)?(?:PRIMARY\s+)?'
+        r'(?:SKILLS?|COMPETENCIES|TECHNOLOGIES|TECH\s+STACK)'
+        r'(?:\s*(?:AND|&)\s*(?:COMPETENCIES|SKILLS?))?'
+        r')\s*[:\s]+'
         r'([\s\S]+?)(?=\n\s*(?:' + _SECTION_HEADERS + r')[:\s]*\n|\Z)'
     )
     m = re.search(pattern, text, re.IGNORECASE)
@@ -392,8 +427,11 @@ def _extract_from_skills_section(text: str) -> list:
     # Fallback: single-line format (entire resume on one line)
     if not m:
         pattern_inline = (
-            r'(?:TECHNICAL\s+SKILLS?|SKILLS?|COMPETENCIES|TECHNOLOGIES|'
-            r'TECH\s+STACK|CORE\s+COMPETENCIES)[:\s]+'
+            r'(?:'
+            r'(?:ABOUT\s+)?(?:KEY\s+)?(?:TECHNICAL\s+|CORE\s+)?(?:PRIMARY\s+)?'
+            r'(?:SKILLS?|COMPETENCIES|TECHNOLOGIES|TECH\s+STACK)'
+            r'(?:\s*(?:AND|&)\s*(?:COMPETENCIES|SKILLS?))?'
+            r')[:\s]+'
             r'(.+?)(?:\s+(?:Honors|Additional|Education|Projects|Experience|Certifications|References)|\Z)'
         )
         m = re.search(pattern_inline, text, re.IGNORECASE)
@@ -471,15 +509,15 @@ def extract_skills(text: str, top_n: int = 50) -> list:
     """Hybrid skill extraction pipeline.
 
     Priority order:
-      1. Known technology dictionary (regex over full text)
-      2. Resume section parsing (SKILLS / TECHNICAL SKILLS sections)
-      3. KeyBERT fallback (only if < 5 skills found so far)
+      1. Resume section parsing (SKILLS / TECHNICAL SKILLS sections) — highest precision
+      2. Known technology dictionary (regex over full text) — high recall
+    No KeyBERT fallback — it produces more noise than signal.
     """
-    # Phase 1: Regex dictionary scan (fast, high precision)
-    regex_skills = _extract_by_regex(text)
-
-    # Phase 2: Section-based extraction (high recall for listed skills)
+    # Phase 1: Section-based extraction (high precision for explicitly listed skills)
     section_skills = _extract_from_skills_section(text)
+
+    # Phase 2: Regex dictionary scan (fast, high recall)
+    regex_skills = _extract_by_regex(text)
 
     # Merge: section skills first (they're explicitly listed), then regex finds
     seen_lower = set()
@@ -489,10 +527,6 @@ def extract_skills(text: str, top_n: int = 50) -> list:
         if key not in seen_lower:
             seen_lower.add(key)
             merged.append(s)
-
-    # Phase 3: KeyBERT fallback only if we found very few skills
-    if len(merged) < 5:
-        merged = _extract_by_keybert(text, merged, top_n=top_n)
 
     return merged[:top_n]
 
@@ -508,7 +542,8 @@ def extract_education(text: str) -> list:
     _SECTION_HEADERS = (
         r'EXPERIENCE|WORK\s+EXPERIENCE|PROJECTS|CERTIFICATIONS|'
         r'SUMMARY|CONTACT|REFERENCES|OBJECTIVE|ACHIEVEMENTS|PUBLICATIONS|'
-        r'AWARDS|LANGUAGES|INTERESTS|VOLUNTEER|PORTFOLIO|TECHNICAL\s+SKILLS'
+        r'AWARDS|LANGUAGES|INTERESTS|VOLUNTEER|PORTFOLIO|TECHNICAL\s+SKILLS|'
+        r'SKILLS|COMPETENCIES|TECHNOLOGIES|WORK\s+HISTORY'
     )
     m = re.search(
         r'(?:^|\n)\s*(?:EDUCATION|EDUCATIONAL\s+BACKGROUND)[:\s]*[\s]+'
@@ -518,7 +553,7 @@ def extract_education(text: str) -> list:
     if not m:
         # Inline fallback for single-line PDFs
         m = re.search(
-            r'Education\s+(.+?)(?:\s+(?:Experience|Projects|Technical Skills|Certifications|Honors|Additional|Contact)|\Z)',
+            r'Education\s+(.+?)(?:\s+(?:Experience|Projects|Technical Skills|Certifications|Honors|Additional|Contact|Skills)|\Z)',
             text, re.IGNORECASE
         )
     if not m:
@@ -529,9 +564,18 @@ def extract_education(text: str) -> list:
     # Split on known resume section boundaries within the captured text
     # (Sometimes the experience section leaks into education capture)
     section = re.split(
-        r'\b(?:Experience|Projects|Technical Skills|Certifications|Honors|Additional)\b',
+        r'\b(?:Experience|Projects|Technical Skills|Certifications|Honors|Additional|Skills|Work\s+History)\b',
         section, maxsplit=1, flags=re.IGNORECASE
     )[0]
+
+    # Also strip any leading noise (non-education text that leaked before the actual degree)
+    # Look for degree keywords to find where education actually starts
+    degree_start = re.search(
+        r'(?:B\.?Tech|M\.?Tech|B\.?S\.?|M\.?S\.?|B\.?E\.?|M\.?E\.?|Bachelor|Master|Ph\.?D)',
+        section, re.IGNORECASE
+    )
+    if degree_start and degree_start.start() > 10:
+        section = section[degree_start.start():]
 
     # Extract institution names (University, College, Institute, School)
     institutions = re.findall(
@@ -572,6 +616,12 @@ def extract_education(text: str) -> list:
         institution_str = re.sub(r'\s+', ' ', institution_str).strip()
         # Remove any leading/trailing commas
         institution_str = institution_str.strip(', ')
+        # Remove trailing garbage (e.g. "University of X\nBachelor...")
+        institution_str = re.split(r'\n', institution_str)[0].strip()
+        # Remove leading year numbers (e.g. "2020 Northgate University")
+        institution_str = re.sub(r'^\d{4}\s+', '', institution_str)
+        # Remove trailing words that aren't part of the name
+        institution_str = re.sub(r'\s+(?:KEY|ABOUT|CORE|PRIMARY|ADDITIONAL).*$', '', institution_str, flags=re.IGNORECASE)
 
     entry = {
         "institution": institution_str,
@@ -594,16 +644,17 @@ def count_projects(text: str) -> int:
     _SECTION_HEADERS = (
         r'EXPERIENCE|WORK\s+EXPERIENCE|EDUCATION|CERTIFICATIONS|'
         r'SUMMARY|CONTACT|REFERENCES|OBJECTIVE|ACHIEVEMENTS|PUBLICATIONS|'
-        r'AWARDS|LANGUAGES|INTERESTS|VOLUNTEER|PORTFOLIO|TECHNICAL\s+SKILLS'
+        r'AWARDS|LANGUAGES|INTERESTS|VOLUNTEER|PORTFOLIO|TECHNICAL\s+SKILLS|'
+        r'SKILLS|COMPETENCIES|TECHNOLOGIES|TECH\s+STACK'
     )
     m = re.search(
-        r'(?:^|\n)\s*(?:PROJECTS?|PERSONAL\s+PROJECTS?)[:\s]*[\s]+'
+        r'(?:^|\n)\s*(?:PROJECTS?|PERSONAL\s+PROJECTS?|SIDE\s+PROJECTS?|PORTFOLIO|OPEN\s+SOURCE)[:\s]*[\s]+'
         r'([\s\S]+?)(?=\n\s*(?:' + _SECTION_HEADERS + r')[:\s]*\n|\Z)',
         text, re.IGNORECASE
     )
     if not m:
         m = re.search(
-            r'Projects?\s+(.+?)(?:\s+(?:Technical Skills|Honors|Additional|Certifications|Contact)|\Z)',
+            r'(?:Projects?|Personal\s+Projects?|Side\s+Projects?|Portfolio)\s+(.+?)(?:\s+(?:Technical Skills|Honors|Additional|Certifications|Contact|Skills|Education|Experience)|\Z)',
             text, re.IGNORECASE
         )
     if not m:

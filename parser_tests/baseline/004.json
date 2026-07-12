@@ -1,0 +1,33 @@
+{
+  "name": "ANGEL Lic No",
+  "email": "hello@reallygreatsite.com",
+  "phone": "0123 456 7890",
+  "domain": "Software Engineering",
+  "confidence": 0.5641,
+  "experience": {
+    "years": 14,
+    "months": 168,
+    "level": "Senior"
+  },
+  "education": [
+    {
+      "institution": "MASTERS IN COMPUTER SCIENCE BACHELOR OF COMPUTER SCIENCE Las Felipinas University",
+      "degree": "ms Participated in a 24 hr hackathon",
+      "major": "COMPUTER SCIENCE",
+      "graduation_year": 2019,
+      "gpa": null,
+      "high_school": [],
+      "raw": "MASTERS IN COMPUTER SCIENCE BACHELOR OF COMPUTER SCIENCE Las Felipinas University, 2019 - 2021 Las Felipinas University, 2008 - 2012 AFFILIATIONS YELLOW TREE ORGANIZATION LIFE TECH PRO 2011 Non-profit Hackathon Set up database systems Participated in a 24 hr hackathon"
+    }
+  ],
+  "skills": [
+    "Java",
+    "Python",
+    "C++",
+    "DSA",
+    "Algorithms",
+    "SQL",
+    "C"
+  ],
+  "projects_count": 0
+}

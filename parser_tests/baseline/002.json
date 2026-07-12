@@ -1,0 +1,25 @@
+{
+  "name": "MATTHEW COLLINS",
+  "email": "hello@reallygreatsite.com",
+  "phone": "+123-456-7890",
+  "domain": "Software Engineering",
+  "confidence": 0.5421,
+  "experience": {
+    "years": 2,
+    "months": 24,
+    "level": "Mid"
+  },
+  "education": [
+    {
+      "institution": "Northgate University",
+      "degree": null,
+      "major": null,
+      "graduation_year": 2016,
+      "gpa": null,
+      "high_school": [],
+      "raw": "Bachelor of Computer Science March, 2016 - March, 2020 Northgate University KEY"
+    }
+  ],
+  "skills": [],
+  "projects_count": 2
+}

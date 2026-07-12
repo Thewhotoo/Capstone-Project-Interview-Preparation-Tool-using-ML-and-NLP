@@ -20,6 +20,60 @@ app = Flask(__name__, template_folder="templates")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.join(BASE_DIR, "../..")
 
+# Add resume_classifier to path for real parsing and classification
+RESUME_CLASSIFIER_DIR = os.path.join(PROJECT_ROOT, "resume_classifier")
+if RESUME_CLASSIFIER_DIR not in sys.path:
+    sys.path.insert(0, RESUME_CLASSIFIER_DIR)
+
+# ── RAG Integration ───────────────────────────────────────────────────────────
+try:
+    from rag_integration import rag_generator as _rag_gen
+    _rag_available = _rag_gen.rag_available and bool(_rag_gen.get_available_subjects())
+except ImportError:
+    _rag_available = False
+    _rag_gen = None
+
+# Ensure resume_classifier stays at top of sys.path (RAG path may have shadowed it)
+if RESUME_CLASSIFIER_DIR in sys.path:
+    sys.path.remove(RESUME_CLASSIFIER_DIR)
+sys.path.insert(0, RESUME_CLASSIFIER_DIR)
+
+# ── RoBERTa Multitask Model ───────────────────────────────────────────────────
+ROBERTA_DIR = os.path.join(PROJECT_ROOT, "Roberta", "roberta-multitask-model")
+if ROBERTA_DIR not in sys.path:
+    sys.path.insert(0, ROBERTA_DIR)
+
+_roberta_predictors = None
+
+def _get_roberta_predictors():
+    """Lazy-load the three RoBERTa prediction functions."""
+    global _roberta_predictors
+    if _roberta_predictors is None:
+        try:
+            from inference.predict_intent import predict_intent
+            from inference.predict_difficulty import predict_difficulty
+            from inference.predict_topic import predict_topic
+            _roberta_predictors = {
+                "intent": predict_intent,
+                "difficulty": predict_difficulty,
+                "topic": predict_topic,
+            }
+            logger.info("RoBERTa inference pipeline loaded (rule-based fallback)")
+        except ImportError as e:
+            logger.warning(f"RoBERTa inference unavailable: {e}")
+            _roberta_predictors = False
+    return _roberta_predictors if _roberta_predictors is not False else None
+
+# Module-level RAG question cache for /api/next_question
+_rag_question_pool = []      # list of question dicts
+_rag_question_counter = 0    # auto-incrementing ID for RAG questions
+_asked_rag_ids = set()       # IDs already asked
+
+# Module-level adaptive session storage
+_adaptive_sessions = {}      # session_id -> session state dict
+
+import time
+
 # ═══════════════════════════════════════════════════════════════════════════
 # WEB UI ROUTES
 # ═══════════════════════════════════════════════════════════════════════════
@@ -48,9 +102,27 @@ def get_domain_quiz():
         
         # Convert skills to lowercase for matching
         skills_lower = [s.lower() for s in skills]
-        
-        # QUESTION BANKS - 10-12 questions per domain with Easy/Medium/Hard mix
-        all_questions = {
+
+        # ── Quiz questions: use hardcoded banks (well-crafted MCQs) ───────
+        # RAG is used for the chat flow (open-ended questions + reference answers).
+        # FLAN-T5 small cannot generate quality MCQ questions.
+        quiz_questions = _hardcoded_quiz(domain)
+
+        return jsonify({
+            "status": "success",
+            "domain": domain,
+            "total_questions": len(quiz_questions),
+            "quiz": quiz_questions,
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        return jsonify({"error": str(e)}), 400
+
+
+def _hardcoded_quiz(domain):
+    """Return the static question bank for a domain."""
+    all_questions = {
             "Software Engineer": [
                 # EASY
                 {"question": "What does OOP stand for?", "options": ["Object Oriented Programming", "Object Organization Protocol", "Online Operating Process", "Object Output Parameter"], "answer": 0, "difficulty": "Easy"},
@@ -131,85 +203,132 @@ def get_domain_quiz():
                 {"question": "What is the difference between pessimistic and optimistic locking?", "options": ["They are the same", "Pessimistic locks before access; optimistic assumes no conflict and checks at commit; optimistic better for low contention", "Pessimistic is always better", "Only for specific databases"], "answer": 1, "difficulty": "Hard"},
             ]
         }
-        
-        # Get question bank for domain
-        questions = all_questions.get(domain, all_questions["Software Engineer"])
-        
-        # FILTER: If skills provided, prioritize skill-specific questions
-        # For now, return all 10-12 questions with natural mix
-        # You can add skill matching logic here later
-        
-        return jsonify({
-            "status": "success",
-            "domain": domain,
-            "total_questions": len(questions),
-            "quiz": questions[:12]  # Return up to 12 questions
-        }), 200
-    
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        return jsonify({"error": str(e)}), 400
+
+    return all_questions.get(domain, all_questions["Software Engineer"])
+
+_sbert_classifier = None
+
+def get_sbert_classifier():
+    """Lazy load the SBERT domain classifier on first use."""
+    global _sbert_classifier
+    if _sbert_classifier is None:
+        try:
+            from src.models import SBERTMatcher
+            _sbert_classifier = SBERTMatcher()
+            logger.info("SBERT resume classifier loaded successfully")
+        except Exception as e:
+            logger.warning(f"SBERT classifier unavailable: {e}")
+            _sbert_classifier = False
+    return _sbert_classifier if _sbert_classifier is not False else None
+
 
 @app.route("/api/classify-resume", methods=["POST"])
 def classify_resume():
     """
-    Classify resume and extract domain + skills
-    For now, returns mock data with diverse skills. In production, would use real resume_classifier
+    Classify an uploaded resume: parse text, extract skills/experience, predict domain.
+    Uses the real resume_classifier pipeline (SBERT domain matching + KeyBERT skills).
     """
+    import tempfile
+
     try:
         if "file" not in request.files:
             return jsonify({"error": "No file provided"}), 400
-        
+
         file = request.files["file"]
-        
-        # Mock resume classification with diverse skills
-        # In production, would call resume_classifier and extract real skills from resume text
-        mock_responses = {
-            "Software Engineer": {
-                "predicted_domain": "Software Engineer",
-                "confidence": 0.92,
-                "experience": {"years": 4, "level": "Mid-level"},
-                "skills": ["Python", "Java", "Docker", "Kubernetes", "REST APIs", "Microservices", "Git", "SQL"],
-                "email": "engineer@example.com",
-                "phone": "+1-555-0100"
-            },
-            "Network Engineer": {
-                "predicted_domain": "Network Engineer",
-                "confidence": 0.88,
-                "experience": {"years": 5, "level": "Senior"},
-                "skills": ["TCP/IP", "BGP", "OSPF", "Cisco IOS", "Routing", "Firewalls", "VPN", "Network Security"],
-                "email": "network@example.com",
-                "phone": "+1-555-0101"
-            },
-            "Data Scientist": {
-                "predicted_domain": "Data Scientist",
-                "confidence": 0.85,
-                "experience": {"years": 3, "level": "Mid-level"},
-                "skills": ["Python", "TensorFlow", "PyTorch", "Pandas", "Scikit-learn", "SQL", "Statistics", "Machine Learning"],
-                "email": "datascientist@example.com",
-                "phone": "+1-555-0102"
-            },
-            "Database Engineer": {
-                "predicted_domain": "Database Engineer",
-                "confidence": 0.89,
-                "experience": {"years": 6, "level": "Senior"},
-                "skills": ["PostgreSQL", "MongoDB", "Indexing", "Query Optimization", "Replication", "Sharding", "ACID", "NoSQL"],
-                "email": "dba@example.com",
-                "phone": "+1-555-0103"
+        if file.filename == "":
+            return jsonify({"error": "No file selected"}), 400
+
+        # Validate extension
+        ext = os.path.splitext(file.filename)[1].lower()
+        if ext not in [".pdf", ".docx", ".doc", ".txt"]:
+            return jsonify({"error": "Only PDF and DOCX files are supported"}), 400
+
+        # Save to a temp file so the parser can read it from disk
+        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+            file.save(tmp.name)
+            tmp_path = tmp.name
+
+        try:
+            # 1. Parse the resume (extract raw text, email, phone)
+            from src.parser import parse_resume
+            parsed = parse_resume(tmp_path)
+            text = parsed.get("raw_text", "")
+
+            if not text or len(text.strip()) < 50:
+                return jsonify({"error": "Could not extract enough text from resume"}), 400
+
+            # 2. Extract features (skills via KeyBERT, experience from job history)
+            from src.features import extract_features
+            features = extract_features(text)
+
+            # 3. Classify domain using SBERT cosine similarity against domain descriptions
+            classifier = get_sbert_classifier()
+            if classifier:
+                sbert_scores = classifier.predict(text)
+
+                # Keyword-based boost for Software Engineering
+                # Resumes with 3+ SWE-specific terms should be classified as SE
+                # even if they contain ML/AI keywords (hybrid profiles)
+                swe_keywords = [
+                    'microservices', 'rest api', 'restful', 'docker', 'kubernetes',
+                    'ci/cd', 'devops', 'flask', 'fastapi', 'django', 'express',
+                    'react', 'angular', 'node.js', 'spring boot', 'laravel',
+                    'postgresql', 'mongodb', 'redis', 'nginx', 'jenkins',
+                    'terraform', 'ansible', 'github actions', 'agile', 'scrum',
+                    'system design', 'architecture', 'deployment', 'scalable',
+                    'api', 'web app', 'full stack', 'full-stack', 'backend', 'frontend',
+                    'unity', 'blender', 'vr', 'virtual reality', 'simulation',
+                    'interview platform', 'soc platform', 'dashboard',
+                ]
+                text_lower = text.lower()
+                swe_hits = sum(1 for kw in swe_keywords if kw in text_lower)
+
+                # If resume has 3+ SWE keywords, boost SE score by a margin
+                if swe_hits >= 3:
+                    boost = min(0.08, swe_hits * 0.015)  # cap at 0.08
+                    sbert_scores["Software Engineering"] = sbert_scores.get("Software Engineering", 0) + boost
+
+                top_domain = max(sbert_scores, key=sbert_scores.get)
+                confidence = sbert_scores[top_domain]
+            else:
+                # Fallback: default to Software Engineering if classifier unavailable
+                top_domain = "Software Engineering"
+                confidence = 0.0
+
+            # Map classifier domains to quiz domains (the quiz bank uses different labels)
+            DOMAIN_TO_QUIZ = {
+                "Software Engineering": "Software Engineer",
+                "Data Science": "Data Scientist",
+                "Cybersecurity": "Network Engineer",
+                "Finance": "Database Engineer",
             }
-        }
-        
-        # Return random domain's mock data (or default to Software Engineer)
-        import random
-        domain = random.choice(list(mock_responses.keys()))
-        response_data = mock_responses[domain]
-        response_data["status"] = "success"
-        
-        return jsonify(response_data), 200
-    
+            quiz_domain = DOMAIN_TO_QUIZ.get(top_domain, "Software Engineer")
+
+            return jsonify({
+                "status": "success",
+                "predicted_domain": top_domain,
+                "quiz_domain": quiz_domain,
+                "confidence": round(confidence, 4),
+                "skills": features.get("skills", []),
+                "experience": features.get("total_experience", {"years": 0, "level": "Unknown"}),
+                "education": features.get("education", []),
+                "projects_count": features.get("projects_count", 0),
+                "name": parsed.get("name"),
+                "email": parsed.get("email"),
+                "phone": parsed.get("phone"),
+            }), 200
+
+        finally:
+            # Clean up temp file
+            try:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+            except Exception as e:
+                logger.warning(f"Failed to cleanup temp file: {e}")
+
     except Exception as e:
-        logger.error(f"Error: {e}")
-        return jsonify({"error": str(e)}), 400
+        logger.error(f"Resume classification error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
 
 # ═══════════════════════════════════════════════════════════════════════════
 # API ENDPOINTS FOR UI
@@ -262,36 +381,107 @@ SAMPLE_QUESTIONS = [
 @app.route("/api/next_question", methods=["POST"])
 def next_question():
     """
-    Get next question for the interview
+    Get next question for the interview.
+    Tries RAG open-ended questions first (if available), falls back to hardcoded.
     Request: {"asked_ids": [], "difficulty": "medium", "topic": "All"}
     """
+    global _rag_question_pool, _rag_question_counter, _asked_rag_ids
+
     try:
         data = request.get_json() or {}
         asked_ids = data.get("asked_ids", [])
         target_difficulty = data.get("difficulty", "medium")
         target_topic = data.get("topic", "All")
-        
-        # Filter questions
+
+        # ── Seed RAG question pool on first call (if available) ───────────
+        if _rag_available and not _rag_question_pool:
+            try:
+                _rag_question_counter = 0
+                for topic in ["TCP", "DNS", "IP Routing", "UDP", "Congestion Control"]:
+                    rags = _rag_gen.generate_open_questions("cn_unit1", topic, num_questions=2)
+                    for r in rags:
+                        _rag_question_counter += 1
+                        # Build a fill_mask from the reference_answer
+                        fill_mask = _make_fill_mask(r.get("reference_answer", ""))
+                        _rag_question_pool.append({
+                            "sample_id": 1000 + _rag_question_counter,
+                            "question": r["question"],
+                            "reference_answer": r.get("reference_answer", ""),
+                            "topic": r.get("topic", topic),
+                            "difficulty": "medium",
+                            "fill_mask": fill_mask,
+                            "_source": "rag",
+                        })
+                logger.info(f"Seeded {len(_rag_question_pool)} RAG questions")
+            except Exception as e:
+                logger.warning(f"RAG pool seeding failed: {e}")
+
+        # ── Try RAG questions first ───────────────────────────────────────
+        if _rag_question_pool:
+            available_rag = [
+                q for q in _rag_question_pool
+                if q["sample_id"] not in _asked_rag_ids
+                and q["sample_id"] not in asked_ids
+                and (target_difficulty == "All" or q.get("difficulty") == target_difficulty)
+                and (target_topic == "All" or target_topic in q.get("topic", ""))
+            ]
+            if not available_rag:
+                # Relax difficulty/topic filter, just avoid already-asked
+                available_rag = [
+                    q for q in _rag_question_pool
+                    if q["sample_id"] not in _asked_rag_ids
+                    and q["sample_id"] not in asked_ids
+                ]
+            if available_rag:
+                import random as _rng
+                chosen = _rng.choice(available_rag)
+                _asked_rag_ids.add(chosen["sample_id"])
+                return jsonify({"status": "success", "data": chosen}), 200
+
+        # ── Fallback: hardcoded questions ─────────────────────────────────
         available = [
             q for q in SAMPLE_QUESTIONS
             if q["sample_id"] not in asked_ids
             and (target_difficulty == "All" or q.get("difficulty") == target_difficulty)
             and (target_topic == "All" or target_topic in q.get("topic", ""))
         ]
-        
         if not available:
             available = [q for q in SAMPLE_QUESTIONS if q["sample_id"] not in asked_ids]
-        
         if not available:
             return jsonify({"status": "completed"}), 200
-        
+
         import random
         question = random.choice(available)
         return jsonify({"status": "success", "data": question}), 200
-    
+
     except Exception as e:
         logger.error(f"Error: {e}")
         return jsonify({"error": str(e)}), 400
+
+
+def _make_fill_mask(reference_answer):
+    """
+    Create a fill-in-the-blank question from a reference answer.
+    Picks the longest meaningful word (>5 chars) and blanks it out.
+    """
+    import re as _re
+    words = _re.findall(r"[A-Za-z\-]+", reference_answer)
+    technical = [w for w in words if len(w) > 5 and w.lower() not in
+                 {"system", "network", "process", "protocol", "processes", "between", "before", "establish", "connection", "mechanism", "through", "different", "without", "requests", "response"}]
+    if not technical:
+        technical = [w for w in words if len(w) > 5]
+    if not technical:
+        technical = words[-2:] if len(words) >= 2 else [words[0]] if words else ["this"]
+
+    key_term = technical[0]
+    # Blank it out in the first sentence
+    first_sentence = _re.split(r"[.!?]", reference_answer)[0]
+    blanked = first_sentence.replace(key_term, "___", 1)
+    if blanked == first_sentence:
+        # If word not in first sentence, prepend a prompt
+        blanked = f"Complete: ... {key_term} ..."
+
+    return {"question": blanked, "answer": key_term}
 
 @app.route("/api/evaluate", methods=["POST"])
 def evaluate():
@@ -493,79 +683,243 @@ def evaluate():
     except Exception as e:
         logger.error(f"Error: {e}")
         return jsonify({"error": str(e)}), 400
-    
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        return jsonify({"error": str(e)}), 400
 
 @app.route("/roberta/classify", methods=["POST"])
 def roberta_classify():
     """
-    Classify a question
-    Request: {"text": "..."}
+    Classify a question using the RoBERTa multitask model (or rule-based fallback).
+    Request: {"text": "What is deadlock?"}
+    Returns: {intent, difficulty, topics, confidence, source}
     """
     try:
         data = request.get_json() or {}
         text = data.get("text", "").strip()
-        
+
         if not text:
             return jsonify({"error": "Text required"}), 400
-        
-        # Dummy classification logic
-        keywords = text.lower()
-        
-        if "explain" in keywords:
-            intent = "explanation"
-        elif "what" in keywords:
-            intent = "definition"
-        else:
-            intent = "general"
-        
-        if "three-way" in keywords or "tcp" in keywords:
-            difficulty = "medium"
-            topics = "networking"
-        elif "routing" in keywords or "congestion" in keywords:
-            difficulty = "hard"
-            topics = "advanced_networking"
-        else:
-            difficulty = "easy"
-            topics = "basics"
-        
+
+        predictors = _get_roberta_predictors()
+
+        if not predictors:
+            return jsonify({"error": "RoBERTa inference pipeline not available"}), 503
+
+        intent_result = predictors["intent"](text)
+        difficulty_result = predictors["difficulty"](text)
+        topic_result = predictors["topic"](text)
+
+        # Normalize: topic can be list or single label
+        topics = topic_result.get("labels", [])
+        if not topics and isinstance(topic_result.get("scores"), dict):
+            # Pick the top-scoring topic
+            scores = topic_result["scores"]
+            if scores:
+                topics = [max(scores, key=scores.get)]
+
         return jsonify({
-            "intent": intent,
-            "difficulty": difficulty,
-            "confidence": 0.85,
+            "intent": intent_result.get("label", "unknown"),
+            "difficulty": difficulty_result.get("label", "unknown"),
             "topics": topics,
-            "intent_confidence": 0.92,
-            "difficulty_confidence": 0.88
+            "confidence": round(
+                (intent_result.get("confidence", 0) + difficulty_result.get("confidence", 0)) / 2, 2
+            ),
+            "intent_confidence": round(intent_result.get("confidence", 0), 2),
+            "difficulty_confidence": round(difficulty_result.get("confidence", 0), 2),
+            "source": intent_result.get("source", "rule"),
         }), 200
-    
+
     except Exception as e:
-        logger.error(f"Error: {e}")
-        return jsonify({"error": str(e)}), 400
+        logger.error(f"RoBERTa classify error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/adaptive/session", methods=["POST"])
 def adaptive_session():
     """
-    Start an adaptive session
+    Start an adaptive interview session using the RoBERTa adaptive engine.
     Request: {"user_id": "...", "num_questions": 5}
+    Returns: profile summary + first question
     """
     try:
         data = request.get_json() or {}
         user_id = data.get("user_id", "guest")
         num_questions = int(data.get("num_questions", 5))
-        
+
+        predictors = _get_roberta_predictors()
+        if not predictors:
+            return jsonify({"error": "RoBERTa inference pipeline not available"}), 503
+
+        from adaptive.user_profile import UserProfileManager
+        from adaptive.adaptive_selector import AdaptiveSelector, QuestionDataset
+
+        dataset_path = os.path.join(ROBERTA_DIR, "data", "dataset.json")
+        dataset = QuestionDataset(dataset_path=dataset_path)
+        if not dataset.questions:
+            return jsonify({"error": "Question dataset not loaded"}), 500
+
+        profile_manager = UserProfileManager()
+        profile = profile_manager.get_or_create_profile(user_id)
+        selector = AdaptiveSelector(dataset)
+
+        # Pick first question
+        question = selector.select_next_question(profile)
+        if not question:
+            return jsonify({"error": "No questions available"}), 500
+
+        # Store session state in-memory
+        session_id = f"session_{user_id}_{int(time.time())}"
+        _adaptive_sessions[session_id] = {
+            "user_id": user_id,
+            "profile": profile,
+            "profile_manager": profile_manager,
+            "selector": selector,
+            "dataset": dataset,
+            "num_questions": num_questions,
+            "asked": [],
+            "scores": [],
+        }
+
         return jsonify({
             "status": "success",
-            "user_id": user_id,
-            "session_id": f"session_{user_id}_{int(__import__('time').time())}",
+            "session_id": session_id,
+            "profile": {
+                "user_id": user_id,
+                "level": profile.current_level,
+                "overall_accuracy": round(profile.overall_accuracy, 1),
+                "total_attempted": profile.total_attempted,
+                "weak_topics": profile.get_weak_topics(),
+            },
+            "question": {
+                "text": question.text,
+                "intent": question.intent,
+                "difficulty": question.difficulty,
+                "topics": question.topics,
+            },
             "num_questions": num_questions,
-            "message": f"Session started for {user_id} with {num_questions} questions"
         }), 200
-    
+
     except Exception as e:
-        logger.error(f"Error: {e}")
-        return jsonify({"error": str(e)}), 400
+        logger.error(f"Adaptive session error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/adaptive/next", methods=["POST"])
+def adaptive_next():
+    """
+    Get next question in an adaptive session.
+    Request: {"session_id": "..."}
+    """
+    try:
+        data = request.get_json() or {}
+        session_id = data.get("session_id", "")
+
+        session = _adaptive_sessions.get(session_id)
+        if not session:
+            return jsonify({"error": "Invalid or expired session"}), 404
+
+        if len(session["asked"]) >= session["num_questions"]:
+            return jsonify({"status": "completed"}), 200
+
+        question = session["selector"].select_next_question(session["profile"])
+        if not question:
+            return jsonify({"status": "completed"}), 200
+
+        return jsonify({
+            "status": "success",
+            "question": {
+                "text": question.text,
+                "intent": question.intent,
+                "difficulty": question.difficulty,
+                "topics": question.topics,
+            },
+            "question_num": len(session["asked"]) + 1,
+            "total_questions": session["num_questions"],
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Adaptive next error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/adaptive/evaluate", methods=["POST"])
+def adaptive_evaluate():
+    """
+    Evaluate user's answer in an adaptive session and update profile.
+    Request: {"session_id": "...", "question_text": "...", "user_answer": "..."}
+    """
+    try:
+        data = request.get_json() or {}
+        session_id = data.get("session_id", "")
+        question_text = data.get("question_text", "")
+        user_answer = data.get("user_answer", "")
+
+        session = _adaptive_sessions.get(session_id)
+        if not session:
+            return jsonify({"error": "Invalid or expired session"}), 404
+
+        predictors = _get_roberta_predictors()
+        if not predictors:
+            return jsonify({"error": "RoBERTa inference pipeline not available"}), 503
+
+        from inference.input_validation import is_valid_question
+
+        # Classify the question
+        q_intent = predictors["intent"](question_text)
+        q_difficulty = predictors["difficulty"](question_text)
+        q_topic_result = predictors["topic"](question_text)
+        q_topics = q_topic_result.get("labels", ["General"])
+
+        # Evaluate answer using intent/topic overlap + length heuristics
+        a_intent = predictors["intent"](user_answer)
+        a_topic_result = predictors["topic"](user_answer)
+        a_topics = a_topic_result.get("labels", [])
+
+        # Score components
+        topic_overlap = len(set(q_topics) & set(a_topics))
+        topic_score = min(1.0, topic_overlap / max(len(q_topics), 1))
+
+        intent_match = 1.0 if a_intent.get("label") == q_intent.get("label") else 0.3
+        comprehensiveness = min(1.0, len(user_answer.split()) / 30)
+
+        score = round((topic_score * 0.5 + intent_match * 0.25 + comprehensiveness * 0.25) * 100, 1)
+        is_correct = score >= 60
+
+        # Record in session
+        session["asked"].append(question_text)
+        session["scores"].append(score)
+
+        # Update profile
+        profile = session["profile"]
+        for topic in q_topics:
+            profile.record_attempt(
+                score=score,
+                topic=topic,
+                intent=q_intent.get("label", "unknown"),
+                difficulty=q_difficulty.get("label", "medium"),
+            )
+        session["profile_manager"].save_profile(profile)
+
+        # Grade
+        if score >= 85:
+            grade = "excellent"
+        elif score >= 65:
+            grade = "mostly_correct"
+        elif score >= 40:
+            grade = "partially_correct"
+        else:
+            grade = "blatantly_wrong"
+
+        return jsonify({
+            "status": "success",
+            "score": score,
+            "grade": grade,
+            "is_correct": is_correct,
+            "feedback": f"Score: {score}/100 ({grade})",
+            "question_num": len(session["asked"]),
+            "total_questions": session["num_questions"],
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Adaptive evaluate error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
 
 # ═══════════════════════════════════════════════════════════════════════════
 # RUN

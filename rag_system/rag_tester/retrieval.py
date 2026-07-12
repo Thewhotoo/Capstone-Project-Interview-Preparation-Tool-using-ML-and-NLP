@@ -10,6 +10,10 @@ from sentence_transformers import SentenceTransformer
 # Load embedding model
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
+# Absolute path to knowledge_base directory (relative to this file)
+_RAG_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+_KB_DIR = os.path.join(_RAG_BASE_DIR, "knowledge_base")
+
 
 def load_knowledge_base(subject_name):
     """
@@ -21,15 +25,15 @@ def load_knowledge_base(subject_name):
     Returns:
         tuple: (index, chunks) or (None, None) if not found
     """
-    index_path = f"knowledge_base/{subject_name}.index"
-    json_path = f"knowledge_base/{subject_name}_chunks.json"
+    index_path = os.path.join(_KB_DIR, f"{subject_name}.index")
+    json_path = os.path.join(_KB_DIR, f"{subject_name}_chunks.json")
 
     if not os.path.exists(index_path) or not os.path.exists(json_path):
-        print(f"❌ Knowledge base not found for '{subject_name}'")
+        print(f"Knowledge base not found for '{subject_name}'")
         print(f"   Run: python ingestor.py first to create the index")
         return None, None
 
-    print(f"📂 Loading index: {subject_name}")
+    print(f"Loading index: {subject_name}")
     index = faiss.read_index(index_path)
     
     with open(json_path, "r", encoding='utf-8') as f:

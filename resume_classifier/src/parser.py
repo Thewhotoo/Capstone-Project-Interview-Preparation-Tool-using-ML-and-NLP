@@ -146,6 +146,41 @@ def extract_phone(text: str) -> str:
     match = re.search(r'(\+?\d[\d\s\-().]{7,}\d)', text)
     return match.group(0) if match else None
 
+def extract_name(text: str) -> str:
+    """Extract candidate name — typically the first line of the resume."""
+    # Take the first segment before common separators
+    first_part = re.split(r'\n|\(cid:|linkedin|github', text, maxsplit=1)[0]
+    # Also stop at phone number pattern
+    first_part = re.split(r'\+?\d[\d\s\-]{7,}', first_part, maxsplit=1)[0]
+    # Also stop at email
+    first_part = re.split(r'[\w.-]+@', first_part, maxsplit=1)[0]
+    
+    words = first_part.strip().split()
+    words = [w for w in words if len(w) > 1]
+    
+    if len(words) < 2:
+        return None
+    
+    # The name ends when we hit a city, state, number, or other address markers
+    address_markers = {
+        'bangalore', 'bengaluru', 'mumbai', 'delhi', 'chennai', 'hyderabad',
+        'pune', 'kolkata', 'indore', 'jaipur', 'lucknow', 'noida', 'gurgaon',
+        'karnataka', 'maharashtra', 'tamil', 'andhra', 'telangana', 'gujarat',
+        'rajasthan', 'uttar', 'madhya', 'kerala', 'punjab', 'haryana',
+        'india', 'usa', 'uk', 'canada', 'australia', 'germany',
+    }
+    name_words = []
+    for w in words:
+        clean = w.strip(',.').lower()
+        if clean.isdigit() or clean in address_markers or re.match(r'^\d+$', clean):
+            break
+        name_words.append(w.strip(',.'))
+    
+    # Typically 2-4 name parts
+    if 2 <= len(name_words) <= 5:
+        return " ".join(name_words[:4])
+    return None
+
 # ── Main Parse Function ──────────────────────────────────────────────────────
 
 def parse_resume(path: str) -> dict:
@@ -155,6 +190,7 @@ def parse_resume(path: str) -> dict:
     
     result = {
         "raw_text":      text,
+        "name":          extract_name(text),
         "email":         extract_email(text),
         "phone":         extract_phone(text),
         "entities":      entities,

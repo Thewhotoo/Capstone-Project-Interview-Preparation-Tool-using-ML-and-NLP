@@ -4,10 +4,10 @@ LLM Generation Module - Generates interview questions from context
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 # Load FLAN-T5 model once
-print("⏳ Loading FLAN-T5 model...")
+print("Loading FLAN-T5 model...")
 tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
 model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-small")
-print("✅ Model loaded!")
+print("FLAN-T5 model loaded!")
 
 
 def generate_interview_question(context, concept=None):
@@ -98,7 +98,7 @@ Question:"""
         return question
     
     except Exception as e:
-        print(f"❌ Error generating question: {e}")
+        print(f"Error generating question: {e}")
         return "Unable to generate question at this time."
 
 
@@ -181,5 +181,5 @@ Explanation:"""
         return explanation if explanation else context_clean[:150] + "..."
     
     except Exception as e:
-        print(f"⚠️  Error generating explanation, using source text")
+        print(f"Error generating explanation, using source text")
         return context_clean[:150] + "..."

@@ -1,6 +1,5 @@
 import os
 import torch
-import json
 from utils.config import (
     SBERT_BASE, BERT_BASE, BERT_MODEL_DIR,
     MAX_LENGTH, ALPHA, BETA, DOMAIN_LABELS, DOMAINS_FILE

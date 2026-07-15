@@ -5,10 +5,17 @@ import faiss
 import json
 import os
 import numpy as np
-from sentence_transformers import SentenceTransformer
 
-# Load embedding model
-model = SentenceTransformer('all-MiniLM-L6-v2')
+# Lazy-loaded SentenceTransformer singleton
+_model = None
+
+
+def _get_model():
+    global _model
+    if _model is None:
+        from sentence_transformers import SentenceTransformer
+        _model = SentenceTransformer('all-MiniLM-L6-v2')
+    return _model
 
 # Absolute path to knowledge_base directory (relative to this file)
 _RAG_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -60,7 +67,7 @@ def retrieve_relevant_content(subject_name, query, top_k=5):
         return []
     
     # Encode query
-    query_vector = model.encode([query]).astype('float32')
+    query_vector = _get_model().encode([query]).astype('float32')
     
     # Search FAISS index
     distances, indices = index.search(query_vector, k=min(top_k, len(chunks)))

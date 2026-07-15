@@ -5,13 +5,9 @@ ROOT_DIR = os.path.dirname(BASE_DIR)
 
 # Data paths
 DATA_DIR        = os.path.join(ROOT_DIR, "data")
-RAW_DIR         = os.path.join(DATA_DIR, "raw")
-PROCESSED_DIR   = os.path.join(DATA_DIR, "processed")
-LABELED_DIR     = os.path.join(DATA_DIR, "labeled")
 DOMAINS_FILE    = os.path.join(DATA_DIR, "domains.json")
 
 # Model paths
-MODEL_DIR       = os.path.join(ROOT_DIR, "models")
 BERT_MODEL_DIR  = os.path.join(ROOT_DIR, "bert_resume_model")
 
 # Model settings

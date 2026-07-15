@@ -4,15 +4,30 @@ Integrates with existing UI and all components
 """
 
 from flask import Flask, request, jsonify, render_template
-from werkzeug.utils import secure_filename
-import json
+from dotenv import load_dotenv
 import os
 import sys
 import logging
 
+# Load .env file (GEMINI_API_KEY etc.)
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# ── Startup validation: GEMINI_API_KEY ──────────────────────────────────────
+_gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
+if not _gemini_key:
+    logger.error(
+        "╔══════════════════════════════════════════════════════════════╗\n"
+        "║  GEMINI_API_KEY is NOT set!                                ║\n"
+        "║  Resume upload and Gemini features will not work.          ║\n"
+        "║  Set GEMINI_API_KEY in main_cap/cap/.env                   ║\n"
+        "╚══════════════════════════════════════════════════════════════╝"
+    )
+else:
+    logger.info("GEMINI_API_KEY loaded (%s...)", _gemini_key[:8])
 
 app = Flask(__name__, template_folder="templates")
 
@@ -91,25 +106,40 @@ def health():
 @app.route("/api/get-domain-quiz", methods=["POST"])
 def get_domain_quiz():
     """
-    Get 10-12 adaptive quiz questions based on domain & resume skills
-    Request: {"domain": "Software Engineer", "skills": ["Python", "Java", "Docker"]}
-    Returns: 10-12 questions with MIX of Easy/Medium/Hard based on skills
+    Generate Resume Discussion questions from the Candidate Profile.
+
+    Request:
+        {"session_id": "...", "domain": "...", "skills": [...]}
+
+    If session_id maps to a stored Candidate Profile, questions are derived
+    from projects, interview_seeds, experience, technologies, and skills.
+
+    Falls back to hardcoded MCQ banks when no profile is available.
     """
     try:
         data = request.get_json() or {}
+        session_id = data.get("session_id", "")
         domain = data.get("domain", "Software Engineer")
-        skills = data.get("skills", [])  # Extract skills from resume
-        
-        # Convert skills to lowercase for matching
-        skills_lower = [s.lower() for s in skills]
+        skills = data.get("skills", [])
 
-        # ── Quiz questions: use hardcoded banks (well-crafted MCQs) ───────
-        # RAG is used for the chat flow (open-ended questions + reference answers).
-        # FLAN-T5 small cannot generate quality MCQ questions.
+        # Try to load the Candidate Profile (single source of truth)
+        profile = _candidate_profiles.get(session_id) if session_id else None
+
+        if profile:
+            questions = _generate_resume_discussion_questions(profile)
+            return jsonify({
+                "status": "success",
+                "mode": "resume_discussion",
+                "domain": domain,
+                "total_questions": len(questions),
+                "quiz": questions,
+            }), 200
+
+        # Fallback: hardcoded MCQs when no profile available
         quiz_questions = _hardcoded_quiz(domain)
-
         return jsonify({
             "status": "success",
+            "mode": "quiz",
             "domain": domain,
             "total_questions": len(quiz_questions),
             "quiz": quiz_questions,
@@ -118,6 +148,125 @@ def get_domain_quiz():
     except Exception as e:
         logger.error(f"Error: {e}")
         return jsonify({"error": str(e)}), 400
+
+
+def _generate_resume_discussion_questions(profile: dict, num_questions: int = 10):
+    """
+    Build open-ended Resume Discussion questions from the Candidate Profile.
+
+    Priority order:
+        1. interview_seeds (from projects)
+        2. project titles / summaries
+        3. experience entries
+        4. technologies (from projects)
+        5. skills
+
+    Returns a list of dicts compatible with the existing quiz renderer:
+        {question, options, answer, difficulty, _discussion: True}
+    """
+    import random
+
+    questions: list[dict] = []
+    used_seeds: set[str] = set()
+
+    # ── 1. Questions from interview_seeds ──────────────────────────────
+    for project in profile.get("projects", []):
+        title = project.get("title", "your project")
+        for seed in project.get("interview_seeds", []):
+            if seed.lower() in used_seeds:
+                continue
+            used_seeds.add(seed.lower())
+            q_text = f"Regarding {title}: {seed}"
+            questions.append({
+                "question": q_text,
+                "options": [
+                    "I'd like to discuss this in detail",
+                    "Let me explain my approach",
+                ],
+                "answer": 0,
+                "difficulty": "Medium",
+                "_discussion": True,
+            })
+
+    # ── 2. Questions about project technologies ────────────────────────
+    for project in profile.get("projects", []):
+        title = project.get("title", "your project")
+        techs = project.get("technologies", [])
+        if techs:
+            tech_str = ", ".join(techs[:3])
+            q_text = f"I see {tech_str} listed under {title}. Can you walk me through how you used them?"
+            questions.append({
+                "question": q_text,
+                "options": [
+                    "I'd like to discuss this in detail",
+                    "Let me explain my approach",
+                ],
+                "answer": 0,
+                "difficulty": "Medium",
+                "_discussion": True,
+            })
+
+    # ── 3. Questions from experience ───────────────────────────────────
+    for exp in profile.get("experience", []):
+        role = exp.get("role", "")
+        company = exp.get("company", "")
+        if role and company:
+            q_text = (
+                f"Tell me about your time as {role} at {company}. "
+                "What were the most technically challenging aspects?"
+            )
+            questions.append({
+                "question": q_text,
+                "options": [
+                    "I'd like to discuss this in detail",
+                    "Let me explain my approach",
+                ],
+                "answer": 0,
+                "difficulty": "Medium",
+                "_discussion": True,
+            })
+
+    # ── 4. Technology-specific questions ───────────────────────────────
+    all_techs: list[str] = []
+    for project in profile.get("projects", []):
+        all_techs.extend(project.get("technologies", []))
+    for tech in list(dict.fromkeys(all_techs))[:4]:
+        q_text = (
+            f"I notice {tech} in your projects. "
+            f"Why did you choose {tech}, and what alternatives did you consider?"
+        )
+        questions.append({
+            "question": q_text,
+            "options": [
+                "I'd like to discuss this in detail",
+                "Let me explain my approach",
+            ],
+            "answer": 0,
+            "difficulty": "Medium",
+            "_discussion": True,
+        })
+
+    # ── 5. Skill-based questions ───────────────────────────────────────
+    skills = profile.get("skills", [])
+    if skills:
+        q_text = (
+            f"You list {skills[0]} as a key skill. "
+            "Can you describe a project where you applied it in production?"
+        )
+        questions.append({
+            "question": q_text,
+            "options": [
+                "I'd like to discuss this in detail",
+                "Let me explain my approach",
+            ],
+            "answer": 0,
+            "difficulty": "Medium",
+            "_discussion": True,
+        })
+
+    # ── Shuffle and cap ────────────────────────────────────────────────
+    random.shuffle(questions)
+    return questions[:num_questions]
 
 
 def _hardcoded_quiz(domain):
@@ -206,29 +355,24 @@ def _hardcoded_quiz(domain):
 
     return all_questions.get(domain, all_questions["Software Engineer"])
 
-_sbert_classifier = None
-
-def get_sbert_classifier():
-    """Lazy load the SBERT domain classifier on first use."""
-    global _sbert_classifier
-    if _sbert_classifier is None:
-        try:
-            from src.models import SBERTMatcher
-            _sbert_classifier = SBERTMatcher()
-            logger.info("SBERT resume classifier loaded successfully")
-        except Exception as e:
-            logger.warning(f"SBERT classifier unavailable: {e}")
-            _sbert_classifier = False
-    return _sbert_classifier if _sbert_classifier is not False else None
+# ── In-memory Candidate Profile store ────────────────────────────────────────
+# Keyed by session: stores the full Gemini-generated profile so downstream
+# modules (quiz, interview) never need to re-parse the resume.
+_candidate_profiles = {}   # session_id -> Candidate Profile dict
 
 
 @app.route("/api/classify-resume", methods=["POST"])
 def classify_resume():
     """
-    Classify an uploaded resume: parse text, extract skills/experience, predict domain.
-    Uses the real resume_classifier pipeline (SBERT domain matching + KeyBERT skills).
+    Parse an uploaded resume with a single Gemini 2.5 Flash call.
+    The generated Candidate Profile is stored in memory for the lifetime of the
+    session so that dashboard, quiz, and interview modules consume it directly
+    without re-parsing.
+
+    Returns the profile in the exact format the frontend already expects.
     """
     import tempfile
+    import uuid
 
     try:
         if "file" not in request.files:
@@ -249,92 +393,40 @@ def classify_resume():
             tmp_path = tmp.name
 
         try:
-            # 1. Parse the resume (extract raw text, email, phone)
-            from src.parser import parse_resume
-            parsed = parse_resume(tmp_path)
-            text = parsed.get("raw_text", "")
+            # 1. Extract raw text from the resume
+            if ext == ".pdf":
+                from candidate_profile_generator import extract_text_from_pdf
+                text = extract_text_from_pdf(tmp_path)
+            else:
+                # Fallback to existing parser for DOCX / DOC / TXT
+                from src.parser import extract_text
+                text = extract_text(tmp_path)
 
             if not text or len(text.strip()) < 50:
                 return jsonify({"error": "Could not extract enough text from resume"}), 400
 
-            # 2. Extract features (skills via KeyBERT, experience from job history)
-            #    Features need structured text with newlines for section detection
-            from src.features import extract_features
-            features = extract_features(text)
+            # 2. Generate Candidate Profile with a single Gemini call
+            from candidate_profile_generator import (
+                generate_candidate_profile,
+                profile_to_frontend_format,
+            )
 
-            # 3. Classify domain using SBERT cosine similarity against domain descriptions
-            #    SBERT gets flattened text (no newlines) — it only compares semantics
-            from utils.helpers import clean_text as _flatten
-            flat_text = _flatten(text)
-            classifier = get_sbert_classifier()
-            if classifier:
-                sbert_scores = classifier.predict(flat_text)
+            profile = generate_candidate_profile(text)
 
-                # Keyword-based boost for Software Engineering
-                # Resumes with 3+ SWE-specific terms should be classified as SE
-                # even if they contain ML/AI keywords (hybrid profiles)
-                swe_keywords = [
-                    'microservices', 'rest api', 'restful', 'docker', 'kubernetes',
-                    'ci/cd', 'devops', 'flask', 'fastapi', 'django', 'express',
-                    'react', 'angular', 'node.js', 'spring boot', 'laravel',
-                    'postgresql', 'mongodb', 'redis', 'nginx', 'jenkins',
-                    'terraform', 'ansible', 'github actions', 'agile', 'scrum',
-                    'system design', 'architecture', 'deployment', 'scalable',
-                    'api', 'web app', 'full stack', 'full-stack', 'backend', 'frontend',
-                    'unity', 'blender', 'vr', 'virtual reality', 'simulation',
-                    'interview platform', 'soc platform', 'dashboard',
-                    # ML/AI frameworks are still software engineering tools
-                    'tensorflow', 'pytorch', 'scikit-learn', 'keras', 'opencv',
-                    'langchain', 'langgraph', 'llamaindex', 'rag',
-                    'machine learning', 'deep learning', 'neural network',
-                    'transformers', 'hugging face', 'openai', 'llm',
-                    'data pipeline', 'mlops', 'model deployment',
-                    # General CS / SE terms
-                    'algorithms', 'data structures', 'oop', 'database',
-                    'git', 'github', 'linux', 'python', 'java',
-                    # UX/UI design that is still software engineering
-                    'figma', 'sketch', 'adobe xd', 'zeplin', 'invision',
-                    'wireframe', 'prototyping', 'user interface', 'ui design',
-                    'ux design', 'user experience', 'interaction design',
-                    'responsive design', 'accessibility', 'usability',
-                ]
-                text_lower = flat_text.lower()
-                swe_hits = sum(1 for kw in swe_keywords if kw in text_lower)
+            # 3. Store in memory (keyed by a generated session ID)
+            session_id = f"profile_{uuid.uuid4().hex[:12]}"
+            _candidate_profiles[session_id] = profile
 
-                # If resume has 3+ SWE keywords, boost SE score by a margin
-                if swe_hits >= 3:
-                    boost = min(0.15, swe_hits * 0.015)  # cap at 0.15
-                    sbert_scores["Software Engineering"] = sbert_scores.get("Software Engineering", 0) + boost
+            # 4. Convert to frontend format and attach session_id
+            result = profile_to_frontend_format(profile)
+            result["session_id"] = session_id
 
-                top_domain = max(sbert_scores, key=sbert_scores.get)
-                confidence = sbert_scores[top_domain]
-            else:
-                # Fallback: default to Software Engineering if classifier unavailable
-                top_domain = "Software Engineering"
-                confidence = 0.0
-
-            # Map classifier domains to quiz domains (the quiz bank uses different labels)
-            DOMAIN_TO_QUIZ = {
-                "Software Engineering": "Software Engineer",
-                "Data Science": "Data Scientist",
-                "Cybersecurity": "Network Engineer",
-                "Finance": "Database Engineer",
-            }
-            quiz_domain = DOMAIN_TO_QUIZ.get(top_domain, "Software Engineer")
-
-            return jsonify({
-                "status": "success",
-                "predicted_domain": top_domain,
-                "quiz_domain": quiz_domain,
-                "confidence": round(confidence, 4),
-                "skills": features.get("skills", []),
-                "experience": features.get("total_experience", {"years": 0, "level": "Unknown"}),
-                "education": features.get("education", []),
-                "projects_count": features.get("projects_count", 0),
-                "name": parsed.get("name"),
-                "email": parsed.get("email"),
-                "phone": parsed.get("phone"),
-            }), 200
+            logger.info(
+                "Candidate profile generated for session %s: domain=%s",
+                session_id,
+                result.get("predicted_domain"),
+            )
+            return jsonify(result), 200
 
         finally:
             # Clean up temp file
@@ -344,9 +436,26 @@ def classify_resume():
             except Exception as e:
                 logger.warning(f"Failed to cleanup temp file: {e}")
 
+    except RuntimeError as e:
+        # Gemini-specific errors (rate limit, timeout, malformed JSON)
+        logger.error("Gemini profile generation failed: %s", e)
+        return jsonify({"error": str(e)}), 502
+
     except Exception as e:
         logger.error(f"Resume classification error: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/candidate-profile/<session_id>", methods=["GET"])
+def get_candidate_profile(session_id):
+    """
+    Retrieve a stored Candidate Profile by session ID.
+    Downstream modules use this instead of re-parsing the resume.
+    """
+    profile = _candidate_profiles.get(session_id)
+    if not profile:
+        return jsonify({"error": "Profile not found or session expired"}), 404
+    return jsonify(profile), 200
 
 # ═══════════════════════════════════════════════════════════════════════════
 # API ENDPOINTS FOR UI
@@ -877,8 +986,6 @@ def adaptive_evaluate():
         if not predictors:
             return jsonify({"error": "RoBERTa inference pipeline not available"}), 503
 
-        from inference.input_validation import is_valid_question
-
         # Classify the question
         q_intent = predictors["intent"](question_text)
         q_difficulty = predictors["difficulty"](question_text)
@@ -943,12 +1050,33 @@ def adaptive_evaluate():
 # RUN
 # ═══════════════════════════════════════════════════════════════════════════
 
+def _verify_gemini_connectivity():
+    """Send a minimal request to Gemini to verify the API key and connectivity."""
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        logger.warning("Skipping Gemini connectivity check — no API key")
+        return False
+    try:
+        from google import genai
+        from google.genai import types
+        client = genai.Client(api_key=api_key)
+        resp = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents="Reply with the word OK",
+            config=types.GenerateContentConfig(
+                max_output_tokens=8,
+                temperature=0.0,
+            ),
+        )
+        text = (resp.text or "").strip()
+        logger.info("Gemini connectivity OK — response: %s", text)
+        return True
+    except Exception as e:
+        logger.warning("Gemini connectivity check failed: %s", e)
+        return False
+
+
 if __name__ == "__main__":
-    print("\n" + "="*70)
-    print("CAPSTONE INTERVIEW SYSTEM")
-    print("="*70)
-    print(f"Open your browser: http://localhost:5000")
-    print(f"System ready!")
-    print("="*70 + "\n")
-    
+    _verify_gemini_connectivity()
+    logger.info("Open your browser: http://localhost:5000")
     app.run(debug=False, port=5000, threaded=True, use_reloader=False)

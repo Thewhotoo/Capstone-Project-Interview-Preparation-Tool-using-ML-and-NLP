@@ -2,17 +2,6 @@ import re
 from utils.config import EXPERIENCE_LEVELS
 from datetime import datetime
 
-# Lazy load KeyBERT model on first use
-_kw_model = None
-
-def get_keybert_model():
-    """Lazy load KeyBERT model on first use to avoid startup delays"""
-    global _kw_model
-    if _kw_model is None:
-        from keybert import KeyBERT
-        _kw_model = KeyBERT()
-    return _kw_model
-
 # ── Experience Level ─────────────────────────────────────────────────────────
 
 def parse_date_range(date_str: str) -> dict:
@@ -479,30 +468,6 @@ def _extract_by_regex(text: str) -> list:
             if display not in found:
                 found.append(display)
     return found
-
-
-def _extract_by_keybert(text: str, existing: list, top_n: int = 20) -> list:
-    """KeyBERT fallback — only used if other methods return too few skills."""
-    try:
-        kw_model = get_keybert_model()
-        text_limited = text[:3000] if len(text) > 3000 else text
-        keywords = kw_model.extract_keywords(
-            text_limited,
-            keyphrase_ngram_range=(1, 2),
-            stop_words="english",
-            top_n=top_n,
-        )
-        existing_lower = {s.lower() for s in existing}
-        result = list(existing)
-        for kw, score in keywords:
-            kw_clean = kw.strip()
-            if kw_clean.lower() not in existing_lower and len(kw_clean) >= 2:
-                result.append(kw_clean)
-                existing_lower.add(kw_clean.lower())
-        return result
-    except Exception as e:
-        print(f"Warning: KeyBERT fallback failed: {e}")
-        return existing
 
 
 def extract_skills(text: str, top_n: int = 50) -> list:

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from typing import Optional
 
 from inference.predict_intent import predict_intent
@@ -35,7 +34,6 @@ class SessionManager:
         # Session tracking
         self.session_questions: list[tuple] = []
         self.asked_question_texts: set[str] = set()  # Track asked questions to avoid repeats
-        self.session_start_time = time.time()
     
     def display_profile_summary(self) -> None:
         """Display user's current profile and stats."""
@@ -746,17 +744,6 @@ class SessionManager:
         
         print("\n" + "="*60)
     
-    def _display_feedback_old(self, is_correct: bool, question) -> None:
-        """Old feedback display - kept for reference."""
-        if is_correct:
-            print("\n✓ Correct! Well done!")
-            print(f"Expected: {question.intent} answer about {', '.join(question.topics)}")
-        else:
-            print("\n✗ Incorrect or incomplete.")
-            print(f"This was a '{question.difficulty}' level '{question.intent}' question")
-            print(f"Topics: {', '.join(question.topics)}")
-            print("Try to provide a more comprehensive answer next time.")
-    
     def display_session_summary(self) -> None:
         """Display summary of the session."""
         if not self.session_questions:
@@ -810,49 +797,3 @@ class SessionManager:
             recommendations.append("You're doing great! Try more complex problems.")
         
         return " ".join(recommendations) if recommendations else "Keep practicing!"
-
-
-def main():
-    """Main entry point for the adaptive session."""
-    print("Welcome to Adaptive Interview Question Practice!")
-    print("="*60)
-    
-    # Get user ID
-    user_id = input("Enter your username (e.g., user1): ").strip()
-    if not user_id:
-        user_id = "guest"
-    
-    # Create session
-    session = SessionManager(user_id)
-    
-    # Show menu
-    while True:
-        print("\nOptions:")
-        print("1. View Profile")
-        print("2. Start Practice Session")
-        print("3. Get Personalized Recommendation")
-        print("4. Exit")
-        
-        choice = input("\nSelect an option (1-4): ").strip()
-        
-        if choice == "1":
-            session.display_profile_summary()
-        elif choice == "2":
-            num_q = input("How many questions? (default 5): ").strip()
-            try:
-                num_q = int(num_q) if num_q else 5
-            except ValueError:
-                num_q = 5
-            session.start_session(num_questions=num_q)
-        elif choice == "3":
-            print(f"\nRecommendation for {user_id}:")
-            print(session.get_recommendation())
-        elif choice == "4":
-            print("Thank you for practicing! Keep improving!")
-            break
-        else:
-            print("Invalid option. Please select 1-4.")
-
-
-if __name__ == "__main__":
-    main()

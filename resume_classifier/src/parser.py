@@ -1,6 +1,6 @@
 import re
 import os
-from utils.helpers import clean_text, clean_text_structured
+from utils.helpers import clean_text_structured
 
 # Lazy-loaded document parsing libraries
 _pdfplumber = None

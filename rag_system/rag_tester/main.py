@@ -3,7 +3,7 @@ Main RAG Pipeline - Complete PDF-based Question Generation and Answer Evaluation
 """
 import os
 from ingestor import ingest_subject
-from retrieval import retrieve_relevant_content, get_best_context, get_context_with_pages
+from retrieval import retrieve_relevant_content, get_best_context
 from generate import generate_interview_question, generate_reference_answer, generate_explanation
 from evaluate import evaluate_answer, compare_answers
 from tqdm import tqdm

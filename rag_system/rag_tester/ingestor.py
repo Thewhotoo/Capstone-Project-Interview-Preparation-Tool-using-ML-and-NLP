@@ -4,7 +4,6 @@ import json
 import os
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from pathlib import Path
 
 # Load the same model used in engine.py
 model = SentenceTransformer('all-MiniLM-L6-v2')

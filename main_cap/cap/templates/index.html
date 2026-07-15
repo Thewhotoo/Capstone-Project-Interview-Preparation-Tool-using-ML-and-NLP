@@ -185,22 +185,6 @@
             font-family: 'Inter', sans-serif;
             line-height: 1.5;
         }
-        .dash-card-value .tag {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin: 3px 4px 3px 0;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border-subtle);
-            color: #ccc;
-        }
-        .dash-card-value .tag.tag-primary {
-            background: rgba(59,130,246,0.12);
-            border-color: rgba(59,130,246,0.25);
-            color: #60a5fa;
-        }
 
         .dash-full { grid-column: 1 / -1; }
 
@@ -265,24 +249,6 @@
             box-shadow: 0 0 40px rgba(255,255,255,0.08);
             background: #f0f0f0;
         }
-
-        .dash-loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 80vh;
-            gap: 20px;
-        }
-        .dash-loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border-subtle);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 700px) {
             .dash-grid { grid-template-columns: 1fr; }
@@ -522,22 +488,22 @@
                 <label>📄 Upload Your Resume (Optional)</label>
                 <input type="file" id="resume-file" accept=".pdf,.docx" style="width: 100%; padding: 12px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-elevated); color: white; cursor: pointer;">
             </div>
-            <button class="start-btn" onclick="uploadResume()">Start Quiz →</button>
+            <button class="start-btn" onclick="uploadResume()">Start Interview →</button>
             <br><br>
-            <button class="start-btn" style="background: #666;" onclick="testQuizDirectly()">🧪 TEST: Load Quiz Directly</button>
+            <button class="start-btn" style="background: #666;" onclick="testQuizDirectly()">TEST: Load Discussion Directly</button>
             <div id="resume-analysis" style="display: none; margin-top: 20px; padding: 20px; background: var(--bot-bubble); border-radius: 12px; border: 1px solid var(--border-subtle);">
                 <p style="color: #10b981; margin: 5px 0;"><strong>✅ Domain:</strong> <span id="classified-domain"></span></p>
                 <p style="color: #f59e0b; margin: 5px 0;"><strong>🎯 Confidence:</strong> <span id="domain-confidence"></span></p>
                 <p style="color: #3b82f6; margin: 5px 0;"><strong>💼 Experience:</strong> <span id="domain-experience"></span></p>
-                <button class="start-btn" style="margin-top: 12px;" onclick="startQuizFromAnalysis()">Proceed to Domain Quiz →</button>
+                <button class="start-btn" style="margin-top: 12px;" onclick="startQuizFromAnalysis()">Proceed to Resume Discussion →</button>
             </div>
         </div>
 
-        <!-- STEP 2: Domain Verification Quiz -->
+        <!-- STEP 2: Resume Discussion -->
         <div id="quiz-section" style="display: none; margin-top: 20px; max-height: 70vh; overflow-y: auto; padding-right: 10px;">
             <div style="background: var(--bot-bubble); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 20px; position: sticky; top: 0; z-index: 10;">
-                <p style="color: #3b82f6; margin: 0;"><strong>✓ Domain Verification Quiz</strong></p>
-                <p style="color: #888; margin: 5px 0 0 0; font-size: 0.9rem;">Mix of Easy, Medium, Hard questions based on your resume</p>
+                <p style="color: #3b82f6; margin: 0;"><strong>Resume Discussion</strong></p>
+                <p style="color: #888; margin: 5px 0 0 0; font-size: 0.9rem;">Questions based on your projects and experience</p>
                 <div style="margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
                     <p style="margin: 0 0 8px 0; color: #aaa; font-size: 0.85rem;">Progress: <span id="quiz-progress">0</span>/<span id="quiz-total">12</span></p>
                     <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
@@ -759,7 +725,7 @@
             if (data.email) contactParts.push(esc(data.email));
             if (data.phone) contactParts.push(esc(data.phone));
             const contact = contactParts.length > 0 ? contactParts.join("<br>") : "N/A";
-            const projectCount = data.projects_count != null ? data.projects_count : "N/A";
+            const projects = Array.isArray(data.projects) ? data.projects : [];
 
             const cards = [
                 { label: "Domain", value: domain, primary: true },
@@ -768,7 +734,6 @@
                 { label: "Level", value: level },
                 { label: "Education", value: education, small: true },
                 { label: "Contact", value: contact, small: true },
-                { label: "Projects", value: projectCount },
             ];
 
             cards.forEach((c, i) => {
@@ -780,6 +745,30 @@
                 `;
                 el.appendChild(card);
             });
+
+            const projCard = document.createElement("div");
+            projCard.className = "dash-card dash-full";
+            let projHtml = `<div class="dash-card-label">Projects (${projects.length})</div>`;
+            if (projects.length === 0) {
+                projHtml += `<div style="color:#666; font-size:0.9rem; margin-top:8px;">No projects detected in resume.</div>`;
+            } else {
+                projHtml += `<div style="margin-top:10px;">`;
+                for (const p of projects) {
+                    const title = esc(p.title || "Untitled Project");
+                    const summary = esc(p.summary || "");
+                    const techs = Array.isArray(p.technologies) ? p.technologies : [];
+                    projHtml += `
+                        <div style="margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #2a2a3e;">
+                            <div style="font-weight:600; color:#e2e8f0; font-size:0.95rem;">${title}</div>
+                            ${summary ? `<div style="color:#94a3b8; font-size:0.85rem; margin-top:4px; line-height:1.4;">${summary}</div>` : ""}
+                            ${techs.length > 0 ? `<div style="margin-top:6px;">${techs.map(t => `<span class="skill-chip sk-lang" style="font-size:0.75rem; margin-right:4px; margin-bottom:2px;">${esc(t)}</span>`).join("")}</div>` : ""}
+                        </div>
+                    `;
+                }
+                projHtml += `</div>`;
+            }
+            projCard.innerHTML = projHtml;
+            el.appendChild(projCard);
 
             return el;
         }
@@ -833,7 +822,7 @@
             el.innerHTML = `
                 <div class="dash-card-label">Interview Preview</div>
                 <div class="dash-preview-box">
-                    <strong>Domain Quiz:</strong> ${quizDomain} &mdash; 12 multiple-choice questions covering Easy, Medium, and Hard difficulty levels.<br>
+                    <strong>Resume Discussion:</strong> ${quizDomain} &mdash; Conversational questions based on your projects, technologies, and experience.<br>
                     <strong>Adaptive Interview:</strong> ${domain} focus with ${yearExp > 0 ? yearExp + ' years' : 'your'} experience level. Questions adapt based on your responses.<br>
                     <strong>Evaluation:</strong> Semantic scoring + fill-in-the-blank verification. Results populate the final analytics dashboard.
                 </div>
@@ -843,7 +832,7 @@
 
         function renderDashStartButton() {
             const el = document.createElement("div");
-            el.innerHTML = `<button class="dash-start-btn" onclick="startDomainQuizFromDashboard()">Start Domain Quiz</button>`;
+            el.innerHTML = `<button class="dash-start-btn" onclick="startDomainQuizFromDashboard()">Start Resume Discussion</button>`;
             return el;
         }
 
@@ -949,8 +938,6 @@
         let resumeSkills = [];  // Store skills from resume for quiz customization
         
         async function testQuizDirectly() {
-            console.log("TEST: Directly loading quiz");
-            
             // Hide resume section
             document.getElementById("resume-upload-section").style.display = "none";
             document.getElementById("quiz-section").style.display = "block";
@@ -963,13 +950,11 @@
             });
             
             const result = await response.json();
-            console.log("TEST: Quiz loaded:", result.quiz.length, "questions");
             
             displayQuiz(result.quiz);
         }
         
         async function uploadResume() {
-            console.log("uploadResume clicked");
             
             const fileInput = document.getElementById("resume-file");
             const file = fileInput.files[0];
@@ -996,7 +981,7 @@
 
                 if (!response.ok || result.error) {
                     showToast(result.error || "Failed to analyze resume.", "error");
-                    startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Quiz →"; });
+                    startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Interview →"; });
                     return;
                 }
 
@@ -1005,12 +990,12 @@
                     showCandidateDashboard(result);
                 } else {
                     showToast("Unexpected response from server.", "error");
-                    startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Quiz →"; });
+                    startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Interview →"; });
                 }
             } catch (err) {
                 console.error("Upload error:", err);
                 showToast("Network error. Please try again.", "error");
-                startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Quiz →"; });
+                startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Interview →"; });
             }
         }
 
@@ -1022,20 +1007,18 @@
 
         async function loadDomainQuiz(domain, skills = []) {
             try {
-                console.log("Loading quiz for domain:", domain);
+                const sessionId = parsedResumeData ? (parsedResumeData.session_id || "") : "";
                 const response = await fetch("/api/get-domain-quiz", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ domain: domain, skills: skills })
+                    body: JSON.stringify({ session_id: sessionId, domain: domain, skills: skills })
                 });
 
                 const result = await response.json();
-                console.log("Quiz API response:", result);
                 
                 if (result.status === "success" && result.quiz && result.quiz.length > 0) {
                     // Update total questions counter
                     const totalQs = result.total_questions || result.quiz.length;
-                    console.log("Questions loaded:", totalQs);
                     document.getElementById("quiz-total").textContent = totalQs;
                     // Now display the quiz
                     displayQuiz(result.quiz);
@@ -1050,16 +1033,10 @@
         }
 
         function displayQuiz(questions) {
-            console.log("=== displayQuiz START ===");
-            console.log("Questions received:", questions.length);
-            
             const container = document.getElementById("quiz-questions-container");
-            console.log("Container found?", !!container);
-            console.log("Container element:", container);
             
             if (!container) {
                 console.error("FATAL: quiz-questions-container not found!");
-                alert("ERROR: Quiz container not found in DOM");
                 return;
             }
             
@@ -1068,61 +1045,48 @@
 
             // Update total questions
             document.getElementById("quiz-total").textContent = questions.length;
-            console.log("Updated quiz-total to:", questions.length);
 
-            console.log("Starting to render", questions.length, "questions...");
-            
-            let renderedCount = 0;
             questions.forEach((q, index) => {
-                try {
-                    console.log(`Rendering Q${index + 1}:`, q.question.substring(0, 50) + "...");
-                    
-                    const questionDiv = document.createElement("div");
-                    questionDiv.style.cssText = "margin-bottom: 20px; padding: 20px; background: var(--bg-elevated); border-radius: 12px; border: 1px solid var(--border-subtle);";
-                    
-                    let optionsHtml = "";
-                    (q.options || []).forEach((opt, optIndex) => {
-                        optionsHtml += `
-                            <div style="margin: 12px 0;">
-                                <label style="display: flex; align-items: flex-start; cursor: pointer; color: #aaa;">
-                                    <input type="radio" name="q${index}" value="${optIndex}" onchange="selectAnswer(${index}, ${optIndex})" style="margin-right: 12px; margin-top: 4px; cursor: pointer;">
-                                    <span style="line-height: 1.4;">${opt}</span>
-                                </label>
-                            </div>
-                        `;
-                    });
-
-                    const difficultyColor = q.difficulty === "Hard" ? "#fb7185" : q.difficulty === "Medium" ? "#fbbf24" : "#10b981";
-                    
-                    questionDiv.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <p style="color: #3b82f6; margin: 0;"><strong>Q${index + 1}: ${q.question}</strong></p>
-                            <span style="padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 6px; border: 1px solid ${difficultyColor}; color: ${difficultyColor}; font-size: 0.75rem; font-weight: 600;">${q.difficulty}</span>
+                const questionDiv = document.createElement("div");
+                questionDiv.style.cssText = "margin-bottom: 20px; padding: 20px; background: var(--bg-elevated); border-radius: 12px; border: 1px solid var(--border-subtle);";
+                
+                const isDiscussion = q._discussion;
+                
+                let optionsHtml = "";
+                (q.options || []).forEach((opt, optIndex) => {
+                    optionsHtml += `
+                        <div style="margin: 12px 0;">
+                            <label style="display: flex; align-items: flex-start; cursor: pointer; color: #aaa;">
+                                <input type="radio" name="q${index}" value="${optIndex}" onchange="selectAnswer(${index}, ${optIndex})" style="margin-right: 12px; margin-top: 4px; cursor: pointer;">
+                                <span style="line-height: 1.4;">${opt}</span>
+                            </label>
                         </div>
-                        ${optionsHtml}
                     `;
-                    
-                    container.appendChild(questionDiv);
-                    renderedCount++;
-                    console.log(`✓ Q${index + 1} rendered successfully`);
-                } catch (err) {
-                    console.error(`✗ Error rendering Q${index + 1}:`, err);
-                }
-            });
+                });
 
-            console.log(`Rendered ${renderedCount}/${questions.length} questions`);
+                const difficultyColor = q.difficulty === "Hard" ? "#fb7185" : q.difficulty === "Medium" ? "#fbbf24" : "#10b981";
+                const badgeHtml = isDiscussion
+                    ? `<span style="padding: 4px 10px; background: rgba(59,130,246,0.1); border-radius: 6px; border: 1px solid #3b82f6; color: #3b82f6; font-size: 0.75rem; font-weight: 600;">Discussion</span>`
+                    : `<span style="padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 6px; border: 1px solid ${difficultyColor}; color: ${difficultyColor}; font-size: 0.75rem; font-weight: 600;">${q.difficulty}</span>`;
+                
+                questionDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <p style="color: #3b82f6; margin: 0;"><strong>Q${index + 1}: ${q.question}</strong></p>
+                        ${badgeHtml}
+                    </div>
+                    ${optionsHtml}
+                `;
+                
+                container.appendChild(questionDiv);
+            });
 
             // Add submit button
             const submitBtn = document.createElement("button");
             submitBtn.className = "start-btn";
-            submitBtn.textContent = `Submit Quiz & Continue (${questions.length} questions)`;
+            submitBtn.textContent = `Continue to Interview (${questions.length} questions)`;
             submitBtn.style.cssText = "margin-top: 20px; width: 100%;";
             submitBtn.onclick = submitQuiz;
             container.appendChild(submitBtn);
-            console.log("Submit button added");
-            
-            console.log("=== displayQuiz END ===");
-            console.log("Container HTML length:", container.innerHTML.length);
         }
 
         function selectAnswer(questionIndex, answerIndex) {
@@ -1144,9 +1108,6 @@
                 return;
             }
 
-            // Calculate score (mock - in real implementation would fetch actual answers)
-            const score = quizAnswers.filter(a => a === 0 || a === 1).length / total * 100;
-            
             // Hide quiz and show subject selection
             document.getElementById("quiz-section").style.display = "none";
             document.getElementById("subject-selection-section").style.display = "block";
@@ -1154,7 +1115,7 @@
             // Show quiz result
             const resultDiv = document.createElement("div");
             resultDiv.style.cssText = "margin-bottom: 20px; padding: 15px; background: var(--bot-bubble); border-radius: 12px; border: 1px solid var(--border-subtle); color: #10b981;";
-            resultDiv.innerHTML = `<strong>✅ Quiz Passed!</strong> Score: ${score.toFixed(0)}% - Your domain expertise verified. Now let's start the interview!`;
+            resultDiv.innerHTML = `<strong>Discussion Complete!</strong> Resume reviewed. Now let's proceed to the technical interview!`;
             document.getElementById("subject-selection-section").insertBefore(resultDiv, document.getElementById("subject-selection-section").firstChild);
         }
 
@@ -1192,7 +1153,7 @@
 
             // Re-enable upload buttons
             const startBtns = document.querySelectorAll("#resume-upload-section .start-btn");
-            startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Quiz →"; });
+            startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Interview →"; });
             
             setTimeout(() => {
                 landingContainer.style.opacity = "1";

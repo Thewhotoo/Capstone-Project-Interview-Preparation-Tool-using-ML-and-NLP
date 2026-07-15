@@ -1,7 +1,6 @@
 """Generate question-specific model answers, not generic definitions."""
 
 from __future__ import annotations
-from inference.predict_topic import predict_topic
 
 
 class QuestionSpecificAnswerGenerator:

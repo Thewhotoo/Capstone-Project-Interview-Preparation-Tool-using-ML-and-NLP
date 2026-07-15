@@ -1,15 +1,9 @@
 import re
 import json
-import os
 
 def load_json(path: str) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
-
-def save_json(data: dict, path: str):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
 
 def clean_text(text: str) -> str:
     """Collapse all whitespace (including newlines) into single spaces.

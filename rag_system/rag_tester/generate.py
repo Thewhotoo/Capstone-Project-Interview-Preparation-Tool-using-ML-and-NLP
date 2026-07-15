@@ -1,13 +1,21 @@
 """
 LLM Generation Module - Generates interview questions from context
 """
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
-# Load FLAN-T5 model once
-print("Loading FLAN-T5 model...")
-tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
-model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-small")
-print("FLAN-T5 model loaded!")
+# Lazy-loaded FLAN-T5 singleton
+_tokenizer = None
+_model = None
+
+
+def _get_model():
+    global _tokenizer, _model
+    if _tokenizer is None or _model is None:
+        from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+        print("Loading FLAN-T5 model...")
+        _tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-small")
+        _model = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-small")
+        print("FLAN-T5 model loaded!")
+    return _tokenizer, _model
 
 
 def generate_interview_question(context, concept=None):
@@ -56,6 +64,7 @@ Create ONE question that:
 Question:"""
 
     try:
+        tokenizer, model = _get_model()
         inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
         
         outputs = model.generate(
@@ -150,6 +159,7 @@ Provide a 2-3 sentence explanation that:
 Explanation:"""
 
     try:
+        tokenizer, model = _get_model()
         inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=400)
         
         outputs = model.generate(

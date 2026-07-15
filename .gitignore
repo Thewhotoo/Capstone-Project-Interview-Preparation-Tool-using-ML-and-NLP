@@ -12,3 +12,4 @@ Thumbs.db
 **/__MACOSX/
 **/cache/
 *.log
+.env

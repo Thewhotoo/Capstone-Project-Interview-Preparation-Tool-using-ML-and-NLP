@@ -11,6 +11,9 @@ import re
 
 logger = logging.getLogger(__name__)
 
+# Suppress faiss AVX2 fallback INFO messages (expected on most Windows systems)
+logging.getLogger("faiss.loader").setLevel(logging.WARNING)
+
 # ── Path Setup for RAG System ─────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RAG_SYSTEM_DIR = os.path.abspath(os.path.join(BASE_DIR, "../../rag_system/rag_tester"))

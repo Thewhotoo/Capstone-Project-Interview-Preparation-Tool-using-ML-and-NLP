@@ -474,6 +474,199 @@
             width: fit-content;
         }
         .retry-btn:hover { transform: scale(1.02); background: #f0f0f0; }
+
+        /* ═══════════════════════════════════════════════════════════════
+           RESUME DISCUSSION (dedicated — isolated from #chat-container /
+           #dashboard-container above, which the Technical/Adaptive
+           Interview owns exclusively). Reuses .msg / .avatar / .msg-wrapper
+           / .typing-indicator / .input-area / .retry-btn from above for
+           visual consistency, since those are generic, not interview-
+           specific — only the container, state and behavior are separate.
+           ═══════════════════════════════════════════════════════════════ */
+        #rd-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+
+        #rd-header {
+            width: 100%;
+            padding: 22px 24px 18px;
+            border-bottom: 1px solid var(--border-subtle);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+        #rd-header-title {
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+            text-align: center;
+        }
+        #rd-progress-track {
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            height: 4px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        #rd-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            border-radius: 4px;
+            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #rd-progress-label {
+            max-width: 640px;
+            margin: 8px auto 0;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        #rd-messages {
+            width: 100%;
+            max-width: 800px;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 36px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            scroll-behavior: smooth;
+        }
+        #rd-messages::-webkit-scrollbar { display: none; }
+
+        .rd-category-tag {
+            display: inline-block;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--accent);
+            border: 1px solid rgba(59,130,246,0.35);
+            background: rgba(59,130,246,0.08);
+            padding: 3px 9px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .rd-category-tag.followup {
+            color: #f59e0b;
+            border-color: rgba(245,158,11,0.35);
+            background: rgba(245,158,11,0.08);
+        }
+
+        /* ─── Resume Discussion report screen ─── */
+        #rd-report-container {
+            display: none;
+            width: 100%;
+            max-width: 860px;
+            margin: auto;
+            height: 92vh;
+            flex-direction: column;
+            overflow-y: auto;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            padding: 48px 24px 24px;
+        }
+        #rd-report-container::-webkit-scrollbar { display: none; }
+
+        .rd-report-eyebrow {
+            font-size: 0.72rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .rd-report-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            color: #fff;
+            margin-bottom: 36px;
+        }
+
+        .rd-section-title { font-weight: 600; font-size: 1.05rem; letter-spacing: 0.5px; color: #fff; margin: 8px 0 18px; }
+
+        .rd-skillbar { margin-bottom: 18px; }
+        .rd-skillbar-head { display: flex; justify-content: space-between; font-size: 0.85rem; color: #ccc; margin-bottom: 8px; }
+        .rd-skillbar-track { width: 100%; height: 6px; background: #111; border-radius: 10px; overflow: hidden; }
+        .rd-skillbar-fill { height: 100%; border-radius: 10px; transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        .rd-project-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 40px; }
+        .rd-project-card { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; }
+        .rd-project-card.strongest { border-color: rgba(52,211,153,0.35); }
+        .rd-project-card.weakest { border-color: rgba(251,113,133,0.35); }
+        .rd-project-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 8px; }
+        .rd-project-name { font-size: 1.05rem; font-weight: 600; }
+
+        .rd-chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 36px; }
+        .rd-chip { font-size: 0.78rem; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border-subtle); background: rgba(255,255,255,0.03); }
+        .rd-chip.mastered { color: #34d399; border-color: rgba(52,211,153,0.3); }
+        .rd-chip.review { color: #fbbf24; border-color: rgba(251,191,36,0.3); }
+
+        .rd-timeline-card { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px 24px; margin-bottom: 14px; cursor: pointer; }
+        .rd-timeline-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        .rd-timeline-grade { font-family: 'Roboto Mono', monospace; font-weight: 600; }
+        .rd-timeline-q { font-size: 1.02rem; font-weight: 500; color: #fff; margin-bottom: 10px; line-height: 1.5; }
+        .rd-timeline-a { font-size: 0.88rem; color: #aaa; line-height: 1.55; }
+        .rd-timeline-detail { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-subtle); }
+        .rd-timeline-detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+        .rd-timeline-metric-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+        .rd-timeline-metric-value { font-family: 'Roboto Mono', monospace; }
+        .rd-timeline-list { margin: 0 0 10px; padding-left: 18px; font-size: 0.85rem; }
+        .rd-suggested-answer { font-size: 0.85rem; color: #93c5fd; background: rgba(59,130,246,0.05); padding: 12px 14px; border-radius: 8px; border-left: 3px solid var(--accent); line-height: 1.5; }
+        .rd-expand-hint { font-size: 0.68rem; color: #555; margin-top: 10px; text-align: center; }
+
+        .rd-report-actions { display: flex; gap: 16px; margin: 40px 0; }
+
+        /* ─── Interview-report additions: overall score + secondary metrics,
+             strengths/improve columns, authenticity/feedback/focus cards ─── */
+        .rd-overall-card {
+            background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+            border-radius: 16px; padding: 28px 28px 24px; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+        }
+        .rd-overall-score { font-family: 'Roboto Mono', monospace; font-size: 3rem; font-weight: 700; line-height: 1; }
+        .rd-overall-meta { flex: 1; min-width: 180px; }
+        .rd-overall-grade { font-size: 1rem; font-weight: 600; color: #fff; text-transform: capitalize; margin-bottom: 4px; }
+        .rd-overall-sub { font-size: 0.82rem; color: var(--text-muted); }
+
+        .rd-metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 40px; }
+        .rd-metric-card { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px 14px; }
+        .rd-metric-value { font-family: 'Roboto Mono', monospace; font-size: 1.4rem; font-weight: 700; margin-bottom: 4px; }
+        .rd-metric-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.2px; }
+
+        .rd-columns-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 40px; }
+        .rd-column-card { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px 22px; }
+        .rd-column-card.strengths { border-color: rgba(52,211,153,0.3); }
+        .rd-column-card.improve { border-color: rgba(251,191,36,0.3); }
+        .rd-column-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+        .rd-column-card.strengths .rd-column-title { color: #34d399; }
+        .rd-column-card.improve .rd-column-title { color: #fbbf24; }
+        .rd-column-list { margin: 0; padding-left: 18px; font-size: 0.88rem; color: #ddd; line-height: 1.7; }
+
+        .rd-chip.missing { color: #fb7185; border-color: rgba(251,113,133,0.3); }
+        .rd-chip.focus { color: #93c5fd; border-color: rgba(59,130,246,0.35); background: rgba(59,130,246,0.06); }
+
+        .rd-feedback-card {
+            background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-left: 3px solid var(--accent);
+            border-radius: 10px; padding: 20px 22px; margin-bottom: 40px; font-size: 0.92rem; color: #ddd; line-height: 1.65;
+        }
+
+        @media (max-width: 640px) {
+            .rd-project-grid { grid-template-columns: 1fr; }
+            .rd-metric-grid { grid-template-columns: repeat(2, 1fr); }
+            .rd-columns-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -489,33 +682,9 @@
                 <input type="file" id="resume-file" accept=".pdf,.docx" style="width: 100%; padding: 12px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-elevated); color: white; cursor: pointer;">
             </div>
             <button class="start-btn" onclick="uploadResume()">Start Interview →</button>
-            <br><br>
-            <button class="start-btn" style="background: #666;" onclick="testQuizDirectly()">TEST: Load Discussion Directly</button>
-            <div id="resume-analysis" style="display: none; margin-top: 20px; padding: 20px; background: var(--bot-bubble); border-radius: 12px; border: 1px solid var(--border-subtle);">
-                <p style="color: #10b981; margin: 5px 0;"><strong>✅ Domain:</strong> <span id="classified-domain"></span></p>
-                <p style="color: #f59e0b; margin: 5px 0;"><strong>🎯 Confidence:</strong> <span id="domain-confidence"></span></p>
-                <p style="color: #3b82f6; margin: 5px 0;"><strong>💼 Experience:</strong> <span id="domain-experience"></span></p>
-                <button class="start-btn" style="margin-top: 12px;" onclick="startQuizFromAnalysis()">Proceed to Resume Discussion →</button>
-            </div>
         </div>
 
-        <!-- STEP 2: Resume Discussion -->
-        <div id="quiz-section" style="display: none; margin-top: 20px; max-height: 70vh; overflow-y: auto; padding-right: 10px;">
-            <div style="background: var(--bot-bubble); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 20px; position: sticky; top: 0; z-index: 10;">
-                <p style="color: #3b82f6; margin: 0;"><strong>Resume Discussion</strong></p>
-                <p style="color: #888; margin: 5px 0 0 0; font-size: 0.9rem;">Questions based on your projects and experience</p>
-                <div style="margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                    <p style="margin: 0 0 8px 0; color: #aaa; font-size: 0.85rem;">Progress: <span id="quiz-progress">0</span>/<span id="quiz-total">12</span></p>
-                    <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
-                        <div id="quiz-progress-bar" style="height: 100%; width: 0%; background: #3b82f6; transition: width 0.3s;"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="quiz-questions-container" style="padding-bottom: 20px;"></div>
-        </div>
-
-        <!-- STEP 3: Subject Selection -->
+        <!-- STEP 2: Subject Selection -->
         <div id="subject-selection-section" style="display: none; margin-top: 20px;">
             <div class="form-group">
                 <label>Subject Domain</label>
@@ -559,6 +728,24 @@
 
     <div id="dashboard-container"></div>
 
+    <!-- RESUME DISCUSSION (dedicated — isolated from #chat-container / #dashboard-container
+         above, which the Technical/Adaptive Interview uses; kept fully separate so this
+         redesign has zero visual or behavioral effect on that flow) -->
+    <div id="rd-container">
+        <div id="rd-header">
+            <div id="rd-header-title">Resume Discussion</div>
+            <div id="rd-progress-track"><div id="rd-progress-fill"></div></div>
+            <div id="rd-progress-label">Getting started</div>
+        </div>
+        <div id="rd-messages"></div>
+        <div class="input-area" id="rd-input-area">
+            <input type="text" id="rd-user-input" placeholder="Share your answer..." autocomplete="off">
+            <button class="send-btn" id="rd-send-btn" onclick="rdHandleSubmission()">Send</button>
+        </div>
+    </div>
+
+    <div id="rd-report-container"></div>
+
     <!-- CANDIDATE ASSESSMENT DASHBOARD -->
     <div id="candidate-dashboard">
         <div class="dash-wrapper" id="dash-wrapper"></div>
@@ -577,6 +764,12 @@
         let selectedTopic = "All";
         let parsedResumeData = null;  // Stores parsed resume for dashboard
 
+        // ─── RESUME DISCUSSION STATE (dedicated — see #rd-container) ──
+        let rdSessionId = null;
+        let rdQuestionNum = 0;
+        let rdTotalQuestions = 12;
+        let rdCurrentCategory = "project_overview";
+
         const landingContainer = document.getElementById("landing-container");
         const chatContainer = document.getElementById("chat-container");
         const dashboardContainer = document.getElementById("dashboard-container");
@@ -587,6 +780,14 @@
         const sendBtn = document.getElementById("send-btn");
         const micBtn = document.getElementById("mic-btn");
         const chatHeader = document.getElementById("chat-header-title");
+
+        const rdContainer = document.getElementById("rd-container");
+        const rdMessages = document.getElementById("rd-messages");
+        const rdInput = document.getElementById("rd-user-input");
+        const rdSendBtn = document.getElementById("rd-send-btn");
+        const rdProgressFill = document.getElementById("rd-progress-fill");
+        const rdProgressLabel = document.getElementById("rd-progress-label");
+        const rdReportContainer = document.getElementById("rd-report-container");
 
         // ─── TOAST NOTIFICATION HELPER ────────────────────────────────
         function showToast(message, type = "info", duration = 3500) {
@@ -816,13 +1017,13 @@
             el.style.marginBottom = "28px";
 
             const domain = esc(data.predicted_domain || "Software Engineering");
-            const quizDomain = esc(data.quiz_domain || "Software Engineer");
+            const discussionDomain = esc(data.discussion_domain || "Software Engineer");
             const yearExp = data.experience ? (data.experience.years || 0) : 0;
 
             el.innerHTML = `
                 <div class="dash-card-label">Interview Preview</div>
                 <div class="dash-preview-box">
-                    <strong>Resume Discussion:</strong> ${quizDomain} &mdash; Conversational questions based on your projects, technologies, and experience.<br>
+                    <strong>Resume Discussion:</strong> ${discussionDomain} &mdash; Conversational questions based on your projects, technologies, and experience.<br>
                     <strong>Adaptive Interview:</strong> ${domain} focus with ${yearExp > 0 ? yearExp + ' years' : 'your'} experience level. Questions adapt based on your responses.<br>
                     <strong>Evaluation:</strong> Semantic scoring + fill-in-the-blank verification. Results populate the final analytics dashboard.
                 </div>
@@ -832,27 +1033,384 @@
 
         function renderDashStartButton() {
             const el = document.createElement("div");
-            el.innerHTML = `<button class="dash-start-btn" onclick="startDomainQuizFromDashboard()">Start Resume Discussion</button>`;
+            el.innerHTML = `<button class="dash-start-btn" onclick="startDomainDiscussionFromDashboard()">Start Resume Discussion</button>`;
             return el;
         }
 
-        function startDomainQuizFromDashboard() {
+        function startDomainDiscussionFromDashboard() {
             candidateDashboard.style.display = "none";
+            landingContainer.style.display = "none";
+            rdMessages.innerHTML = "";
+            rdQuestionNum = 0;
 
-            // Switch to quiz flow
-            document.getElementById("resume-upload-section").style.display = "none";
+            rdContainer.style.display = "flex";
+            rdContainer.style.opacity = "0";
+            setTimeout(() => { rdContainer.style.opacity = "1"; }, 50);
+
+            rdStartSession();
+        }
+
+        // ─── RESUME DISCUSSION — dedicated chat helpers ────────────────
+        const RD_CATEGORY_LABELS = {
+            "project_overview": "Project Overview",
+            "project_deep_dive": "Project Deep Dive",
+            "skill_in_context": "Skill in Context",
+            "experience": "Experience",
+            "certification": "Certification",
+        };
+
+        function rdCategoryLabel(cat) {
+            return RD_CATEGORY_LABELS[cat] || "Discussion";
+        }
+
+        function rdUpdateProgress(num, total, category) {
+            const pct = Math.min(100, Math.round((num / Math.max(total, 1)) * 100));
+            rdProgressFill.style.width = pct + "%";
+            rdProgressLabel.textContent = `Question ${num} of ~${total} \u2014 ${rdCategoryLabel(category)}`;
+        }
+
+        function rdAddMessage(text, sender, isHtml = false, categoryTag = null) {
+            const wrapper = document.createElement("div");
+            wrapper.className = `msg-wrapper ${sender}-wrapper`;
+
+            const avatar = document.createElement("div");
+            avatar.className = "avatar";
+            avatar.innerHTML = sender === "bot" ? "AI" : "U";
+
+            const msgDiv = document.createElement("div");
+            msgDiv.className = `msg ${sender}-msg`;
+
+            let inner = "";
+            if (categoryTag) {
+                inner += `<div class="rd-category-tag${categoryTag.followup ? " followup" : ""}">${esc(categoryTag.label)}</div>`;
+            }
+            inner += isHtml ? text : esc(text).replace(/\n/g, "<br>");
+            msgDiv.innerHTML = inner;
+
+            wrapper.appendChild(avatar);
+            wrapper.appendChild(msgDiv);
+            rdMessages.appendChild(wrapper);
+            rdMessages.scrollTop = rdMessages.scrollHeight;
+        }
+
+        function rdShowTyping() {
+            const wrapper = document.createElement("div");
+            wrapper.className = "msg-wrapper bot-wrapper";
+            wrapper.id = "rd-typing-box";
+            wrapper.innerHTML = `<div class="avatar">AI</div><div class="typing-indicator"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+            rdMessages.appendChild(wrapper);
+            rdMessages.scrollTop = rdMessages.scrollHeight;
+        }
+
+        function rdHideTyping() {
+            const box = document.getElementById("rd-typing-box");
+            if (box) box.remove();
+        }
+
+        function rdDisableInput() {
+            rdInput.disabled = true;
+            rdSendBtn.disabled = true;
+            rdInput.placeholder = "Thinking...";
+        }
+
+        function rdEnableInput() {
+            rdInput.disabled = false;
+            rdSendBtn.disabled = false;
+            rdInput.placeholder = "Share your answer...";
+            rdInput.focus();
+        }
+
+        function rdHandleSubmission() {
+            if (rdInput.disabled) return;
+            const text = rdInput.value.trim();
+            if (!text) return;
+            rdInput.value = "";
+            rdHandleReply(text);
+        }
+
+        rdInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") rdHandleSubmission();
+        });
+
+        async function rdStartSession() {
+            rdDisableInput();
+            rdShowTyping();
+
+            const sessionId = parsedResumeData ? (parsedResumeData.session_id || "") : "";
+
+            try {
+                const res = await fetch("/api/resume-discussion/start", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                const data = await res.json();
+
+                await sleep(600);
+                rdHideTyping();
+
+                if (data.error) {
+                    rdAddMessage(data.error, "bot");
+                    rdEnableInput();
+                    return;
+                }
+
+                rdSessionId = data.session_id;
+                rdTotalQuestions = data.total_questions;
+                rdQuestionNum = data.question_num;
+                rdCurrentCategory = data.question.category;
+
+                rdAddMessage(
+                    "Let's talk through your background. I'll ask about your projects, experience, and technologies \u2014 take your time with each answer.",
+                    "bot",
+                );
+                await sleep(400);
+
+                rdUpdateProgress(rdQuestionNum, rdTotalQuestions, rdCurrentCategory);
+                rdLoadQuestion(data.question, false);
+
+            } catch (err) {
+                rdHideTyping();
+                console.error("Discussion start error:", err);
+                rdAddMessage("Failed to start the discussion. Please try again.", "bot");
+                rdEnableInput();
+            }
+        }
+
+        function rdLoadQuestion(q, isFollowup) {
+            rdAddMessage(q.text, "bot", false, {
+                label: isFollowup ? "Follow-up" : rdCategoryLabel(q.category),
+                followup: isFollowup,
+            });
+            rdEnableInput();
+        }
+
+        async function rdHandleReply(answer) {
+            rdDisableInput();
+            rdAddMessage(answer, "user");
+            rdShowTyping();
+
+            try {
+                const res = await fetch("/api/resume-discussion/reply", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ session_id: rdSessionId, answer: answer })
+                });
+                const data = await res.json();
+
+                await sleep(700);
+                rdHideTyping();
+
+                if (data.error) {
+                    rdAddMessage(data.error, "bot");
+                    rdEnableInput();
+                    return;
+                }
+
+                if (data.is_completed) {
+                    await sleep(600);
+                    rdTriggerReport();
+                    return;
+                }
+
+                if (data.next_question) {
+                    rdQuestionNum = data.question_num;
+                    rdCurrentCategory = data.next_question.category;
+                    // Use the fixed target set at session start, not data.total_questions
+                    // (that field is the running count of turns so far, not a target — using
+                    // it here made the progress bar read "Question 2 of ~2", "3 of ~3", etc.)
+                    rdUpdateProgress(rdQuestionNum, rdTotalQuestions, rdCurrentCategory);
+
+                    await sleep(500);
+                    rdLoadQuestion(data.next_question, data.is_followup);
+                }
+
+            } catch (err) {
+                rdHideTyping();
+                console.error("Discussion reply error:", err);
+                rdAddMessage("Something went wrong processing that answer. Please try again.", "bot");
+                rdEnableInput();
+            }
+        }
+
+        async function rdTriggerReport() {
+            rdDisableInput();
+            rdShowTyping();
+
+            try {
+                const res = await fetch("/api/resume-discussion/end", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ session_id: rdSessionId })
+                });
+                const data = await res.json();
+                await sleep(500);
+                rdHideTyping();
+
+                rdContainer.style.opacity = "0";
+                await sleep(400);
+                rdContainer.style.display = "none";
+
+                rdRenderReport(data);
+
+            } catch (err) {
+                rdHideTyping();
+                console.error("Discussion end error:", err);
+                rdAddMessage("Failed to generate your discussion report.", "bot");
+                rdEnableInput();
+            }
+        }
+
+        function rdRenderReport(data) {
+            rdReportContainer.innerHTML = "";
+            rdReportContainer.style.display = "flex";
+
+            const avg = data.average_answer_quality || 0;
+            const perfColor = avg >= 75 ? "#34d399" : avg >= 50 ? "#fbbf24" : "#fb7185";
+            const gradeLabel = avg >= 80 ? "Excellent" : avg >= 60 ? "Good" : avg >= 40 ? "Adequate" : "Needs Improvement";
+            const timeline = data.timeline || [];
+
+            const secondaryMetrics = [
+                { label: "Communication", value: data.communication_score || 0 },
+                { label: "Technical Depth", value: data.technical_depth || 0 },
+                { label: "Project Understanding", value: data.project_understanding || 0 },
+                { label: "Resume Authenticity", value: data.resume_authenticity || 0 },
+            ];
+
+            const skillRows = [
+                { label: "Relevance", value: timeline.reduce((s, t) => s + (t.correctness || 0), 0) / Math.max(timeline.length, 1) * 100 },
+                { label: "Technical Depth", value: data.technical_depth || 0 },
+                { label: "Completeness", value: timeline.reduce((s, t) => s + (t.completeness || 0), 0) / Math.max(timeline.length, 1) * 100 },
+                { label: "Communication", value: data.communication_score || 0 },
+                { label: "Concept Coverage", value: data.concept_coverage_avg || 0 },
+            ];
+
+            const techChips = (data.technologies_demonstrated || []).map(t => `<span class="rd-chip">${esc(t)}</span>`).join("");
+            const masteredChips = (data.concepts_mastered || []).map(c => `<span class="rd-chip mastered">${esc(c)}</span>`).join("");
+            const reviewChips = (data.concepts_needing_review || []).map(c => `<span class="rd-chip review">${esc(c)}</span>`).join("");
+            const missingSkillChips = (data.skills_not_demonstrated || []).map(t => `<span class="rd-chip missing">${esc(t)}</span>`).join("");
+            const focusChips = (data.recommended_focus || []).map(f => `<span class="rd-chip focus">${esc(f)}</span>`).join("");
+            const strengthsListHtml = (data.strongest_areas || []).map(s => `<li>${esc(s)}</li>`).join("") || "<li>Not enough data yet</li>";
+            const improveListHtml = (data.areas_to_improve || []).map(s => `<li>${esc(s)}</li>`).join("") || "<li>No specific gaps flagged</li>";
+
+            let timelineHtml = "";
+            timeline.forEach((item, i) => {
+                const gradeColor = item.score >= 0.7 ? "#34d399" : item.score >= 0.4 ? "#fbbf24" : "#fb7185";
+                const strengthsHtml = (item.strengths || []).map(s => `<li>${esc(s)}</li>`).join("");
+                const weaknessesHtml = (item.weaknesses || []).map(w => `<li>${esc(w)}</li>`).join("");
+                const answerText = item.answer || "";
+                const answerPreview = esc(answerText.substring(0, 240)) + (answerText.length > 240 ? "\u2026" : "");
+
+                timelineHtml += `
+                    <div class="rd-timeline-card" onclick="this.querySelector('.rd-timeline-detail').style.display = this.querySelector('.rd-timeline-detail').style.display === 'block' ? 'none' : 'block'">
+                        <div class="rd-timeline-head">
+                            <span>${item.is_followup ? "Follow-up" : "Q" + (item.question_num || i + 1)} &middot; ${esc(rdCategoryLabel(item.category))}</span>
+                            <span class="rd-timeline-grade" style="color:${gradeColor}">${(item.score * 100).toFixed(0)}% &middot; ${esc(item.grade)}</span>
+                        </div>
+                        <div class="rd-timeline-q">${esc(item.question)}</div>
+                        <div class="rd-timeline-a">${answerPreview}</div>
+
+                        <div class="rd-timeline-detail">
+                            <div class="rd-timeline-detail-grid">
+                                <div><div class="rd-timeline-metric-label">Correctness</div><div class="rd-timeline-metric-value">${((item.correctness || 0) * 100).toFixed(0)}%</div></div>
+                                <div><div class="rd-timeline-metric-label">Technical Depth</div><div class="rd-timeline-metric-value">${((item.technical_depth || 0) * 100).toFixed(0)}%</div></div>
+                                <div><div class="rd-timeline-metric-label">Completeness</div><div class="rd-timeline-metric-value">${((item.completeness || 0) * 100).toFixed(0)}%</div></div>
+                                <div><div class="rd-timeline-metric-label">Communication</div><div class="rd-timeline-metric-value">${((item.communication || 0) * 100).toFixed(0)}%</div></div>
+                            </div>
+                            ${strengthsHtml ? `<div class="rd-timeline-metric-label">Strengths</div><ul class="rd-timeline-list">${strengthsHtml}</ul>` : ""}
+                            ${weaknessesHtml ? `<div class="rd-timeline-metric-label">To improve</div><ul class="rd-timeline-list">${weaknessesHtml}</ul>` : ""}
+                            ${item.suggested_answer ? `<div class="rd-timeline-metric-label" style="margin-bottom:6px;">A stronger answer</div><div class="rd-suggested-answer">${esc(item.suggested_answer)}</div>` : ""}
+                        </div>
+                        <div class="rd-expand-hint">Tap to expand details</div>
+                    </div>
+                `;
+            });
+
+            rdReportContainer.innerHTML = `
+                <div class="rd-report-eyebrow">Resume Discussion &middot; Interview Report</div>
+                <div class="rd-report-title">Your Discussion Report</div>
+
+                <div class="rd-overall-card">
+                    <div class="rd-overall-score" style="color:${perfColor}">${avg.toFixed(0)}%</div>
+                    <div class="rd-overall-meta">
+                        <div class="rd-overall-grade">${esc(gradeLabel)} overall performance</div>
+                        <div class="rd-overall-sub">${data.total_questions || 0} questions discussed across ${(data.projects_discussed || []).length} project${(data.projects_discussed || []).length === 1 ? "" : "s"}</div>
+                    </div>
+                </div>
+
+                <div class="rd-metric-grid">
+                    ${secondaryMetrics.map(m => {
+                        const color = m.value >= 75 ? "#34d399" : m.value >= 50 ? "#fbbf24" : "#fb7185";
+                        return `<div class="rd-metric-card">
+                            <div class="rd-metric-value" style="color:${color}">${(m.value || 0).toFixed(0)}%</div>
+                            <div class="rd-metric-label">${esc(m.label)}</div>
+                        </div>`;
+                    }).join("")}
+                </div>
+
+                <div class="rd-section-title">Skill Breakdown</div>
+                <div style="margin-bottom:40px;">
+                    ${skillRows.map(s => {
+                        const color = s.value >= 75 ? "#34d399" : s.value >= 50 ? "#fbbf24" : "#fb7185";
+                        return `<div class="rd-skillbar">
+                            <div class="rd-skillbar-head"><span>${esc(s.label)}</span><span>${s.value.toFixed(0)}%</span></div>
+                            <div class="rd-skillbar-track"><div class="rd-skillbar-fill" style="width:${s.value}%; background:${color};"></div></div>
+                        </div>`;
+                    }).join("")}
+                </div>
+
+                <div class="rd-columns-grid">
+                    <div class="rd-column-card strengths">
+                        <div class="rd-column-title">Strongest Areas</div>
+                        <ul class="rd-column-list">${strengthsListHtml}</ul>
+                    </div>
+                    <div class="rd-column-card improve">
+                        <div class="rd-column-title">Areas to Improve</div>
+                        <ul class="rd-column-list">${improveListHtml}</ul>
+                    </div>
+                </div>
+
+                <div class="rd-section-title">Projects</div>
+                <div class="rd-project-grid">
+                    <div class="rd-project-card strongest"><div class="rd-project-label">Strongest</div><div class="rd-project-name" style="color:#34d399;">${esc(data.strongest_project || "N/A")}</div></div>
+                    <div class="rd-project-card weakest"><div class="rd-project-label">Could go deeper</div><div class="rd-project-name" style="color:#fb7185;">${esc(data.weakest_project || "N/A")}</div></div>
+                </div>
+
+                ${(data.projects_discussed || []).length ? `<div class="rd-section-title">Projects Discussed</div><div class="rd-chip-row">${(data.projects_discussed || []).map(p => `<span class="rd-chip">${esc(p)}</span>`).join("")}</div>` : ""}
+                ${techChips ? `<div class="rd-section-title">Skills Demonstrated</div><div class="rd-chip-row">${techChips}</div>` : ""}
+                ${missingSkillChips ? `<div class="rd-section-title">Skills Not Sufficiently Demonstrated</div><div class="rd-chip-row">${missingSkillChips}</div>` : ""}
+                ${masteredChips ? `<div class="rd-section-title">Concepts Mastered</div><div class="rd-chip-row">${masteredChips}</div>` : ""}
+                ${reviewChips ? `<div class="rd-section-title">Concepts to Review</div><div class="rd-chip-row">${reviewChips}</div>` : ""}
+
+                ${data.personalized_feedback ? `<div class="rd-section-title">Personalized Feedback</div><div class="rd-feedback-card">${esc(data.personalized_feedback)}</div>` : ""}
+                ${focusChips ? `<div class="rd-section-title">Recommended Focus Before the Technical Interview</div><div class="rd-chip-row">${focusChips}</div>` : ""}
+
+                <div class="rd-section-title">Discussion Timeline</div>
+                <div style="margin-bottom:20px;">${timelineHtml}</div>
+
+                <div class="rd-report-actions">
+                    <button class="retry-btn" onclick="resetInterview()" style="flex:1;">Start Over</button>
+                    <button class="retry-btn" onclick="proceedToAdaptiveInterview()" style="flex:1; background:#3b82f6; color:white;">Proceed to Technical Interview \u2192</button>
+                </div>
+            `;
+        }
+
+        function proceedToAdaptiveInterview() {
+            rdSessionId = null;
+            rdQuestionNum = 0;
+
+            rdReportContainer.style.display = "none";
+            rdMessages.innerHTML = "";
+
+            // Show subject selection for Adaptive Technical Interview
             landingContainer.style.display = "block";
             landingContainer.style.opacity = "0";
-            document.getElementById("quiz-section").style.display = "block";
+            document.getElementById("resume-upload-section").style.display = "none";
+            document.getElementById("subject-selection-section").style.display = "block";
 
             setTimeout(() => { landingContainer.style.opacity = "1"; }, 50);
-
-            const domain = parsedResumeData ? parsedResumeData.quiz_domain : "Software Engineer";
-            const skills = parsedResumeData ? (parsedResumeData.skills || []) : [];
-            classifiedDomain = domain;
-            resumeSkills = skills;
-            loadDomainQuiz(domain, skills);
         }
+
         function animateScore(elementId, targetScore, cardId) {
             const el = document.getElementById(elementId);
             const cardElement = document.getElementById(cardId);
@@ -932,33 +1490,11 @@
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // RESUME UPLOAD & CLASSIFICATION
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        let classifiedDomain = null;
-        let quizAnswers = [];
-        
-        let resumeSkills = [];  // Store skills from resume for quiz customization
-        
-        async function testQuizDirectly() {
-            // Hide resume section
-            document.getElementById("resume-upload-section").style.display = "none";
-            document.getElementById("quiz-section").style.display = "block";
-            
-            // Directly fetch and show quiz
-            const response = await fetch("/api/get-domain-quiz", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ domain: "Software Engineer", skills: [] })
-            });
-            
-            const result = await response.json();
-            
-            displayQuiz(result.quiz);
-        }
-        
         async function uploadResume() {
-            
+
             const fileInput = document.getElementById("resume-file");
             const file = fileInput.files[0];
-            
+
             if (!file) {
                 showToast("Please select a resume file first.", "error");
                 return;
@@ -999,126 +1535,6 @@
             }
         }
 
-        function startQuizFromAnalysis() {
-            document.getElementById("resume-analysis").style.display = "none";
-            document.getElementById("quiz-section").style.display = "block";
-            loadDomainQuiz(classifiedDomain, resumeSkills);
-        }
-
-        async function loadDomainQuiz(domain, skills = []) {
-            try {
-                const sessionId = parsedResumeData ? (parsedResumeData.session_id || "") : "";
-                const response = await fetch("/api/get-domain-quiz", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ session_id: sessionId, domain: domain, skills: skills })
-                });
-
-                const result = await response.json();
-                
-                if (result.status === "success" && result.quiz && result.quiz.length > 0) {
-                    // Update total questions counter
-                    const totalQs = result.total_questions || result.quiz.length;
-                    document.getElementById("quiz-total").textContent = totalQs;
-                    // Now display the quiz
-                    displayQuiz(result.quiz);
-                } else {
-                    console.error("Invalid quiz response:", result);
-                    alert("Error loading quiz. Check console.");
-                }
-            } catch (error) {
-                console.error("Error loading quiz:", error);
-                alert("Error loading quiz: " + error);
-            }
-        }
-
-        function displayQuiz(questions) {
-            const container = document.getElementById("quiz-questions-container");
-            
-            if (!container) {
-                console.error("FATAL: quiz-questions-container not found!");
-                return;
-            }
-            
-            container.innerHTML = "";
-            quizAnswers = [];
-
-            // Update total questions
-            document.getElementById("quiz-total").textContent = questions.length;
-
-            questions.forEach((q, index) => {
-                const questionDiv = document.createElement("div");
-                questionDiv.style.cssText = "margin-bottom: 20px; padding: 20px; background: var(--bg-elevated); border-radius: 12px; border: 1px solid var(--border-subtle);";
-                
-                const isDiscussion = q._discussion;
-                
-                let optionsHtml = "";
-                (q.options || []).forEach((opt, optIndex) => {
-                    optionsHtml += `
-                        <div style="margin: 12px 0;">
-                            <label style="display: flex; align-items: flex-start; cursor: pointer; color: #aaa;">
-                                <input type="radio" name="q${index}" value="${optIndex}" onchange="selectAnswer(${index}, ${optIndex})" style="margin-right: 12px; margin-top: 4px; cursor: pointer;">
-                                <span style="line-height: 1.4;">${opt}</span>
-                            </label>
-                        </div>
-                    `;
-                });
-
-                const difficultyColor = q.difficulty === "Hard" ? "#fb7185" : q.difficulty === "Medium" ? "#fbbf24" : "#10b981";
-                const badgeHtml = isDiscussion
-                    ? `<span style="padding: 4px 10px; background: rgba(59,130,246,0.1); border-radius: 6px; border: 1px solid #3b82f6; color: #3b82f6; font-size: 0.75rem; font-weight: 600;">Discussion</span>`
-                    : `<span style="padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 6px; border: 1px solid ${difficultyColor}; color: ${difficultyColor}; font-size: 0.75rem; font-weight: 600;">${q.difficulty}</span>`;
-                
-                questionDiv.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <p style="color: #3b82f6; margin: 0;"><strong>Q${index + 1}: ${q.question}</strong></p>
-                        ${badgeHtml}
-                    </div>
-                    ${optionsHtml}
-                `;
-                
-                container.appendChild(questionDiv);
-            });
-
-            // Add submit button
-            const submitBtn = document.createElement("button");
-            submitBtn.className = "start-btn";
-            submitBtn.textContent = `Continue to Interview (${questions.length} questions)`;
-            submitBtn.style.cssText = "margin-top: 20px; width: 100%;";
-            submitBtn.onclick = submitQuiz;
-            container.appendChild(submitBtn);
-        }
-
-        function selectAnswer(questionIndex, answerIndex) {
-            quizAnswers[questionIndex] = answerIndex;
-            
-            // Update progress
-            const answered = quizAnswers.filter(a => a !== undefined).length;
-            const total = parseInt(document.getElementById("quiz-total").textContent) || 12;
-            document.getElementById("quiz-progress").textContent = answered;
-            document.getElementById("quiz-progress-bar").style.width = (answered / total * 100) + "%";
-        }
-
-        async function submitQuiz() {
-            const total = parseInt(document.getElementById("quiz-total").textContent) || 12;
-            const answered = quizAnswers.filter(a => a !== undefined).length;
-            
-            if (answered < total) {
-                alert(`Please answer all ${total} questions (${answered}/${total} answered)`);
-                return;
-            }
-
-            // Hide quiz and show subject selection
-            document.getElementById("quiz-section").style.display = "none";
-            document.getElementById("subject-selection-section").style.display = "block";
-            
-            // Show quiz result
-            const resultDiv = document.createElement("div");
-            resultDiv.style.cssText = "margin-bottom: 20px; padding: 15px; background: var(--bot-bubble); border-radius: 12px; border: 1px solid var(--border-subtle); color: #10b981;";
-            resultDiv.innerHTML = `<strong>Discussion Complete!</strong> Resume reviewed. Now let's proceed to the technical interview!`;
-            document.getElementById("subject-selection-section").insertBefore(resultDiv, document.getElementById("subject-selection-section").firstChild);
-        }
-
         function startInterview() {
             selectedTopic = document.getElementById("topic-select").value;
             chatHeader.innerHTML = `${selectedTopic === 'All' ? 'Operating Systems' : selectedTopic} // Active Session`;
@@ -1139,17 +1555,21 @@
             currentDifficulty = "medium";
             stage = "main_question";
             parsedResumeData = null;
-            
+
+            // Reset Resume Discussion state
+            rdSessionId = null;
+            rdQuestionNum = 0;
+
             messagesDiv.innerHTML = "";
+            rdMessages.innerHTML = "";
             dashboardContainer.style.display = "none";
+            rdReportContainer.style.display = "none";
             candidateDashboard.style.display = "none";
             dashWrapper.innerHTML = "";
-            
+
             landingContainer.style.display = "block";
             document.getElementById("resume-upload-section").style.display = "block";
-            document.getElementById("quiz-section").style.display = "none";
             document.getElementById("subject-selection-section").style.display = "none";
-            document.getElementById("resume-analysis").style.display = "none";
 
             // Re-enable upload buttons
             const startBtns = document.querySelectorAll("#resume-upload-section .start-btn");
@@ -1341,9 +1761,10 @@
             const text = inputField.value.trim();
             if (!text) return;
             
-            disableInput(); 
-            addMessage(text, "user");
+            disableInput();
             inputField.value = "";
+
+            addMessage(text, "user");
 
             if (stage === "main_question") {
                 tempMainAnswer = text;

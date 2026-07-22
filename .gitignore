@@ -13,3 +13,5 @@ Thumbs.db
 **/cache/
 *.log
 .env
+main_cap/cap/debug_candidate_profile*.json
+main_cap/cap/_verify_traceability_cache.json

@@ -10,3 +10,5 @@ lxml
 sentence-transformers
 scikit-learn
 keybert
+transformers>=4.40.0
+torch>=2.0.0

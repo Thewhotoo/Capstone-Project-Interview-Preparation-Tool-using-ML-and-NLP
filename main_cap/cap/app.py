@@ -9,6 +9,8 @@ import os
 import sys
 import logging
 
+import discussion_engine
+
 # Load .env file (GEMINI_API_KEY etc.)
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
@@ -27,7 +29,7 @@ if not _gemini_key:
         "╚══════════════════════════════════════════════════════════════╝"
     )
 else:
-    logger.info("GEMINI_API_KEY loaded (%s...)", _gemini_key[:8])
+    logger.info("Gemini configured successfully.")
 
 app = Flask(__name__, template_folder="templates")
 
@@ -103,8 +105,8 @@ def health():
     """Health check"""
     return jsonify({"status": "ok"}), 200
 
-@app.route("/api/get-domain-quiz", methods=["POST"])
-def get_domain_quiz():
+@app.route("/api/get-resume-discussion", methods=["POST"])
+def get_resume_discussion():
     """
     Generate Resume Discussion questions from the Candidate Profile.
 
@@ -132,17 +134,17 @@ def get_domain_quiz():
                 "mode": "resume_discussion",
                 "domain": domain,
                 "total_questions": len(questions),
-                "quiz": questions,
+                "questions": questions,
             }), 200
 
         # Fallback: hardcoded MCQs when no profile available
-        quiz_questions = _hardcoded_quiz(domain)
+        fallback_questions = _hardcoded_fallback(domain)
         return jsonify({
             "status": "success",
-            "mode": "quiz",
+            "mode": "fallback",
             "domain": domain,
-            "total_questions": len(quiz_questions),
-            "quiz": quiz_questions,
+            "total_questions": len(fallback_questions),
+            "questions": fallback_questions,
         }), 200
 
     except Exception as e:
@@ -161,7 +163,7 @@ def _generate_resume_discussion_questions(profile: dict, num_questions: int = 10
         4. technologies (from projects)
         5. skills
 
-    Returns a list of dicts compatible with the existing quiz renderer:
+    Returns a list of dicts compatible with the existing discussion renderer:
         {question, options, answer, difficulty, _discussion: True}
     """
     import random
@@ -269,7 +271,7 @@ def _generate_resume_discussion_questions(profile: dict, num_questions: int = 10
     return questions[:num_questions]
 
 
-def _hardcoded_quiz(domain):
+def _hardcoded_fallback(domain):
     """Return the static question bank for a domain."""
     all_questions = {
             "Software Engineer": [
@@ -357,7 +359,7 @@ def _hardcoded_quiz(domain):
 
 # ── In-memory Candidate Profile store ────────────────────────────────────────
 # Keyed by session: stores the full Gemini-generated profile so downstream
-# modules (quiz, interview) never need to re-parse the resume.
+# modules (discussion, interview) never need to re-parse the resume.
 _candidate_profiles = {}   # session_id -> Candidate Profile dict
 
 
@@ -366,7 +368,7 @@ def classify_resume():
     """
     Parse an uploaded resume with a single Gemini 2.5 Flash call.
     The generated Candidate Profile is stored in memory for the lifetime of the
-    session so that dashboard, quiz, and interview modules consume it directly
+    session so that dashboard, discussion, and interview modules consume it directly
     without re-parsing.
 
     Returns the profile in the exact format the frontend already expects.
@@ -1047,36 +1049,76 @@ def adaptive_evaluate():
         return jsonify({"error": str(e)}), 500
 
 # ═══════════════════════════════════════════════════════════════════════════
+# RESUME DISCUSSION ENGINE (Conversational Interview)
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/resume-discussion/start", methods=["POST"])
+def resume_discussion_start():
+    """
+    Start a conversational Resume Discussion session.
+
+    Delegates to discussion_engine.start_session — see that module for the
+    Gemini-driven question decision + heuristic fallback logic.
+    """
+    try:
+        data = request.get_json() or {}
+        profile_session_id = data.get("session_id", "")
+
+        profile = _candidate_profiles.get(profile_session_id)
+        if not profile:
+            return jsonify({"error": "Candidate Profile not found. Upload a resume first."}), 404
+
+        result, status = discussion_engine.start_session(profile, profile_session_id)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion start error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/resume-discussion/reply", methods=["POST"])
+def resume_discussion_reply():
+    """
+    Submit an answer and receive evaluation + next question.
+
+    Delegates to discussion_engine.reply.
+    """
+    try:
+        data = request.get_json() or {}
+        disc_session_id = data.get("session_id", "")
+        answer = data.get("answer", "").strip()
+
+        result, status = discussion_engine.reply(disc_session_id, answer)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion reply error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/resume-discussion/end", methods=["POST"])
+def resume_discussion_end():
+    """
+    End a Resume Discussion session and return the full summary.
+
+    Delegates to discussion_engine.end_session.
+    """
+    try:
+        data = request.get_json() or {}
+        disc_session_id = data.get("session_id", "")
+
+        result, status = discussion_engine.end_session(disc_session_id)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion end error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # RUN
 # ═══════════════════════════════════════════════════════════════════════════
 
-def _verify_gemini_connectivity():
-    """Send a minimal request to Gemini to verify the API key and connectivity."""
-    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
-    if not api_key:
-        logger.warning("Skipping Gemini connectivity check — no API key")
-        return False
-    try:
-        from google import genai
-        from google.genai import types
-        client = genai.Client(api_key=api_key)
-        resp = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents="Reply with the word OK",
-            config=types.GenerateContentConfig(
-                max_output_tokens=8,
-                temperature=0.0,
-            ),
-        )
-        text = (resp.text or "").strip()
-        logger.info("Gemini connectivity OK — response: %s", text)
-        return True
-    except Exception as e:
-        logger.warning("Gemini connectivity check failed: %s", e)
-        return False
-
-
 if __name__ == "__main__":
-    _verify_gemini_connectivity()
     logger.info("Open your browser: http://localhost:5000")
     app.run(debug=False, port=5000, threaded=True, use_reloader=False)

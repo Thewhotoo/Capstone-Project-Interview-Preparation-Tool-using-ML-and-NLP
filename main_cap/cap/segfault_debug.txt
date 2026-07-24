@@ -1,0 +1,98 @@
+[23:16:57]   profile 0 ('Software Engineering'): 8 units, 1 rejected
+[23:16:57]   profile 1 ('Frontend Engineering'): 8 units, 0 rejected
+[23:16:57]   profile 2 ('Data Science / Machine Learning'): 8 units, 0 rejected
+[23:16:57]   profile 3 ('DevOps / Cloud Infrastructure'): 8 units, 0 rejected
+[23:16:57]   profile 4 ('Mobile Engineering'): 8 units, 0 rejected
+split 87 18 15
+building tokenizer
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+building dataloaders
+train_batches 22
+constructing MultiTaskModel
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/198 [00:00<?, ?it/s]Windows fatal exception: access violation
+
+Windows fatal exception: access violation
+
+Windows fatal exception: access violation
+
+Thread 0x0000a510 (most recent call first):
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 363 in wait
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 659 in wait
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\tqdm\_monitor.py", line 60 in run
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1043 in _bootstrap_inner
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1014 in _bootstrap
+
+Current thread 0x00008f74 (most recent call first):
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\core_model_loading.py", line 1185 in _materialize_copy
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\core_model_loading.py", line 1199 in _job
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\thread.py", line 59 in run
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\thread.py", line 93 in _worker
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 994 in run
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1043 in _bootstrap_inner
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1014 in _bootstrap
+
+Thread 0x00007028 (most recent call first):
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\core_model_loading.py", line 1185 in _materialize_copy
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\core_model_loading.py", line 1199 in _job
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\thread.py", line 59 in run
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\thread.py", line 93 in _worker
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 994 in run
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1043 in _bootstrap_inner
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1014 in _bootstrap
+
+Thread 0x000060c4 (most recent call first):
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\core_model_loading.py", line 1185 in _materialize_copy
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\core_model_loading.py", line 1199 in _job
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\thread.py", line 59 in run
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\thread.py", line 93 in _worker
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 994 in run
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1043 in _bootstrap_inner
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1014 in _bootstrap
+
+Thread 0x00001230 (most recent call first):
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\core_model_loading.py", line 1185 in _materialize_copy
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\core_model_loading.py", line 1199 in _job
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\thread.py", line 59 in run
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\thread.py", line 93 in _worker
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 994 in run
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1043 in _bootstrap_inner
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1014 in _bootstrap
+
+Thread 0x00004148 (most recent call first):
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\ssl.py", line 1140 in read
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\ssl.py", line 1285 in recv
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_backends\sync.py", line 128 in read
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_sync\http11.py", line 217 in _receive_event
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_sync\http11.py", line 177 in _receive_response_headers
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_sync\http11.py", line 106 in handle_request
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_sync\connection.py", line 103 in handle_request
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236 in handle_request
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_transports\default.py", line 250 in handle_request
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 1014 in _send_single_request
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 979 in _send_handling_redirects
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 942 in _send_handling_auth
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 914 in send
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 825 in request
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\httpx\_client.py", line 1053 in get
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\huggingface_hub\hf_api.py", line 7212 in _fetch_discussion_page
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\huggingface_hub\hf_api.py", line 7224 in get_repo_discussions
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\safetensors_conversion.py", line 14 in previous_pr
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\safetensors_conversion.py", line 69 in get_conversion_pr_reference
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\safetensors_conversion.py", line 96 in auto_conversion
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 994 in run
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1043 in _bootstrap_inner
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 1014 in _bootstrap
+
+Thread 0x00003b30 (most recent call first):
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\threading.py", line 359 in wait
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\concurrent\futures\_base.py", line 451 in result
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\core_model_loading.py", line 922 in materialize_tensors
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\core_model_loading.py", line 958 in convert
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\core_model_loading.py", line 1660 in convert_and_load_state_dict_in_model
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\modeling_utils.py", line 4502 in _load_pretrained_model
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\modeling_utils.py", line 4368 in from_pretrained
+  File "C:\Users\mayur\AppData\Local\Programs\Python\Python313\Lib\site-packages\transformers\models\auto\auto_factory.py", line 402 in from_pretrained
+  File "C:\Users\mayur\capstone\main_cap\cap\model_backbone.py", line 91 in __init__
+  File "C:\Users\mayur\capstone\main_cap\cap\model_heads.py", line 236 in __init__
+  File "<string>", line 44 in <module>

@@ -1,0 +1,6 @@
+Test Candidate -> 8 units, 1 rejected
+  REJECTED: RejectedTopic(topic='GraphQL federation', originating_project='Order Management System', originating_experience='', reason="no project titled 'Order Management System' exists on this profile")
+Frontend Candidate -> 8 units, 0 rejected
+Data/ML Candidate -> 8 units, 0 rejected
+DevOps/Cloud Candidate -> 8 units, 0 rejected
+Mobile Candidate -> 8 units, 0 rejected

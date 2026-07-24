@@ -1,0 +1,55 @@
+[00:53:23] === STEP 1: Build the pool from 36 curated candidate profiles across 12 domains ===
+[00:53:23] Loaded 36 curated profiles.
+[00:53:23]   ...built pool through profile 1/36
+[00:53:23]   ...built pool through profile 7/36
+[00:53:23]   ...built pool through profile 13/36
+[00:53:23]   ...built pool through profile 19/36
+[00:53:23]   ...built pool through profile 25/36
+[00:53:23]   ...built pool through profile 31/36
+[00:53:23]   ...built pool through profile 36/36
+[00:53:23] Built a combined pool of 362 discussion units from 36 candidate profiles (vs. 40 units / 5 profiles in experiment 2).
+[00:53:23] === STEP 2: Generate 2500 examples via CoverageStrategy + FakeGenerationClient ===
+[00:53:23] CoverageStrategy planned 2500 recipes. Tier distribution: {'weak': 450, 'excellent': 450, 'contradictory': 125, 'good': 450, 'poor': 450, 'adequate': 450, 'off_topic': 125}
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit0205' rejected on attempt 1/3: concept_count_mismatch: 'retrieval' appears in the answer despite being targeted OMITTED
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit0295' rejected on attempt 1/3: reasoning_mismatch: category 'architecture' was targeted major-severity-missing, but the answer strongly addresses it (2 markers found)
+[00:53:23]   progress: 500/2500 recipes processed (496 accepted, 4 rejected)
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit0608' rejected on attempt 1/3: reasoning_mismatch: category 'testing' was targeted major-severity-missing, but the answer strongly addresses it (2 markers found)
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit0734' rejected on attempt 1/3: reasoning_mismatch: category 'testing' was targeted major-severity-missing, but the answer strongly addresses it (2 markers found)
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit0824' rejected on attempt 1/3: reasoning_mismatch: category 'testing' was targeted major-severity-missing, but the answer strongly addresses it (2 markers found)
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit0858' rejected on attempt 1/3: hallucinated_technology: mentions sqlite not present in grounding
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit0858' rejected on attempt 2/3: hallucinated_technology: mentions sqlite not present in grounding
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit0858' rejected on attempt 3/3: hallucinated_technology: mentions sqlite not present in grounding
+[00:53:24]   progress: 1000/2500 recipes processed (991 accepted, 9 rejected)
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit1362' rejected on attempt 1/3: hallucinated_technology: mentions sqlite not present in grounding
+[00:53:24]   progress: 1500/2500 recipes processed (1487 accepted, 13 rejected)
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit1579' rejected on attempt 1/3: reasoning_mismatch: category 'architecture' was targeted major-severity-missing, but the answer strongly addresses it (2 markers found)
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit1662' rejected on attempt 1/3: concept_count_mismatch: 'grounding' appears in the answer despite being targeted OMITTED
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit1865' rejected on attempt 1/3: concept_count_mismatch: 'retrieval' appears in the answer despite being targeted OMITTED
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit1925' rejected on attempt 1/3: reasoning_mismatch: category 'architecture' was targeted major-severity-missing, but the answer strongly addresses it (2 markers found)
+[00:53:24]   progress: 2000/2500 recipes processed (1985 accepted, 15 rejected)
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit2047' rejected on attempt 1/3: reasoning_mismatch: category 'architecture' was targeted major-severity-missing, but the answer strongly addresses it (2 markers found)
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit2370' rejected on attempt 1/3: hallucinated_technology: mentions sqlite not present in grounding
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit2370' rejected on attempt 2/3: hallucinated_technology: mentions sqlite not present in grounding
+recipe 'experiment::v_experiment_003_scaled_library_fake_client::unit2370' rejected on attempt 3/3: hallucinated_technology: mentions sqlite not present in grounding
+[00:53:24]   progress: 2500/2500 recipes processed (2480 accepted, 20 rejected)
+[00:53:24] Generation complete in 1.3s: 2480 accepted, 20 rejected out of 2500.
+[00:53:24] === STEP 3: Assemble DatasetManifest ===
+[00:53:25] --- Dataset statistics (validated at construction by DatasetManifest/TrainingExample's own frozen validators) ---
+[00:53:25]   dataset_version: v_experiment_003_scaled_library_fake_client
+[00:53:25]   total examples: 2480
+[00:53:25]   unique underlying specifications: 359 (vs. 40 in experiment 2, 8 in experiment 1)
+[00:53:25]   candidate profiles: 36 across 12 domains (vs. 5 profiles / 1-5 domains before)
+[00:53:25]   tier_distribution: {'adequate': 444, 'contradictory': 123, 'excellent': 445, 'good': 447, 'off_topic': 125, 'poor': 448, 'weak': 448}
+[00:53:25]   label_source_distribution: {'synthetic_ground_truth': 2480}
+[00:53:25]   reasoning_type distribution: {'recall': 411, 'explanation': 409, 'application': 417, 'reflection': 417, 'ownership': 416, 'decision_making': 410}
+[00:53:25]   category distribution: {'project_deep_dive': 369, 'project_overview': 451, 'skill_in_context': 827, 'certification': 417, 'experience': 416}
+[00:53:25]   answer word count: min=11, max=140, avg=26.5
+[00:53:25]   average repetition per specification: 6.9x (vs. ~6.25x in experiment 2 at 120 examples / 40 specs, and would have been ~62.5x for this batch size against experiment 2's pool)
+[00:53:25] === STEP 4: Specification-level split (split_dataset_by_group, unmodified since session 8) ===
+[00:53:25] Split sizes: train=1736, val=383, test=361
+[00:53:25] Unique specifications per split: train=248, val=52, test=59
+[00:53:25] Specification overlap across splits: 0 (must be 0 for a valid held-out split)
+[00:53:25] === STEP 5: Persist to JSONL (experiment_dataset_io, new this milestone) ===
+[00:53:25] Saved 2480 examples to 'C:\\Users\\mayur\\AppData\\Local\\Temp\\v_experiment_003_scaled_library_fake_client.jsonl' in 0.1s (8.20 MB).
+[00:53:25] Reloaded 2480 examples in 0.3s. Round-trip fidelity: True.
+[00:53:25] === EXPERIMENT COMPLETE (no training/benchmark/promotion this milestone, per approved scope) ===

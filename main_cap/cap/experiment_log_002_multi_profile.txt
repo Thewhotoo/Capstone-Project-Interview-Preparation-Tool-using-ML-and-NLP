@@ -1,0 +1,80 @@
+[23:20:46] === STEP 1: Generate a diversified synthetic dataset (5 candidate profiles) ===
+[23:20:46]   profile 0 ('Software Engineering'): 8 units, 1 rejected
+[23:20:46]   profile 1 ('Frontend Engineering'): 8 units, 0 rejected
+[23:20:46]   profile 2 ('Data Science / Machine Learning'): 8 units, 0 rejected
+[23:20:46]   profile 3 ('DevOps / Cloud Infrastructure'): 8 units, 0 rejected
+[23:20:46]   profile 4 ('Mobile Engineering'): 8 units, 0 rejected
+[23:20:46] Built a combined pool of 40 discussion units from 5 candidate profiles.
+[23:20:46] CoverageStrategy planned 120 recipes. Tier distribution: {'contradictory': 6, 'excellent': 22, 'adequate': 22, 'off_topic': 6, 'good': 22, 'poor': 21, 'weak': 21}
+[23:20:46] Using FakeGenerationClient (deterministic, network-free) -- see module docstring for why.
+[23:20:46]   progress: 20/120 recipes processed (20 accepted, 0 rejected)
+[23:20:46]   progress: 40/120 recipes processed (40 accepted, 0 rejected)
+[23:20:46]   progress: 60/120 recipes processed (60 accepted, 0 rejected)
+[23:20:46]   progress: 80/120 recipes processed (80 accepted, 0 rejected)
+[23:20:46]   progress: 100/120 recipes processed (100 accepted, 0 rejected)
+[23:20:46]   progress: 120/120 recipes processed (120 accepted, 0 rejected)
+[23:20:46] Generation complete: 120 accepted, 0 rejected out of 120.
+[23:20:46] Assembling DatasetManifest...
+[23:20:46] --- Dataset statistics (validated at construction by DatasetManifest/TrainingExample's own frozen validators) ---
+[23:20:46]   dataset_version: v_experiment_002_multi_profile_fake_client
+[23:20:46]   total examples: 120
+[23:20:46]   unique underlying specifications: 40
+[23:20:46]   tier_distribution: {'adequate': 22, 'contradictory': 6, 'excellent': 22, 'good': 22, 'off_topic': 6, 'poor': 21, 'weak': 21}
+[23:20:46]   label_source_distribution: {'synthetic_ground_truth': 120}
+[23:20:46]   generator_provenance (prompt_id, prompt_version): (('promptbook', '1.0.0'),)
+[23:20:46]   reasoning_type distribution: {'recall': 24, 'explanation': 24, 'reflection': 24, 'ownership': 24, 'decision_making': 24}
+[23:20:46]   category distribution: {'project_deep_dive': 24, 'project_overview': 24, 'certification': 24, 'experience': 24, 'skill_in_context': 24}
+[23:20:46]   source_id (topic) distribution: {'Resume Discussion Platform': 12, 'AWS Certified Cloud Practitioner': 5, 'Software Engineering Intern at Acme Corp': 8, 'Static Portfolio Site': 3, 'Meta Front-End Developer Professional Certificate': 5, 'Frontend Engineer at Northwind Retail': 8, 'Component Design System': 12, 'AWS Certified Machine Learning – Specialty': 5, 'Data Scientist at Helios Analytics': 7, 'Marketing Site Redesign': 3, 'Certified Kubernetes Administrator (CKA)': 5, 'DevOps Engineer at Cascade Systems': 7, 'Customer Churn Prediction Pipeline': 8, 'Apple Certified iOS App Developer': 4, 'iOS Engineer at Trailhead Apps': 6, 'Internal Analytics Dashboard': 2, 'Multi-Region Kubernetes Deployment Pipeline': 8, 'Internal Observability Stack': 2, 'Offline-First Grocery List App': 8, 'App Store Release Automation': 2}
+[23:20:46]   concept_observation status distribution: {'superficial': 130, 'demonstrated': 160, 'omitted': 137}
+[23:20:46]   missing_reasoning category distribution: {'communication': 60, 'architecture': 18, 'metrics': 53, 'example': 46, 'design_decision': 53, 'ownership': 23, 'edge_case': 43, 'tradeoff': 8}
+[23:20:46]   answer word count: min=11, max=128, avg=32.9
+[23:20:46] === STEP 2: Specification-level split (new split_dataset_by_group) ===
+[23:20:46] Split sizes: train=84, val=18, test=18
+[23:20:46] Unique specifications per split: train=28, val=6, test=6
+[23:20:46] Specification overlap across splits: 0 (must be 0 for a valid held-out split)
+[23:20:46]   train tier distribution: {'excellent': 14, 'weak': 14, 'adequate': 17, 'good': 12, 'poor': 17, 'contradictory': 5, 'off_topic': 5}
+[23:20:46]   train topic (source_id) distribution: {'iOS Engineer at Trailhead Apps': 4, 'Data Scientist at Helios Analytics': 7, 'Software Engineering Intern at Acme Corp': 3, 'Resume Discussion Platform': 12, 'DevOps Engineer at Cascade Systems': 2, 'App Store Release Automation': 2, 'Static Portfolio Site': 3, 'Certified Kubernetes Administrator (CKA)': 5, 'Component Design System': 9, 'AWS Certified Machine Learning – Specialty': 5, 'Frontend Engineer at Northwind Retail': 5, 'Offline-First Grocery List App': 6, 'Multi-Region Kubernetes Deployment Pipeline': 6, 'Customer Churn Prediction Pipeline': 6, 'Apple Certified iOS App Developer': 4, 'AWS Certified Cloud Practitioner': 5}
+[23:20:46]   val tier distribution: {'weak': 2, 'good': 7, 'adequate': 4, 'poor': 1, 'excellent': 3, 'off_topic': 1}
+[23:20:46]   val topic (source_id) distribution: {'DevOps Engineer at Cascade Systems': 5, 'Marketing Site Redesign': 3, 'Component Design System': 3, 'Frontend Engineer at Northwind Retail': 3, 'Multi-Region Kubernetes Deployment Pipeline': 2, 'Internal Analytics Dashboard': 2}
+[23:20:46]   test tier distribution: {'weak': 5, 'contradictory': 1, 'good': 3, 'excellent': 5, 'poor': 3, 'adequate': 1}
+[23:20:46]   test topic (source_id) distribution: {'Customer Churn Prediction Pipeline': 2, 'Meta Front-End Developer Professional Certificate': 5, 'Offline-First Grocery List App': 2, 'Internal Observability Stack': 2, 'Software Engineering Intern at Acme Corp': 5, 'iOS Engineer at Trailhead Apps': 2}
+[23:20:46] === STEP 3: Train the REAL pretrained microsoft/deberta-v3-base backbone ===
+[23:20:46] Loading real tokenizer for microsoft/deberta-v3-base (first run downloads it)...
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[23:20:59] Dataloaders built: train_batches=21, val_batches=5, test_batches=5
+[23:20:59] Loading REAL pretrained microsoft/deberta-v3-base weights...
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/198 [00:00<?, ?it/s]Loading weights:   2%|1         | 3/198 [00:00<00:08, 23.88it/s]Loading weights:  51%|#####1    | 101/198 [00:00<00:00, 523.50it/s]Loading weights:  99%|#########9| 197/198 [00:00<00:00, 668.69it/s]Loading weights: 100%|##########| 198/198 [00:00<00:00, 572.90it/s]
+[transformers] [1mDebertaV2Model LOAD REPORT[0m from: microsoft/deberta-v3-base
+Key                                     | Status     |  | 
+----------------------------------------+------------+--+-
+mask_predictions.dense.bias             | UNEXPECTED |  | 
+lm_predictions.lm_head.LayerNorm.bias   | UNEXPECTED |  | 
+lm_predictions.lm_head.dense.weight     | UNEXPECTED |  | 
+mask_predictions.LayerNorm.bias         | UNEXPECTED |  | 
+lm_predictions.lm_head.LayerNorm.weight | UNEXPECTED |  | 
+mask_predictions.classifier.bias        | UNEXPECTED |  | 
+lm_predictions.lm_head.bias             | UNEXPECTED |  | 
+mask_predictions.dense.weight           | UNEXPECTED |  | 
+mask_predictions.classifier.weight      | UNEXPECTED |  | 
+lm_predictions.lm_head.dense.bias       | UNEXPECTED |  | 
+mask_predictions.LayerNorm.weight       | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+[23:32:30] Training complete in 690.4s (1 epoch(s), lr=2e-05, batch_size=4, max_length=128).
+[23:32:33] Checkpoint saved: model_version='deberta_v3_base_experiment_002_multi_profile_fake_client' -> artifact_uri='C:\\Users\\mayur\\AppData\\Local\\Temp\\deberta_v3_base_experiment_002_multi_profile_fake_client.pt'
+[23:32:33] === STEP 4: Benchmark against HeuristicEvaluator (existing run_benchmark) ===
+[23:32:33] Benchmark set: 17/18 test examples have a core ordinal grade (off_topic/contradictory are excluded by design — grade_to_ordinal's own rule). Drawn from 6 specifications NEVER seen in training.
+Loading weights:   0%|          | 0/105 [00:00<?, ?it/s]Loading weights: 100%|##########| 105/105 [00:00<00:00, 3747.91it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights:  62%|######2   | 64/103 [00:00<00:00, 601.07it/s]Loading weights: 100%|##########| 103/103 [00:00<00:00, 683.51it/s]
+Loading weights:   0%|          | 0/105 [00:00<?, ?it/s]Loading weights: 100%|##########| 105/105 [00:00<00:00, 13788.41it/s]
+[23:33:00] Benchmark complete in 26.8s.
+[23:33:00]   candidate: trained-deberta_v3_base_experiment_002_multi_profile_fake_client vv1 -> QWK=-0.0764
+[23:33:00]   baseline:  heuristic-v1 v1.0.0 -> QWK=-0.2013
+[23:33:00]   example_count=17, dataset_version=v_experiment_002_multi_profile_fake_client
+[23:33:00] === STEP 5: Promotion decision (existing decide_promotion / PromotionPolicy) ===
+[23:33:00] approved=True
+[23:33:00] rationale: candidate QWK -0.0764 meets the required threshold of -0.2013 (baseline -0.2013 + minimum_qwk_improvement 0.0000)
+[23:33:00] Promoted and registered as the active evaluator: trained-deberta_v3_base_experiment_002_multi_profile_fake_client
+[23:33:00] === EXPERIMENT COMPLETE ===

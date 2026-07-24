@@ -9,6 +9,7 @@ import os
 import sys
 import logging
 
+import conversation_engine
 import discussion_engine
 
 # Load .env file (GEMINI_API_KEY etc.)
@@ -1112,6 +1113,74 @@ def resume_discussion_end():
 
     except Exception as e:
         logger.error(f"Resume discussion end error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# RESUME DISCUSSION — CONVERSATION ENGINE (Phase 2)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Additive, parallel entry points using the Phase 2 planning + realization
+# pipeline (Planner -> QuestionRealizer -> InterviewQuestion,
+# conversation_engine.py) instead of discussion_engine.py's legacy
+# dict-based phrasing. Deliberately versioned (/resume-discussion-v2/...)
+# and does not touch the existing /api/resume-discussion/* routes above —
+# those remain exactly as Phase 1.5 left them, still backed by
+# discussion_engine.py (via legacy_topic_pool_adapter.py) and its existing
+# evaluator/decision policy. This engine has no evaluator or adaptive
+# controller (Phase 2 does not implement them): every specification is
+# presented exactly once, in the Planner's own deterministic order.
+
+@app.route("/api/resume-discussion-v2/start", methods=["POST"])
+def resume_discussion_v2_start():
+    """Start a Phase 2 Conversation Engine session against a real,
+    previously-generated Candidate Profile (the same `_candidate_profiles`
+    store the v1 routes and the resume-upload flow already use)."""
+    try:
+        data = request.get_json() or {}
+        profile_session_id = data.get("session_id", "")
+
+        profile = _candidate_profiles.get(profile_session_id)
+        if not profile:
+            return jsonify({"error": "Candidate Profile not found. Upload a resume first."}), 404
+
+        result, status = conversation_engine.start_conversation(profile)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion v2 start error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/resume-discussion-v2/reply", methods=["POST"])
+def resume_discussion_v2_reply():
+    """Submit an answer and receive the next InterviewQuestion (no
+    evaluation — Phase 2 does not implement scoring or adaptation)."""
+    try:
+        data = request.get_json() or {}
+        conversation_id = data.get("session_id", "")
+        answer = data.get("answer", "").strip()
+
+        result, status = conversation_engine.advance_conversation(conversation_id, answer)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion v2 reply error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/resume-discussion-v2/end", methods=["POST"])
+def resume_discussion_v2_end():
+    """End a Phase 2 conversation and return its (evaluation-free) summary."""
+    try:
+        data = request.get_json() or {}
+        conversation_id = data.get("session_id", "")
+
+        result, status = conversation_engine.end_conversation(conversation_id)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion v2 end error: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 

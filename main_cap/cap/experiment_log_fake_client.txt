@@ -1,0 +1,75 @@
+[20:05:49] === STEP 1: Generate the first real synthetic dataset ===
+[20:05:49] Built a pool of 8 discussion units from the sample candidate profile (real Planner + Realizer).
+[20:05:49]   - [project_deep_dive] recall: 'Tell me about Resume Discussion Platform using Python, Flask, and SBER' (expected_concepts=('routing', 'request handling', 'templating', 'wsgi', 'semantic similarity', 'sentence embeddings', 'cosine similarity'))
+[20:05:49]   - [project_overview] explanation: "Let's stay on this for a moment — Walk me through how the pieces of Re" (expected_concepts=('routing', 'request handling', 'templating', 'wsgi', 'semantic similarity', 'sentence embeddings', 'cosine similarity'))
+[20:05:49]   - [experience] ownership: "I'd like to talk about your work experience. You worked as Software En" (expected_concepts=())
+[20:05:49]   - [certification] reflection: "I'd like to ask about one of your certifications. What motivated you t" (expected_concepts=())
+[20:05:49]   - [skill_in_context] decision_making: "Let's go back to this project for a moment — What made you settle on t" (expected_concepts=('routing', 'request handling', 'templating', 'wsgi', 'semantic similarity', 'sentence embeddings', 'cosine similarity'))
+[20:05:49]   - [project_deep_dive] explanation: "Let's stay on this for a moment — How did you structure Resume Discuss" (expected_concepts=('routing', 'request handling', 'templating', 'wsgi', 'semantic similarity', 'sentence embeddings', 'cosine similarity'))
+[20:05:49]   - [project_overview] recall: "Now let's move on to another project. I noticed you built Static Portf" (expected_concepts=())
+[20:05:49]   - [skill_in_context] decision_making: 'Coming back to this project — Why did you take the approach you did fo' (expected_concepts=())
+[20:05:49] CoverageStrategy planned 50 recipes. Tier distribution: {'good': 9, 'excellent': 10, 'poor': 9, 'off_topic': 2, 'weak': 9, 'adequate': 9, 'contradictory': 2}
+[20:05:49] Using FakeGenerationClient (deterministic, network-free) -- see module docstring for why.
+[20:05:49]   progress: 10/50 recipes processed (10 accepted, 0 rejected)
+[20:05:49]   progress: 20/50 recipes processed (20 accepted, 0 rejected)
+[20:05:49]   progress: 30/50 recipes processed (30 accepted, 0 rejected)
+[20:05:49]   progress: 40/50 recipes processed (40 accepted, 0 rejected)
+[20:05:49]   progress: 50/50 recipes processed (50 accepted, 0 rejected)
+[20:05:49] Generation complete: 50 accepted, 0 rejected out of 50.
+[20:05:49] Assembling DatasetManifest...
+[20:05:49] --- Dataset statistics (validated at construction by DatasetManifest/TrainingExample's own frozen validators) ---
+[20:05:49]   dataset_version: v_experiment_001_fake_client
+[20:05:49]   total examples: 50
+[20:05:49]   tier_distribution: {'adequate': 9, 'contradictory': 2, 'excellent': 10, 'good': 9, 'off_topic': 2, 'poor': 9, 'weak': 9}
+[20:05:49]   label_source_distribution: {'synthetic_ground_truth': 50}
+[20:05:49]   generator_provenance (prompt_id, prompt_version): (('promptbook', '1.0.0'),)
+[20:05:49]   reasoning_type distribution: {'recall': 10, 'explanation': 10, 'reflection': 10, 'ownership': 10, 'decision_making': 10}
+[20:05:49]   category distribution: {'project_deep_dive': 10, 'project_overview': 10, 'certification': 10, 'experience': 10, 'skill_in_context': 10}
+[20:05:49]   concept_observation status distribution: {'demonstrated': 55, 'omitted': 39, 'superficial': 39}
+[20:05:49]   missing_reasoning category distribution: {'communication': 21, 'example': 17, 'metrics': 20, 'edge_case': 25, 'design_decision': 21, 'ownership': 10, 'architecture': 10, 'tradeoff': 6}
+[20:05:49]   answer word count: min=11, max=85, avg=28.0
+[20:05:49] === STEP 2: Split the dataset (deterministic, existing split_dataset) ===
+[20:05:49] Split sizes: train=35, val=7, test=8
+[20:05:49]   train tier distribution: {'poor': 8, 'weak': 8, 'contradictory': 2, 'excellent': 7, 'good': 4, 'off_topic': 1, 'adequate': 5}
+[20:05:49]   val tier distribution: {'adequate': 1, 'good': 3, 'off_topic': 1, 'poor': 1, 'excellent': 1}
+[20:05:49]   test tier distribution: {'good': 2, 'adequate': 3, 'weak': 1, 'excellent': 2}
+[20:05:49] === STEP 3: Train the REAL pretrained microsoft/deberta-v3-base backbone ===
+[20:05:49] Loading real tokenizer for microsoft/deberta-v3-base (first run downloads it)...
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[20:06:00] Dataloaders built: train_batches=9, val_batches=2, test_batches=2
+[20:06:00] Loading REAL pretrained microsoft/deberta-v3-base weights (first run downloads ~700MB)...
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/198 [00:00<?, ?it/s]Loading weights:   2%|1         | 3/198 [00:00<00:17, 11.15it/s]Loading weights: 100%|##########| 198/198 [00:00<00:00, 708.32it/s]
+[transformers] [1mDebertaV2Model LOAD REPORT[0m from: microsoft/deberta-v3-base
+Key                                     | Status     |  | 
+----------------------------------------+------------+--+-
+mask_predictions.classifier.bias        | UNEXPECTED |  | 
+lm_predictions.lm_head.LayerNorm.weight | UNEXPECTED |  | 
+mask_predictions.dense.weight           | UNEXPECTED |  | 
+mask_predictions.classifier.weight      | UNEXPECTED |  | 
+lm_predictions.lm_head.dense.weight     | UNEXPECTED |  | 
+lm_predictions.lm_head.LayerNorm.bias   | UNEXPECTED |  | 
+mask_predictions.LayerNorm.bias         | UNEXPECTED |  | 
+lm_predictions.lm_head.bias             | UNEXPECTED |  | 
+mask_predictions.LayerNorm.weight       | UNEXPECTED |  | 
+mask_predictions.dense.bias             | UNEXPECTED |  | 
+lm_predictions.lm_head.dense.bias       | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+[20:07:54] Training complete in 113.5s (1 epoch(s), lr=2e-05, batch_size=4, max_length=128).
+[20:07:57] Checkpoint saved: model_version='deberta_v3_base_experiment_001_fake_client' -> artifact_uri='C:\\Users\\mayur\\AppData\\Local\\Temp\\deberta_v3_base_experiment_001_fake_client.pt'
+[20:07:57] === STEP 4: Benchmark against HeuristicEvaluator (existing run_benchmark) ===
+[20:07:57] Benchmark set: 8/8 test examples have a core ordinal grade (off_topic/contradictory are excluded by design — grade_to_ordinal's own rule).
+Loading weights:   0%|          | 0/105 [00:00<?, ?it/s]Loading weights: 100%|##########| 105/105 [00:00<00:00, 3317.00it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|##########| 103/103 [00:00<00:00, 1703.19it/s]
+Loading weights:   0%|          | 0/105 [00:00<?, ?it/s]Loading weights: 100%|##########| 105/105 [00:00<00:00, 5614.94it/s]
+[20:08:23] Benchmark complete in 25.8s.
+[20:08:23]   candidate: trained-deberta_v3_base_experiment_001_fake_client vv1 -> QWK=0.0000
+[20:08:23]   baseline:  heuristic-v1 v1.0.0 -> QWK=-0.0189
+[20:08:23]   example_count=8, dataset_version=v_experiment_001_fake_client
+[20:08:23] === STEP 5: Promotion decision (existing decide_promotion / PromotionPolicy) ===
+[20:08:23] approved=True
+[20:08:23] rationale: candidate QWK 0.0000 meets the required threshold of -0.0189 (baseline -0.0189 + minimum_qwk_improvement 0.0000)
+[20:08:23] Promoted and registered as the active evaluator: trained-deberta_v3_base_experiment_001_fake_client
+[20:08:23] === EXPERIMENT COMPLETE ===

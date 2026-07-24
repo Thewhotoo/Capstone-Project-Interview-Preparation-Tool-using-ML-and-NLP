@@ -35,7 +35,7 @@ one until retrained). Flagging this explicitly rather than glossing over it.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Callable, Optional
 
 import torch
 import torch.nn.functional as F
@@ -305,6 +305,7 @@ def train_model(
     device: str = "cpu",
     backbone: Optional[nn.Module] = None,
     random_seed: Optional[int] = None,
+    on_epoch_end: Optional[Callable[[int, MultiTaskModel, Optional[float], Optional[float]], None]] = None,
 ) -> MultiTaskModel:
     """
     Minimal, reference end-to-end trainer (approved clarification #1) —
@@ -327,9 +328,33 @@ def train_model(
     alone. `random_seed=None` (the default) preserves the previous,
     unseeded behavior exactly — this is an additive, backward-compatible
     parameter, not a behavior change for existing callers.
+
+    PORTABILITY / best-effort GPU determinism (session 10, Colab vs. local
+    execution): when `random_seed` is given and `device` is a CUDA device,
+    `torch.backends.cudnn.deterministic`/`benchmark` are set for best-effort
+    reproducibility — PyTorch does NOT guarantee bit-identical results
+    across different GPU models/driver versions the way `torch.manual_seed`
+    alone guarantees on CPU. Honest limitation, not something this function
+    can fully close.
+
+    PER-EPOCH CHECKPOINTING (Experiment 1, session 10): if `on_epoch_end` is
+    given, it is called once BEFORE training starts — `on_epoch_end(0,
+    model, None, None)`, the untrained model — and once after each of the
+    `num_epochs` epochs completes — `on_epoch_end(epoch_index, model,
+    avg_train_loss, avg_val_loss)` for `epoch_index` in `1..num_epochs`
+    (`avg_val_loss` is `None` if `val_loader` is `None`). This lets a caller
+    capture/benchmark/persist the model's state at every point along an
+    epoch curve from a SINGLE training run instead of restarting training
+    from scratch per epoch count. `train_model` itself never persists or
+    benchmarks anything — the callback decides what, if anything, to do
+    with the model/losses it receives. `on_epoch_end=None` (the default)
+    preserves the previous behavior exactly.
     """
     if random_seed is not None:
         torch.manual_seed(random_seed)
+        if str(device).startswith("cuda") and torch.cuda.is_available():
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
 
     model = MultiTaskModel(
         backbone_config, backbone=backbone, missing_reasoning_categories=missing_reasoning_categories,
@@ -338,19 +363,38 @@ def train_model(
     model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
-    for _ in range(num_epochs):
+    if on_epoch_end is not None:
+        model.eval()
+        on_epoch_end(0, model, None, None)
+
+    for epoch_index in range(1, num_epochs + 1):
         model.train()
+        train_loss_total = 0.0
+        train_batch_count = 0
         for batch in train_loader:
             optimizer.zero_grad()
             loss = compute_batch_loss(model, batch, device)
             loss.backward()
             optimizer.step()
+            train_loss_total += loss.item()
+            train_batch_count += 1
+        avg_train_loss = (train_loss_total / train_batch_count) if train_batch_count else None
 
+        avg_val_loss = None
         if val_loader is not None:
             model.eval()
+            val_loss_total = 0.0
+            val_batch_count = 0
             with torch.no_grad():
                 for batch in val_loader:
-                    compute_batch_loss(model, batch, device)  # validation pass only, no gradient step
+                    loss = compute_batch_loss(model, batch, device)
+                    val_loss_total += loss.item()
+                    val_batch_count += 1
+            avg_val_loss = (val_loss_total / val_batch_count) if val_batch_count else None
+
+        if on_epoch_end is not None:
+            model.eval()
+            on_epoch_end(epoch_index, model, avg_train_loss, avg_val_loss)
 
     model.eval()
     return model

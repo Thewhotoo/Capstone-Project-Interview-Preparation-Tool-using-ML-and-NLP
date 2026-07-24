@@ -14,6 +14,8 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import torch
+
 from evaluation_request import ConversationContextSnapshot, EvaluationRequest
 from evaluator import Evaluator, check_conformance
 import evaluator_registry
@@ -98,6 +100,27 @@ class TestTrainedEvaluatorConformance(unittest.TestCase):
         self.assertEqual(set(evaluator.declared_dimensions), set(TrainedEvaluator.declared_dimensions))
         self.assertEqual(set(evaluator.declared_reasoning_types), set(ReasoningType))
         self.assertFalse(evaluator.requires_network)
+
+
+class TestTrainedEvaluatorDevicePortability(unittest.TestCase):
+    """Session 10 (Colab portability): device is inferred from the model
+    itself, not a separate constructor argument -- verified here on CPU
+    (the only device available in this environment); the SAME mechanism
+    (next(model.parameters()).device) resolves to cuda automatically if the
+    model was moved there, with zero code change needed."""
+
+    def test_device_is_inferred_from_the_model(self):
+        evaluator = _trained_evaluator()
+        self.assertEqual(evaluator.device, torch.device("cpu"))
+
+    def test_evaluate_works_when_model_explicitly_on_cpu(self):
+        backbone = build_tiny_random_encoder(_TOKENIZER, hidden_size=16)
+        model = MultiTaskModel(BackboneConfig(), backbone=backbone)
+        model.to("cpu")
+        evaluator = TrainedEvaluator(_checkpoint(), model, _TOKENIZER, BackboneConfig(max_length=32))
+        self.assertEqual(evaluator.device, torch.device("cpu"))
+        result = evaluator.evaluate(_request())  # must not raise a device-mismatch error
+        self.assertTrue(result.dimensions)
 
 
 class TestTrainedEvaluatorEvaluate(unittest.TestCase):

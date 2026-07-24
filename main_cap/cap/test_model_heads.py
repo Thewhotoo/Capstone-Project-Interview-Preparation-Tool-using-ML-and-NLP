@@ -260,5 +260,69 @@ class TestTrainModelReproducibility(unittest.TestCase):
         self.assertIsInstance(trained, MultiTaskModel)
 
 
+class TestTrainModelEpochCheckpointing(unittest.TestCase):
+    """Experiment 1 (session 10): on_epoch_end lets a caller capture the
+    model's state at every point along an epoch curve from ONE training
+    run, instead of restarting from scratch per epoch count."""
+
+    def _fake_batch(self, n: int = 2) -> dict:
+        pairs = [("question", "answer") for _ in range(n)]
+        main = _batch(_TOKENIZER, pairs)
+        dimension_targets = torch.randint(0, 5, (n, len(ALL_DIMENSIONS)))
+        dimension_mask = torch.ones((n, len(ALL_DIMENSIONS)))
+        presence_target = torch.zeros((n, len(_MISSING_REASONING_CATEGORIES)))
+        presence_target[:, 0] = 1.0
+        severity_target = torch.zeros((n, len(_MISSING_REASONING_CATEGORIES)))
+        severity_target[:, 0] = 0.5
+        concept_batch = _batch(_TOKENIZER, [("answer", "caching")] * n)
+        return {
+            "main_input_ids": main["input_ids"], "main_attention_mask": main["attention_mask"],
+            "dimension_targets": dimension_targets, "dimension_mask": dimension_mask,
+            "presence_target": presence_target, "severity_target": severity_target,
+            "concept_input_ids": concept_batch["input_ids"], "concept_attention_mask": concept_batch["attention_mask"],
+            "concept_targets": torch.zeros(n, dtype=torch.long),
+        }
+
+    def test_callback_fires_once_before_training_and_once_per_epoch(self):
+        backbone = build_tiny_random_encoder(_TOKENIZER, hidden_size=16)
+        train_loader = [self._fake_batch(), self._fake_batch()]
+        val_loader = [self._fake_batch()]
+        calls = []
+
+        def on_epoch_end(epoch_index, model, train_loss, val_loss):
+            calls.append((epoch_index, isinstance(model, MultiTaskModel), train_loss, val_loss))
+
+        train_model(
+            train_loader, val_loader, BackboneConfig(), num_epochs=3, backbone=backbone,
+            on_epoch_end=on_epoch_end,
+        )
+
+        self.assertEqual([c[0] for c in calls], [0, 1, 2, 3])
+        self.assertTrue(all(c[1] for c in calls))
+        # Epoch 0 (untrained) has no loss yet; epochs 1-3 have both train and val loss.
+        self.assertEqual(calls[0][2], None)
+        self.assertEqual(calls[0][3], None)
+        for epoch_index, _, train_loss, val_loss in calls[1:]:
+            self.assertIsInstance(train_loss, float)
+            self.assertIsInstance(val_loss, float)
+
+    def test_callback_receives_none_val_loss_without_a_val_loader(self):
+        backbone = build_tiny_random_encoder(_TOKENIZER, hidden_size=16)
+        train_loader = [self._fake_batch()]
+        calls = []
+
+        train_model(
+            train_loader, None, BackboneConfig(), num_epochs=1, backbone=backbone,
+            on_epoch_end=lambda i, m, tl, vl: calls.append((i, tl, vl)),
+        )
+        self.assertEqual(calls[-1][2], None)
+
+    def test_no_callback_preserves_prior_behavior(self):
+        backbone = build_tiny_random_encoder(_TOKENIZER, hidden_size=16)
+        train_loader = [self._fake_batch()]
+        trained = train_model(train_loader, None, BackboneConfig(), num_epochs=1, backbone=backbone)
+        self.assertIsInstance(trained, MultiTaskModel)
+
+
 if __name__ == "__main__":
     unittest.main()

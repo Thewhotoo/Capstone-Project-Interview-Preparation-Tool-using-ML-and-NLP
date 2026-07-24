@@ -15,3 +15,33 @@ Thumbs.db
 .env
 main_cap/cap/debug_candidate_profile*.json
 main_cap/cap/_verify_traceability_cache.json
+
+# --- ML experiment artifacts (generated, reproducible via run_experiment_*.py) ---
+main_cap/cap/artifacts/
+*.pt
+*.pth
+*.safetensors
+*.ckpt
+
+# --- ad hoc debug / dry-run output (not *.log, so not caught above) ---
+main_cap/cap/*dryrun*.txt
+main_cap/cap/*_log.txt
+main_cap/cap/*_log_*.txt
+main_cap/cap/experiment_1_smoketest.txt
+main_cap/cap/segfault_debug.txt
+main_cap/cap/async_load_test.txt
+main_cap/cap/experiment0_validation.txt
+
+# --- AI-assistant session-continuity notes (local only, not project docs) ---
+main_cap/cap/SESSION_HANDOFF.md
+
+# --- runtime-generated app state ---
+main_cap/cap/user_profiles/*.json
+
+# --- HuggingFace / torch model cache, if ever run locally ---
+.cache/
+**/*.hf_cache/
+
+# --- editor / OS cruft not already covered ---
+*.swp
+.idea/

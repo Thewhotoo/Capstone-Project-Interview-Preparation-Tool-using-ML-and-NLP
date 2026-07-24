@@ -59,6 +59,31 @@ class TestSaveAndLoadCheckpointArtifact(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 load_checkpoint_artifact(path, BackboneConfig(), backbone=mismatched_backbone)
 
+    def test_map_location_defaults_to_cpu(self):
+        backbone = build_tiny_random_encoder(_TOKENIZER, hidden_size=16)
+        model = MultiTaskModel(BackboneConfig(), backbone=backbone)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "checkpoint.pt")
+            save_checkpoint_artifact(model, path)
+            reload_backbone = build_tiny_random_encoder(_TOKENIZER, hidden_size=16)
+            loaded = load_checkpoint_artifact(path, BackboneConfig(), backbone=reload_backbone)
+            self.assertEqual(next(loaded.parameters()).device, torch.device("cpu"))
+
+    def test_map_location_explicit_cpu_still_works(self):
+        # Portability (session 10): a checkpoint produced on one machine
+        # (e.g. Colab GPU) must still load correctly when map_location is
+        # explicitly requested -- exercised here with "cpu" since that's
+        # the only device available in this environment; the same
+        # parameter accepts "cuda" unchanged on a machine that has one.
+        backbone = build_tiny_random_encoder(_TOKENIZER, hidden_size=16)
+        model = MultiTaskModel(BackboneConfig(), backbone=backbone)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "checkpoint.pt")
+            save_checkpoint_artifact(model, path)
+            reload_backbone = build_tiny_random_encoder(_TOKENIZER, hidden_size=16)
+            loaded = load_checkpoint_artifact(path, BackboneConfig(), backbone=reload_backbone, map_location="cpu")
+            self.assertEqual(next(loaded.parameters()).device, torch.device("cpu"))
+
 
 if __name__ == "__main__":
     unittest.main()

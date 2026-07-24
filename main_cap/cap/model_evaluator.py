@@ -164,6 +164,14 @@ class TrainedEvaluator:
         self.backbone_config = backbone_config
         self.name = f"trained-{checkpoint.model_version}"
         self.version = checkpoint.schema_version
+        # Portability (Colab/GPU vs local/CPU, session 10): inferred from
+        # the model itself rather than a separate constructor argument, so
+        # there is no way to pass a device that disagrees with where the
+        # model actually lives. Whatever device train_model / the caller
+        # already moved the model to (cpu locally, cuda on Colab) is what
+        # this evaluator's own tensors are moved to before every forward
+        # pass -- no caller-side wiring required either way.
+        self.device = next(model.parameters()).device
 
     def evaluate(self, request: EvaluationRequest) -> EvaluationResult:
         self.model.eval()
@@ -172,7 +180,9 @@ class TrainedEvaluator:
                 self.tokenizer, request.question_text, request.answer_text, self.backbone_config.max_length,
             )
             main_batch = self.tokenizer.pad([main_encoding], return_tensors="pt")
-            outputs = self.model.forward_dimensions(main_batch["input_ids"], main_batch["attention_mask"])
+            main_input_ids = main_batch["input_ids"].to(self.device)
+            main_attention_mask = main_batch["attention_mask"].to(self.device)
+            outputs = self.model.forward_dimensions(main_input_ids, main_attention_mask)
 
             relevant = relevant_dimensions(request.reasoning_type)
             dimensions: list[DimensionScore] = []
@@ -204,7 +214,9 @@ class TrainedEvaluator:
                     self.tokenizer, request.answer_text, concept, self.backbone_config.max_length,
                 )
                 concept_batch = self.tokenizer.pad([concept_encoding], return_tensors="pt")
-                concept_logits = self.model.forward_concept(concept_batch["input_ids"], concept_batch["attention_mask"])
+                concept_input_ids = concept_batch["input_ids"].to(self.device)
+                concept_attention_mask = concept_batch["attention_mask"].to(self.device)
+                concept_logits = self.model.forward_concept(concept_input_ids, concept_attention_mask)
                 probs = torch.softmax(concept_logits, dim=1)[0]
                 predicted_index = int(torch.argmax(probs).item())
                 status = _CONCEPT_STATUS_ORDER[predicted_index]

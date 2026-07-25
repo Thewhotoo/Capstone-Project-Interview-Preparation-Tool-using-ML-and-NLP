@@ -11,9 +11,13 @@ identified (Experiment 2 root-cause analysis) as the leading explanation
 for Experiment 2's instability relative to Experiment 1.
 
 WHAT CHANGES (one coherent configuration, not a sweep):
-  - TRAIN_BATCH_SIZE: 4 -> 8. Halves the number of noisy gradient-descent
-    steps per epoch (train=1738 examples -> ~218 steps/epoch instead of
-    ~435), directly targeting the "too many small, noisy steps" mechanism.
+  - TRAIN_BATCH_SIZE: kept at 4 (the original Experiment 2 baseline value).
+    An earlier revision of this configuration doubled it to 8 to reduce
+    step-count noise, but that run hit a CUDA out-of-memory error on the
+    T4 GPU it was run on; batch=4 is the only batch size confirmed to fit,
+    so it was reverted. The step-count-noise mechanism this was meant to
+    address is instead addressed by the LR schedule below, which lets the
+    model settle late in training regardless of how many steps it takes.
   - Linear warmup + linear decay to zero (`train_model`'s new, additive
     `use_lr_decay`/`num_warmup_steps`, session 11): the model never
     previously spent any time at a LOW learning rate late in training --
@@ -101,7 +105,8 @@ MODEL_VERSION = "deberta_v3_base_experiment_2_tuned"
 MAX_LENGTH = 128
 
 # --- The one coherent tuned configuration ---
-TRAIN_BATCH_SIZE = 8          # was 4 -- halves noisy steps/epoch (evidence: §"WHAT CHANGES" above)
+TRAIN_BATCH_SIZE = 4          # reverted from 8 -- batch=8 hit CUDA OOM on the T4 GPU; batch=4 is the
+                               # value already known to fit (it's Experiment 2 baseline's batch size)
 NUM_EPOCHS = 5                 # unchanged -- val QWK already plateaus by epoch 4-5 in the baseline
 LEARNING_RATE = 2e-5           # unchanged peak LR -- no evidence the magnitude itself is wrong
 WEIGHT_DECAY = 0.01            # unchanged value, now explicit (was AdamW's implicit default)

@@ -294,6 +294,19 @@ def compute_batch_loss(model: MultiTaskModel, batch: dict, device: str = "cpu") 
     return total_loss
 
 
+def _linear_warmup_decay_lambda(step: int, num_warmup_steps: int, num_training_steps: int) -> float:
+    """Multiplicative LR factor: linear ramp 0 -> 1 over the first
+    `num_warmup_steps` steps, then linear decay 1 -> 0 over the remaining
+    steps to `num_training_steps`. Standard transformer fine-tuning shape
+    (matches `transformers.get_linear_schedule_with_warmup`'s formula) --
+    reimplemented directly on `torch.optim.lr_scheduler.LambdaLR` rather
+    than importing that helper, to keep this a single, dependency-free
+    function."""
+    if step < num_warmup_steps:
+        return step / max(1, num_warmup_steps)
+    return max(0.0, (num_training_steps - step) / max(1, num_training_steps - num_warmup_steps))
+
+
 def train_model(
     train_loader: DataLoader,
     val_loader: Optional[DataLoader],
@@ -306,14 +319,28 @@ def train_model(
     backbone: Optional[nn.Module] = None,
     random_seed: Optional[int] = None,
     on_epoch_end: Optional[Callable[[int, MultiTaskModel, Optional[float], Optional[float]], None]] = None,
+    weight_decay: float = 0.01,
+    num_warmup_steps: int = 0,
+    use_lr_decay: bool = False,
 ) -> MultiTaskModel:
     """
     Minimal, reference end-to-end trainer (approved clarification #1) —
     produces a real, loadable `MultiTaskModel`. Deliberately minimal: fixed
-    epoch count, a single AdamW optimizer, no LR scheduler, no mixed
-    precision, no distributed training, no hyperparameter search, no early
-    stopping. All of that is explicitly future work for a production
-    training harness, not this milestone.
+    epoch count, a single AdamW optimizer, no mixed precision, no
+    distributed training, no hyperparameter search, no early stopping. All
+    of that remains explicitly future work for a production training
+    harness, not this milestone.
+
+    OPTIONAL LR SCHEDULE (session 11, additive, backward-compatible): by
+    default (`use_lr_decay=False`, `num_warmup_steps=0`) there is still NO
+    scheduler at all -- the optimizer uses a constant `learning_rate`,
+    identical to every previous call site. Passing `use_lr_decay=True`
+    switches on a linear warmup (`num_warmup_steps` steps) followed by
+    linear decay to zero over the rest of training (`_linear_warmup_decay_lambda`),
+    stepped once per optimizer step. `weight_decay` defaults to `0.01` --
+    `torch.optim.AdamW`'s own default, so omitting it (as every existing
+    caller does) is bit-for-bit identical to before this parameter existed;
+    it is now explicit rather than implicit.
 
     REPRODUCIBILITY (Experiment 0, research-validity milestone): if
     `random_seed` is given, `torch.manual_seed(random_seed)` is called
@@ -361,7 +388,15 @@ def train_model(
         num_ordinal_classes=num_ordinal_classes,
     )
     model.to(device)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+
+    scheduler = None
+    if use_lr_decay:
+        total_steps = num_epochs * len(train_loader)
+        scheduler = torch.optim.lr_scheduler.LambdaLR(
+            optimizer,
+            lr_lambda=lambda step: _linear_warmup_decay_lambda(step, num_warmup_steps, total_steps),
+        )
 
     if on_epoch_end is not None:
         model.eval()
@@ -376,6 +411,8 @@ def train_model(
             loss = compute_batch_loss(model, batch, device)
             loss.backward()
             optimizer.step()
+            if scheduler is not None:
+                scheduler.step()
             train_loss_total += loss.item()
             train_batch_count += 1
         avg_train_loss = (train_loss_total / train_batch_count) if train_batch_count else None

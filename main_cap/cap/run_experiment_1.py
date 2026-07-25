@@ -58,7 +58,7 @@ from experiment_profile_library import all_experiment_profiles
 from generation_client import FakeGenerationClient
 from heuristic_evaluator import HeuristicEvaluator
 from model_backbone import BackboneConfig, build_tokenizer
-from model_checkpoint_io import save_checkpoint_artifact
+from model_checkpoint_io import load_checkpoint_artifact, save_checkpoint_artifact
 from model_dataset import build_dataloaders
 from model_evaluator import TrainedEvaluator, promote_trained_model
 from model_heads import train_model
@@ -227,14 +227,32 @@ def phase_train() -> int:
 
     test_examples = tuple(by_id[i] for i in split.test_ids)
     core_test_examples = tuple(e for e in test_examples if e.labels.overall_label.grade in _CORE_GRADES)
+    val_examples = tuple(by_id[i] for i in split.val_ids)
+    core_val_examples = tuple(e for e in val_examples if e.labels.overall_label.grade in _CORE_GRADES)
     train_examples = tuple(by_id[i] for i in split.train_ids)
     majority_grade = _majority_grade(train_examples)
     majority_qwk = _trivial_baseline_qwk(core_test_examples, majority_grade)
     _log(f"Trivial majority-class baseline: predicts {majority_grade!r} always -> QWK={majority_qwk:.4f} "
          f"({len(core_test_examples)}/{len(test_examples)} core-grade test examples).")
+    _log(f"Checkpoint selection will use {len(core_val_examples)}/{len(val_examples)} core-grade "
+         f"VALIDATION examples (never the test set) -- test remains reserved for final reporting/promotion gating.")
 
     baseline = HeuristicEvaluator()
     epoch_curve: list[dict] = []
+
+    # Best-checkpoint tracking (engineering correction, session 11): exactly
+    # ONE checkpoint is ever kept on disk -- overwritten in place whenever a
+    # new highest per-epoch VALIDATION QWK is observed, rather than
+    # unconditionally persisting the final epoch. Selection uses validation
+    # examples (never test) so the test set stays reserved for reporting/
+    # promotion gating, standard train/val/test discipline. Training/
+    # optimizer/benchmarking POLICY (the run_benchmark call itself,
+    # epoch_curve_summary.json, epoch_N_benchmark.json) are unchanged --
+    # this only adds a second, validation-set run_benchmark call used
+    # purely to decide which epoch's weights to keep.
+    best_weights_path = os.path.join(ARTIFACTS_DIR, "best_checkpoint_weights.pt")
+    best_checkpoint_path = os.path.join(ARTIFACTS_DIR, "best_checkpoint.json")
+    best: dict = {"val_qwk": -1.0, "epoch": None, "checkpoint": None, "test_benchmark": None}
 
     def on_epoch_end(epoch_index: int, model, train_loss, val_loss) -> None:
         label = "untrained (epoch 0)" if epoch_index == 0 else f"epoch {epoch_index}"
@@ -245,13 +263,23 @@ def phase_train() -> int:
         )
         checkpoint = assemble_checkpoint(
             model_version=f"{MODEL_VERSION}_epoch{epoch_index}", experiment_config=placeholder_config,
-            artifact_uri=f"in-memory-epoch-{epoch_index}" if epoch_index < NUM_EPOCHS else "pending-final-save",
+            artifact_uri=f"in-memory-epoch-{epoch_index}",
         )
         candidate = TrainedEvaluator(checkpoint, model, tokenizer, backbone_config)
+
+        # Reporting benchmark (unchanged from before this change): test set,
+        # feeds epoch_curve_summary.json / epoch_N_benchmark.json exactly as
+        # it always has.
         benchmark = run_benchmark(candidate, baseline, core_test_examples, dataset_version=DATASET_VERSION)
 
-        _log(f"  candidate QWK={benchmark.candidate_qwk:.4f}  baseline QWK={benchmark.baseline_qwk:.4f}  "
-             f"majority QWK={majority_qwk:.4f}  train_loss={train_loss}  val_loss={val_loss}")
+        # Selection benchmark (new, session 11 follow-up): validation set,
+        # used ONLY to decide which checkpoint is "best" -- never written
+        # into epoch_curve_summary.json, never reported as "the" QWK.
+        val_benchmark = run_benchmark(candidate, baseline, core_val_examples, dataset_version=DATASET_VERSION)
+
+        _log(f"  test QWK={benchmark.candidate_qwk:.4f}  val QWK={val_benchmark.candidate_qwk:.4f}  "
+             f"baseline QWK={benchmark.baseline_qwk:.4f}  majority QWK={majority_qwk:.4f}  "
+             f"train_loss={train_loss}  val_loss={val_loss}")
         save_json(benchmark, os.path.join(ARTIFACTS_DIR, f"epoch_{epoch_index}_benchmark.json"))
         epoch_curve.append({
             "epoch": epoch_index, "train_loss": train_loss, "val_loss": val_loss,
@@ -259,18 +287,14 @@ def phase_train() -> int:
             "majority_qwk": majority_qwk,
         })
 
-        if epoch_index == NUM_EPOCHS:
-            weights_path = os.path.join(ARTIFACTS_DIR, "final_checkpoint_weights.pt")
-            save_checkpoint_artifact(model, weights_path)
-            final_checkpoint = checkpoint.model_copy(update={"artifact_uri": weights_path})
-            save_json(final_checkpoint, os.path.join(ARTIFACTS_DIR, "final_checkpoint.json"))
-
-            decision = decide_promotion(final_checkpoint, benchmark, PromotionPolicy())
-            save_json(decision, os.path.join(ARTIFACTS_DIR, "final_promotion_decision.json"))
-            _log(f"  Final-epoch promotion decision: approved={decision.approved} -- {decision.rationale}")
-            if decision.approved:
-                promote_trained_model(final_checkpoint, decision, candidate, make_active=True)
-                _log(f"  Promoted and registered as the active evaluator: {candidate.name}")
+        if val_benchmark.candidate_qwk > best["val_qwk"]:
+            save_checkpoint_artifact(model, best_weights_path)
+            best_checkpoint = checkpoint.model_copy(update={"artifact_uri": best_weights_path})
+            save_json(best_checkpoint, best_checkpoint_path)
+            best.update({"val_qwk": val_benchmark.candidate_qwk, "epoch": epoch_index,
+                         "checkpoint": best_checkpoint, "test_benchmark": benchmark})
+            _log(f"  New best checkpoint: {label} (val QWK={val_benchmark.candidate_qwk:.4f}, "
+                 f"test QWK={benchmark.candidate_qwk:.4f}) -- overwrote {best_weights_path!r}.")
 
     t0 = time.time()
     train_model(
@@ -282,6 +306,27 @@ def phase_train() -> int:
     with open(os.path.join(ARTIFACTS_DIR, "epoch_curve_summary.json"), "w", encoding="utf-8") as f:
         json.dump(epoch_curve, f, indent=2)
     _log(f"Epoch curve summary written to {os.path.join(ARTIFACTS_DIR, 'epoch_curve_summary.json')!r}.")
+
+    # Promotion now evaluates the BEST (by validation QWK) checkpoint, not
+    # whichever epoch ran last. The best epoch's weights only survive on
+    # disk (the in-memory `model` has since moved past it), so they're
+    # reloaded into a fresh model instance before being wrapped as the
+    # promotion candidate. The promotion decision itself is gated on that
+    # checkpoint's TEST benchmark (never validation) -- standard discipline:
+    # select on val, report/gate on test.
+    _log(f"Best checkpoint: epoch {best['epoch']} (val QWK={best['val_qwk']:.4f}, "
+         f"test QWK={best['test_benchmark'].candidate_qwk:.4f}).")
+    best_model = load_checkpoint_artifact(best_weights_path, backbone_config, map_location=device)
+    best_candidate = TrainedEvaluator(best["checkpoint"], best_model, tokenizer, backbone_config)
+
+    decision = decide_promotion(best["checkpoint"], best["test_benchmark"], PromotionPolicy())
+    save_json(decision, os.path.join(ARTIFACTS_DIR, "final_promotion_decision.json"))
+    _log(f"Promotion decision (best checkpoint by val QWK, epoch {best['epoch']}, "
+         f"gated on test QWK={best['test_benchmark'].candidate_qwk:.4f}): "
+         f"approved={decision.approved} -- {decision.rationale}")
+    if decision.approved:
+        promote_trained_model(best["checkpoint"], decision, best_candidate, make_active=True)
+        _log(f"Promoted and registered as the active evaluator: {best_candidate.name}")
 
     _log("=== TRAIN PHASE COMPLETE ===")
     return 0

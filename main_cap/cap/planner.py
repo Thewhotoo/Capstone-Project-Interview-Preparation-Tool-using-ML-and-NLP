@@ -136,3 +136,9 @@ class Planner:
 
     def remaining(self) -> int:
         return self.pool.remaining()
+
+    def total(self) -> int:
+        """Total number of specifications planned for this profile (fixed
+        at construction) — read-only introspection, e.g. for a progress
+        indicator. Does not influence planning, selection, or termination."""
+        return self.pool.total()

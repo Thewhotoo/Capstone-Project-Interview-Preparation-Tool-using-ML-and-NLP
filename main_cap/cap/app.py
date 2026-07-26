@@ -10,6 +10,7 @@ import sys
 import logging
 
 import conversation_engine
+import deployment_evaluator
 import discussion_engine
 
 # Load .env file (GEMINI_API_KEY etc.)
@@ -31,6 +32,10 @@ if not _gemini_key:
     )
 else:
     logger.info("Gemini configured successfully.")
+
+# ── Startup wiring: production evaluator (trained model, falls back to
+# HeuristicEvaluator automatically -- see deployment_evaluator.py) ──────────
+deployment_evaluator.bootstrap_production_evaluator()
 
 app = Flask(__name__, template_folder="templates")
 

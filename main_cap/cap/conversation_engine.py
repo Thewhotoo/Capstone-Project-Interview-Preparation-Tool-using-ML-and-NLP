@@ -57,6 +57,16 @@ from topic_pool import ProfileLike
 
 _conversations: dict[str, dict] = {}
 
+# Interview budget (session 14, UX milestone): a real technical interview
+# doesn't exhaust a candidate's entire topic pool -- capping the number of
+# QUESTIONS ASKED (not touching Planner/TopicPool's own priority ordering
+# at all) is enough. `TopicPool.select_next` always returns the current
+# highest-priority UNASKED unit; simply not calling `plan_next` again once
+# this many turns have been recorded means only the top-N priority units
+# are ever scheduled -- lower-priority units are silently never asked, with
+# zero change to planning heuristics. Single constant, easy to retune.
+RESUME_DISCUSSION_QUESTION_BUDGET = 10
+
 
 def _question_payload(question: InterviewQuestion) -> dict:
     return {
@@ -128,6 +138,7 @@ def start_conversation(profile: ProfileLike) -> tuple[dict, int]:
         "status": "success",
         "conversation_id": conversation_id,
         "question": _question_payload(question),
+        "total_questions": min(planner.total(), RESUME_DISCUSSION_QUESTION_BUDGET),
     }, 200
 
 
@@ -172,7 +183,14 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
     memory.record_turn(current_question, variant_idx, answer_text=answer)
     planner.advance(spec_id, UnitStatus.COVERED)
 
-    next_spec = planner.plan_next(ConversationState(last_category=session["last_category"]))
+    # Budget check BEFORE asking the planner for another unit -- this is
+    # the only way lower-priority units "never get scheduled" rather than
+    # scheduled-then-discarded; select_next() itself is never told to stop
+    # early, it simply isn't called again once the budget is spent.
+    if memory.turn_count() >= RESUME_DISCUSSION_QUESTION_BUDGET:
+        next_spec = None
+    else:
+        next_spec = planner.plan_next(ConversationState(last_category=session["last_category"]))
     if next_spec is None:
         session["ended"] = True
         return {
@@ -216,6 +234,17 @@ def _result_payload(result) -> dict:
         "missing_reasoning": [
             {"category": m.category, "explanation": m.explanation, "severity": m.severity}
             for m in result.missing_reasoning
+        ],
+        # Session 15: already computed by every Evaluator implementation
+        # (TrainedEvaluator.evaluate() populates this per turn from
+        # EvaluationRequest.expected_concepts) but never previously rendered
+        # here -- this is the only per-turn field that names the SPECIFIC
+        # technical concepts (not a fixed reasoning-category taxonomy) this
+        # question was actually grounded in, needed for a question-specific
+        # Strong Answer. Pure field selection, no new evaluation logic.
+        "concept_coverage": [
+            {"concept": c.concept, "status": c.status.value, "evidence": c.evidence}
+            for c in result.concept_coverage
         ],
         "suggested_improvements": list(result.suggested_improvements),
         "recommended_topics": list(result.recommended_topics),

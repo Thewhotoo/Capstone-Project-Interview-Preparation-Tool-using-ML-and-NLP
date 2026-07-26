@@ -334,6 +334,13 @@ class TopicPool:
             1 for state in self.lifecycle.values() if state.status == UnitStatus.UNASKED
         )
 
+    def total(self) -> int:
+        """Total number of `QuestionSpecification` units ever enumerated
+        into this pool for this profile — fixed at construction time, never
+        recomputed. Read-only introspection, same category as `remaining()`;
+        does not affect selection, lifecycle, or termination in any way."""
+        return len(self.lifecycle)
+
     # ── Lifecycle transitions (Chapter 11.4, hardened — Phase 1.5, Task 2) ─
     # Phase 1 exposes these so a caller can drive the status machine; Phase
     # 1 itself does not decide WHEN to call them (that is the Adaptive

@@ -769,6 +769,12 @@
         let rdQuestionNum = 0;
         let rdTotalQuestions = 12;
         let rdCurrentCategory = "project_overview";
+        // v2 migration: the v2 backend (conversation_engine.py) never returns
+        // question/answer text on its own -- only metadata + evaluations. The
+        // frontend already sees both as it renders them, so it accumulates
+        // them here and zips them with each turn's real evaluation to build
+        // the report client-side (see rdBuildReportFromV2).
+        let rdTurnHistory = [];
 
         const landingContainer = document.getElementById("landing-container");
         const chatContainer = document.getElementById("chat-container");
@@ -1139,7 +1145,7 @@
             const sessionId = parsedResumeData ? (parsedResumeData.session_id || "") : "";
 
             try {
-                const res = await fetch("/api/resume-discussion/start", {
+                const res = await fetch("/api/resume-discussion-v2/start", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ session_id: sessionId })
@@ -1155,10 +1161,20 @@
                     return;
                 }
 
-                rdSessionId = data.session_id;
+                // v2's response shape: {status, conversation_id, question,
+                // total_questions}. total_questions is the REAL planned pool
+                // size for this profile (Planner.total(), session 12) -- not
+                // an estimate, and not a fixed ceiling; question_num comes
+                // from the question's own turn_number.
+                rdSessionId = data.conversation_id;
                 rdTotalQuestions = data.total_questions;
-                rdQuestionNum = data.question_num;
+                rdQuestionNum = data.question.turn_number;
                 rdCurrentCategory = data.question.category;
+                rdTurnHistory = [{
+                    question: data.question.text, category: data.question.category,
+                    project_reference: data.question.project_reference, is_followup: false,
+                    turn_number: data.question.turn_number, answer: null, evaluation: null,
+                }];
 
                 rdAddMessage(
                     "Let's talk through your background. I'll ask about your projects, experience, and technologies \u2014 take your time with each answer.",
@@ -1191,7 +1207,7 @@
             rdShowTyping();
 
             try {
-                const res = await fetch("/api/resume-discussion/reply", {
+                const res = await fetch("/api/resume-discussion-v2/reply", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ session_id: rdSessionId, answer: answer })
@@ -1207,6 +1223,14 @@
                     return;
                 }
 
+                // Record this turn's real answer + real TrainedEvaluator result
+                // against the pending entry pushed when its question was shown.
+                const rdCurrentTurn = rdTurnHistory[rdTurnHistory.length - 1];
+                if (rdCurrentTurn) {
+                    rdCurrentTurn.answer = answer;
+                    rdCurrentTurn.evaluation = data.evaluation;
+                }
+
                 if (data.is_completed) {
                     await sleep(600);
                     rdTriggerReport();
@@ -1214,15 +1238,20 @@
                 }
 
                 if (data.next_question) {
-                    rdQuestionNum = data.question_num;
+                    // v2 has no top-level question_num/is_followup -- turn_number
+                    // and next_question.is_followup are the equivalent fields.
+                    rdQuestionNum = data.turn_number;
                     rdCurrentCategory = data.next_question.category;
-                    // Use the fixed target set at session start, not data.total_questions
-                    // (that field is the running count of turns so far, not a target — using
-                    // it here made the progress bar read "Question 2 of ~2", "3 of ~3", etc.)
                     rdUpdateProgress(rdQuestionNum, rdTotalQuestions, rdCurrentCategory);
+                    rdTurnHistory.push({
+                        question: data.next_question.text, category: data.next_question.category,
+                        project_reference: data.next_question.project_reference,
+                        is_followup: data.next_question.is_followup, turn_number: data.turn_number,
+                        answer: null, evaluation: null,
+                    });
 
                     await sleep(500);
-                    rdLoadQuestion(data.next_question, data.is_followup);
+                    rdLoadQuestion(data.next_question, data.next_question.is_followup);
                 }
 
             } catch (err) {
@@ -1238,7 +1267,7 @@
             rdShowTyping();
 
             try {
-                const res = await fetch("/api/resume-discussion/end", {
+                const res = await fetch("/api/resume-discussion-v2/end", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ session_id: rdSessionId })
@@ -1251,7 +1280,7 @@
                 await sleep(400);
                 rdContainer.style.display = "none";
 
-                rdRenderReport(data);
+                rdRenderReport(rdBuildReportFromV2(data, rdTurnHistory));
 
             } catch (err) {
                 rdHideTyping();
@@ -1259,6 +1288,191 @@
                 rdAddMessage("Failed to generate your discussion report.", "bot");
                 rdEnableInput();
             }
+        }
+
+        // ─── v1 -> v2 report adapter (frontend-only; no backend change) ───
+        // v1's discussion_engine.py used to compute this whole aggregated
+        // report shape server-side. v2's evaluation_engine/conversation_engine
+        // only expose a per-turn Evaluation Ledger (see _result_payload in
+        // conversation_engine.py) -- so this function derives the SAME report
+        // shape rdRenderReport already expects, from REAL data only:
+        // per-turn EvaluationResult fields (dimensions/strengths/weaknesses/
+        // recommended_topics) collected during the interview, plus the
+        // session-level fields end_conversation() already returns. Fields v1
+        // had that v2 has no honest equivalent for (personalized_feedback,
+        // concept_coverage_avg, concepts_mastered/needing_review,
+        // skills_not_demonstrated) are left absent/zero rather than invented
+        // -- rdRenderReport already guards every one of these as optional.
+        // Returns null (not 0) when `name` wasn't a relevant dimension for
+        // this turn's reasoning_type (reasoning_dimension_relevance.py --
+        // e.g. technical_depth is only relevant for 5 of 10 reasoning
+        // types). Session 13 calibration fix: treating "not scored" as a
+        // score of 0 was silently deflating session-level averages for any
+        // dimension that isn't ALWAYS_RELEVANT -- this was a frontend
+        // aggregation bug, not the model being harsh. The model/evaluator
+        // itself is unchanged; only how already-present per-turn results
+        // are averaged is corrected here.
+        function rdDimScore(evaluation, name) {
+            const d = evaluation && (evaluation.dimensions || []).find(x => x.name === name);
+            return d ? d.raw_score : null;
+        }
+
+        function rdAvgDimensionPct(evaluations, name) {
+            const scored = evaluations.map(e => rdDimScore(e, name)).filter(v => v !== null);
+            if (!scored.length) return 0;
+            return (scored.reduce((a, b) => a + b, 0) / scored.length) * 100;
+        }
+
+        // Session 14: only show a Strong Answer where it adds genuine
+        // learning value -- suppressed for an already-excellent answer, or
+        // a good answer with no meaningfully missing concepts (nothing left
+        // to usefully add).
+        function rdShouldShowStrongAnswer(evaluation) {
+            if (!evaluation) return false;
+            if (evaluation.grade === "excellent") return false;
+            const missing = evaluation.missing_reasoning || [];
+            if (evaluation.grade === "good" && missing.length === 0) return false;
+            return true;
+        }
+
+        // Session 15: strips the Question Realizer's own fixed boilerplate
+        // lead-ins (question_realizer.py's phrasing templates -- literal,
+        // known strings, not inferred) so what's left is the actual
+        // topic/technology clause this specific question is about. Used
+        // only as a fallback anchor when a turn has no project_reference
+        // (e.g. an EXPERIENCE turn) -- deterministic string processing,
+        // not invention: every word left over came from the real,
+        // grounded question text itself.
+        const RD_QUESTION_BOILERPLATE_PREFIXES = [
+            /^Let's stay on this for a moment\s*[—-]\s*/i,
+            /^Sticking with this a little longer\s*[—-]\s*/i,
+            /^Let's go back to this project for a moment\s*[—-]\s*/i,
+            /^Coming back to this project\s*[—-]\s*/i,
+            /^Now let's move on to another project\.\s*/i,
+        ];
+
+        function rdExtractQuestionTopic(questionText) {
+            const text = questionText || "";
+            // EXPERIENCE turns have no project_reference but the realizer's
+            // fixed phrasing always names "worked as {role} at {company}" --
+            // a much cleaner anchor than the surrounding sentence.
+            const roleMatch = text.match(/you worked as (.+?)\./i);
+            if (roleMatch) return roleMatch[1].trim();
+
+            let stripped = text;
+            for (const prefix of RD_QUESTION_BOILERPLATE_PREFIXES) {
+                stripped = stripped.replace(prefix, "");
+            }
+            stripped = stripped.replace(/[?.]$/, "").trim();
+            // Safety net: never let an unrecognized phrasing balloon the
+            // anchor into repeating the whole question verbatim.
+            if (stripped.length > 80) stripped = stripped.slice(0, 77).trim() + "...";
+            return stripped;
+        }
+
+        // Deterministic, question-specific "Strong Answer". Reuses ONLY
+        // information already available within the evaluator/conversation
+        // engine for THIS turn -- no LLM, no invented technical content:
+        //   - concept_coverage: real, specific technical concepts the
+        //     trained evaluator already looked up for this exact question
+        //     (e.g. "ASGI", "graph nodes") -- session 15 addition, exposed
+        //     from an already-computed EvaluationResult field.
+        //   - project_reference / the question's own text: the concrete
+        //     project or topic this question is actually about, so the
+        //     anchor differs per question even when concept_coverage or
+        //     missing_reasoning don't.
+        //   - missing_reasoning: the existing reasoning-category signal,
+        //     kept as a secondary framing layer only.
+        // Written in first person, as the answer itself -- never "a
+        // stronger answer would..." framing, per requirement.
+        function rdBuildStrongAnswerHint(turn) {
+            const evaluation = turn.evaluation;
+            if (!rdShouldShowStrongAnswer(evaluation)) return null;
+
+            const anchor = turn.project_reference || rdExtractQuestionTopic(turn.question);
+
+            const gaps = (evaluation.concept_coverage || [])
+                .filter(c => c.status !== "demonstrated")
+                .map(c => c.concept);
+
+            const missing = (evaluation.missing_reasoning || [])
+                .slice()
+                .sort((a, b) => (b.severity || 0) - (a.severity || 0))
+                .slice(0, 2)
+                .map(m => m.category.replace(/_/g, " "));
+
+            const parts = [];
+            if (gaps.length) {
+                parts.push(`For ${anchor}, I made sure to explicitly cover ${gaps.slice(0, 3).join(", ")}, tying each one back to what I actually implemented rather than mentioning it in passing.`);
+            }
+            if (missing.length) {
+                const lead = gaps.length ? "I also walked through" : `For ${anchor}, I walked through`;
+                parts.push(`${lead} ${missing.join(" and ")} directly, with the concrete reasoning behind it rather than just the outcome.`);
+            }
+            if (!parts.length) return null;
+            return parts.join(" ");
+        }
+
+        function rdBuildReportFromV2(endData, turnHistory) {
+            const evaluations = turnHistory.map(t => t.evaluation).filter(Boolean);
+            const uniq = (arr) => Array.from(new Set(arr));
+
+            const avgOverall = evaluations.length
+                ? (evaluations.reduce((s, e) => s + (e.overall_score || 0), 0) / evaluations.length) * 100
+                : 0;
+
+            // Strongest/weakest project: grouped from this session's own
+            // real per-turn scores, not fabricated.
+            const byProject = {};
+            turnHistory.forEach((t) => {
+                if (!t.evaluation || !t.project_reference) return;
+                (byProject[t.project_reference] = byProject[t.project_reference] || []).push(t.evaluation.overall_score || 0);
+            });
+            let strongestProject = null, weakestProject = null, bestAvg = -1, worstAvg = 2;
+            Object.entries(byProject).forEach(([proj, scores]) => {
+                const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+                if (avg > bestAvg) { bestAvg = avg; strongestProject = proj; }
+                if (avg < worstAvg) { worstAvg = avg; weakestProject = proj; }
+            });
+
+            const timeline = turnHistory.map((t) => ({
+                is_followup: t.is_followup,
+                question_num: t.turn_number,
+                category: t.category,
+                score: t.evaluation ? t.evaluation.overall_score : 0,
+                grade: t.evaluation ? t.evaluation.grade : "n/a",
+                question: t.question,
+                answer: t.answer || "",
+                correctness: rdDimScore(t.evaluation, "technical_accuracy"),
+                technical_depth: rdDimScore(t.evaluation, "technical_depth"),
+                completeness: rdDimScore(t.evaluation, "completeness"),
+                communication: rdDimScore(t.evaluation, "communication"),
+                strengths: t.evaluation ? t.evaluation.strengths : [],
+                weaknesses: t.evaluation ? t.evaluation.weaknesses : [],
+                suggested_answer: rdBuildStrongAnswerHint(t),
+            }));
+
+            return {
+                average_answer_quality: avgOverall,
+                communication_score: rdAvgDimensionPct(evaluations, "communication"),
+                technical_depth: rdAvgDimensionPct(evaluations, "technical_depth"),
+                project_understanding: rdAvgDimensionPct(evaluations, "technical_accuracy"),
+                resume_authenticity: rdAvgDimensionPct(evaluations, "resume_grounding"),
+                concept_coverage_avg: 0,
+                technologies_demonstrated: endData.technologies_mentioned || [],
+                concepts_mastered: [],
+                concepts_needing_review: [],
+                skills_not_demonstrated: [],
+                recommended_focus: uniq(evaluations.flatMap(e => e.recommended_topics || [])),
+                strongest_areas: uniq(evaluations.flatMap(e => e.strengths || [])),
+                areas_to_improve: uniq(evaluations.flatMap(e => e.weaknesses || [])),
+                strongest_project: strongestProject,
+                weakest_project: weakestProject,
+                personalized_feedback: null,
+                projects_discussed: endData.projects_discussed || [],
+                total_questions: endData.total_questions || turnHistory.length,
+                timeline: timeline,
+            };
         }
 
         function rdRenderReport(data) {
@@ -1319,7 +1533,7 @@
                             </div>
                             ${strengthsHtml ? `<div class="rd-timeline-metric-label">Strengths</div><ul class="rd-timeline-list">${strengthsHtml}</ul>` : ""}
                             ${weaknessesHtml ? `<div class="rd-timeline-metric-label">To improve</div><ul class="rd-timeline-list">${weaknessesHtml}</ul>` : ""}
-                            ${item.suggested_answer ? `<div class="rd-timeline-metric-label" style="margin-bottom:6px;">A stronger answer</div><div class="rd-suggested-answer">${esc(item.suggested_answer)}</div>` : ""}
+                            ${item.suggested_answer ? `<div class="rd-timeline-metric-label" style="margin-bottom:6px;">Strong Answer</div><div class="rd-suggested-answer">${esc(item.suggested_answer)}</div>` : ""}
                         </div>
                         <div class="rd-expand-hint">Tap to expand details</div>
                     </div>
@@ -1398,6 +1612,7 @@
         function proceedToAdaptiveInterview() {
             rdSessionId = null;
             rdQuestionNum = 0;
+            rdTurnHistory = [];
 
             rdReportContainer.style.display = "none";
             rdMessages.innerHTML = "";
@@ -1559,6 +1774,7 @@
             // Reset Resume Discussion state
             rdSessionId = null;
             rdQuestionNum = 0;
+            rdTurnHistory = [];
 
             messagesDiv.innerHTML = "";
             rdMessages.innerHTML = "";

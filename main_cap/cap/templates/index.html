@@ -1323,96 +1323,14 @@
             return (scored.reduce((a, b) => a + b, 0) / scored.length) * 100;
         }
 
-        // Session 14: only show a Strong Answer where it adds genuine
-        // learning value -- suppressed for an already-excellent answer, or
-        // a good answer with no meaningfully missing concepts (nothing left
-        // to usefully add).
-        function rdShouldShowStrongAnswer(evaluation) {
-            if (!evaluation) return false;
-            if (evaluation.grade === "excellent") return false;
-            const missing = evaluation.missing_reasoning || [];
-            if (evaluation.grade === "good" && missing.length === 0) return false;
-            return true;
-        }
-
-        // Session 15: strips the Question Realizer's own fixed boilerplate
-        // lead-ins (question_realizer.py's phrasing templates -- literal,
-        // known strings, not inferred) so what's left is the actual
-        // topic/technology clause this specific question is about. Used
-        // only as a fallback anchor when a turn has no project_reference
-        // (e.g. an EXPERIENCE turn) -- deterministic string processing,
-        // not invention: every word left over came from the real,
-        // grounded question text itself.
-        const RD_QUESTION_BOILERPLATE_PREFIXES = [
-            /^Let's stay on this for a moment\s*[—-]\s*/i,
-            /^Sticking with this a little longer\s*[—-]\s*/i,
-            /^Let's go back to this project for a moment\s*[—-]\s*/i,
-            /^Coming back to this project\s*[—-]\s*/i,
-            /^Now let's move on to another project\.\s*/i,
-        ];
-
-        function rdExtractQuestionTopic(questionText) {
-            const text = questionText || "";
-            // EXPERIENCE turns have no project_reference but the realizer's
-            // fixed phrasing always names "worked as {role} at {company}" --
-            // a much cleaner anchor than the surrounding sentence.
-            const roleMatch = text.match(/you worked as (.+?)\./i);
-            if (roleMatch) return roleMatch[1].trim();
-
-            let stripped = text;
-            for (const prefix of RD_QUESTION_BOILERPLATE_PREFIXES) {
-                stripped = stripped.replace(prefix, "");
-            }
-            stripped = stripped.replace(/[?.]$/, "").trim();
-            // Safety net: never let an unrecognized phrasing balloon the
-            // anchor into repeating the whole question verbatim.
-            if (stripped.length > 80) stripped = stripped.slice(0, 77).trim() + "...";
-            return stripped;
-        }
-
-        // Deterministic, question-specific "Strong Answer". Reuses ONLY
-        // information already available within the evaluator/conversation
-        // engine for THIS turn -- no LLM, no invented technical content:
-        //   - concept_coverage: real, specific technical concepts the
-        //     trained evaluator already looked up for this exact question
-        //     (e.g. "ASGI", "graph nodes") -- session 15 addition, exposed
-        //     from an already-computed EvaluationResult field.
-        //   - project_reference / the question's own text: the concrete
-        //     project or topic this question is actually about, so the
-        //     anchor differs per question even when concept_coverage or
-        //     missing_reasoning don't.
-        //   - missing_reasoning: the existing reasoning-category signal,
-        //     kept as a secondary framing layer only.
-        // Written in first person, as the answer itself -- never "a
-        // stronger answer would..." framing, per requirement.
-        function rdBuildStrongAnswerHint(turn) {
-            const evaluation = turn.evaluation;
-            if (!rdShouldShowStrongAnswer(evaluation)) return null;
-
-            const anchor = turn.project_reference || rdExtractQuestionTopic(turn.question);
-
-            const gaps = (evaluation.concept_coverage || [])
-                .filter(c => c.status !== "demonstrated")
-                .map(c => c.concept);
-
-            const missing = (evaluation.missing_reasoning || [])
-                .slice()
-                .sort((a, b) => (b.severity || 0) - (a.severity || 0))
-                .slice(0, 2)
-                .map(m => m.category.replace(/_/g, " "));
-
-            const parts = [];
-            if (gaps.length) {
-                parts.push(`For ${anchor}, I made sure to explicitly cover ${gaps.slice(0, 3).join(", ")}, tying each one back to what I actually implemented rather than mentioning it in passing.`);
-            }
-            if (missing.length) {
-                const lead = gaps.length ? "I also walked through" : `For ${anchor}, I walked through`;
-                parts.push(`${lead} ${missing.join(" and ")} directly, with the concrete reasoning behind it rather than just the outcome.`);
-            }
-            if (!parts.length) return null;
-            return parts.join(" ");
-        }
-
+        // Improved Answer is generated server-side, deterministically, in
+        // strong_answer.py (build_improved_answer) and delivered per turn as
+        // evaluation.improved_answer -- null when hidden (already-strong
+        // answer, or nothing concrete to add). It is a stronger rewrite of the
+        // candidate's OWN answer: their response with repetition removed plus
+        // grounded first-person additions for the missing concepts / weak
+        // reasoning the evaluator flagged. DeBERTa is evaluation-only; the UI
+        // just renders the string.
         function rdBuildReportFromV2(endData, turnHistory) {
             const evaluations = turnHistory.map(t => t.evaluation).filter(Boolean);
             const uniq = (arr) => Array.from(new Set(arr));
@@ -1449,8 +1367,19 @@
                 communication: rdDimScore(t.evaluation, "communication"),
                 strengths: t.evaluation ? t.evaluation.strengths : [],
                 weaknesses: t.evaluation ? t.evaluation.weaknesses : [],
-                suggested_answer: rdBuildStrongAnswerHint(t),
+                suggested_answer: (t.evaluation && t.evaluation.improved_answer) || null,
             }));
+
+            // Concept Coverage: average ONLY turns that carry a value. The
+            // backend sends evaluation.concept_coverage_pct (0-100) from the
+            // shared lexical detector, or null when the turn has no concept
+            // pool (experience/certification) -- those are excluded, not 0.
+            const conceptPctValues = turnHistory
+                .map(t => t.evaluation && t.evaluation.concept_coverage_pct)
+                .filter(v => typeof v === "number");
+            const conceptCoverageAvg = conceptPctValues.length
+                ? conceptPctValues.reduce((a, b) => a + b, 0) / conceptPctValues.length
+                : 0;
 
             return {
                 average_answer_quality: avgOverall,
@@ -1458,7 +1387,7 @@
                 technical_depth: rdAvgDimensionPct(evaluations, "technical_depth"),
                 project_understanding: rdAvgDimensionPct(evaluations, "technical_accuracy"),
                 resume_authenticity: rdAvgDimensionPct(evaluations, "resume_grounding"),
-                concept_coverage_avg: 0,
+                concept_coverage_avg: conceptCoverageAvg,
                 technologies_demonstrated: endData.technologies_mentioned || [],
                 concepts_mastered: [],
                 concepts_needing_review: [],
@@ -1533,7 +1462,7 @@
                             </div>
                             ${strengthsHtml ? `<div class="rd-timeline-metric-label">Strengths</div><ul class="rd-timeline-list">${strengthsHtml}</ul>` : ""}
                             ${weaknessesHtml ? `<div class="rd-timeline-metric-label">To improve</div><ul class="rd-timeline-list">${weaknessesHtml}</ul>` : ""}
-                            ${item.suggested_answer ? `<div class="rd-timeline-metric-label" style="margin-bottom:6px;">Strong Answer</div><div class="rd-suggested-answer">${esc(item.suggested_answer)}</div>` : ""}
+                            ${item.suggested_answer ? `<div class="rd-timeline-metric-label" style="margin-bottom:6px;">Improved Answer</div><div class="rd-suggested-answer">${esc(item.suggested_answer)}</div>` : ""}
                         </div>
                         <div class="rd-expand-hint">Tap to expand details</div>
                     </div>

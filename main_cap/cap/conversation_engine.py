@@ -42,7 +42,6 @@ change what happens next.
 from __future__ import annotations
 
 import uuid as _uuid
-from typing import Any, Optional
 
 import question_realizer
 from conversation_memory import ConversationMemory
@@ -53,6 +52,8 @@ from heuristic_evaluator import HeuristicEvaluator
 from interview_question import InterviewQuestion
 from planner import ConversationState, Planner
 from question_specification import UnitStatus
+from concept_analysis import concept_coverage_percent
+from strong_answer import build_improved_answer
 from topic_pool import ProfileLike
 
 _conversations: dict[str, dict] = {}
@@ -191,12 +192,25 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
         next_spec = None
     else:
         next_spec = planner.plan_next(ConversationState(last_category=session["last_category"]))
+    # Improved Answer is derived here, at the one site where the
+    # EvaluationResult, the InterviewQuestion (its grounding) AND the raw
+    # candidate `answer` are all in scope — the candidate answer is the input
+    # that makes this an *improvement* of their own response rather than a
+    # fresh one. `_result_payload` stays a pure field-selector and the ledger
+    # (results only) is untouched. See strong_answer.py.
+    turn_evaluation = _result_payload(result)
+    turn_evaluation["improved_answer"] = build_improved_answer(current_question, result, answer)
+    # Concept Coverage % for the dashboard, from the SAME shared lexical
+    # detector the Improved Answer uses. None when the turn has no concept pool
+    # (e.g. experience/certification) — the dashboard averages only non-null turns.
+    turn_evaluation["concept_coverage_pct"] = concept_coverage_percent(current_question, result, answer)
+
     if next_spec is None:
         session["ended"] = True
         return {
             "status": "success", "next_question": None, "is_completed": True,
             "turn_number": memory.turn_count(),
-            "evaluation": _result_payload(result),
+            "evaluation": turn_evaluation,
         }, 200
 
     next_turn_number = memory.turn_count() + 1
@@ -210,7 +224,7 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
         "next_question": _question_payload(next_question),
         "is_completed": False,
         "turn_number": next_turn_number,
-        "evaluation": _result_payload(result),
+        "evaluation": turn_evaluation,
     }, 200
 
 
@@ -241,7 +255,7 @@ def _result_payload(result) -> dict:
         # here -- this is the only per-turn field that names the SPECIFIC
         # technical concepts (not a fixed reasoning-category taxonomy) this
         # question was actually grounded in, needed for a question-specific
-        # Strong Answer. Pure field selection, no new evaluation logic.
+        # Improved Answer. Pure field selection, no new evaluation logic.
         "concept_coverage": [
             {"concept": c.concept, "status": c.status.value, "evidence": c.evidence}
             for c in result.concept_coverage

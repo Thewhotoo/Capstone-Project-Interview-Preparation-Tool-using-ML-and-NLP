@@ -20,7 +20,7 @@ to phrase a natural, non-repetitive, well-sequenced conversation:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional
 
 from interview_question import InterviewQuestion

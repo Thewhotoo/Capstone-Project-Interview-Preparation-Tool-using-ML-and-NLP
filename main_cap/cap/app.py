@@ -128,7 +128,6 @@ def get_resume_discussion():
         data = request.get_json() or {}
         session_id = data.get("session_id", "")
         domain = data.get("domain", "Software Engineer")
-        skills = data.get("skills", [])
 
         # Try to load the Candidate Profile (single source of truth)
         profile = _candidate_profiles.get(session_id) if session_id else None
@@ -520,7 +519,7 @@ def next_question():
     Tries RAG open-ended questions first (if available), falls back to hardcoded.
     Request: {"asked_ids": [], "difficulty": "medium", "topic": "All"}
     """
-    global _rag_question_pool, _rag_question_counter, _asked_rag_ids
+    global _rag_question_counter
 
     try:
         data = request.get_json() or {}
@@ -631,32 +630,38 @@ def evaluate():
         question = data.get("question", "").strip().lower()
         user_fill = data.get("user_fill_mask", "").strip().lower()
         ref_fill = data.get("reference_fill_mask", "").strip().lower()
-        fill_question = data.get("fill_question", "").strip().lower()
-        
+
         # ═══════════════════════════════════════════════════════════════
         # MAIN ANSWER EVALUATION (STRICT with gibberish, LENIENT with correct)
         # ═══════════════════════════════════════════════════════════════
         
         def is_gibberish(text):
             """Detect if answer is gibberish/nonsense"""
+            import re
+
             if len(text) < 5:
                 return True
-            
+
             gibberish_patterns = [
                 "routing packet",  # Wrong answer for TCP handshake
                 "xxxx", "asdf", "qwerty", "zzzzz",  # keyboard gibberish
                 "blah", "bla bla", "idk", "dunno", "no idea",
                 "random", "whatever", "test", "hello world",
             ]
-            
+
+            # Whole-word/whole-phrase match only, so legitimate technical
+            # answers containing these as substrings of a longer word
+            # (e.g. "test suite", "randomized", "whatever alternative")
+            # aren't misflagged -- \b anchors each pattern to word
+            # boundaries rather than matching anywhere in the string.
             for pattern in gibberish_patterns:
-                if pattern in text:
+                if re.search(r"\b" + re.escape(pattern) + r"\b", text):
                     return True
-            
+
             # Check if answer has too many random/unrelated words
-            if any(word in text for word in ["lol", "haha", "wtf", "omg"]):
+            if any(re.search(r"\b" + re.escape(word) + r"\b", text) for word in ["lol", "haha", "wtf", "omg"]):
                 return True
-                
+
             return False
         
         def extract_key_concepts(answer_text):

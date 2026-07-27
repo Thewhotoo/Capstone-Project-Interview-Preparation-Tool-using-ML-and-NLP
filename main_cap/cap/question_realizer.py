@@ -36,7 +36,7 @@ import discussion_policy
 from conversation_memory import ConversationMemory
 from interview_question import InterviewQuestion
 from question_families import PhrasingContext, ReasoningType, get_family
-from question_specification import QuestionSpecification, SourceType
+from question_specification import QuestionSpecification
 
 
 def _stable_index(*parts: str, modulus: int) -> int:

@@ -16,6 +16,19 @@
             --text-main: #fcfcfc;
             --text-muted: #888888;
             --border-subtle: rgba(255, 255, 255, 0.06);
+
+            /* --- Phase 1 additive tokens (shared scale, does not
+                 replace anything the other screens already use) ---
+                 Graphite/charcoal neutrals + a single restrained lime
+                 accent reserved for "the system is alive" moments only
+                 (status, focus, active state) — never a fill color. */
+            --border-hover: rgba(255, 255, 255, 0.16);
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-slow: cubic-bezier(0.22, 1, 0.36, 1);
+            --text-dim: #55564d;
+            --lime: #c8ff5e;
+            --lime-dim: rgba(200, 255, 94, 0.14);
+            --lime-border: rgba(200, 255, 94, 0.4);
         }
 
         /* --- TOAST NOTIFICATIONS --- */
@@ -60,25 +73,368 @@
             flex-direction: column;
         }
 
-        /* --- LANDING PAGE --- */
+        /* ═══════════════════════════════════════════════════════════
+           LANDING — "Interview Operating System"
+           One continuous scene (idle → recognised → building → ready).
+           Graphite/charcoal neutrals throughout; lime (--lime) is used
+           ONLY as a status signal (active state, focus, progress,
+           scanning) — never as a fill or decorative color.
+           ═══════════════════════════════════════════════════════════ */
         #landing-container {
             width: 100%;
-            max-width: 500px;
-            margin: auto; /* Centers it perfectly */
-            text-align: center;
+            max-height: 100vh;
+            margin: auto;
             transition: opacity 0.5s ease, transform 0.5s ease;
-            padding: 40px;
+            padding: 48px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+            z-index: 1;
+        }
+        #landing-container::-webkit-scrollbar { display: none; }
+
+        /* ═══════════════════════════════════════════════════════════
+           APP-WIDE ATMOSPHERE — lives at body level (see markup),
+           behind every screen (landing, dashboard, interview, report).
+           This is the single biggest fix for "feels like separate
+           websites stitched together": one persistent environment that
+           never resets when the active screen changes underneath it.
+           ═══════════════════════════════════════════════════════════ */
+        .app-bg, .app-grain, .app-beam, .app-glow {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .app-bg {
+            background:
+                radial-gradient(ellipse 1100px 700px at 50% -15%, rgba(255,255,255,0.05), transparent 60%),
+                radial-gradient(ellipse 900px 700px at 88% 105%, rgba(200,255,94,0.045), transparent 62%),
+                linear-gradient(180deg, var(--bg-base), #0d0d0e 55%, var(--bg-base));
+        }
+        .app-grain {
+            opacity: 0.05;
+            mix-blend-mode: overlay;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px 180px;
+        }
+        /* a single slow light sweep — a moment, not a loop you consciously notice */
+        .app-beam {
+            top: -20%; left: -10%; width: 160%; height: 380px;
+            background: linear-gradient(100deg, transparent 40%, rgba(255,255,255,0.04) 48%, rgba(255,255,255,0.065) 50%, rgba(255,255,255,0.04) 52%, transparent 60%);
+            transform: rotate(-8deg);
+            animation: beamSweep 18s var(--ease) infinite;
+        }
+        @keyframes beamSweep {
+            0% { transform: rotate(-8deg) translateY(-60px); opacity: 0; }
+            8% { opacity: 1; }
+            32% { transform: rotate(-8deg) translateY(140px); opacity: 0; }
+            100% { opacity: 0; }
+        }
+        /* cursor-following volumetric light — subtle, JS-driven (see script) */
+        .app-glow {
+            width: 700px; height: 700px; left: 0; top: 0;
+            margin-left: -350px; margin-top: -350px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 65%);
+            will-change: transform;
         }
 
-        .landing-title { 
-            font-size: 3rem; 
-            font-weight: 700; 
-            margin-bottom: 8px; 
-            letter-spacing: -1px;
-            color: #ffffff;
+        /* ambient system log — small, honest framing: an illustrative
+           sense of "something is always running", not a literal event
+           feed. Fixed, so it persists across screens like the rest of
+           the atmosphere. */
+        .system-log {
+            position: fixed; left: 24px; bottom: 22px; z-index: 5;
+            display: flex; align-items: center; gap: 8px;
+            font-family: 'Roboto Mono', monospace; font-size: 0.72rem;
+            color: var(--text-dim); letter-spacing: 0.02em;
+            pointer-events: none; max-width: 360px;
         }
-        
-        .landing-sub { color: var(--text-muted); margin-bottom: 40px; font-size: 1.1rem; font-weight: 300; }
+        .system-log .log-dot {
+            width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+            background: var(--lime); box-shadow: 0 0 6px rgba(200,255,94,0.7);
+            animation: breathe 2.4s ease-in-out infinite;
+        }
+        #system-log-text { transition: opacity 0.6s var(--ease-slow); }
+        #system-log-text.fade { opacity: 0; }
+        @media (max-width: 900px) { .system-log { display: none; } }
+
+        .landing-content { width: 100%; position: relative; z-index: 1; }
+
+        .capability-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+        .capability-chip {
+            font-size: 0.76rem; color: var(--text-muted); font-weight: 500;
+            padding: 7px 13px; border-radius: 100px;
+            border: 1px solid var(--border-subtle);
+            background: rgba(255,255,255,0.025);
+        }
+
+        .landing-grid {
+            width: 100%;
+            max-width: 1320px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        /* ---------- left: copy — typography carries the hierarchy ---------- */
+        .landing-copy { text-align: left; }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+            padding: 8px 16px 8px 12px;
+            border-radius: 100px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+            border: 1px solid var(--border-subtle);
+        }
+        .eyebrow-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--lime);
+            box-shadow: 0 0 8px rgba(200,255,94,0.8);
+            animation: breathe 2.4s ease-in-out infinite;
+        }
+        @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .hero-title {
+            font-family: 'Newsreader', Georgia, serif;
+            font-weight: 400;
+            font-size: clamp(2.4rem, 3.4vw, 3.6rem);
+            letter-spacing: -0.01em;
+            line-height: 1.12;
+            color: #ffffff;
+            margin: 0 0 22px;
+            max-width: 560px;
+            min-height: 1.12em;
+        }
+        #hero-title-text.type-caret::after {
+            content: ""; display: inline-block; width: 3px; height: 0.82em; margin-left: 3px;
+            background: rgba(255,255,255,0.75); vertical-align: -0.06em;
+            animation: caretBlink 0.9s steps(1) infinite;
+        }
+
+        .hero-subtitle {
+            font-size: 1.02rem;
+            font-weight: 400;
+            line-height: 1.65;
+            color: var(--text-muted);
+            max-width: 440px;
+            margin: 0 0 30px;
+        }
+
+        .trust-footnote { font-size: 0.78rem; color: var(--text-dim); }
+
+        /* ---------- right: the stage — vessel + real supporting information ---------- */
+        .landing-stage { position: relative; }
+
+        /* Two in-flow (never overlapping) tiles above the vessel. Each
+           communicates something true: the pipeline the resume is about
+           to enter, and the system's actual current state — not
+           decoration for its own sake. */
+        .stage-info-row { display: flex; gap: 14px; margin-bottom: 22px; }
+        .stage-tile {
+            flex: 1;
+            min-width: 0;
+            border-radius: 14px;
+            border: 1px solid var(--border-subtle);
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.008));
+            padding: 14px 16px;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 20px 40px -28px rgba(0,0,0,0.7);
+        }
+        .tile-label {
+            font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em;
+            color: var(--text-dim); margin-bottom: 10px; font-weight: 600;
+        }
+        .pipeline-steps { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+        .pipeline-step {
+            font-size: 0.72rem; font-weight: 500; color: var(--text-dim);
+            transition: color 0.4s var(--ease-slow);
+        }
+        .pipeline-step.done { color: var(--text-muted); }
+        .pipeline-step.active { color: var(--lime); }
+        .pipeline-sep { width: 10px; height: 1px; background: var(--border-subtle); flex-shrink: 0; }
+
+        .status-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem; }
+        .status-row + .status-row { margin-top: 8px; }
+        .status-key { color: var(--text-dim); }
+        .status-val { color: var(--text-muted); font-family: 'Roboto Mono', monospace; font-weight: 500; }
+        .status-val.online { color: var(--lime); display: inline-flex; align-items: center; gap: 6px; }
+        .status-val.online::before {
+            content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--lime);
+            box-shadow: 0 0 6px rgba(200,255,94,0.7); animation: breathe 2.4s ease-in-out infinite;
+        }
+
+        .vessel-wrap { position: relative; }
+
+        .ambient-graph {
+            position: absolute;
+            top: -56px; right: -30px; width: 260px; height: 200px;
+            opacity: 0.5; pointer-events: none; z-index: 0;
+        }
+        .ambient-graph circle.node { fill: var(--text-dim); }
+        .ambient-graph circle.node.active { fill: var(--lime); filter: drop-shadow(0 0 4px rgba(200,255,94,0.7)); }
+        .ambient-graph line { stroke: var(--border-subtle); stroke-width: 1; }
+        .ambient-graph line.active { stroke: rgba(200,255,94,0.3); }
+        .ambient-graph .drift-a { animation: driftA 14s ease-in-out infinite alternate; }
+        .ambient-graph .drift-b { animation: driftB 18s ease-in-out infinite alternate; }
+        @keyframes driftA { from { transform: translate(0,0); } to { transform: translate(8px, -10px); } }
+        @keyframes driftB { from { transform: translate(0,0); } to { transform: translate(-10px, 8px); } }
+        .node.pulse { animation: nodePulse 2.2s ease-in-out infinite; }
+        @keyframes nodePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .upload-input-hidden { display: none; }
+
+        /* ---------- the vessel: one element, four states, never swapped ---------- */
+        .vessel {
+            position: relative;
+            width: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.008)), var(--bg-elevated);
+            box-shadow:
+                0 1px 0 rgba(255,255,255,0.04) inset,
+                0 10px 24px -12px rgba(0,0,0,0.6),
+                0 36px 70px -30px rgba(0,0,0,0.75);
+            cursor: pointer;
+            height: 100px;
+            transition: height 0.9s var(--ease-slow), border-color 0.5s var(--ease-slow),
+                        box-shadow 0.7s var(--ease-slow), transform 0.4s var(--ease-slow);
+        }
+        .vessel:hover { transform: translateY(-1px); border-color: var(--border-hover); }
+        /* idle: nearly invisible, blends into the composition — a
+           docking station, not an upload box — until hovered/engaged */
+        .vessel.idle {
+            border-color: rgba(255,255,255,0.045);
+            background: rgba(255,255,255,0.012);
+            box-shadow: none;
+        }
+        .vessel.idle:hover {
+            border-color: var(--border-hover);
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.008)), var(--bg-elevated);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 10px 24px -12px rgba(0,0,0,0.6), 0 36px 70px -30px rgba(0,0,0,0.75);
+        }
+        .vessel.recognized, .vessel.building, .vessel.drag-over { border-color: var(--lime-border); box-shadow: 0 0 0 1px var(--lime-dim), 0 10px 24px -12px rgba(0,0,0,0.6), 0 36px 70px -30px rgba(0,0,0,0.75), 0 0 60px -22px rgba(200,255,94,0.16); }
+        .vessel.drag-over { transform: scale(1.006); }
+        .vessel.building { height: 244px; }
+        .vessel.ready { height: 140px; border-color: var(--lime-border); }
+
+        .vessel-scan {
+            position: absolute; left: 1px; right: 1px; top: -1px; height: 2px; border-radius: 2px;
+            background: linear-gradient(90deg, transparent, var(--lime), transparent);
+            opacity: 0; box-shadow: 0 0 12px rgba(200,255,94,0.6); pointer-events: none;
+        }
+        .vessel.building .vessel-scan { animation: scanDown 1.2s linear infinite; opacity: 1; }
+        @keyframes scanDown { from { top: -1px; } to { top: 100%; } }
+
+        .v-layer {
+            position: absolute; inset: 0; padding: 28px 30px;
+            display: flex; align-items: center; gap: 16px;
+            opacity: 0; pointer-events: none; transform: translateY(6px);
+            transition: opacity 0.45s var(--ease-slow), transform 0.45s var(--ease-slow);
+        }
+        .vessel.idle .v-idle,
+        .vessel.recognized .v-recognized,
+        .vessel.building .v-building,
+        .vessel.ready .v-ready { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+        .v-icon {
+            width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+            background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.4s var(--ease-slow);
+        }
+        .v-icon svg { width: 18px; height: 18px; stroke: var(--text-muted); transition: stroke 0.4s var(--ease-slow); }
+        .v-icon.on { background: var(--lime-dim); border-color: var(--lime-border); }
+        .v-icon.on svg { stroke: var(--lime); }
+
+        .v-text { text-align: left; flex-grow: 1; min-width: 0; }
+        .v-title { font-size: 0.98rem; font-weight: 500; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .v-sub { font-size: 0.82rem; color: var(--text-muted); margin-top: 2px; }
+        .v-action {
+            font-size: 0.78rem; color: var(--text-muted); font-weight: 600; flex-shrink: 0;
+            padding: 8px 14px; border-radius: 9px; border: 1px solid var(--border-subtle);
+            background: transparent; font-family: inherit; cursor: pointer;
+            transition: all 0.2s var(--ease);
+        }
+        .v-action:hover { color: var(--text-main); border-color: var(--border-hover); }
+
+        /* building layer: fields arrive as the system reads the document */
+        .v-building { flex-direction: column; align-items: stretch; justify-content: center; gap: 0; padding: 22px 26px; }
+        .build-status {
+            font-size: 0.8rem; color: var(--lime); font-family: 'Roboto Mono', monospace;
+            min-height: 20px; margin-bottom: 12px;
+        }
+        .build-status.type-caret::after {
+            content: ""; display: inline-block; width: 6px; height: 13px; margin-left: 2px;
+            background: var(--lime); vertical-align: -2px;
+            animation: caretBlink 0.9s steps(1) infinite;
+        }
+        @keyframes caretBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+        .build-row {
+            display: flex; align-items: center; justify-content: space-between; padding: 8px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            opacity: 0; transform: translateX(-6px);
+            transition: opacity 0.5s var(--ease-slow), transform 0.5s var(--ease-slow);
+        }
+        .build-row:last-child { border-bottom: none; }
+        .build-row.show { opacity: 1; transform: translateX(0); }
+        .build-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); }
+        .build-value { font-size: 0.86rem; color: var(--text-main); font-weight: 500; font-family: 'Roboto Mono', monospace; }
+
+        .v-ready { flex-direction: column; align-items: center; justify-content: center; gap: 5px; text-align: center; }
+        .ready-title { font-size: 1rem; font-weight: 500; color: var(--text-main); }
+        .ready-sub { font-size: 0.82rem; color: var(--text-muted); }
+
+        /* ---------- steps: neutral, except the one that's active ---------- */
+        .upload-steps { display: flex; align-items: center; gap: 10px; margin-top: 32px; flex-wrap: wrap; position: relative; z-index: 1; }
+        .upload-step { display: flex; align-items: center; gap: 8px; font-size: 0.79rem; color: var(--text-muted); font-weight: 500; }
+        .upload-step-num {
+            width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--border-subtle);
+            background: rgba(255,255,255,0.03);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.66rem; font-weight: 600; font-family: 'Roboto Mono', monospace; color: var(--text-muted);
+        }
+        .upload-step.active { color: var(--text-main); }
+        .upload-step.active .upload-step-num { border-color: var(--lime-border); background: var(--lime-dim); color: var(--lime); }
+        .upload-step-connector { width: 20px; height: 1px; background: var(--border-subtle); }
+
+        .btn-primary {
+            width: 100%; margin-top: 28px; padding: 16px; border-radius: 13px; cursor: pointer;
+            background: transparent; border: 1.5px solid var(--border-hover); color: var(--text-muted);
+            font-size: 1rem; font-weight: 600; font-family: inherit;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.4s var(--ease-slow); position: relative; z-index: 1;
+        }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-primary.ready-state { border-color: var(--lime-border); color: var(--text-main); box-shadow: 0 0 0 1px var(--lime-dim), 0 20px 50px -24px rgba(200,255,94,0.25); }
+        .btn-primary.ready-state:hover:not(:disabled) { background: var(--lime); color: #0a0a08; border-color: var(--lime); box-shadow: 0 8px 30px -8px rgba(200,255,94,0.5); transform: translateY(-1px); }
+        .btn-arrow { display: inline-block; transition: transform 0.2s var(--ease); }
+        .btn-primary.ready-state:hover:not(:disabled) .btn-arrow { transform: translateX(2px); }
+
+        @media (max-width: 980px) {
+            .landing-grid { grid-template-columns: 1fr; gap: 44px; }
+            .landing-copy { text-align: center; }
+            .hero-title, .hero-subtitle { margin-left: auto; margin-right: auto; }
+            .hero-eyebrow, .capability-row { margin-left: auto; margin-right: auto; justify-content: center; }
+            .ambient-graph { display: none; }
+        }
+        @media (max-width: 640px) {
+            #landing-container { padding: 28px 20px; }
+            .hero-title { font-size: 1.9rem; }
+            .hero-subtitle { font-size: 0.92rem; }
+            .stage-info-row { flex-direction: column; gap: 10px; }
+        }
 
         .form-group { text-align: left; margin-bottom: 24px; }
         .form-group label { 
@@ -121,13 +477,17 @@
         }
         .start-btn:hover { transform: scale(1.02); background: #f0f0f0; box-shadow: 0 0 30px rgba(255,255,255,0.1); }
 
-        /* --- CANDIDATE ASSESSMENT DASHBOARD --- */
+        /* --- CANDIDATE ASSESSMENT DASHBOARD ---
+           Same operating system as the landing screen: transparent
+           background so the app-wide atmosphere shows through, serif
+           headline, glass cards with layered shadows, lime reserved
+           for the one "this is the headline stat" moment. */
         #candidate-dashboard {
             display: none;
             width: 100%;
             height: 92vh;
             overflow-y: auto;
-            background: var(--bg-base);
+            background: transparent;
             animation: dashFadeIn 0.6s ease forwards;
         }
         #candidate-dashboard::-webkit-scrollbar { display: none; }
@@ -137,14 +497,17 @@
             max-width: 1100px;
             margin: 0 auto;
             padding: 40px 32px 60px;
+            position: relative;
+            z-index: 1;
         }
 
         .dash-greeting {
-            font-size: 2rem;
-            font-weight: 700;
+            font-family: 'Newsreader', Georgia, serif;
+            font-weight: 400;
+            font-size: 2.2rem;
             color: #fff;
-            letter-spacing: -0.5px;
-            margin-bottom: 4px;
+            letter-spacing: -0.01em;
+            margin-bottom: 6px;
         }
         .dash-subtitle {
             font-size: 0.95rem;
@@ -160,10 +523,11 @@
             margin-bottom: 28px;
         }
         .dash-card {
-            background: var(--bg-elevated);
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.008)), var(--bg-elevated);
             border: 1px solid var(--border-subtle);
-            border-radius: 14px;
+            border-radius: 18px;
             padding: 24px;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 50px -30px rgba(0,0,0,0.7);
         }
         .dash-card-label {
             font-size: 0.7rem;
@@ -209,6 +573,7 @@
         .skill-chip.sk-db { background: rgba(168,85,247,0.10); border-color: rgba(168,85,247,0.20); color: #c4b5fd; }
         .skill-chip.sk-cloud { background: rgba(6,182,212,0.10); border-color: rgba(6,182,212,0.20); color: #67e8f9; }
         .skill-chip.sk-other { background: rgba(255,255,255,0.04); border-color: var(--border-subtle); color: #aaa; }
+        .skill-chip.sk-aiml { background: var(--lime-dim); border-color: var(--lime-border); color: var(--lime); }
 
         .dash-category-label {
             font-size: 0.65rem;
@@ -233,27 +598,178 @@
 
         .dash-start-btn {
             width: 100%;
-            padding: 18px;
+            padding: 17px;
             margin-top: 10px;
-            background: #fff;
-            color: #000;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.05rem;
+            background: transparent;
+            color: var(--text-main);
+            border: 1.5px solid var(--lime-border);
+            border-radius: 13px;
+            font-size: 1.02rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 0 1px var(--lime-dim), 0 20px 50px -24px rgba(200,255,94,0.2);
+            transition: all 0.3s var(--ease-slow);
         }
         .dash-start-btn:hover {
-            transform: scale(1.015);
-            box-shadow: 0 0 40px rgba(255,255,255,0.08);
-            background: #f0f0f0;
+            transform: translateY(-1px);
+            background: var(--lime);
+            color: #0a0a08;
+            box-shadow: 0 8px 30px -8px rgba(200,255,94,0.5);
         }
 
         @media (max-width: 700px) {
             .dash-grid { grid-template-columns: 1fr; }
             .dash-wrapper { padding: 24px 16px 40px; }
             .dash-greeting { font-size: 1.5rem; }
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           INTERVIEW BRIEFING (Candidate Dashboard v2)
+           Same visual language as the landing page — charcoal/graphite,
+           restrained lime, serif for the one big moment, glass panels,
+           staggered reveal. This screen answers "what did the AI learn
+           from this resume" — nothing here is a score, a percentage
+           beyond what the classifier genuinely returns, or a
+           performance claim. Those belong in the final report.
+           ═══════════════════════════════════════════════════════════ */
+        @keyframes riseIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+        .brief-header { margin-bottom: 6px; opacity: 0; animation: riseIn 0.7s var(--ease-slow) forwards; }
+        .brief-eyebrow-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+        .brief-eyebrow {
+            display: inline-flex; align-items: center; gap: 9px;
+            font-size: 0.7rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 8px 16px 8px 12px; border-radius: 100px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+            border: 1px solid var(--border-subtle);
+        }
+        .brief-pill {
+            font-size: 0.7rem; font-weight: 600; color: var(--lime);
+            padding: 7px 14px; border-radius: 100px;
+            border: 1px solid var(--lime-border); background: var(--lime-dim);
+            display: inline-flex; align-items: center; gap: 7px;
+        }
+        .brief-pill::before {
+            content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--lime);
+            box-shadow: 0 0 6px rgba(200,255,94,.7); animation: breathe 2.4s ease-in-out infinite;
+        }
+        .brief-name {
+            font-family: 'Newsreader', Georgia, serif; font-weight: 400;
+            font-size: clamp(1.7rem, 2.6vw, 2.2rem); letter-spacing: -0.01em;
+            color: #fff; margin: 0 0 6px;
+        }
+        .brief-subline { font-size: 0.88rem; color: var(--text-muted); font-family: 'Roboto Mono', monospace; margin-bottom: 10px; }
+        .brief-context { font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; max-width: 720px; }
+
+        /* Dense 3-column, 2-row workspace grid. Row 2's Experience
+           Timeline spans the first two tracks (it benefits most from
+           width) while Technical Stack takes the third — five cards
+           total now that Topics has merged into AI Interview Strategy. */
+        .brief-grid {
+            display: grid;
+            grid-template-columns: 0.8fr 1.3fr 0.8fr;
+            gap: 18px;
+            margin-top: 22px;
+        }
+        .brief-grid > .dash-card {
+            opacity: 0; transform: translateY(10px);
+            animation: riseIn 0.5s var(--ease-slow) forwards;
+            display: flex; flex-direction: column;
+            transition: transform 0.35s var(--ease-slow), border-color 0.35s var(--ease-slow), box-shadow 0.35s var(--ease-slow);
+        }
+        .brief-grid > .dash-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-hover);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 50px -30px rgba(0,0,0,0.7), 0 0 0 1px var(--lime-dim), 0 16px 40px -28px rgba(200,255,94,0.12);
+        }
+        .brief-grid > .dash-card:nth-child(1) { animation-delay: 0.1s; }
+        .brief-grid > .dash-card:nth-child(2) { animation-delay: 0.2s; }
+        .brief-grid > .dash-card:nth-child(3) { animation-delay: 0.3s; }
+        .brief-grid > .dash-card:nth-child(4) { animation-delay: 0.42s; grid-column: span 2; }
+        .brief-grid > .dash-card:nth-child(5) { animation-delay: 0.52s; }
+
+        .brief-panel-label { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); font-weight: 600; margin-bottom: 10px; }
+
+        /* candidate profile — compact definition list, not stacked cards */
+        .brief-dl { display: grid; grid-template-columns: auto 1fr; gap: 7px 16px; margin: 0; }
+        .brief-dl dt { font-size: 0.72rem; color: var(--text-dim); white-space: nowrap; }
+        .brief-dl dd { font-size: 0.84rem; color: var(--text-main); margin: 0; text-align: left; overflow-wrap: anywhere; }
+
+        /* AI summary — the visual centerpiece; wider column. Top-aligned
+           like every other card: label first, text grows downward. */
+        .brief-summary-text { font-size: 1.02rem; line-height: 1.62; color: var(--text-main); margin: 0; }
+        .brief-summary-text.type-caret::after {
+            content: ""; display: inline-block; width: 2px; height: 1em; margin-left: 2px;
+            background: rgba(255,255,255,0.7); vertical-align: -0.12em;
+            animation: caretBlink 0.9s steps(1) infinite;
+        }
+
+        .brief-strategy-text { font-size: 0.87rem; color: var(--text-muted); line-height: 1.55; margin: 0 0 14px; }
+        .brief-focus-label { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 8px; }
+
+        /* experience timeline — GitHub-repo-style cards, compact by
+           default, expand smoothly on click. No nested scrollbars. */
+        .brief-repo-card {
+            border: 1px solid var(--border-subtle); border-radius: 10px;
+            margin-bottom: 8px; background: rgba(255,255,255,0.015);
+            overflow: hidden;
+            transition: border-color 0.3s var(--ease-slow);
+        }
+        .brief-repo-card:last-child { margin-bottom: 0; }
+        .brief-repo-card:hover { border-color: var(--border-hover); }
+        .brief-repo-card.expanded { border-color: var(--lime-border); }
+        .brief-repo-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; cursor: pointer; }
+        .brief-repo-title { font-size: 0.85rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .brief-repo-head-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .brief-repo-category {
+            font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em;
+            color: var(--lime); border: 1px solid var(--lime-border); background: var(--lime-dim);
+            padding: 2px 8px; border-radius: 5px;
+        }
+        .brief-repo-chevron { color: var(--text-dim); font-size: 0.85rem; display: inline-block; transition: transform 0.3s var(--ease-slow), color 0.3s var(--ease-slow); }
+        .brief-repo-card.expanded .brief-repo-chevron { transform: rotate(90deg); color: var(--lime); }
+        .brief-repo-body { max-height: 0; overflow: hidden; transition: max-height 0.4s var(--ease-slow); }
+        .brief-repo-body-inner { padding: 0 12px 12px; }
+        .brief-repo-summary-full { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 8px; }
+        .brief-repo-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+        .brief-repo-chips .skill-chip { font-size: 0.66rem; padding: 3px 8px; }
+
+        .brief-topic-chip {
+            font-size: 0.76rem; padding: 5px 11px; border-radius: 8px;
+            border: 1px solid var(--lime-border); background: var(--lime-dim); color: var(--lime);
+            display: inline-block; margin: 0 6px 6px 0;
+        }
+
+        /* technical stack — a genuinely scrollable fixed-height panel.
+           Scrolling (wheel/trackpad/keyboard/touch) stays fully
+           functional; the scrollbar itself is hidden across all major
+           browsers. Persistent bottom fade signals there's more below. */
+        .brief-stack-body {
+            position: relative;
+            max-height: 220px;
+            overflow-y: auto;
+            -ms-overflow-style: none; /* IE/old Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+        .brief-stack-body::-webkit-scrollbar { /* Chrome, Edge, Safari */
+            width: 0;
+            height: 0;
+            display: none;
+        }
+        .brief-stack-body::after {
+            content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 30px;
+            background: linear-gradient(180deg, transparent, var(--bg-elevated)); pointer-events: none;
+        }
+
+        /* the entry point deeper into the workspace — appears only
+           once the briefing has fully rendered, never immediately */
+        .brief-cta-wrap { margin-top: 22px; opacity: 0; transform: translateY(10px); transition: opacity 0.7s var(--ease-slow), transform 0.7s var(--ease-slow); }
+        .brief-cta-wrap.show { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 980px) {
+            .brief-grid { grid-template-columns: 1fr; }
+            .brief-grid > .dash-card:nth-child(4) { grid-column: span 1; }
         }
 
         /* --- CHAT CONTAINER (FULL SCREEN LAYOUT) --- */
@@ -326,13 +842,13 @@
         .user-msg { background: var(--user-bubble); border: 1px solid var(--border-subtle); }
 
         /* THE NEW EVALUATION CARD WITH GLASSMORPHISM */
-        .eval-card { 
-            background: rgba(10, 10, 10, 0.6); 
+        .eval-card {
+            background: rgba(10, 10, 10, 0.6);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05); 
-            border-radius: 12px; 
-            padding: 20px; 
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
             margin-top: 12px; 
             transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); 
         }
@@ -389,9 +905,10 @@
             outline: none; 
             transition: all 0.3s ease; 
         }
-        input[type="text"]:focus { 
-            border-color: #555; 
-            background: #111; 
+        input[type="text"]:focus {
+            border-color: var(--lime-border);
+            background: #111;
+            box-shadow: 0 0 0 3px var(--lime-dim);
         }
         input[type="text"]:disabled { opacity: 0.5; cursor: not-allowed; }
         
@@ -423,32 +940,35 @@
         }
         #dashboard-container::-webkit-scrollbar { display: none; }
 
-        .dashboard-header { 
-            font-size: 2.5rem; 
-            font-weight: 700; 
-            margin-bottom: 40px; 
-            color: #ffffff; 
-            letter-spacing: -1px;
+        .dashboard-header {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 2.4rem;
+            font-weight: 400;
+            margin-bottom: 40px;
+            color: #ffffff;
+            letter-spacing: -0.01em;
         }
         
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 50px; }
         
-        .stat-box { 
-            background: var(--bg-elevated);
-            padding: 30px 20px; 
-            border-radius: 12px; 
-            border: 1px solid var(--border-subtle); 
+        .stat-box {
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.008)), var(--bg-elevated);
+            padding: 30px 20px;
+            border-radius: 18px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 50px -30px rgba(0,0,0,0.7);
         }
         .stat-value { font-size: 3rem; font-weight: 700; margin-bottom: 8px; line-height: 1; font-family: 'Roboto Mono', monospace; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
         
         .section-title { font-weight: 600; margin-bottom: 24px; font-size: 1.2rem; color: #fff; letter-spacing: 1px;}
         .history-list { display: grid; grid-template-columns: 1fr; gap: 16px; }
-        .history-card { 
-            background: var(--bg-elevated); 
-            padding: 24px; 
-            border-radius: 12px; 
-            border: 1px solid var(--border-subtle); 
+        .history-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.008)), var(--bg-elevated);
+            padding: 24px;
+            border-radius: 18px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 50px -30px rgba(0,0,0,0.7);
         }
         
         .history-card-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
@@ -521,7 +1041,8 @@
         #rd-progress-fill {
             height: 100%;
             width: 0%;
-            background: var(--accent);
+            background: var(--lime);
+            box-shadow: 0 0 8px rgba(200,255,94,0.5);
             border-radius: 4px;
             transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -552,9 +1073,9 @@
             font-size: 0.65rem;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            color: var(--accent);
-            border: 1px solid rgba(59,130,246,0.35);
-            background: rgba(59,130,246,0.08);
+            color: var(--lime);
+            border: 1px solid var(--lime-border);
+            background: var(--lime-dim);
             padding: 3px 9px;
             border-radius: 5px;
             margin-bottom: 10px;
@@ -587,9 +1108,10 @@
             margin-bottom: 8px;
         }
         .rd-report-title {
+            font-family: 'Newsreader', Georgia, serif;
             font-size: 2.2rem;
-            font-weight: 700;
-            letter-spacing: -1px;
+            font-weight: 400;
+            letter-spacing: -0.01em;
             color: #fff;
             margin-bottom: 36px;
         }
@@ -623,7 +1145,7 @@
         .rd-timeline-metric-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
         .rd-timeline-metric-value { font-family: 'Roboto Mono', monospace; }
         .rd-timeline-list { margin: 0 0 10px; padding-left: 18px; font-size: 0.85rem; }
-        .rd-suggested-answer { font-size: 0.85rem; color: #93c5fd; background: rgba(59,130,246,0.05); padding: 12px 14px; border-radius: 8px; border-left: 3px solid var(--accent); line-height: 1.5; }
+        .rd-suggested-answer { font-size: 0.85rem; color: var(--text-main); background: var(--lime-dim); padding: 12px 14px; border-radius: 8px; border-left: 3px solid var(--lime); line-height: 1.5; }
         .rd-expand-hint { font-size: 0.68rem; color: #555; margin-top: 10px; text-align: center; }
 
         .rd-report-actions { display: flex; gap: 16px; margin: 40px 0; }
@@ -655,10 +1177,10 @@
         .rd-column-list { margin: 0; padding-left: 18px; font-size: 0.88rem; color: #ddd; line-height: 1.7; }
 
         .rd-chip.missing { color: #fb7185; border-color: rgba(251,113,133,0.3); }
-        .rd-chip.focus { color: #93c5fd; border-color: rgba(59,130,246,0.35); background: rgba(59,130,246,0.06); }
+        .rd-chip.focus { color: var(--lime); border-color: var(--lime-border); background: var(--lime-dim); }
 
         .rd-feedback-card {
-            background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-left: 3px solid var(--accent);
+            background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-left: 3px solid var(--lime);
             border-radius: 10px; padding: 20px 22px; margin-bottom: 40px; font-size: 0.92rem; color: #ddd; line-height: 1.65;
         }
 
@@ -671,17 +1193,128 @@
 </head>
 <body>
 
-    <div id="landing-container">
-        <div class="landing-title">AI.interviewer</div>
-        <div class="landing-sub">System configuration</div>
+    <!-- Persistent system atmosphere — lives at body level, behind every
+         screen, so the "operating system" never visually resets between
+         landing / dashboard / interview / report. -->
+    <div class="app-bg"></div>
+    <div class="app-grain"></div>
+    <div class="app-beam"></div>
+    <div class="app-glow" id="cursor-glow"></div>
+    <div class="system-log" id="system-log"><span class="log-dot"></span><span id="system-log-text"></span></div>
 
-        <!-- STEP 1: Resume Upload -->
-        <div id="resume-upload-section">
-            <div class="form-group">
-                <label>📄 Upload Your Resume (Optional)</label>
-                <input type="file" id="resume-file" accept=".pdf,.docx" style="width: 100%; padding: 12px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-elevated); color: white; cursor: pointer;">
+    <div id="landing-container">
+      <div class="landing-content">
+        <div class="landing-grid">
+          <div class="landing-copy">
+            <div class="hero-eyebrow"><span class="eyebrow-dot"></span>Interview Operating System</div>
+            <h1 class="hero-title"><span id="hero-title-text"></span></h1>
+            <p class="hero-subtitle">Upload your resume to get a structured conversation and evaluation report grounded in your actual projects and experience.</p>
+            <div class="trust-footnote">No sign-up required &mdash; your resume is used only to personalize this session.</div>
+
+            <div class="capability-row">
+              <div class="capability-chip">Adaptive follow-up questioning</div>
+              <div class="capability-chip">Technical project deep-dives</div>
+              <div class="capability-chip">Concept coverage &amp; improved answers</div>
+              <div class="capability-chip">Technical reasoning analysis</div>
+              <div class="capability-chip">Detailed performance report</div>
             </div>
-            <button class="start-btn" onclick="uploadResume()">Start Interview →</button>
+          </div>
+
+          <!-- STEP 1: Resume Upload — one persistent element, four states -->
+          <div class="landing-stage" id="resume-upload-section">
+            <div class="stage-info-row">
+              <div class="stage-tile" id="pipeline-tile">
+                <div class="tile-label">AI Pipeline</div>
+                <div class="pipeline-steps">
+                  <span class="pipeline-step active" data-stage="resume">Resume</span>
+                  <span class="pipeline-sep"></span>
+                  <span class="pipeline-step" data-stage="profile">Profile</span>
+                  <span class="pipeline-sep"></span>
+                  <span class="pipeline-step" data-stage="interview">Interview</span>
+                  <span class="pipeline-sep"></span>
+                  <span class="pipeline-step" data-stage="report">Report</span>
+                </div>
+              </div>
+              <div class="stage-tile" id="status-tile">
+                <div class="tile-label">System Status</div>
+                <div class="status-row"><span class="status-key">Engine</span><span class="status-val online">Online</span></div>
+                <div class="status-row"><span class="status-key">Resume</span><span class="status-val" id="status-resume-val">Awaiting</span></div>
+              </div>
+            </div>
+
+            <div class="vessel-wrap">
+              <svg class="ambient-graph" viewBox="0 0 340 340" aria-hidden="true">
+                <g class="drift-a">
+                  <line x1="40" y1="60" x2="120" y2="110" />
+                  <line x1="120" y1="110" x2="90" y2="190" />
+                  <line x1="120" y1="110" x2="210" y2="90" class="active" />
+                </g>
+                <g class="drift-b">
+                  <line x1="210" y1="90" x2="270" y2="160" class="active" />
+                  <line x1="90" y1="190" x2="180" y2="230" />
+                  <line x1="270" y1="160" x2="180" y2="230" />
+                </g>
+                <circle class="node" cx="40" cy="60" r="4" />
+                <circle class="node" cx="120" cy="110" r="4" />
+                <circle class="node active pulse" cx="210" cy="90" r="5" />
+                <circle class="node" cx="90" cy="190" r="4" />
+                <circle class="node active pulse" cx="270" cy="160" r="5" />
+                <circle class="node" cx="180" cy="230" r="4" />
+              </svg>
+
+              <div class="vessel idle" id="vessel">
+                <div class="vessel-scan"></div>
+                <input type="file" id="resume-file" accept=".pdf,.docx" class="upload-input-hidden">
+
+              <div class="v-layer v-idle">
+                <div class="v-icon" id="idle-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+                </div>
+                <div class="v-text">
+                  <div class="v-title">Drop your resume to begin</div>
+                  <div class="v-sub">PDF or DOCX, up to 10MB &mdash; click anywhere in this seam</div>
+                </div>
+                <div class="v-action">Browse</div>
+              </div>
+
+              <div class="v-layer v-recognized">
+                <div class="v-icon on">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                </div>
+                <div class="v-text">
+                  <div class="v-title" id="rec-filename"></div>
+                  <div class="v-sub" id="rec-filesize"></div>
+                </div>
+                <button type="button" class="v-action" id="remove-file-btn">Remove</button>
+              </div>
+
+              <div class="v-layer v-building">
+                <div class="build-status" id="build-status"></div>
+                <div class="build-row" id="row-candidate"><span class="build-label">Candidate</span><span class="build-value" id="val-candidate"></span></div>
+                <div class="build-row" id="row-domain"><span class="build-label">Domain</span><span class="build-value" id="val-domain"></span></div>
+                <div class="build-row" id="row-experience"><span class="build-label">Experience</span><span class="build-value" id="val-experience"></span></div>
+                <div class="build-row" id="row-skills"><span class="build-label">Skills detected</span><span class="build-value" id="val-skills"></span></div>
+              </div>
+
+              <div class="v-layer v-ready">
+                <div class="ready-title">Profile built.</div>
+                <div class="ready-sub">Opening your candidate overview&hellip;</div>
+              </div>
+              </div>
+            </div>
+
+            <div class="upload-steps">
+                <div class="upload-step active"><span class="upload-step-num">1</span>Upload resume</div>
+                <div class="upload-step-connector"></div>
+                <div class="upload-step"><span class="upload-step-num">2</span>Discuss your projects</div>
+                <div class="upload-step-connector"></div>
+                <div class="upload-step"><span class="upload-step-num">3</span>Get a detailed report</div>
+            </div>
+
+            <button class="btn-primary" id="start-interview-btn" disabled>
+                <span id="start-btn-label">Start Interview</span><span class="btn-arrow">→</span>
+            </button>
+          </div>
         </div>
 
         <!-- STEP 2: Subject Selection -->
@@ -714,6 +1347,7 @@
 
             <button class="start-btn" onclick="startInterview()">Initialize Session</button>
         </div>
+      </div>
     </div>
 
     <div id="chat-container">
@@ -829,6 +1463,10 @@
                 exact: ["react","reactjs","react.js","angular","angularjs","vue","vuejs","vue.js","next","nextjs","next.js","nuxt","nuxtjs","svelte","sveltejs","django","flask","fastapi","spring","spring boot","springboot"," express","expressjs","node","nodejs","node.js","rails","ruby on rails","laravel","symfony","ASP.NET","dotnet",".net","blazor","flutter","android","ios"," SwiftUI","tailwind","tailwindcss","bootstrap","jquery"],
                 substring: ["react","angular","vue","next","nuxt","svelte","django","flask","fastapi","spring","express","node","rails","laravel","symfony","asp.net","dotnet","blazor","flutter","tailwind","bootstrap","jquery"]
             },
+            "AI/ML": {
+                exact: ["tensorflow","pytorch","keras","scikit-learn","sklearn","hugging face","huggingface","transformers","sentence-transformers","nlp","langchain","langgraph","opencv","spacy","nltk","xgboost","lightgbm","onnx","mlflow","llm","gemini","gemini api","openai","openai api","gpt","bert","roberta","distilbert","flan-t5","rag","faiss","pinecone","chromadb","chroma","deep learning","machine learning","computer vision","cnn","rnn","lstm"],
+                substring: ["tensorflow","pytorch","keras","scikit","sklearn","hugging face","huggingface","transformers","nlp","langchain","langgraph","opencv","spacy","nltk","xgboost","lightgbm","onnx","mlflow","llm","gemini","openai","gpt","bert","rag","faiss","pinecone","chroma","deep learning","machine learning","computer vision"]
+            },
             "Tools": {
                 exact: ["git","github","gitlab","bitbucket","docker","dockerfile","kubernetes","k8s","jenkins","travis","circleci","github actions","terraform","ansible","puppet","chef","vagrant","nginx","apache","tomcat","webpack","vite","npm","yarn","pip","conda","maven","gradle","ant","cmake","make","vim","neovim","emacs","vscode","intellij","eclipse","postman","swagger","figma","jira","confluence","trello","notion","slack","discord","linux","unix","macos","windows","ci/cd","devops","mlops"],
                 substring: ["git","github","gitlab","bitbucket","docker","kubernetes","k8s","jenkins","travis","circleci","terraform","ansible","puppet","chef","vagrant","nginx","apache","tomcat","webpack","vite","npm","yarn","pip","conda","maven","gradle","cmake","postman","swagger","figma","jira","confluence","trello","notion","linux","unix","ci/cd","devops","mlops"]
@@ -847,6 +1485,7 @@
             const result = {
                 "Languages": [],
                 "Frameworks": [],
+                "AI/ML": [],
                 "Tools": [],
                 "Databases": [],
                 "Cloud": [],
@@ -887,12 +1526,107 @@
             return result;
         }
 
-        // ─── CANDIDATE ASSESSMENT DASHBOARD RENDER FUNCTIONS ───────────
+        // ─── INTERVIEW BRIEFING RENDER FUNCTIONS ───────────────────────
+        // Answers exactly one question: "what did the AI learn from this
+        // resume?" Every value below traces back to a real field on the
+        // /api/classify-resume response (name, predicted_domain,
+        // experience, education, contact, skills, projects). Nothing here
+        // is a score, a confidence percentage, or a performance claim —
+        // those belong in the final report, not this briefing.
+
+        function uniq(arr) { return Array.from(new Set((arr || []).filter(Boolean))); }
+
+        // Project category is derived only from each project's own real
+        // technologies/title/summary — the same spirit as categorizeSkills,
+        // just applied per-project instead of per-skill.
+        const PROJECT_CATEGORY_RULES = [
+            { label: "Machine Learning", keywords: ["tensorflow","pytorch","keras","scikit","sklearn","nlp","llm","gemini","openai","gpt","bert","transformer","huggingface","hugging face","langchain","langgraph","rag","faiss","machine learning","deep learning","computer vision","cnn","rnn","lstm","xgboost"] },
+            { label: "Full-Stack Development", keywords: ["react","angular","vue","next","node","express","django","flask","fastapi","spring","rails","laravel",".net","tailwind","bootstrap","html","css","javascript","typescript"] },
+            { label: "Mobile Development", keywords: ["flutter","android","ios","swift","kotlin","react native","swiftui"] },
+            { label: "Cloud & DevOps", keywords: ["aws","azure","gcp","docker","kubernetes","terraform","ci/cd","jenkins","devops"] },
+            { label: "Cybersecurity", keywords: ["nmap","burp","metasploit","penetration","security","encryption","owasp","vulnerability"] },
+            { label: "Data Engineering", keywords: ["spark","kafka","airflow","etl","hadoop","bigquery","redshift","snowflake"] },
+            { label: "Databases", keywords: ["mysql","postgres","mongodb","redis","sql","database"] },
+        ];
+
+        function deriveProjectCategory(project) {
+            const techs = Array.isArray(project.technologies) ? project.technologies : [];
+            const haystack = (techs.join(" ") + " " + (project.title || "") + " " + (project.summary || "")).toLowerCase();
+            for (const rule of PROJECT_CATEGORY_RULES) {
+                if (rule.keywords.some(k => haystack.includes(k))) return rule.label;
+            }
+            return "Software Development";
+        }
+
+        function collectProjectTechnologies(data) {
+            const projects = Array.isArray(data.projects) ? data.projects : [];
+            const all = [];
+            projects.forEach(p => { if (Array.isArray(p.technologies)) all.push(...p.technologies); });
+            return uniq(all);
+        }
+
+        // One AI-composed paragraph, addressed directly to the candidate
+        // ("you") so it reads like the AI briefing them rather than
+        // describing a document — template-generated purely from real
+        // fields, no invented facts, no evaluative claims.
+        function buildAiSummaryText(data) {
+            const level = data.experience && data.experience.level ? data.experience.level : "";
+            const years = data.experience && data.experience.years ? data.experience.years : 0;
+            const domain = data.predicted_domain || null;
+            const projects = Array.isArray(data.projects) ? data.projects : [];
+            const skills = Array.isArray(data.skills) ? data.skills : [];
+            const categories = uniq(projects.map(p => deriveProjectCategory(p)));
+            const topSkills = skills.slice(0, 5);
+
+            let intro = "You";
+            if (years > 0 && level) {
+                intro += ` bring ${years} year${years === 1 ? "" : "s"} of experience as a ${level.toLowerCase()} professional`;
+            } else if (years > 0) {
+                intro += ` bring ${years} year${years === 1 ? "" : "s"} of experience`;
+            } else if (level) {
+                intro += ` are approaching this as a ${level.toLowerCase()} professional`;
+            } else {
+                intro += " are early in your professional journey";
+            }
+            if (domain) intro += ` in ${domain}`;
+            intro += ".";
+            const parts = [intro];
+
+            if (projects.length > 0) {
+                const catText = categories.length > 1
+                    ? `spanning ${categories.slice(0, -1).join(", ")} and ${categories[categories.length - 1]}`
+                    : `in ${categories[0] || "software development"}`;
+                parts.push(`Your resume highlights ${projects.length} project${projects.length === 1 ? "" : "s"} ${catText}.`);
+            }
+
+            if (topSkills.length > 0) {
+                parts.push(`I'll ground our conversation in the technologies you've used most — ${topSkills.join(", ")}.`);
+            }
+
+            return parts.join(" ");
+        }
+
+        // Derived only from detected projects, technologies and domain —
+        // a forward-looking statement about what the conversation will
+        // cover, never a judgment about the candidate.
+        function buildStrategyText(data) {
+            const domain = data.predicted_domain || "your background";
+            const projects = Array.isArray(data.projects) ? data.projects : [];
+            const categories = uniq(projects.map(p => deriveProjectCategory(p))).slice(0, 3);
+            const skills = Array.isArray(data.skills) ? data.skills : [];
+            const topTechs = skills.slice(0, 4);
+
+            let sentence = `The interview will center on ${domain}`;
+            if (categories.length > 0) sentence += `, with deep-dives into ${categories.join(", ")}`;
+            if (topTechs.length > 0) sentence += `, and practical questions on ${topTechs.join(", ")}`;
+            sentence += ".";
+            return sentence;
+        }
 
         function showCandidateDashboard(data) {
             parsedResumeData = data;
 
-            // Hide landing, show dashboard
+            // Hide landing, show briefing
             landingContainer.style.opacity = "0";
             setTimeout(() => {
                 landingContainer.style.display = "none";
@@ -900,147 +1634,215 @@
             }, 400);
 
             dashWrapper.innerHTML = "";
-            dashWrapper.appendChild(renderDashGreeting(data));
-            dashWrapper.appendChild(renderDashStatsGrid(data));
-            dashWrapper.appendChild(renderDashSkills(data));
-            dashWrapper.appendChild(renderDashInterviewPreview(data));
-            dashWrapper.appendChild(renderDashStartButton());
+            dashWrapper.appendChild(renderBriefingHeader(data));
+            dashWrapper.appendChild(renderBriefingGrid(data));
+            dashWrapper.appendChild(renderBriefingCta());
+
+            requestAnimationFrame(() => runBriefingSequence(data));
         }
 
-        function renderDashGreeting(data) {
+        function renderBriefingHeader(data) {
             const el = document.createElement("div");
+            el.className = "brief-header";
             const name = esc(data.name || "Candidate");
+            const level = data.experience && data.experience.level ? esc(data.experience.level) : "";
+            const domain = esc(data.predicted_domain || "Software Engineering");
+            const subline = level ? `${level} &middot; ${domain}` : domain;
             el.innerHTML = `
-                <div class="dash-greeting">Hello, ${name}</div>
-                <div class="dash-subtitle">Here's your candidate assessment overview</div>
+                <div class="brief-eyebrow-row">
+                    <div class="brief-eyebrow"><span class="eyebrow-dot"></span>Interview Briefing</div>
+                    <div class="brief-pill">Profile generated</div>
+                </div>
+                <div class="brief-name">${name}</div>
+                <div class="brief-subline">${subline}</div>
+                <p class="brief-context">Your resume has been analysed. The interview below will be personalised around the projects, technologies and experience detected in your resume.</p>
             `;
             return el;
         }
 
-        function renderDashStatsGrid(data) {
+        // Flat 5-card grid, in reading order, so CSS grid auto-flows it
+        // into exactly the requested 2 rows:
+        //   Row 1: Candidate Profile | AI Summary | AI Interview Strategy
+        //   Row 2: Experience Timeline (spans 2) | Technical Stack
+        function renderBriefingGrid(data) {
             const el = document.createElement("div");
-            el.className = "dash-grid";
-
-            const domain = esc(data.predicted_domain || "N/A");
-            const confidence = data.confidence ? (data.confidence * 100).toFixed(1) + "%" : "N/A";
-            const years = data.experience ? (data.experience.years || 0) : 0;
-            const level = esc(data.experience ? (data.experience.level || "Unknown") : "Unknown");
-            const education = Array.isArray(data.education) && data.education.length > 0
-                ? data.education.map(e => esc(typeof e === "string" ? e : (e.degree || e.major || JSON.stringify(e)))).join("<br>")
-                : "N/A";
-            const contactParts = [];
-            if (data.email) contactParts.push(esc(data.email));
-            if (data.phone) contactParts.push(esc(data.phone));
-            const contact = contactParts.length > 0 ? contactParts.join("<br>") : "N/A";
-            const projects = Array.isArray(data.projects) ? data.projects : [];
-
-            const cards = [
-                { label: "Domain", value: domain, primary: true },
-                { label: "Confidence", value: confidence },
-                { label: "Experience", value: `${years} years` },
-                { label: "Level", value: level },
-                { label: "Education", value: education, small: true },
-                { label: "Contact", value: contact, small: true },
-            ];
-
-            cards.forEach((c, i) => {
-                const card = document.createElement("div");
-                card.className = "dash-card" + (c.small ? " dash-full" : "");
-                card.innerHTML = `
-                    <div class="dash-card-label">${esc(c.label)}</div>
-                    <div class="dash-card-value${c.small ? ' small' : ''}"${c.primary ? ' style="color:#60a5fa;"' : ''}>${c.value}</div>
-                `;
-                el.appendChild(card);
-            });
-
-            const projCard = document.createElement("div");
-            projCard.className = "dash-card dash-full";
-            let projHtml = `<div class="dash-card-label">Projects (${projects.length})</div>`;
-            if (projects.length === 0) {
-                projHtml += `<div style="color:#666; font-size:0.9rem; margin-top:8px;">No projects detected in resume.</div>`;
-            } else {
-                projHtml += `<div style="margin-top:10px;">`;
-                for (const p of projects) {
-                    const title = esc(p.title || "Untitled Project");
-                    const summary = esc(p.summary || "");
-                    const techs = Array.isArray(p.technologies) ? p.technologies : [];
-                    projHtml += `
-                        <div style="margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #2a2a3e;">
-                            <div style="font-weight:600; color:#e2e8f0; font-size:0.95rem;">${title}</div>
-                            ${summary ? `<div style="color:#94a3b8; font-size:0.85rem; margin-top:4px; line-height:1.4;">${summary}</div>` : ""}
-                            ${techs.length > 0 ? `<div style="margin-top:6px;">${techs.map(t => `<span class="skill-chip sk-lang" style="font-size:0.75rem; margin-right:4px; margin-bottom:2px;">${esc(t)}</span>`).join("")}</div>` : ""}
-                        </div>
-                    `;
-                }
-                projHtml += `</div>`;
-            }
-            projCard.innerHTML = projHtml;
-            el.appendChild(projCard);
-
+            el.className = "brief-grid";
+            el.appendChild(renderCandidateProfileCard(data));
+            el.appendChild(renderAiSummaryCard());
+            el.appendChild(renderStrategyCard(data));
+            el.appendChild(renderTimelineCard(data));
+            el.appendChild(renderTechnicalStackCard(data));
             return el;
         }
 
-        function renderDashSkills(data) {
-            const el = document.createElement("div");
-            el.className = "dash-card dash-full";
-            el.style.marginBottom = "28px";
-
+        // Topics merged into the strategy card itself, as a compact
+        // "Focus Areas" chip row — same real skills/technologies as
+        // before, just no longer a separate panel.
+        function getFocusTopics(data) {
             const skills = Array.isArray(data.skills) ? data.skills : [];
-            const cats = categorizeSkills(skills);
+            const allTechs = collectProjectTechnologies(data);
+            return uniq([...skills, ...allTechs]).slice(0, 8);
+        }
 
-            const chipClassMap = {
-                "Languages": "sk-lang",
-                "Frameworks": "sk-framework",
-                "Tools": "sk-tool",
-                "Databases": "sk-db",
-                "Cloud": "sk-cloud",
-                "Other": "sk-other"
-            };
+        function renderCandidateProfileCard(data) {
+            const el = document.createElement("div");
+            el.className = "dash-card";
 
-            let html = `<div class="dash-card-label">Skills (${skills.length} detected)</div>`;
+            const domain = esc(data.predicted_domain || "N/A");
+            const years = data.experience ? (data.experience.years || 0) : 0;
+            const level = esc(data.experience ? (data.experience.level || "Unknown") : "Unknown");
+            const education = Array.isArray(data.education) && data.education.length > 0
+                ? data.education.map(e => esc(typeof e === "string" ? e : (e.degree || e.major || JSON.stringify(e)))).join(", ")
+                : "Not detected";
+            const contactParts = [];
+            if (data.email) contactParts.push(esc(data.email));
+            if (data.phone) contactParts.push(esc(data.phone));
+            const contact = contactParts.length > 0 ? contactParts.join(" &middot; ") : "Not detected";
 
-            if (skills.length === 0) {
-                html += `<div style="color:#666; font-size:0.9rem; margin-top:8px;">No skills detected in resume.</div>`;
+            el.innerHTML = `
+                <div class="brief-panel-label">Candidate Profile</div>
+                <dl class="brief-dl">
+                    <dt>Domain</dt><dd>${domain}</dd>
+                    <dt>Experience</dt><dd>${years} yr${years === 1 ? "" : "s"} &middot; ${level}</dd>
+                    <dt>Education</dt><dd>${education}</dd>
+                    <dt>Contact</dt><dd>${contact}</dd>
+                </dl>
+            `;
+            return el;
+        }
+
+        function renderAiSummaryCard() {
+            const el = document.createElement("div");
+            el.className = "dash-card";
+            el.innerHTML = `
+                <div class="brief-panel-label">AI Summary</div>
+                <p class="brief-summary-text" id="brief-summary-text"></p>
+            `;
+            return el;
+        }
+
+        function renderStrategyCard(data) {
+            const el = document.createElement("div");
+            el.className = "dash-card";
+            const topics = getFocusTopics(data);
+            const chipsHtml = topics.length
+                ? topics.map(t => `<span class="brief-topic-chip">${esc(t)}</span>`).join("")
+                : `<div style="color:var(--text-muted); font-size:0.8rem;">Not enough resume content to project focus areas.</div>`;
+            el.innerHTML = `
+                <div class="brief-panel-label">AI Interview Strategy</div>
+                <p class="brief-strategy-text">${esc(buildStrategyText(data))}</p>
+                <div class="brief-focus-label">Focus Areas</div>
+                <div>${chipsHtml}</div>
+            `;
+            return el;
+        }
+
+        // Compact by default — title + category only. Clicking expands
+        // the summary/tech chips smoothly (measured max-height, no
+        // nested scrollbar) rather than truncating with an internal scroll.
+        function renderRepoCard(project, index) {
+            const title = esc(project.title || "Untitled Project");
+            const summary = esc(project.summary || "");
+            const techs = Array.isArray(project.technologies) ? project.technologies : [];
+            const category = esc(deriveProjectCategory(project));
+            return `
+                <div class="brief-repo-card" id="repo-card-${index}">
+                    <div class="brief-repo-head" onclick="toggleRepoCard(${index})">
+                        <div class="brief-repo-title">${title}</div>
+                        <div class="brief-repo-head-right">
+                            <div class="brief-repo-category">${category}</div>
+                            <span class="brief-repo-chevron">&#8250;</span>
+                        </div>
+                    </div>
+                    <div class="brief-repo-body" id="repo-body-${index}">
+                        <div class="brief-repo-body-inner">
+                            ${summary ? `<div class="brief-repo-summary-full">${summary}</div>` : ""}
+                            ${techs.length ? `<div class="brief-repo-chips">${techs.map(t => `<span class="skill-chip sk-lang">${esc(t)}</span>`).join("")}</div>` : ""}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleRepoCard(index) {
+            const card = document.getElementById(`repo-card-${index}`);
+            const body = document.getElementById(`repo-body-${index}`);
+            if (!card || !body) return;
+            if (card.classList.contains("expanded")) {
+                body.style.maxHeight = "0px";
+                card.classList.remove("expanded");
             } else {
-                for (const [cat, catSkills] of Object.entries(cats)) {
-                    if (catSkills.length === 0) continue;
-                    html += `<div class="dash-category-label">${esc(cat)}</div>`;
-                    html += `<div class="dash-skills-grid">`;
-                    for (const s of catSkills) {
-                        html += `<span class="skill-chip ${chipClassMap[cat] || ''}">${esc(s)}</span>`;
-                    }
-                    html += `</div>`;
-                }
+                card.classList.add("expanded");
+                body.style.maxHeight = body.scrollHeight + "px";
             }
+        }
 
+        function renderTimelineCard(data) {
+            const el = document.createElement("div");
+            el.className = "dash-card";
+            const projects = Array.isArray(data.projects) ? data.projects : [];
+            let html = `<div class="brief-panel-label">Experience Timeline</div>`;
+            if (projects.length === 0) {
+                html += `<div style="color:var(--text-muted); font-size:0.85rem;">No projects detected in resume.</div>`;
+            } else {
+                html += projects.map((p, i) => renderRepoCard(p, i)).join("");
+            }
             el.innerHTML = html;
             return el;
         }
 
-        function renderDashInterviewPreview(data) {
+        // Detected Skills + Detected Technologies merged into one panel —
+        // the union of the resume's own skills list and every project's
+        // technologies, deduplicated and grouped the same way as before.
+        // A fixed-height, naturally scrollable panel (GitHub/Linear-style)
+        // — same union-of-skills-and-technologies data as before, no
+        // expand/collapse interaction needed.
+        function renderTechnicalStackCard(data) {
             const el = document.createElement("div");
-            el.className = "dash-card dash-full";
-            el.style.marginBottom = "28px";
+            el.className = "dash-card";
+            const skills = Array.isArray(data.skills) ? data.skills : [];
+            const projectTechs = collectProjectTechnologies(data);
+            const combined = uniq([...skills, ...projectTechs]);
+            const cats = categorizeSkills(combined);
+            const chipClassMap = { "Languages": "sk-lang", "Frameworks": "sk-framework", "AI/ML": "sk-aiml", "Tools": "sk-tool", "Databases": "sk-db", "Cloud": "sk-cloud", "Other": "sk-other" };
 
-            const domain = esc(data.predicted_domain || "Software Engineering");
-            const discussionDomain = esc(data.discussion_domain || "Software Engineer");
-            const yearExp = data.experience ? (data.experience.years || 0) : 0;
-
+            let inner = "";
+            if (combined.length === 0) {
+                inner = `<div style="color:var(--text-muted); font-size:0.85rem;">No technologies detected.</div>`;
+            } else {
+                for (const [cat, catSkills] of Object.entries(cats)) {
+                    if (catSkills.length === 0) continue;
+                    inner += `<div class="dash-category-label">${esc(cat)}</div>`;
+                    inner += `<div class="dash-skills-grid">`;
+                    for (const s of catSkills) inner += `<span class="skill-chip ${chipClassMap[cat] || ''}">${esc(s)}</span>`;
+                    inner += `</div>`;
+                }
+            }
             el.innerHTML = `
-                <div class="dash-card-label">Interview Preview</div>
-                <div class="dash-preview-box">
-                    <strong>Resume Discussion:</strong> ${discussionDomain} &mdash; Conversational questions based on your projects, technologies, and experience.<br>
-                    <strong>Adaptive Interview:</strong> ${domain} focus with ${yearExp > 0 ? yearExp + ' years' : 'your'} experience level. Questions adapt based on your responses.<br>
-                    <strong>Evaluation:</strong> Semantic scoring + fill-in-the-blank verification. Results populate the final analytics dashboard.
-                </div>
+                <div class="brief-panel-label">Technical Stack</div>
+                <div class="brief-stack-body">${inner}</div>
             `;
             return el;
         }
 
-        function renderDashStartButton() {
+        function renderBriefingCta() {
             const el = document.createElement("div");
-            el.innerHTML = `<button class="dash-start-btn" onclick="startDomainDiscussionFromDashboard()">Start Resume Discussion</button>`;
+            el.className = "brief-cta-wrap";
+            el.id = "brief-cta-wrap";
+            el.innerHTML = `<button class="dash-start-btn" onclick="startDomainDiscussionFromDashboard()">Enter Resume Discussion &rarr;</button>`;
             return el;
+        }
+
+        // The workspace entry point appears only once the briefing has
+        // fully rendered — the AI summary finishes "writing" first.
+        async function runBriefingSequence(data) {
+            const summaryEl = document.getElementById("brief-summary-text");
+            if (summaryEl) {
+                await typeLine(summaryEl, buildAiSummaryText(data));
+            }
+            await wait(500);
+            const ctaWrap = document.getElementById("brief-cta-wrap");
+            if (ctaWrap) ctaWrap.classList.add("show");
         }
 
         function startDomainDiscussionFromDashboard() {
@@ -1632,52 +2434,264 @@
         }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // RESUME UPLOAD & CLASSIFICATION
+        // RESUME UPLOAD — one continuous scene: idle → recognized →
+        // building → ready. The vessel element is never swapped for a
+        // different component; only its state class, height and inner
+        // layer visibility change. Same /api/classify-resume contract
+        // and same showCandidateDashboard() handoff as before.
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        const vessel = document.getElementById("vessel");
+        const resumeFileInput = document.getElementById("resume-file");
+        const recFilename = document.getElementById("rec-filename");
+        const recFilesize = document.getElementById("rec-filesize");
+        const removeFileBtn = document.getElementById("remove-file-btn");
+        const startInterviewBtn = document.getElementById("start-interview-btn");
+        const buildStatusEl = document.getElementById("build-status");
+
+        function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + " B";
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB";
+            return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+        }
+
+        // ─── context-aware system log: only ever states what is
+        // actually happening right now. Idle cycles a small honest set
+        // of lines; every other state is set explicitly from the real
+        // event that triggered it (see handleResumeFileChosen,
+        // clearResumeFile, uploadResume below). ───
+        const systemLogTextEl = document.getElementById("system-log-text");
+        const SYSTEM_LOG_IDLE_LINES = ["Initializing Interview Engine...", "Waiting for resume...", "System ready."];
+        let systemLogIdleTimer = null;
+        let systemLogIdleIndex = 0;
+
+        function setSystemLog(text) {
+            if (!systemLogTextEl) return;
+            systemLogTextEl.classList.add("fade");
+            setTimeout(() => {
+                systemLogTextEl.textContent = text;
+                systemLogTextEl.classList.remove("fade");
+            }, 300);
+        }
+
+        function stopIdleSystemLogCycle() {
+            if (systemLogIdleTimer) { clearInterval(systemLogIdleTimer); systemLogIdleTimer = null; }
+        }
+
+        function startIdleSystemLogCycle() {
+            stopIdleSystemLogCycle();
+            systemLogIdleIndex = 0;
+            setSystemLog(SYSTEM_LOG_IDLE_LINES[0]);
+            systemLogIdleTimer = setInterval(() => {
+                systemLogIdleIndex = (systemLogIdleIndex + 1) % SYSTEM_LOG_IDLE_LINES.length;
+                setSystemLog(SYSTEM_LOG_IDLE_LINES[systemLogIdleIndex]);
+            }, 4200);
+        }
+
+        // ─── the two informational tiles above the vessel: an honest,
+        // live reflection of where the resume actually is in the
+        // pipeline — not decoration. ───
+        const pipelineSteps = document.querySelectorAll("#pipeline-tile .pipeline-step");
+        const statusResumeVal = document.getElementById("status-resume-val");
+        const VESSEL_STATUS_TEXT = { idle: "Awaiting", recognized: "Recognised", building: "Analyzing...", ready: "Ready" };
+
+        function setVesselStage(stage) {
+            vessel.classList.remove("idle", "recognized", "building", "ready");
+            vessel.classList.add(stage);
+
+            const activeStep = (stage === "building" || stage === "ready") ? "profile" : "resume";
+            pipelineSteps.forEach(el => {
+                el.classList.remove("active", "done");
+                if (el.dataset.stage === activeStep) el.classList.add("active");
+                else if (el.dataset.stage === "resume" && activeStep === "profile") el.classList.add("done");
+            });
+            if (statusResumeVal) statusResumeVal.textContent = VESSEL_STATUS_TEXT[stage] || "Awaiting";
+        }
+
+        // ─── AI-writing status text: natural pace, punctuation pauses,
+        // caret lingers then fades. Plays once per line, never loops. ───
+        function typeLine(el, text) {
+            return new Promise(resolve => {
+                el.textContent = "";
+                el.classList.add("type-caret");
+                let i = 0;
+                function tick() {
+                    if (i < text.length) {
+                        const ch = text[i];
+                        el.textContent += ch;
+                        i++;
+                        let delay = 46 + (Math.random() * 26 - 13); // ~100-120wpm feel
+                        if (/[,.:;!?]/.test(ch)) delay += 200;
+                        setTimeout(tick, delay);
+                    } else {
+                        setTimeout(() => {
+                            el.classList.remove("type-caret");
+                            resolve();
+                        }, 550);
+                    }
+                }
+                tick();
+            });
+        }
+
+        function revealRow(rowId, valueId, text) {
+            document.getElementById(rowId).classList.add("show");
+            document.getElementById(valueId).textContent = text;
+        }
+
+        function resetBuildRows() {
+            ["candidate", "domain", "experience", "skills"].forEach(name => {
+                document.getElementById(`row-${name}`).classList.remove("show");
+                document.getElementById(`val-${name}`).textContent = "";
+            });
+            buildStatusEl.textContent = "";
+            buildStatusEl.classList.remove("type-caret");
+        }
+
+        // ─── stage: idle → recognized ───
+        function handleResumeFileChosen() {
+            const file = resumeFileInput.files[0];
+            if (!file) return;
+            recFilename.textContent = file.name;
+            recFilesize.textContent = formatFileSize(file.size) + " — recognised, ready to enter the system";
+            setVesselStage("recognized");
+            startInterviewBtn.disabled = false;
+            startInterviewBtn.classList.add("ready-state");
+            stopIdleSystemLogCycle();
+            setSystemLog("Resume detected.");
+        }
+
+        function clearResumeFile(e) {
+            if (e) e.stopPropagation();
+            resumeFileInput.value = "";
+            setVesselStage("idle");
+            resetBuildRows();
+            startInterviewBtn.disabled = true;
+            startInterviewBtn.classList.remove("ready-state");
+            startIdleSystemLogCycle();
+        }
+
+        resumeFileInput.addEventListener("change", handleResumeFileChosen);
+        removeFileBtn.addEventListener("click", clearResumeFile);
+        vessel.addEventListener("click", () => {
+            if (vessel.classList.contains("idle")) resumeFileInput.click();
+        });
+
+        ["dragenter", "dragover"].forEach(evt => vessel.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (vessel.classList.contains("idle")) vessel.classList.add("drag-over");
+        }));
+        ["dragleave", "drop"].forEach(evt => vessel.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            vessel.classList.remove("drag-over");
+        }));
+        vessel.addEventListener("drop", (e) => {
+            if (!vessel.classList.contains("idle")) return;
+            const dt = e.dataTransfer;
+            if (dt && dt.files && dt.files.length) {
+                resumeFileInput.files = dt.files;
+                handleResumeFileChosen();
+            }
+        });
+
+        // ─── stage: recognized → building → ready → handoff ───
         async function uploadResume() {
-
-            const fileInput = document.getElementById("resume-file");
-            const file = fileInput.files[0];
-
+            const file = resumeFileInput.files[0];
             if (!file) {
                 showToast("Please select a resume file first.", "error");
                 return;
             }
 
-            // Show loading state
-            const startBtns = document.querySelectorAll("#resume-upload-section .start-btn");
-            startBtns.forEach(b => { b.disabled = true; b.textContent = "Analyzing..."; });
+            setVesselStage("building");
+            startInterviewBtn.disabled = true;
 
-            try {
+            const fetchPromise = (async () => {
                 const formData = new FormData();
                 formData.append("file", file);
-
-                const response = await fetch("/api/classify-resume", {
-                    method: "POST",
-                    body: formData
-                });
-
+                const response = await fetch("/api/classify-resume", { method: "POST", body: formData });
                 const result = await response.json();
-
                 if (!response.ok || result.error) {
-                    showToast(result.error || "Failed to analyze resume.", "error");
-                    startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Interview →"; });
-                    return;
+                    throw new Error(result.error || "Failed to analyze resume.");
                 }
+                if (result.status !== "success") {
+                    throw new Error("Unexpected response from server.");
+                }
+                return result;
+            })();
 
-                if (result.status === "success") {
-                    showToast("Resume parsed successfully!", "success");
-                    showCandidateDashboard(result);
-                } else {
-                    showToast("Unexpected response from server.", "error");
-                    startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Interview →"; });
-                }
+            setSystemLog("Reading resume...");
+            await typeLine(buildStatusEl, "Reading resume...");
+
+            let result;
+            try {
+                result = await fetchPromise;
             } catch (err) {
                 console.error("Upload error:", err);
-                showToast("Network error. Please try again.", "error");
-                startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Interview →"; });
+                showToast(err.message || "Network error. Please try again.", "error");
+                setVesselStage("recognized");
+                resetBuildRows();
+                startInterviewBtn.disabled = false;
+                setSystemLog("Resume detected.");
+                return;
             }
+
+            revealRow("row-candidate", "val-candidate", result.name || "Candidate");
+            revealRow("row-domain", "val-domain", result.predicted_domain || "—");
+
+            setSystemLog("Detecting technologies...");
+            await typeLine(buildStatusEl, "Understanding projects...");
+            const years = result.experience ? (result.experience.years || 0) : 0;
+            const level = result.experience ? (result.experience.level || "") : "";
+            const expText = years ? `${years} yr${years === 1 ? "" : "s"}${level ? " · " + level : ""}` : (level || "—");
+            revealRow("row-experience", "val-experience", expText);
+
+            setSystemLog("Extracting projects...");
+            await typeLine(buildStatusEl, "Building candidate profile...");
+            const skillCount = Array.isArray(result.skills) ? result.skills.length : 0;
+            revealRow("row-skills", "val-skills", `${skillCount} skill${skillCount === 1 ? "" : "s"}`);
+
+            setSystemLog("Building candidate profile...");
+            await typeLine(buildStatusEl, "Preparing interview...");
+
+            setVesselStage("ready");
+            setSystemLog("Candidate profile ready.");
+            await wait(700);
+            setSystemLog("AI waiting to begin interview.");
+            showToast("Resume parsed successfully!", "success");
+            showCandidateDashboard(result);
         }
+
+        startInterviewBtn.addEventListener("click", uploadResume);
+
+        // ─── cursor-following volumetric light — app-wide, not just the
+        // landing screen, so the environment reacts on every screen ───
+        (function () {
+            const glow = document.getElementById("cursor-glow");
+            if (!glow) return;
+            let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+            let glowX = mouseX, glowY = mouseY;
+            window.addEventListener("mousemove", (e) => { mouseX = e.clientX; mouseY = e.clientY; });
+            function tick() {
+                glowX += (mouseX - glowX) * 0.06;
+                glowY += (mouseY - glowY) * 0.06;
+                glow.style.transform = `translate(${glowX}px, ${glowY}px)`;
+                requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        })();
+
+        // ─── the hero headline writes itself once, on first load ───
+        (function () {
+            const el = document.getElementById("hero-title-text");
+            if (!el) return;
+            typeLine(el, "Interview practice built on your real resume");
+        })();
+
+        // The page loads with no resume yet — start the honest idle cycle.
+        startIdleSystemLogCycle();
 
         function startInterview() {
             selectedTopic = document.getElementById("topic-select").value;
@@ -1716,10 +2730,9 @@
             document.getElementById("resume-upload-section").style.display = "block";
             document.getElementById("subject-selection-section").style.display = "none";
 
-            // Re-enable upload buttons
-            const startBtns = document.querySelectorAll("#resume-upload-section .start-btn");
-            startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Interview →"; });
-            
+            // Reset the vessel back to its idle state
+            clearResumeFile();
+
             setTimeout(() => {
                 landingContainer.style.opacity = "1";
             }, 50);

@@ -45,3 +45,6 @@ main_cap/cap/user_profiles/*.json
 # --- editor / OS cruft not already covered ---
 *.swp
 .idea/
+
+# Personal Claude session notes
+session_handover.md

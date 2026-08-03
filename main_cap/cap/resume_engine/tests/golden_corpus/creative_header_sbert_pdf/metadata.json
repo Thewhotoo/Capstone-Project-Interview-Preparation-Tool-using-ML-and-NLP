@@ -1,0 +1,13 @@
+{
+  "fixture_id": "creative_header_sbert_pdf",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "ats_plain",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "medium",
+  "known_edge_cases": [
+    "'Where I have Worked' as a header for the Experience section -- scores below FUZZY_WEAK_THRESHOLD on gazetteer fuzzy match (no shared vocabulary), only resolvable via Tier 4's SBERT embedding fallback"
+  ],
+  "notes": "Milestone 2 fixture (2026-08). The one fixture in the corpus that specifically requires Tier 4 to succeed rather than degrading to 'unknown'.",
+  "added_in_milestone": 2
+}

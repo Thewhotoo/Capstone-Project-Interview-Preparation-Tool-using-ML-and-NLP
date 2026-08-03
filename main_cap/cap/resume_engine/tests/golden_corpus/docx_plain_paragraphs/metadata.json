@@ -1,0 +1,13 @@
+{
+  "fixture_id": "docx_plain_paragraphs",
+  "layout_type": "single_column",
+  "document_type": "docx",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "easy",
+  "known_edge_cases": [
+    "plain DOCX paragraphs with Heading styles, no tables",
+    "exercises paragraph.style.name capture (style_name field)"
+  ],
+  "notes": "Baseline DOCX regression fixture, no layout-hack table involved.",
+  "added_in_milestone": 1
+}

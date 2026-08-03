@@ -7,6 +7,8 @@ pdfminer.six
 pdfplumber
 python-docx
 lxml
+rapidfuzz
+python-dateutil
 sentence-transformers
 scikit-learn
 keybert

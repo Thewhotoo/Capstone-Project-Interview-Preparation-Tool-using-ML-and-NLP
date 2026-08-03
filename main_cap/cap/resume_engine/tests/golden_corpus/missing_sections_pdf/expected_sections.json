@@ -1,0 +1,7 @@
+{
+  "expected_labels_in_order": ["contact", "experience"],
+  "min_confidence_by_label": {
+    "experience": 0.85
+  },
+  "labels_must_be_absent": ["summary", "projects", "education", "skills", "certifications"]
+}

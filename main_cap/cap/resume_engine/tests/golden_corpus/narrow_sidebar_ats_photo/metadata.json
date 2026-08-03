@@ -1,0 +1,14 @@
+{
+  "fixture_id": "narrow_sidebar_ats_photo",
+  "layout_type": "two_column",
+  "document_type": "pdf",
+  "template_style": "ats_narrow_sidebar",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "hard",
+  "known_edge_cases": [
+    "a genuine two-column resume with a very short (3-line) sidebar against a long (20-line) main column",
+    "RESOLVED (2026-08): originally a KNOWN LIMITATION found during Milestone 1 validation -- MIN_BAND_BALANCE_RATIO=0.25 in layout.py rejected this real layout (actual balance 3/20=0.15) and classified it as 'ambiguous' instead of 'two_column'. Fixed by the same row-pitch-continuity change that fixed right_aligned_dates_ats's false positive (see docs/architecture/ResumeIntelligenceEngine.md Section 4.2 implementation note and Milestone1_ValidationReport.md): the sidebar's own rows are single-spaced (pitch ratio 1.0 against the main column), which is what actually makes it a real column -- its short line COUNT (3) was never the relevant signal. Now correctly classifies as 'two_column' (confidence 0.6)."
+  ],
+  "notes": "Validation-pass fixture (2026-08), fix verified (2026-08). This finding and right_aligned_dates_ats's were resolved by the SAME change, not two separate fixes -- both were symptoms of using line-count balance as a proxy for 'is this a real column' instead of measuring row-pitch continuity directly. Now a permanent regression fixture (expected_layout.json added) rather than smoke-only.",
+  "added_in_milestone": 1
+}

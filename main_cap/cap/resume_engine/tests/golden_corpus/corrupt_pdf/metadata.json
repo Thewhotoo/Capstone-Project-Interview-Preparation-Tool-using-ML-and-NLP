@@ -1,0 +1,14 @@
+{
+  "fixture_id": "corrupt_pdf",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "easy",
+  "known_edge_cases": [
+    "a file with a .pdf extension that is not a valid PDF at all",
+    "exercises ExtractionFailure wrapping pymupdf's open failure, not a raw library exception surfacing"
+  ],
+  "notes": "Plain garbage bytes, not a password-protected real PDF -- password-protection isn't separately exercised in this corpus (documented scope note).",
+  "added_in_milestone": 1,
+  "expects_extraction_failure": true
+}

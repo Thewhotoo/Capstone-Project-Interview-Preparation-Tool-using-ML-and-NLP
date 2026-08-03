@@ -1,0 +1,14 @@
+{
+  "fixture_id": "right_aligned_dates_ats",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "ats_plain",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "hard",
+  "known_edge_cases": [
+    "single-column resume with right-aligned dates printed on the SAME visual line as the role/company text (a very common real-world template pattern)",
+    "RESOLVED (2026-08): originally a CONFIRMED FALSE POSITIVE found during Milestone 1 validation -- was misclassified as 'two_column' (confidence 0.6), pulling every date to the end of the document disconnected from its job entry. Fixed by replacing the line-count balance-ratio guard in layout.py with a row-pitch-continuity check (see docs/architecture/ResumeIntelligenceEngine.md Section 4.2 implementation note and Milestone1_ValidationReport.md). Now classifies as 'ambiguous' (0.35) rather than 'two_column' -- reading order is verified correct (dates stay adjacent to their job entries) via expected_layout.json below."
+  ],
+  "notes": "Validation-pass fixture (2026-08), fix verified (2026-08). Root cause: layout.py classified columns directly from each SPAN's x0 using line COUNT as the sole corroboration signal, which can't distinguish a value that appears once per job entry (sparse, large internal pitch) from a genuinely continuous second column (dense, small internal pitch). The fix compares each candidate band's own row-to-row spacing instead of just counting lines. This was likely the single most consequential finding in the validation pass, since inline right-aligned dates are extremely common in real resumes -- now a permanent regression fixture (expected_layout.json added) rather than smoke-only.",
+  "added_in_milestone": 1
+}

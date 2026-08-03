@@ -1,0 +1,14 @@
+{
+  "fixture_id": "full_entity_resume_pdf",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "ats_plain",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "medium",
+  "known_edge_cases": [
+    "the primary Milestone 3 validation fixture: Contact + two Experience entries (inline dates) + two Project entries (one with an explicit Tech: label, one without)",
+    "exercises the pipeline.py repeated-unknown-absorption fix (both Experience and Projects have 2+ entries, so their entry-title lines correctly absorb back into their parent section instead of fragmenting into 'unknown')"
+  ],
+  "notes": "Milestone 3 fixture (2026-08). The multi-entry case works correctly end to end -- see single_entry_sections_pdf for the documented residual limitation when a section has exactly one entry.",
+  "added_in_milestone": 3
+}

@@ -400,25 +400,40 @@ def classify_resume():
             tmp_path = tmp.name
 
         try:
-            # 1. Extract raw text from the resume
-            if ext == ".pdf":
-                from candidate_profile_generator import extract_text_from_pdf
-                text = extract_text_from_pdf(tmp_path)
-            else:
-                # Fallback to existing parser for DOCX / DOC / TXT
-                from src.parser import extract_text
-                text = extract_text(tmp_path)
-
-            if not text or len(text.strip()) < 50:
-                return jsonify({"error": "Could not extract enough text from resume"}), 400
-
-            # 2. Generate Candidate Profile with a single Gemini call
             from candidate_profile_generator import (
-                generate_candidate_profile,
+                engine_supports_format,
+                get_active_parser_backend,
+                generate_candidate_profile_via_engine,
                 profile_to_frontend_format,
             )
 
-            profile = generate_candidate_profile(text)
+            # Milestone 7: feature-flagged backend selection
+            # (CAP_RESUME_PARSER=engine|gemini, default gemini). The
+            # engine only supports PDF/DOCX (its Document Extraction
+            # stage has no .doc/.txt handling) -- those two formats
+            # always use Gemini regardless of the flag.
+            use_engine = get_active_parser_backend() == "engine" and engine_supports_format(ext)
+
+            if use_engine:
+                # 1+2. The engine does its own extraction internally --
+                # no separate text-extraction step needed.
+                profile = generate_candidate_profile_via_engine(tmp_path)
+            else:
+                # 1. Extract raw text from the resume
+                if ext == ".pdf":
+                    from candidate_profile_generator import extract_text_from_pdf
+                    text = extract_text_from_pdf(tmp_path)
+                else:
+                    # Fallback to existing parser for DOCX / DOC / TXT
+                    from src.parser import extract_text
+                    text = extract_text(tmp_path)
+
+                if not text or len(text.strip()) < 50:
+                    return jsonify({"error": "Could not extract enough text from resume"}), 400
+
+                # 2. Generate Candidate Profile with a single Gemini call
+                from candidate_profile_generator import generate_candidate_profile
+                profile = generate_candidate_profile(text)
 
             # 3. Store in memory (keyed by a generated session ID)
             session_id = f"profile_{uuid.uuid4().hex[:12]}"

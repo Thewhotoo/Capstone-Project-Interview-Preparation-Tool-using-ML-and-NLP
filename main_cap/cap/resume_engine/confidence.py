@@ -50,12 +50,52 @@ class AnnotatedCandidateProfile:
 
 
 class DefaultConfidenceEngine:
-    """Concrete `interfaces.ConfidenceEngine` implementation. The weighted
-    per-entity-type scoring formulas (Section 7 of the architecture doc)
-    are Milestone 6 work — not implemented yet."""
+    """Concrete `interfaces.ConfidenceEngine` implementation -- Stage 8.
+
+    By the time this stage runs, every entity from every parser already
+    carries its own explained `Confidence` (Section 7's weighted formulas
+    live INSIDE each parser -- `ContactParser`/`ExperienceParser`/
+    `ProjectParser`/`EducationParser`/`SkillsParser`/`CertificationParser`
+    -- not here). This stage's job is strictly aggregation: fold every
+    already-computed per-entity score into one profile-level
+    `overall_confidence`, using only signals earlier stages already
+    produced -- never a new per-field heuristic invented at this layer.
+
+    Mechanism: a flat, unweighted mean across every individual entity's
+    `Confidence.score`, pooled across all parsers. Deliberately NOT
+    weighted by entity-type "importance" (e.g. favoring projects/
+    experience over education) -- that would be exactly the kind of new
+    heuristic this stage is meant to avoid inventing; if a future
+    milestone wants importance-weighted aggregation, that is a
+    reviewable, documented change to this one function, not a silent
+    assumption baked in now.
+    """
 
     def score(self, parser_results, observations, trace=None) -> AnnotatedCandidateProfile:
-        raise NotImplementedError(
-            "Confidence scoring formulas are implemented in Milestone 6 "
-            "(see docs/architecture/ResumeIntelligenceEngine.md Section 7)."
+        reasons: list[str] = []
+        all_scores: list[float] = []
+
+        for entity_name in sorted(parser_results.keys()):
+            result = parser_results[entity_name]
+            if result.confidences:
+                avg = sum(c.score for c in result.confidences) / len(result.confidences)
+                reasons.append(
+                    f"+{entity_name}:{len(result.confidences)} entities, avg confidence {avg:.2f}"
+                )
+                all_scores.extend(c.score for c in result.confidences)
+            else:
+                reasons.append(f"-{entity_name}:no_entities_found")
+
+        if all_scores:
+            overall_score = round(sum(all_scores) / len(all_scores), 4)
+        else:
+            overall_score = 0.0
+            reasons.append("-no_entities_found_in_any_parser")
+
+        overall_confidence = Confidence(score=overall_score, reasons=reasons)
+
+        return AnnotatedCandidateProfile(
+            parser_results=parser_results,
+            observations=observations,
+            overall_confidence=overall_confidence,
         )

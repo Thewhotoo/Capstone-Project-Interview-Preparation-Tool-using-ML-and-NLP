@@ -6,12 +6,16 @@ those interfaces get bound to real objects.
 
 Milestone 0: every concrete implementation wired here started as a
 structural stub whose methods raise NotImplementedError (see each stage
-module's docstring for which milestone implements it for real).
-`ContactParser`/`ExperienceParser`/`ProjectParser` are real as of
-Milestone 3; `EducationParser`/`SkillsParser`/`CertificationParser` remain
-Milestone 5 stubs. Calling `default_pipeline().run(...)` today will still
-raise `NotImplementedError` once execution reaches `cross_reference.py`
-(Milestone 5) -- expected until later milestones land.
+module's docstring for which milestone implements it for real). As of
+Milestone 6, all eight stages are real: the six entity parsers (Milestone
+3: `ContactParser`/`ExperienceParser`/`ProjectParser`; Milestone 5:
+`EducationParser`/`SkillsParser`/`CertificationParser`), Cross-Reference
+(Milestone 4: interview-seed synthesis; Milestone 5: demonstrated-skills
+tagging), Normalization, Validation, and Confidence Scoring (all three
+Milestone 6). `default_pipeline().run(...)` now completes end-to-end
+without raising -- see `resume_engine/tests/test_pipeline_end_to_end.py`.
+Not yet wired into the live application (`app.py` still calls Gemini) --
+that cutover is Milestone 7.
 """
 
 from __future__ import annotations
@@ -53,20 +57,22 @@ def default_parser_registry() -> ParserRegistry:
     function -- a real cost that a richer sample input would have paid on
     every pipeline construction, not just once.
 
-    The three still-stub Milestone 5 parsers keep the original no-fixture
-    registration, since calling `.parse()` on a stub raises
-    `NotImplementedError` -- conformance for those is exercised in
-    tests/test_interfaces.py and tests/test_registry.py against fake,
-    actually-conforming parsers instead."""
+    `EducationParser`/`SkillsParser`/`CertificationParser` are real as of
+    Milestone 5 and are registered the same way, with the same empty-
+    sample rationale."""
     registry = ParserRegistry()
 
     empty_sections: dict = {}
     empty_doc = DocumentModel(spans=[], body_font_size=10.0)
-    for parser in (ContactParser(), ExperienceParser(), ProjectParser()):
+    for parser in (
+        ContactParser(),
+        ExperienceParser(),
+        ProjectParser(),
+        EducationParser(),
+        SkillsParser(),
+        CertificationParser(),
+    ):
         registry.register_parser(parser, sample_sections=empty_sections, sample_doc=empty_doc)
-
-    for parser in (EducationParser(), SkillsParser(), CertificationParser()):
-        registry.register_parser(parser)
 
     return registry
 

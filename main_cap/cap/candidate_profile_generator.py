@@ -413,6 +413,67 @@ appear in the skills list.  A resume with zero skills is an extraction failure.
 _MAX_CHARS = 30_000
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+# Milestone 7 — Resume Intelligence Engine backend selector
+# ═════════════════════════════════════════════════════════════════════════════
+# Feature flag: which parser backend produces the CandidateProfile.
+# "gemini" (default -- Phase 2 of the cutover keeps Gemini as the default
+# until Shadow Mode, Phase 3, demonstrates the deterministic engine is
+# stable) or "engine" (the Resume Intelligence Engine, Milestones 1-6).
+# Read at call time, not import time, so it can be overridden per-process
+# (env var) or per-test without reloading this module.
+_ENGINE_SUPPORTED_FORMATS = {".pdf": "pdf", ".docx": "docx"}
+
+
+def get_active_parser_backend() -> str:
+    """Returns "engine" or "gemini". Defaults to "gemini" for any
+    unrecognized value, never silently falling through to a typo'd
+    setting choosing the untested path."""
+    raw = os.environ.get("CAP_RESUME_PARSER", "gemini").strip().lower()
+    return "engine" if raw == "engine" else "gemini"
+
+
+def engine_supports_format(file_extension: str) -> bool:
+    """The Resume Intelligence Engine's Document Extraction stage
+    (`resume_engine.extractor.PdfDocxExtractor`) only handles PDF/DOCX --
+    .doc/.txt have no engine-side extractor. Callers must fall back to
+    Gemini for those formats regardless of the feature flag; this is a
+    known, documented limitation, not a silent gap."""
+    return file_extension.lower() in _ENGINE_SUPPORTED_FORMATS
+
+
+def generate_candidate_profile_via_engine(file_path: str) -> dict:
+    """The Resume Intelligence Engine path: runs the real 8-stage
+    pipeline (`resume_engine.factory.default_pipeline`) and maps its
+    output to the exact same public `CandidateProfile` shape
+    `generate_candidate_profile` (the Gemini path) returns --
+    `resume_engine.candidate_profile_mapper.map_to_candidate_profile` is
+    what guarantees that shape match. Imports are local/lazy so a
+    process running only the Gemini path never pays the engine's
+    (heavier: SBERT/KeyBERT model loading) import cost.
+
+    Raises: the same exception types the engine itself raises
+    (`resume_engine.extractor.ExtractionFailure` for corrupt/scanned
+    files) -- callers should catch and handle exactly as they already do
+    for the Gemini path's `RuntimeError`.
+    """
+    import os as _os
+
+    from resume_engine.candidate_profile_mapper import map_to_candidate_profile
+    from resume_engine.factory import default_pipeline
+
+    extension = _os.path.splitext(file_path)[1].lower()
+    source_format = _ENGINE_SUPPORTED_FORMATS.get(extension)
+    if source_format is None:
+        raise RuntimeError(
+            f"Resume Intelligence Engine does not support {extension!r} files "
+            "(only .pdf/.docx) -- caller must fall back to the Gemini path."
+        )
+
+    annotated_profile = default_pipeline().run(file_path, source_format)
+    return map_to_candidate_profile(annotated_profile)
+
+
 def generate_candidate_profile(resume_text: str) -> dict:
     """
     Call Gemini 2.5 Flash once with native structured output to produce a

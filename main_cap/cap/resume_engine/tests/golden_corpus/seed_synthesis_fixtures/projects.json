@@ -1,0 +1,175 @@
+[
+  {
+    "id": "zero_evidence_blog",
+    "evidence_profile": "zero",
+    "project": {
+      "title": "Personal Blog",
+      "summary": "A simple blog about my hobbies.",
+      "technologies": [],
+      "concepts": []
+    },
+    "expected_seeds": [],
+    "notes": "No technologies, no concepts, no metric/comparison language -- graceful degradation."
+  },
+  {
+    "id": "zero_evidence_untitled",
+    "evidence_profile": "zero",
+    "project": {
+      "title": "Course Project",
+      "summary": "A class assignment for my degree program.",
+      "technologies": [],
+      "concepts": []
+    },
+    "expected_seeds": [],
+    "notes": "Second independent zero-evidence case."
+  },
+  {
+    "id": "sparse_single_tech",
+    "evidence_profile": "sparse",
+    "project": {
+      "title": "Recipe Finder",
+      "summary": "A small app to search recipes by ingredient.",
+      "technologies": ["Flask"],
+      "concepts": []
+    },
+    "expected_seeds": ["Why did you use Flask in this project?"],
+    "notes": "Exactly one technology, no concepts, no metric -- expect exactly one tech-probe seed."
+  },
+  {
+    "id": "sparse_single_tech_2",
+    "evidence_profile": "sparse",
+    "project": {
+      "title": "Notes Sync",
+      "summary": "Synced notes across devices.",
+      "technologies": ["MongoDB"],
+      "concepts": []
+    },
+    "expected_seeds": ["Why did you use MongoDB in this project?"],
+    "notes": "Second independent sparse case."
+  },
+  {
+    "id": "moderate_state_management",
+    "evidence_profile": "moderate",
+    "project": {
+      "title": "Kanban Board",
+      "summary": "A drag-and-drop task board built with a single-page app.",
+      "technologies": ["React", "Redux", "Node.js"],
+      "concepts": ["State Management"]
+    },
+    "expected_seeds": [
+      "Why did you use React in this project?",
+      "Why did you use Redux in this project?",
+      "How did you approach state management in this project?"
+    ],
+    "notes": "3 technologies (tech-probe cap engages), 1 concept, no metric/comparison."
+  },
+  {
+    "id": "moderate_stream_processing",
+    "evidence_profile": "moderate",
+    "project": {
+      "title": "Clickstream Analytics",
+      "summary": "Processed user clickstream events for near-real-time dashboards.",
+      "technologies": ["Kafka", "Spark"],
+      "concepts": ["Batch Processing", "Stream Processing"]
+    },
+    "expected_seeds": [
+      "Why did you use Kafka in this project?",
+      "Why did you use Spark in this project?",
+      "How did you approach batch processing in this project?"
+    ],
+    "notes": "2 technologies (both fit tech-probe cap), 2 concepts (concept-probe cap engages)."
+  },
+  {
+    "id": "moderate_explicit_migration",
+    "evidence_profile": "moderate",
+    "project": {
+      "title": "Public API",
+      "summary": "Migrated from REST to GraphQL for the public API.",
+      "technologies": ["REST", "GraphQL"],
+      "concepts": ["API Gateway"]
+    },
+    "expected_seeds": [
+      "Why REST over the alternative, given you mentioned \"Migrated from REST to\"?",
+      "How did you approach api gateway in this project?"
+    ],
+    "notes": "Explicit comparison language ('migrated from X to Y') co-occurring with both named technologies -- exercises the tradeoff-probe precondition succeeding. Both REST and GraphQL are consumed by the single tradeoff seed's evidence (per the approved template, which names only tech_a in text), so neither produces a separate tech-probe."
+  },
+  {
+    "id": "false_tradeoff_mere_cooccurrence",
+    "evidence_profile": "moderate",
+    "project": {
+      "title": "Inventory Service",
+      "summary": "Used Postgres and MongoDB together in this project for different data shapes.",
+      "technologies": ["Postgres", "MongoDB"],
+      "concepts": []
+    },
+    "expected_seeds": [
+      "Why did you use Postgres in this project?",
+      "Why did you use MongoDB in this project?"
+    ],
+    "notes": "Two technologies merely co-occur, with NO comparison language -- must NOT produce a tradeoff-probe seed (anti-hallucination guarantee). Falls through to tech-probes instead."
+  },
+  {
+    "id": "false_tradeoff_comparison_too_far",
+    "evidence_profile": "moderate",
+    "project": {
+      "title": "Search Service",
+      "summary": "Elasticsearch powers search. Chose it instead of a naive SQL LIKE scan for full-text relevance ranking on large catalogs with many attributes and facets to filter across, which was the main product requirement driving this rewrite.",
+      "technologies": ["Elasticsearch"],
+      "concepts": []
+    },
+    "expected_seeds": ["Why did you use Elasticsearch in this project?"],
+    "notes": "Comparison language present but only ONE known technology in the project -- tradeoff-probe precondition must fail (fewer than two distinct technologies to pair); the comparison_phrase evidence is unused with reason precondition_not_met:tradeoff_probe."
+  },
+  {
+    "id": "rich_cap_engages",
+    "evidence_profile": "rich",
+    "project": {
+      "title": "Alert Pipeline",
+      "summary": "Chose Redis over Memcached for the caching layer, then reduced latency by 45% by integrating Kafka and Docker.",
+      "technologies": ["Redis", "Memcached", "Kafka", "Docker"],
+      "concepts": ["Caching", "Distributed Systems"]
+    },
+    "expected_seeds": [
+      "You mentioned \"reduced latency by 45%\" — how was that measured or achieved?",
+      "Why Redis over the alternative, given you mentioned \"Chose Redis over\"?",
+      "Why did you use Kafka in this project?",
+      "Why did you use Docker in this project?"
+    ],
+    "notes": "Metric + tradeoff + 4 technologies + 2 concepts -- MAX_SEEDS_PER_PROJECT binds, led by metric_probe and tradeoff_probe per the ranking order. Both concepts are crowded out (reason: below_cap:overall) -- the evidence-starvation case from Design doc Section 8.2, confirmed here as correct ranking behavior, not a bug: the highest-value evidence (a metric and an explicit tradeoff) wins the cap over lower-priority concepts."
+  },
+  {
+    "id": "rich_metrics_and_concepts",
+    "evidence_profile": "rich",
+    "project": {
+      "title": "Search Ranking",
+      "summary": "Improved click-through rate by 18% and cut query latency by 30% using embeddings-based retrieval.",
+      "technologies": ["Elasticsearch", "PyTorch"],
+      "concepts": ["Vector Search", "Embeddings"]
+    },
+    "expected_seeds": [
+      "You mentioned \"18%\" — how was that measured or achieved?",
+      "You mentioned \"cut query latency by 30%\" — how was that measured or achieved?",
+      "Why did you use Elasticsearch in this project?",
+      "Why did you use PyTorch in this project?"
+    ],
+    "notes": "Two independent metrics, no comparison language -- both metrics reach 100% utilization (metric_probe carries no family cap). Both concepts crowded out by the overall cap once metrics + both technologies are seated."
+  },
+  {
+    "id": "rich_no_metrics_wide_tech_spread",
+    "evidence_profile": "rich",
+    "project": {
+      "title": "Data Platform",
+      "summary": "Built a data platform ingesting events into a warehouse for analytics.",
+      "technologies": ["Kafka", "Spark", "Airflow", "Snowflake", "dbt"],
+      "concepts": ["Data Pipeline", "ETL", "Observability"]
+    },
+    "expected_seeds": [
+      "Why did you use Kafka in this project?",
+      "Why did you use Spark in this project?",
+      "How did Airflow and Snowflake work together in this project?",
+      "How did you approach data pipeline in this project?"
+    ],
+    "notes": "5 technologies, 3 concepts, no metrics/comparisons -- exercises tech-probe cap, then a legitimate (non-duplicate) integration-probe firing for two technologies the tech-probe cap left unclaimed, then concept-probe. 'dbt' is left unused (below_cap:tech_probe); ETL and Observability are crowded out by the overall cap (below_cap:overall)."
+  }
+]

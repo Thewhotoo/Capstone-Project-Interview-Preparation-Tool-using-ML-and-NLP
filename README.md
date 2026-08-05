@@ -69,7 +69,7 @@ python app.py
 
 Server runs on: `http://localhost:5000`
 
-On startup the app tries to load the deployed DeBERTa evaluator from `main_cap/cap/deployed_model/` (checkpoint metadata + weights). If the weights file (`best_checkpoint_weights.pt`) isn't present or fails to load, it automatically falls back to a deterministic `HeuristicEvaluator` — the app never fails to start because of this. Check the startup logs to see which evaluator is actually active.
+On startup the app tries to load the deployed DeBERTa checkpoint from `main_cap/cap/deployed_model/` (checkpoint metadata + weights). If it loads and is promotion-approved, the app activates a `HybridEvaluator` that runs both the DeBERTa model and the deterministic heuristic evaluator on every turn — the heuristic remains authoritative for every candidate-facing score, strength/weakness, and recommendation, while DeBERTa's agreement with it adjusts only the reported confidence, and its raw output is logged for future retraining. If the weights file (`best_checkpoint_weights.pt`) isn't present or fails to load, the app automatically falls back to the deterministic `HeuristicEvaluator` alone — the app never fails to start because of this. Check the startup logs to see which evaluator is actually active.
 
 ### 4. Use the app
 
@@ -96,8 +96,9 @@ There is also a separate, simpler quiz-style flow (topic/difficulty MCQs + fill-
 │       ├── question_realizer.py       Turns a planned specification into question text
 │       ├── evaluation_engine.py       Builds evaluation requests and dispatches to the active evaluator
 │       ├── model_evaluator.py         Trained DeBERTa evaluator
-│       ├── heuristic_evaluator.py     Deterministic fallback evaluator
-│       ├── deployment_evaluator.py    Startup wiring: loads the deployed DeBERTa model, falls back to heuristic
+│       ├── heuristic_evaluator.py     Deterministic evaluator -- authoritative for every candidate-facing score
+│       ├── hybrid_evaluator.py        Runs both evaluators; heuristic scores, DeBERTa adjusts confidence + logs diagnostics
+│       ├── deployment_evaluator.py    Startup wiring: loads DeBERTa, activates HybridEvaluator, falls back to bare heuristic
 │       ├── deployed_model/            Deployed checkpoint metadata + weights (weights are large and git-ignored)
 │       ├── concept_analysis.py        Shared lexical concept-coverage detector
 │       ├── strong_answer.py           Improved Answer generator (deterministic, grounded in concept_analysis)
@@ -168,9 +169,11 @@ Additional endpoints exist for optional/exploratory subsystems and are not calle
 - Each answer is evaluated (see below) and recorded to an in-session **Evaluation Ledger**; evaluation does not currently change which question comes next.
 
 ### Answer Evaluation
-- **Production evaluator**: a fine-tuned **DeBERTa-v3** classifier (`model_evaluator.py`), trained via the experiment pipeline in this repo and deployed from `main_cap/cap/deployed_model/`. It scores each answer across multiple dimensions (technical accuracy, technical depth, resume grounding, communication, completeness) and reports concept coverage and missing-reasoning categories.
-- **Automatic fallback**: if the deployed checkpoint is missing, corrupted, or not promoted, the app activates a deterministic `HeuristicEvaluator` instead (`heuristic_evaluator.py`) — the app never crashes because of a missing model.
-- **Known limitation** (documented, not a bug): the DeBERTa model was trained on synthetic template answers and scores natural interview answers more harshly than templated ones — this is a train/serve domain gap, not a scoring pipeline bug.
+- **Production evaluator**: `HybridEvaluator` (`hybrid_evaluator.py`), active whenever a deployed DeBERTa checkpoint is available. It runs both evaluators on every turn:
+  - `HeuristicEvaluator` (`heuristic_evaluator.py`) is **authoritative** for every candidate-facing field: `overall_score`, grade, every per-dimension score, strengths, weaknesses, missing-reasoning, suggested improvements, recommended topics, and concept coverage. Scores and blends are never averaged between the two evaluators.
+  - The trained **DeBERTa-v3** classifier (`model_evaluator.py`) genuinely participates, but its influence is scoped to two things: it can only *lower* (never raise) the reported `confidence` when its per-dimension scores disagree with the heuristic's beyond a threshold, and its raw output plus the computed agreement score are logged to a local diagnostics file (`hybrid_diagnostics.jsonl`, git-ignored) for future retraining. This is a deliberate design choice (see `docs/architecture` — Hybrid Evaluator design review), not a stopgap: the trained checkpoint was validated only on synthetic template data and never completed shadow-testing against real traffic, so it isn't trusted with the primary score yet.
+- **Automatic fallback**: if the deployed checkpoint is missing, corrupted, or not promotion-approved, the app activates a bare `HeuristicEvaluator` instead — the app never crashes because of a missing or unavailable model.
+- **Known limitation of the trained checkpoint** (documented, not a bug): it was trained on synthetic template answers and scores natural interview answers more harshly than templated ones — a train/serve domain gap. This is exactly why it's scoped to confidence-adjustment and diagnostics rather than the primary score.
 
 ### Improved Answer
 - A deterministic (no-LLM) rewrite of the candidate's **own** answer: repetition removed, plus grounded first-person additions naming the specific missing concepts and weak reasoning areas the evaluator flagged.
@@ -196,7 +199,7 @@ Replace the three files in `main_cap/cap/deployed_model/`:
 - `best_checkpoint_weights.pt` — model weights (large; not tracked in git)
 - `final_promotion_decision.json` — promotion decision record
 
-These are exactly what `run_experiment_2_train_tuned.py` produces. If any file is missing or the promotion decision isn't `approved`, the app falls back to `HeuristicEvaluator` automatically.
+These are exactly what `run_experiment_2_train_tuned.py` produces. If all three are present and the promotion decision is `approved`, the checkpoint is wrapped in a `HybridEvaluator` alongside the heuristic (see Answer Evaluation above) rather than replacing it. If any file is missing or the promotion decision isn't `approved`, the app falls back to a bare `HeuristicEvaluator` automatically.
 
 ### Add New PDF Knowledge Bases (RAG)
 Place a PDF in `rag_system/rag_tester/samples/` and index it using the ingestion tooling in `rag_system/rag_tester/ingestor.py` (see `rag_system/rag_tester/README.md` and `SETUP_GUIDE.md`).
@@ -225,8 +228,8 @@ Resume upload and Resume Discussion will not work. Set `GEMINI_API_KEY` in `main
 ### Port 5000 already in use
 `app.py` runs on a fixed port (5000). Either stop the process using that port, or edit the `app.run(...)` call at the bottom of `main_cap/cap/app.py`.
 
-### Trained evaluator not active
-Check the startup logs for `Production evaluator ACTIVE: ...`. If it reports the `HeuristicEvaluator` fallback, verify all three files exist under `main_cap/cap/deployed_model/` and that the promotion decision is `approved`.
+### Trained evaluator not participating
+Check the startup logs for `Production evaluator ACTIVE: ...`. If it reports the bare `HeuristicEvaluator` fallback (not `hybrid-v1`), verify all three files exist under `main_cap/cap/deployed_model/` and that the promotion decision is `approved`. When `hybrid-v1` is active, DeBERTa is genuinely running every turn even though it never sets the primary score — see Answer Evaluation above, or inspect `hybrid_diagnostics.jsonl` for per-turn evidence it ran.
 
 ### RAG system errors
 - Check PDF files exist in `rag_system/rag_tester/samples/`

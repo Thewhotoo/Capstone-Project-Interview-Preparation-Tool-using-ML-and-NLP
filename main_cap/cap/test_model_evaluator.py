@@ -165,6 +165,26 @@ class TestTrainedEvaluatorEvaluate(unittest.TestCase):
         )
 
 
+class TestProportionalDimensionWeighting(unittest.TestCase):
+    """Phase 3 evaluation-fairness fix (same rationale/change as
+    heuristic_evaluator.py's `evaluate()`): the always-relevant dimensions
+    must carry more weight than the 1-2 extra, reasoning_type-specific
+    dimensions, not uniform 1/N weighting."""
+
+    def test_always_relevant_dimension_has_higher_weight_than_an_extra_dimension(self):
+        evaluator = _trained_evaluator()
+        result = evaluator.evaluate(_request())  # DEBUGGING -> extras {debugging, technical_depth}
+        always_relevant_weight = result.dimension("technical_accuracy").weight_used
+        extra_weight = result.dimension("debugging").weight_used
+        self.assertGreater(always_relevant_weight, extra_weight)
+
+    def test_weights_still_sum_to_one_across_contributing_dimensions(self):
+        evaluator = _trained_evaluator()
+        result = evaluator.evaluate(_request())
+        contributing = [d for d in result.dimensions if d.contributes_to_overall]
+        self.assertAlmostEqual(sum(d.weight_used for d in contributing), 1.0, places=2)
+
+
 class TestPromoteTrainedModel(unittest.TestCase):
     def setUp(self):
         # evaluator_registry is process-global state -- reset between tests

@@ -48,7 +48,15 @@ from evaluator_registry import register_evaluator
 from model_backbone import BackboneConfig, tokenize_pair
 from model_heads import _MISSING_REASONING_CATEGORIES, MultiTaskModel, coral_confidence, coral_predict
 from question_families import ReasoningType
-from reasoning_dimension_relevance import ALL_DIMENSIONS, contributes_by_default, relevant_dimensions
+from reasoning_dimension_relevance import (
+    ALL_DIMENSIONS,
+    COMMUNICATION,
+    COMPLETENESS,
+    RESUME_GROUNDING,
+    TECHNICAL_ACCURACY,
+    contributes_by_default,
+    relevant_dimensions,
+)
 from training_experimentation import Checkpoint, PromotionDecision
 
 logger = logging.getLogger(__name__)
@@ -185,6 +193,21 @@ class TrainedEvaluator:
             outputs = self.model.forward_dimensions(main_input_ids, main_attention_mask)
 
             relevant = relevant_dimensions(request.reasoning_type)
+            # Proportional, not uniform, weighting -- same Phase 3
+            # evaluation-fairness fix as heuristic_evaluator.py's `evaluate()`
+            # (see that module for the full rationale). The four
+            # ALWAYS-relevant dimensions carry more weight than the 1-2 extra
+            # dimensions a reasoning_type pulls in on top, since those extras
+            # weren't necessarily what THIS specific question asked about.
+            always_relevant = {TECHNICAL_ACCURACY, COMMUNICATION, COMPLETENESS, RESUME_GROUNDING}
+            _ALWAYS_WEIGHT = 1.5
+            _EXTRA_WEIGHT = 1.0
+            raw_weights = {
+                name: (_ALWAYS_WEIGHT if name in always_relevant else _EXTRA_WEIGHT)
+                for name in relevant
+            }
+            weight_total = sum(raw_weights.values())
+
             dimensions: list[DimensionScore] = []
             for name in ALL_DIMENSIONS:
                 if name not in relevant:
@@ -194,7 +217,8 @@ class TrainedEvaluator:
                 confidence = float(coral_confidence(logits)[0].item())
                 raw_score = ordinal / (self.model.num_ordinal_classes - 1)
                 dimensions.append(DimensionScore(
-                    name=name, raw_score=round(raw_score, 3), weight_used=1.0 / len(relevant),
+                    name=name, raw_score=round(raw_score, 3),
+                    weight_used=round(raw_weights[name] / weight_total, 4),
                     confidence=round(confidence, 3), confidence_source=_CONFIDENCE_SOURCE_MODEL_DERIVED,
                     contributes_to_overall=contributes_by_default(name),
                     evidence_refs=(request.specification.source_id,),

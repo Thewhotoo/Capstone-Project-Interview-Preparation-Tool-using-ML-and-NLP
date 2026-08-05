@@ -154,6 +154,37 @@ def _semantic_similarity(text_a: str, text_b: str) -> float:
     return float(dot / norm) if norm > 0 else 0.0
 
 
+# Calibration for _semantic_similarity's raw cosine output (Phase 3
+# evaluation-fairness fix). Raw SBERT cosine similarity between a candidate's
+# prose answer and a short reference text (a question, or a grounding string
+# built from concatenated project title/tech/concept names) does NOT live on
+# a 0..1 "percent correct" scale -- even a genuinely excellent, fully
+# on-topic, technically detailed answer typically lands only around
+# 0.35-0.45 raw cosine similarity against text that short, while a
+# completely unrelated answer lands around 0.05-0.10. Treating the raw value
+# directly as raw_score (the pre-fix behavior) meant a correct, well-reasoned
+# answer scored technical_accuracy in the 25-40% range purely from this
+# scale mismatch -- not from any actual deficiency in the answer. These
+# constants were derived empirically (see docs/architecture -- Phase 3
+# evaluation-fairness fix) from paired on-topic/off-topic answers against
+# the SAME grounding text and are a linear rescale, not a new signal: they
+# do not change WHAT is being measured, only map its already-meaningful
+# ordering onto a scale a 0..1 "score" is supposed to represent.
+_SIMILARITY_FLOOR = 0.08   # near/at the level of two unrelated texts
+_SIMILARITY_CEILING = 0.55  # a thorough, clearly on-topic, correct answer
+
+
+def _rescale_similarity(raw: float) -> float:
+    """Linearly rescales a raw cosine similarity so the meaningful part of
+    its range (see module-level constants above) maps to 0..1, instead of
+    the raw value's own much narrower, much lower natural range being
+    read directly as a percentage."""
+    if _SIMILARITY_CEILING <= _SIMILARITY_FLOOR:
+        return raw
+    scaled = (raw - _SIMILARITY_FLOOR) / (_SIMILARITY_CEILING - _SIMILARITY_FLOOR)
+    return max(0.0, min(1.0, scaled))
+
+
 def _contradiction_flag(answer: str, grounding_text: str) -> bool:
     """NLI used ONLY as a contradiction flag, never blended into a score —
     see this module's docstring and architecture Chapter 19.5 for why."""
@@ -205,14 +236,33 @@ class HeuristicEvaluator:
         sentences = [s.strip() for s in answer.replace("!", ".").replace("?", ".").split(".") if s.strip()]
 
         grounding_text = _grounding_text(request.specification)
-        similarity = _semantic_similarity(answer, grounding_text or request.question_text)
-        similarity = max(0.0, min(1.0, similarity))
+        # technical_accuracy and resume_grounding are deliberately different
+        # comparisons, not the same value twice (the pre-fix behavior):
+        # technical_accuracy asks "did they address what was actually
+        # asked" (question + a light grounding hint, so an answer that's
+        # on-topic for the QUESTION isn't penalized for not restating every
+        # resume-declared technology); resume_grounding asks the narrower
+        # "is this consistent with what the resume/grounding itself says"
+        # (grounding text alone). Both go through the SAME rescale (see
+        # _rescale_similarity) so they stay on a comparable, fair scale.
+        accuracy_reference = " ".join(filter(None, [request.question_text, grounding_text]))
+        accuracy_similarity = _rescale_similarity(_semantic_similarity(answer, accuracy_reference))
+        grounding_similarity = (
+            _rescale_similarity(_semantic_similarity(answer, grounding_text)) if grounding_text else accuracy_similarity
+        )
         contradiction = _contradiction_flag(answer, grounding_text) if grounding_text else False
 
         terms = _grounding_terms(request.specification)
         mentioned_terms = [t for t in terms if t.lower() in answer_lower]
         missing_terms = [t for t in terms if t.lower() not in answer_lower]
-        term_coverage = (len(mentioned_terms) / len(terms)) if terms else 0.5
+        # A BONUS for mentioning resume-declared technologies/concepts, not
+        # the base score: a specific, narrowly-scoped question naturally
+        # won't touch every technology the project's grounding happens to
+        # list, and shouldn't be penalized as if it should have (Phase 3
+        # evaluation-fairness fix -- "missing an optional concept the
+        # question didn't ask about" must be a small deduction, not the
+        # dominant factor).
+        term_coverage_bonus = (len(mentioned_terms) / len(terms)) if terms else 0.5
 
         has_ownership = _has_ownership_language(answer_lower)
 
@@ -246,28 +296,69 @@ class HeuristicEvaluator:
         # HEURISTIC — this evaluator makes no claim to a calibrated estimate.
         base_confidence = min(1.0, 0.3 + 0.1 * min(len(sentences), 5) + 0.02 * min(word_count, 20))
 
+        # Marker-word dimensions (architecture/trade-offs/debugging/testing/
+        # scalability) are blended with a FLOOR derived from how on-topic
+        # and correct the answer already looks (accuracy_similarity),
+        # instead of being purely 0 when the answer doesn't happen to use
+        # one of a small fixed set of literal phrases. A candidate who
+        # clearly reasons about a trade-off without ever typing the word
+        # "trade-off" must not be scored as if they said nothing at all
+        # (Phase 3 evaluation-fairness fix). The literal-marker signal
+        # still matters -- it can only raise the score above the floor,
+        # never lower it -- so an answer that DOES use explicit,
+        # unambiguous language still earns visibly more credit than one
+        # that doesn't.
+        _marker_floor = 0.65 * accuracy_similarity
+
+        def _floored_marker_score(markers: tuple[str, ...]) -> float:
+            return max(_marker_floor, _marker_score(answer_lower, markers))
+
         raw_by_dimension: dict[str, float] = {
-            TECHNICAL_ACCURACY: similarity,
-            TECHNICAL_DEPTH: min(1.0, term_coverage + 0.15 * min(word_count / 20, 2)),
+            TECHNICAL_ACCURACY: accuracy_similarity,
+            TECHNICAL_DEPTH: min(1.0, 0.8 * accuracy_similarity + 0.2 * term_coverage_bonus),
             COMMUNICATION: communication_raw,
             COMPLETENESS: completeness_raw,
-            ARCHITECTURE: _marker_score(answer_lower, _ARCHITECTURE_MARKERS),
-            TRADEOFFS: _marker_score(answer_lower, _TRADEOFF_MARKERS),
+            ARCHITECTURE: _floored_marker_score(_ARCHITECTURE_MARKERS),
+            TRADEOFFS: _floored_marker_score(_TRADEOFF_MARKERS),
             OWNERSHIP: 1.0 if has_ownership else 0.2,
-            DEBUGGING: _marker_score(answer_lower, _DEBUGGING_MARKERS),
-            TESTING: _marker_score(answer_lower, _TESTING_MARKERS),
-            SCALABILITY: _marker_score(answer_lower, _SCALABILITY_MARKERS),
-            RESUME_GROUNDING: similarity,
+            DEBUGGING: _floored_marker_score(_DEBUGGING_MARKERS),
+            TESTING: _floored_marker_score(_TESTING_MARKERS),
+            SCALABILITY: _floored_marker_score(_SCALABILITY_MARKERS),
+            RESUME_GROUNDING: grounding_similarity,
             AUTHENTICITY: 1.0 if has_ownership else 0.3,
         }
 
         wanted = relevant_dimensions(request.reasoning_type)
+        # Proportional, not uniform, weighting (Phase 3 evaluation-fairness
+        # fix). The four ALWAYS-relevant dimensions -- did they address what
+        # was actually asked, communicate clearly, answer completely, and
+        # stay consistent with the resume -- are what every answer is
+        # fundamentally judged on. The 1-2 EXTRA dimensions a reasoning_type
+        # pulls in on top (e.g. "architecture" for an EXPLANATION question)
+        # are real, relevant signals worth measuring, but this specific
+        # question didn't necessarily ask about them explicitly, so they
+        # must not carry equal weight to "did you actually answer the
+        # question" -- see relevant_dimensions' own module docstring for
+        # why this coarse, reasoning_type-level (not per-question) mapping
+        # is the accepted trade-off. _ALWAYS_WEIGHT/_EXTRA_WEIGHT are
+        # relative shares, not absolute weights; normalized below by
+        # dividing every dimension's weight_used by their sum, same as
+        # the pre-fix uniform scheme already did.
+        always_relevant = {TECHNICAL_ACCURACY, COMMUNICATION, COMPLETENESS, RESUME_GROUNDING}
+        _ALWAYS_WEIGHT = 1.5
+        _EXTRA_WEIGHT = 1.0
+        raw_weights = {
+            dim_name: (_ALWAYS_WEIGHT if dim_name in always_relevant else _EXTRA_WEIGHT)
+            for dim_name in wanted
+        }
+        weight_total = sum(raw_weights.values())
+
         dimensions: list[DimensionScore] = []
         for dim_name in wanted:
             dimensions.append(DimensionScore(
                 name=dim_name,
                 raw_score=round(raw_by_dimension[dim_name], 3),
-                weight_used=1.0 / len(wanted),
+                weight_used=round(raw_weights[dim_name] / weight_total, 4),
                 confidence=round(base_confidence, 3),
                 confidence_source=ConfidenceSource.HEURISTIC,
                 contributes_to_overall=contributes_by_default(dim_name),
@@ -282,7 +373,10 @@ class HeuristicEvaluator:
         overall_score = round(max(0.0, min(1.0, overall_score)), 3)
         grade = self._grade(overall_score)
 
-        strengths, weaknesses = self._claims(dimensions, request)
+        strengths, weaknesses = self._claims(
+            dimensions, request, answer=answer, sentences=sentences,
+            mentioned_terms=mentioned_terms, missing_terms=missing_terms, has_ownership=has_ownership,
+        )
         missing_reasoning = self._missing_reasoning(dimensions, missing_terms, request)
         suggested_improvements = tuple(
             f"Discuss {item.explanation.rstrip('.').lower()}." for item in missing_reasoning[:3]
@@ -346,7 +440,7 @@ class HeuristicEvaluator:
             contradiction_explanation=(
                 "The answer may conflict with what the resume/grounding states." if contradiction else None
             ),
-            resume_grounding_score=round(similarity, 3),
+            resume_grounding_score=round(grounding_similarity, 3),
             raw_model_output=tuple((d.name, d.raw_score) for d in dimensions),
             calibration_version=None,
             recommended_action=self._recommended_action(overall_score, missing_reasoning),
@@ -377,21 +471,85 @@ class HeuristicEvaluator:
             return "clarify"
         return "move_on"
 
-    @staticmethod
-    def _claims(dimensions: list[DimensionScore], request: EvaluationRequest) -> tuple[tuple, tuple]:
+    # Which literal markers back each marker-scored dimension — used to name
+    # the actual matched phrase in a claim's evidence, instead of the bare
+    # dimension name (Phase 3 evaluation-fairness fix: feedback should cite
+    # concrete parts of the answer, not restate the score).
+    _MARKERS_BY_DIMENSION = {
+        ARCHITECTURE: _ARCHITECTURE_MARKERS,
+        TRADEOFFS: _TRADEOFF_MARKERS,
+        DEBUGGING: _DEBUGGING_MARKERS,
+        TESTING: _TESTING_MARKERS,
+        SCALABILITY: _SCALABILITY_MARKERS,
+    }
+
+    @classmethod
+    def _concrete_evidence(
+        cls, dim_name: str, *, answer: str, sentences: list[str],
+        mentioned_terms: list[str], missing_terms: list[str], has_ownership: bool,
+    ) -> tuple[Optional[str], Optional[str]]:
+        """Best-effort concrete evidence for one dimension: (strength_evidence,
+        weakness_evidence), either of which may be None if nothing concrete
+        is available for that side. Always a real fragment of the answer or
+        a real term from the grounding — never invented content."""
+        answer_lower = answer.lower()
+        first_sentence = sentences[0] if sentences else answer[:120]
+
+        if dim_name in cls._MARKERS_BY_DIMENSION:
+            hit = next((m for m in cls._MARKERS_BY_DIMENSION[dim_name] if m in answer_lower), None)
+            if hit is not None:
+                containing = next((s for s in sentences if hit in s.lower()), first_sentence)
+                return f'Referenced "{hit}" — "{containing.strip()[:160]}"', None
+            return None, "The answer doesn't name this explicitly, though it may still be implied."
+
+        if dim_name == TECHNICAL_DEPTH:
+            if mentioned_terms:
+                return f"Specifically mentioned {', '.join(mentioned_terms[:3])}.", None
+            if missing_terms:
+                return None, f"Didn't reference {', '.join(missing_terms[:3])} from this project."
+            return None, None
+
+        if dim_name == OWNERSHIP:
+            if has_ownership:
+                hit = next((m for m in _OWNERSHIP_MARKERS if m in answer_lower), None)
+                if hit is not None:
+                    return f'Used first-person ownership language ("{hit}").', None
+            return None, "Described the work without first-person ownership language (e.g. \"I designed\", \"I built\")."
+
+        if dim_name in (TECHNICAL_ACCURACY, RESUME_GROUNDING):
+            return f'"{first_sentence.strip()[:160]}"', f'"{first_sentence.strip()[:160]}" — not closely aligned with the project as described.'
+
+        if dim_name == COMPLETENESS:
+            return f"Answered in {len(sentences)} sentence(s) covering multiple points.", "The answer was quite short — consider adding another sentence or two of detail."
+
+        if dim_name == COMMUNICATION:
+            return None, "The answer could be structured more clearly (e.g. a brief sequence of steps)."
+
+        return None, None
+
+    @classmethod
+    def _claims(
+        cls, dimensions: list[DimensionScore], request: EvaluationRequest, *,
+        answer: str, sentences: list[str], mentioned_terms: list[str],
+        missing_terms: list[str], has_ownership: bool,
+    ) -> tuple[tuple, tuple]:
         strengths, weaknesses = [], []
         for d in dimensions:
+            strength_evidence, weakness_evidence = cls._concrete_evidence(
+                d.name, answer=answer, sentences=sentences, mentioned_terms=mentioned_terms,
+                missing_terms=missing_terms, has_ownership=has_ownership,
+            )
             if d.raw_score >= 0.65:
                 strengths.append(EvidenceLinkedClaim(
                     claim=f"Strong {d.name.replace('_', ' ')}.",
                     dimension=d.name,
-                    evidence=f"Scored {d.raw_score:.0%} against {request.specification.source_id!r}.",
+                    evidence=strength_evidence or f"Scored {d.raw_score:.0%} on {d.name.replace('_', ' ')}.",
                 ))
             elif d.raw_score < 0.35:
                 weaknesses.append(EvidenceLinkedClaim(
                     claim=f"Weak {d.name.replace('_', ' ')}.",
                     dimension=d.name,
-                    evidence=f"Scored only {d.raw_score:.0%} against {request.specification.source_id!r}.",
+                    evidence=weakness_evidence or f"Scored only {d.raw_score:.0%} on {d.name.replace('_', ' ')}.",
                 ))
         if not strengths:
             strengths.append(EvidenceLinkedClaim(

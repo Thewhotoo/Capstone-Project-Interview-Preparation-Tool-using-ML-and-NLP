@@ -1676,6 +1676,18 @@
                 .replace(/'/g, "&#039;");
         }
 
+        // ─── EMPTY-VALUE FILTERING (report generation hardening) ──────
+        // Strips null/undefined/whitespace-only entries before a list is
+        // turned into HTML, so a report section never renders a blank
+        // bullet point. A field's own producer (heuristic_evaluator.py /
+        // model_evaluator.py) already validates its own output can't be
+        // blank, but this is defense-in-depth against any future
+        // evaluator implementation, partial data, or edge case that isn't
+        // covered by that validation.
+        function nonEmptyStrings(list) {
+            return (list || []).filter((s) => typeof s === "string" && s.trim().length > 0);
+        }
+
         // ─── SKILL CATEGORIZATION ─────────────────────────────────────
         const SKILL_CATEGORIES = {
             "Languages": {
@@ -2838,7 +2850,7 @@
                 </div>
             `).join("");
 
-            const nextStepsHtml = (data.next_steps || []).map(s => `<li>${esc(s)}</li>`).join("");
+            const nextStepsHtml = nonEmptyStrings(data.next_steps).map(s => `<li>${esc(s)}</li>`).join("");
 
             const topics = data.topics || [];
             const topicsHtml = topics.length > 1 ? topics.map(t => `
@@ -2850,8 +2862,8 @@
 
             let timelineHtml = "";
             timeline.forEach((item, i) => {
-                const strengthsListHtml = (item.strengths || []).map(s => `<li>${esc(s)}</li>`).join("");
-                const weaknessesListHtml = (item.weaknesses || []).map(w => `<li>${esc(w)}</li>`).join("");
+                const strengthsListHtml = nonEmptyStrings(item.strengths).map(s => `<li>${esc(s)}</li>`).join("");
+                const weaknessesListHtml = nonEmptyStrings(item.weaknesses).map(w => `<li>${esc(w)}</li>`).join("");
                 const answerText = item.answer || "";
                 const answerPreview = esc(answerText.substring(0, 240)) + (answerText.length > 240 ? "\u2026" : "");
 
@@ -2873,7 +2885,7 @@
                             </div>
                             ${strengthsListHtml ? `<div class="rd-timeline-metric-label">Strengths</div><ul class="rd-timeline-list">${strengthsListHtml}</ul>` : ""}
                             ${weaknessesListHtml ? `<div class="rd-timeline-metric-label">To improve</div><ul class="rd-timeline-list">${weaknessesListHtml}</ul>` : ""}
-                            ${item.suggested_answer ? `<div class="rd-timeline-metric-label" style="margin-bottom:6px;">Improved Answer</div><div class="rd-suggested-answer">${esc(item.suggested_answer)}</div>` : ""}
+                            ${(item.suggested_answer && item.suggested_answer.trim()) ? `<div class="rd-timeline-metric-label" style="margin-bottom:6px;">Improved Answer</div><div class="rd-suggested-answer">${esc(item.suggested_answer)}</div>` : ""}
                         </div>
                         <div class="rd-expand-hint">Tap to expand details</div>
                     </div>
@@ -2890,7 +2902,7 @@
 
                 <div id="rd-report-body">
                     <div class="rd-section-title">The Debrief</div>
-                    <p class="rd-debrief-text">${esc(data.debrief_text || "")}</p>
+                    <p class="rd-debrief-text">${esc((data.debrief_text && data.debrief_text.trim()) || "This was a steady discussion without one section clearly pulling ahead of the rest.")}</p>
 
                     ${snapshotHtml ? `<div class="rd-section-title">Performance Snapshot</div><div class="rd-snapshot-list">${snapshotHtml}</div>` : ""}
 

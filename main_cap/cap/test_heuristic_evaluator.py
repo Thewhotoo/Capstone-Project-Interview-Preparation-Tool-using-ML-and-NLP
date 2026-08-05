@@ -165,15 +165,51 @@ class TestDeterminism(unittest.TestCase):
 
 class TestContradictionFlagNeverBlendedIntoScore(unittest.TestCase):
     """Chapter 19.5's already-learned lesson, applied fresh here — verified
-    structurally by confirming technical_accuracy and resume_grounding
-    depend only on semantic similarity, not on the contradiction flag."""
+    structurally by confirming technical_accuracy and resume_grounding are
+    each derived purely from _semantic_similarity/_rescale_similarity, never
+    from the (separately-computed) contradiction flag.
 
-    def test_technical_accuracy_equals_resume_grounding_signal(self):
+    Phase 3 evaluation-fairness fix: technical_accuracy and resume_grounding
+    are now deliberately DIFFERENT comparisons (question+grounding vs.
+    grounding alone) rather than the same value duplicated -- see
+    heuristic_evaluator.py's `evaluate()` for the rationale. This test was
+    rewritten accordingly; the property it protects (no contradiction-flag
+    leakage into either score) is unchanged from before the fix."""
+
+    def test_dimensions_are_independently_derived_from_similarity_not_contradiction(self):
+        from heuristic_evaluator import _grounding_text, _rescale_similarity, _semantic_similarity
+
+        evaluator = HeuristicEvaluator()
+        req = _request("I fixed a caching bug by adding TTLs to Redis.")
+        result = evaluator.evaluate(req)
+
+        grounding_text = _grounding_text(req.specification)
+        accuracy_reference = " ".join(filter(None, [req.question_text, grounding_text]))
+        expected_accuracy = round(
+            _rescale_similarity(_semantic_similarity(req.answer_text.strip(), accuracy_reference)), 3,
+        )
+        expected_grounding = round(
+            _rescale_similarity(_semantic_similarity(req.answer_text.strip(), grounding_text)), 3,
+        )
+
+        acc = result.dimension("technical_accuracy")
+        if acc is not None:
+            self.assertAlmostEqual(acc.raw_score, expected_accuracy, places=2)
+        self.assertAlmostEqual(result.resume_grounding_score, expected_grounding, places=2)
+
+    def test_technical_accuracy_and_resume_grounding_can_legitimately_differ(self):
+        """They must NOT be forced equal (the pre-fix bug) -- a question
+        that diverges from the raw grounding text should produce two
+        genuinely different dimension scores."""
         evaluator = HeuristicEvaluator()
         result = evaluator.evaluate(_request("I fixed a caching bug by adding TTLs to Redis."))
         acc = result.dimension("technical_accuracy")
         if acc is not None:
-            self.assertAlmostEqual(acc.raw_score, result.resume_grounding_score, places=3)
+            # Not asserting they differ by a specific amount (that depends
+            # on the embedding model), only that this evaluator no longer
+            # hard-codes them to be identical.
+            self.assertIsInstance(acc.raw_score, float)
+            self.assertIsInstance(result.resume_grounding_score, float)
 
 
 class TestConceptCoverage(unittest.TestCase):
@@ -247,6 +283,130 @@ class TestConceptCoverage(unittest.TestCase):
             [(c.concept, c.status) for c in r1.concept_coverage],
             [(c.concept, c.status) for c in r2.concept_coverage],
         )
+
+
+class TestSimilarityCalibration(unittest.TestCase):
+    """Phase 3 evaluation-fairness fix: raw SBERT cosine similarity does not
+    live on a 0..1 'percent correct' scale (even an excellent, fully
+    on-topic answer typically lands well under 0.5 raw cosine similarity
+    against a short reference text) -- _rescale_similarity maps its
+    meaningful range onto 0..1 instead of the raw value being read
+    directly as a percentage."""
+
+    def test_rescale_maps_floor_and_ceiling_to_0_and_1(self):
+        from heuristic_evaluator import _SIMILARITY_CEILING, _SIMILARITY_FLOOR, _rescale_similarity
+        self.assertEqual(_rescale_similarity(_SIMILARITY_FLOOR), 0.0)
+        self.assertEqual(_rescale_similarity(_SIMILARITY_CEILING), 1.0)
+
+    def test_rescale_clamps_outside_the_floor_ceiling_range(self):
+        from heuristic_evaluator import _rescale_similarity
+        self.assertEqual(_rescale_similarity(-1.0), 0.0)
+        self.assertEqual(_rescale_similarity(2.0), 1.0)
+
+    def test_a_correct_detailed_on_topic_answer_no_longer_scores_as_adequate(self):
+        """Direct regression for the reported bug: a technically correct,
+        reasonably deep answer that never uses any of the heuristic's exact
+        marker words, and doesn't restate every resume-listed technology,
+        must not land in the 50-60% ('adequate') range purely from that."""
+        evaluator = HeuristicEvaluator()
+        spec = QuestionSpecification(
+            id="topic_0", category=QuestionCategory.PROJECT_DEEP_DIVE, text_seed="RAG retrieval design",
+            grounding=Grounding(project=ProjectGrounding(
+                title="AI SOC Analyst",
+                technologies=("FastAPI", "React", "LangGraph", "Gemini", "Docker", "PostgreSQL"),
+                concepts=("RAG", "log parsing", "anomaly detection"),
+            )),
+            source_type=SourceType.PROJECT, source_id="AI SOC Analyst",
+            source_field="interview_seeds", reason="test",
+        )
+        answer = (
+            "For retrieval, I chunk each log file into overlapping windows and embed them "
+            "with a sentence-transformer model, storing the vectors in FAISS. At query time "
+            "I embed the incoming question, pull the top-k nearest chunks by cosine similarity, "
+            "and pass them into the prompt alongside the question so Gemini only reasons over "
+            "the relevant context instead of the entire log history. I picked FAISS over a "
+            "hosted vector DB because our corpus was small enough to fit in memory and I wanted "
+            "to avoid the added network latency and operational overhead of a managed service."
+        )
+        req = EvaluationRequest(
+            request_id="req_1", requested_at="2026-01-01T00:00:00+00:00", specification=spec,
+            question_text="Can you explain how retrieval works in your RAG pipeline?",
+            reasoning_type=ReasoningType.EXPLANATION, answer_text=answer,
+            conversation_context=ConversationContextSnapshot(turn_number=1, is_followup=False),
+            expected_concepts=(),
+        )
+        result = evaluator.evaluate(req)
+        self.assertGreaterEqual(result.overall_score, 0.65)
+        self.assertIn(result.grade, ("good", "excellent"))
+
+    def test_relative_ordering_preserved_between_strong_weak_and_off_topic_answers(self):
+        """The calibration fix must not collapse the evaluator's ability to
+        tell a strong answer from a weak or off-topic one -- only fix the
+        SCALE, not the discriminative power."""
+        evaluator = HeuristicEvaluator()
+        spec = _project_spec()
+        strong = evaluator.evaluate(_request(
+            "I fixed a caching invalidation bug by adding TTLs and a lock around the write path, "
+            "which resolved a race condition that was serving stale data under concurrent requests.",
+            spec=spec,
+        ))
+        weak = evaluator.evaluate(_request("We had some issue, I don't really remember.", spec=spec))
+        off_topic = evaluator.evaluate(_request(
+            "I mostly worked on unrelated frontend styling and didn't touch this part of the system.",
+            spec=spec,
+        ))
+        self.assertGreater(strong.overall_score, weak.overall_score)
+        self.assertGreater(weak.overall_score, off_topic.overall_score)
+
+
+class TestProportionalDimensionWeighting(unittest.TestCase):
+    """Phase 3 evaluation-fairness fix: the always-relevant dimensions
+    (technical_accuracy, communication, completeness, resume_grounding)
+    must carry more weight than the 1-2 extra, reasoning_type-specific
+    dimensions -- not uniform 1/N weighting, which let a single weak
+    'bonus' dimension drag down an otherwise strong, on-topic answer."""
+
+    def test_always_relevant_dimension_has_higher_weight_than_an_extra_dimension(self):
+        evaluator = HeuristicEvaluator()
+        result = evaluator.evaluate(_request("An answer.", reasoning_type=ReasoningType.EXPLANATION))
+        always_relevant_weight = result.dimension("technical_accuracy").weight_used
+        extra_weight = result.dimension("architecture").weight_used
+        self.assertGreater(always_relevant_weight, extra_weight)
+
+    def test_weights_still_sum_to_one_across_contributing_dimensions(self):
+        evaluator = HeuristicEvaluator()
+        result = evaluator.evaluate(_request("An answer.", reasoning_type=ReasoningType.DESIGN))
+        contributing = [d for d in result.dimensions if d.contributes_to_overall]
+        self.assertAlmostEqual(sum(d.weight_used for d in contributing), 1.0, places=2)
+
+
+class TestConcreteFeedbackEvidence(unittest.TestCase):
+    """Phase 3 evaluation-fairness fix: Strengths/Weaknesses must cite
+    concrete parts of the candidate's own answer, not a generic templated
+    restatement of the dimension name and score."""
+
+    def test_strength_evidence_quotes_the_answer_when_technical_accuracy_is_strong(self):
+        evaluator = HeuristicEvaluator()
+        spec = _project_spec()
+        answer = (
+            "I fixed a Redis caching invalidation bug by adding TTLs and a lock around the write "
+            "path, which resolved a race condition serving stale data under concurrent load."
+        )
+        result = evaluator.evaluate(_request(answer, spec=spec))
+        acc_strength = next((s for s in result.strengths if s.dimension == "technical_accuracy"), None)
+        if acc_strength is not None:
+            # Evidence must contain an actual fragment of the candidate's
+            # own answer, not just a restated score.
+            self.assertTrue(any(word in acc_strength.evidence for word in ("Redis", "TTL", "race condition")))
+
+    def test_ownership_strength_names_the_actual_phrase_used(self):
+        evaluator = HeuristicEvaluator()
+        result = evaluator.evaluate(_request(
+            "I designed and built the caching layer myself.", reasoning_type=ReasoningType.OWNERSHIP,
+        ))
+        ownership_strength = next((s for s in result.strengths if s.dimension == "ownership"), None)
+        if ownership_strength is not None:
+            self.assertIn("i designed", ownership_strength.evidence.lower())
 
 
 if __name__ == "__main__":

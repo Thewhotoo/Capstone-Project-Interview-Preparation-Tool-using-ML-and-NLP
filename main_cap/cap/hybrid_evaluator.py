@@ -193,8 +193,13 @@ class HybridEvaluator:
                     f"with an independent trained-model comparison."
                 )
 
+            # Built from trained_result.dimensions, NOT trained_result.
+            # raw_model_output -- TrainedEvaluator doesn't populate that
+            # field itself (EvaluationResult defaults it to an empty
+            # tuple), so sourcing from raw_model_output would silently
+            # produce nothing. dimensions is always populated.
             raw_model_output = heuristic_result.raw_model_output + tuple(
-                (f"trained_{name}", score) for name, score in trained_result.raw_model_output
+                (f"trained_{d.name}", d.raw_score) for d in trained_result.dimensions
             ) + (("agreement_score", round(agreement_score, 3)),)
             model_version = heuristic_result.model_version + trained_result.model_version
         else:

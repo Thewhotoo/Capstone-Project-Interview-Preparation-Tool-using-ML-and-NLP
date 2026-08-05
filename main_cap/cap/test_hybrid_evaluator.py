@@ -294,6 +294,19 @@ class TestDiagnosticsRecording(unittest.TestCase):
         self.assertTrue(any(k.startswith("trained_") for k in keys))
         self.assertIn("agreement_score", keys)
 
+    def test_raw_model_output_populated_with_the_real_trained_evaluator(self):
+        """Regression test: TrainedEvaluator itself leaves
+        EvaluationResult.raw_model_output at its default empty tuple (it
+        never sets that field) -- trained_* entries here must be built
+        from trained_result.dimensions, not trained_result.raw_model_output,
+        or they'd silently be empty against the real evaluator despite
+        passing against a stub that happens to copy a non-empty field."""
+        hybrid = HybridEvaluator(HeuristicEvaluator(), _real_trained_evaluator(), diagnostics_log_path=os.devnull)
+        result = hybrid.evaluate(_request())
+        keys = {name for name, _ in result.raw_model_output}
+        self.assertTrue(any(k.startswith("trained_") for k in keys), f"got keys: {keys}")
+        self.assertIn("agreement_score", keys)
+
     def test_diagnostics_record_trained_unavailable_when_it_fails(self):
         import tempfile
         with tempfile.TemporaryDirectory() as tmpdir:

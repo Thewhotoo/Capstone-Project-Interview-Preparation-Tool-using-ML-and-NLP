@@ -19,12 +19,14 @@ should import from.
 
 from __future__ import annotations
 
+import statistics
 from dataclasses import dataclass, field
 
 from resume_engine.document_model import TextSpan
 
 LINE_Y_TOLERANCE = 3.0        # points; spans within this y0 delta are one line
 MIN_HEADER_FONT_RATIO = 1.05  # font_size >= body_font_size * this counts as "larger"
+MIN_BOLD_CHAR_RATIO = 0.3     # fraction of a line's characters that must be bold to count the line as a bold header
 
 
 class _Line:
@@ -46,7 +48,23 @@ class _Line:
 
     @property
     def is_bold(self) -> bool:
-        return any(s.is_bold for s in self.spans)
+        """True only when a MAJORITY of the line's characters are bold, not
+        merely when the line contains any bold span at all.
+
+        Found during Phase 1 real-world evaluation: some resumes bold a
+        single emphasized word or acronym inside an otherwise-plain bullet
+        (e.g. "...reporting directly to the **CTO**."). The old "any bold
+        span" check treated that whole bullet as a bold header line,
+        fragmenting one job into one spurious entry per bolded bullet. A
+        genuine header line (e.g. "Acme Corp, Senior Engineer") is bold
+        end-to-end; a character-count majority reliably tells the two
+        apart without needing a stricter "fully bold" rule that a header
+        with one non-bold punctuation span would fail."""
+        total_chars = sum(len(s.text) for s in self.spans)
+        if total_chars == 0:
+            return False
+        bold_chars = sum(len(s.text) for s in self.spans if s.is_bold)
+        return (bold_chars / total_chars) >= MIN_BOLD_CHAR_RATIO
 
 
 def _group_into_lines(spans: list[TextSpan]) -> list[_Line]:
@@ -63,6 +81,32 @@ def _group_into_lines(spans: list[TextSpan]) -> list[_Line]:
                 continue
         groups.append([span])
     return [_Line(group) for group in groups]
+
+
+def _local_body_font_size(lines: list[_Line]) -> float:
+    """The median line-level font size within THIS section's own lines --
+    the baseline `_is_entry_header_line` compares against, instead of
+    `doc.body_font_size` (Milestone 1's document-WIDE modal font size,
+    computed by raw span-token count across the whole document).
+
+    Found during Phase 1 real-world evaluation: the document-wide
+    statistic is a per-token count, not a per-line or area-weighted one,
+    so an unrelated dense region elsewhere in the document (e.g. a
+    comma-heavy inline skills paragraph, which produces many short-token
+    spans) can out-vote the section's real body-bullet font size even
+    though it occupies a small fraction of the page. On one real resume
+    this made an entire Experience section's 9pt bullets register as
+    "larger than body" against a document-wide mode of 7.2pt pulled from
+    elsewhere in the document, splitting a single job into ~20 spurious
+    entries (one per bullet/clause).
+
+    Median over LINES (not a raw span-token mode) is used because it is
+    robust to the common shape of one taller/bolder header line among
+    several body lines, while still resolving sensibly for the shortest
+    sections (see `test_entry_clustering.py`)."""
+    if not lines:
+        return 0.0
+    return statistics.median(line.max_font_size for line in lines)
 
 
 def _is_entry_header_line(line: _Line, body_font_size: float) -> bool:
@@ -129,6 +173,12 @@ def cluster_entries(spans: list[TextSpan], body_font_size: float) -> list[Entry]
     Reconstruction) and groups them into entries: a header-like line starts
     a new entry, everything else joins the currently-open entry's body.
 
+    `body_font_size` (the document-wide statistic from `doc.body_font_size`)
+    is used only as a last-resort fallback for a degenerate empty-lines
+    input; the header/body threshold itself is `_local_body_font_size`,
+    computed from this section's own lines (see that function's docstring
+    for why the document-wide statistic is unreliable here).
+
     Graceful fallback: if NO line in `spans` is structurally header-like
     (a legitimate case -- some plain-ATS templates use zero bold/size
     variation anywhere, not just at the document-section-header level),
@@ -140,7 +190,9 @@ def cluster_entries(spans: list[TextSpan], body_font_size: float) -> list[Entry]
     if not lines:
         return []
 
-    if not any(_is_entry_header_line(line, body_font_size) for line in lines):
+    local_body_font_size = _local_body_font_size(lines) or body_font_size
+
+    if not any(_is_entry_header_line(line, local_body_font_size) for line in lines):
         return [
             Entry(
                 header_spans=lines[0].spans,
@@ -152,7 +204,7 @@ def cluster_entries(spans: list[TextSpan], body_font_size: float) -> list[Entry]
     entries: list[Entry] = []
     current: Entry | None = None
     for line in lines:
-        if _is_entry_header_line(line, body_font_size):
+        if _is_entry_header_line(line, local_body_font_size):
             current = Entry(header_spans=line.spans)
             entries.append(current)
         elif current is not None:

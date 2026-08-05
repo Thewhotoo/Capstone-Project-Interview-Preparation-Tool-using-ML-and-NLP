@@ -38,6 +38,10 @@ main_cap/cap/SESSION_HANDOFF.md
 # --- runtime-generated app state ---
 main_cap/cap/user_profiles/*.json
 
+# --- HybridEvaluator diagnostics (per-turn heuristic/trained comparison
+# log, for future retraining -- local accumulation, not a repo artifact) ---
+main_cap/cap/hybrid_diagnostics.jsonl
+
 # --- HuggingFace / torch model cache, if ever run locally ---
 .cache/
 **/*.hf_cache/

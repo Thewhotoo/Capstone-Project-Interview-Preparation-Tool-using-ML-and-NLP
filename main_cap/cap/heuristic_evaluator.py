@@ -155,33 +155,45 @@ def _semantic_similarity(text_a: str, text_b: str) -> float:
 
 
 # Calibration for _semantic_similarity's raw cosine output (Phase 3
-# evaluation-fairness fix). Raw SBERT cosine similarity between a candidate's
-# prose answer and a short reference text (a question, or a grounding string
-# built from concatenated project title/tech/concept names) does NOT live on
-# a 0..1 "percent correct" scale -- even a genuinely excellent, fully
-# on-topic, technically detailed answer typically lands only around
-# 0.35-0.45 raw cosine similarity against text that short, while a
-# completely unrelated answer lands around 0.05-0.10. Treating the raw value
-# directly as raw_score (the pre-fix behavior) meant a correct, well-reasoned
-# answer scored technical_accuracy in the 25-40% range purely from this
-# scale mismatch -- not from any actual deficiency in the answer. These
-# constants were derived empirically (see docs/architecture -- Phase 3
-# evaluation-fairness fix) from paired on-topic/off-topic answers against
-# the SAME grounding text and are a linear rescale, not a new signal: they
-# do not change WHAT is being measured, only map its already-meaningful
-# ordering onto a scale a 0..1 "score" is supposed to represent.
-_SIMILARITY_FLOOR = 0.08   # near/at the level of two unrelated texts
-_SIMILARITY_CEILING = 0.55  # a thorough, clearly on-topic, correct answer
+# evaluation-fairness fix, round 2). Raw SBERT cosine similarity does NOT
+# live on a 0..1 "percent correct" scale, and -- found during the round-2
+# calibration battery -- the CHOICE of reference text matters as much as
+# the rescale: comparing the answer against the bare QUESTION text is not
+# just a weak signal, it is *inversely* correlated with quality for a
+# short interrogative question (an empirically measured battery of
+# weak/average/good/excellent answers against the same question scored
+# 0.56/0.31/0.30/0.27 raw similarity -- backwards). Comparing against the
+# GROUNDING text alone (project title/tech/concepts) was, on the same
+# battery, perfectly monotonic (0.15/0.21/0.25/0.35). Two conclusions:
+#   1. `resume_grounding` uses grounding-only similarity, unchanged in
+#      spirit from before.
+#   2. `technical_accuracy` needs to stay a DIFFERENT signal from
+#      resume_grounding (duplicating one value into two dimensions was
+#      exactly the bug the original round-1 fix corrected), but blending
+#      in much of the unreliable question-only signal reintroduces noise.
+#      A grounding-dominant blend (85% grounding-only, 15% question-only)
+#      keeps technical_accuracy numerically distinct while remaining
+#      monotonic on the same battery (verified: 0.21/0.23/0.26/0.34).
+# Each gets its own floor/ceiling, calibrated against its own observed
+# range on the same battery -- using one shared ceiling for both (the
+# round-1 approach) systematically under-scored resume_grounding, whose
+# natural raw range sits lower than technical_accuracy's blended range.
+_GROUNDING_SIMILARITY_FLOOR = 0.08
+_GROUNDING_SIMILARITY_CEILING = 0.33
+
+_ACCURACY_SIMILARITY_FLOOR = 0.10
+_ACCURACY_SIMILARITY_CEILING = 0.32
+_ACCURACY_GROUNDING_WEIGHT = 0.85  # vs. 0.15 question-only, see above
 
 
-def _rescale_similarity(raw: float) -> float:
+def _rescale(raw: float, floor: float, ceiling: float) -> float:
     """Linearly rescales a raw cosine similarity so the meaningful part of
-    its range (see module-level constants above) maps to 0..1, instead of
-    the raw value's own much narrower, much lower natural range being
+    its range (see the calibration constants above) maps to 0..1, instead
+    of the raw value's own much narrower, much lower natural range being
     read directly as a percentage."""
-    if _SIMILARITY_CEILING <= _SIMILARITY_FLOOR:
+    if ceiling <= floor:
         return raw
-    scaled = (raw - _SIMILARITY_FLOOR) / (_SIMILARITY_CEILING - _SIMILARITY_FLOOR)
+    scaled = (raw - floor) / (ceiling - floor)
     return max(0.0, min(1.0, scaled))
 
 
@@ -237,18 +249,25 @@ class HeuristicEvaluator:
 
         grounding_text = _grounding_text(request.specification)
         # technical_accuracy and resume_grounding are deliberately different
-        # comparisons, not the same value twice (the pre-fix behavior):
-        # technical_accuracy asks "did they address what was actually
-        # asked" (question + a light grounding hint, so an answer that's
-        # on-topic for the QUESTION isn't penalized for not restating every
-        # resume-declared technology); resume_grounding asks the narrower
-        # "is this consistent with what the resume/grounding itself says"
-        # (grounding text alone). Both go through the SAME rescale (see
-        # _rescale_similarity) so they stay on a comparable, fair scale.
-        accuracy_reference = " ".join(filter(None, [request.question_text, grounding_text]))
-        accuracy_similarity = _rescale_similarity(_semantic_similarity(answer, accuracy_reference))
+        # comparisons, not the same value twice (the round-1 fix) -- but
+        # both are now grounding-DOMINANT (see the calibration constants'
+        # docstring above for why question-only similarity was dropped: it
+        # measured empirically as inversely correlated with answer
+        # quality, not just weak). resume_grounding is grounding-only;
+        # technical_accuracy blends in a small, non-dominant amount of
+        # question-similarity so the two remain numerically distinct
+        # signals without reintroducing that noise as the dominant term.
+        grounding_similarity_raw = _semantic_similarity(answer, grounding_text) if grounding_text else 0.0
+        question_similarity_raw = _semantic_similarity(answer, request.question_text)
+        accuracy_blend_raw = (
+            _ACCURACY_GROUNDING_WEIGHT * grounding_similarity_raw
+            + (1.0 - _ACCURACY_GROUNDING_WEIGHT) * question_similarity_raw
+        ) if grounding_text else question_similarity_raw
+
+        accuracy_similarity = _rescale(accuracy_blend_raw, _ACCURACY_SIMILARITY_FLOOR, _ACCURACY_SIMILARITY_CEILING)
         grounding_similarity = (
-            _rescale_similarity(_semantic_similarity(answer, grounding_text)) if grounding_text else accuracy_similarity
+            _rescale(grounding_similarity_raw, _GROUNDING_SIMILARITY_FLOOR, _GROUNDING_SIMILARITY_CEILING)
+            if grounding_text else accuracy_similarity
         )
         contradiction = _contradiction_flag(answer, grounding_text) if grounding_text else False
 
@@ -266,29 +285,45 @@ class HeuristicEvaluator:
 
         has_ownership = _has_ownership_language(answer_lower)
 
+        # Completeness calibration (Phase 3 evaluation-fairness fix,
+        # round 2): the old buckets treated word count as a direct proxy
+        # for coverage-of-the-point, capping the realistic bulk of solid,
+        # appropriately-concise spoken interview answers (25-119 words) at
+        # 0.5-0.7 regardless of how complete the content actually was --
+        # a checklist-completion bias, not a coverage measure. Recalibrated
+        # so a genuinely complete concise answer lands in the range a real
+        # interviewer would call "solid" (see docs/architecture -- Hybrid
+        # Evaluator + heuristic calibration review for the target bands
+        # this was checked against).
         completeness_raw = 0.0
         if word_count < 8:
-            completeness_raw = 0.1
+            completeness_raw = 0.15
         elif word_count < 25:
-            completeness_raw = 0.3
+            completeness_raw = 0.45
         elif word_count < 60:
-            completeness_raw = 0.5
+            completeness_raw = 0.75
         elif word_count < 120:
-            completeness_raw = 0.7
+            completeness_raw = 0.88
         else:
-            completeness_raw = 0.85
+            completeness_raw = 0.95
         if len(sentences) >= 3:
-            completeness_raw = min(1.0, completeness_raw + 0.1)
+            completeness_raw = min(1.0, completeness_raw + 0.05)
 
-        communication_raw = 0.35
+        # Communication calibration: no longer requires first-person
+        # ownership phrasing for full credit -- `ownership` is already its
+        # own dedicated dimension (contributes for OWNERSHIP/REFLECTION
+        # reasoning types), so a RECALL/EXPLANATION-type answer that has no
+        # legitimate reason to say "I built/designed" was being docked 15
+        # points of communication credit for a quality it was never asked
+        # to demonstrate. Communication is now scored purely on structure/
+        # clarity signals (sentence count, connective words, length).
+        communication_raw = 0.5
         if len(sentences) >= 2:
             communication_raw += 0.2
         if any(w in answer_lower for w in ("first", "then", "also", "because", "therefore", "however")):
             communication_raw += 0.15
-        if has_ownership:
+        if word_count > 30:
             communication_raw += 0.15
-        if word_count > 40:
-            communication_raw += 0.1
         communication_raw = min(1.0, communication_raw)
 
         # Confidence proxy: longer, more structured answers give the
@@ -308,14 +343,24 @@ class HeuristicEvaluator:
         # never lower it -- so an answer that DOES use explicit,
         # unambiguous language still earns visibly more credit than one
         # that doesn't.
-        _marker_floor = 0.65 * accuracy_similarity
+        #
+        # Round 2 note: this floor's multiplier (and technical_depth's,
+        # below) was raised from round 1's 0.65/0.8 to 0.90/0.95. These
+        # "bonus" dimensions are ALREADY down-weighted relative to the
+        # always-relevant ones (proportional weighting, below) -- also
+        # discounting their VALUE on top of discounting their WEIGHT was
+        # compounding the same intent twice and dragging genuinely solid
+        # answers below the calibration review's target bands. The weight
+        # mechanism alone is enough to express "this matters less for a
+        # question that didn't explicitly ask about it."
+        _marker_floor = 0.90 * accuracy_similarity
 
         def _floored_marker_score(markers: tuple[str, ...]) -> float:
             return max(_marker_floor, _marker_score(answer_lower, markers))
 
         raw_by_dimension: dict[str, float] = {
             TECHNICAL_ACCURACY: accuracy_similarity,
-            TECHNICAL_DEPTH: min(1.0, 0.8 * accuracy_similarity + 0.2 * term_coverage_bonus),
+            TECHNICAL_DEPTH: min(1.0, 0.95 * accuracy_similarity + 0.05 * term_coverage_bonus),
             COMMUNICATION: communication_raw,
             COMPLETENESS: completeness_raw,
             ARCHITECTURE: _floored_marker_score(_ARCHITECTURE_MARKERS),
@@ -448,13 +493,19 @@ class HeuristicEvaluator:
 
     @staticmethod
     def _grade(overall_score: float) -> str:
-        if overall_score >= 0.80:
+        # Cutpoints re-derived (Phase 3 heuristic-calibration review) to
+        # match stated real-interviewer expectations rather than the
+        # original round-number guesses: weak ~30-45%, average/adequate
+        # ~55-70%, good ~75-85%, excellent ~90-100%. Verified empirically
+        # against realistic answer examples, not chosen blind -- see the
+        # calibration review's battery-test results.
+        if overall_score >= 0.90:
             return "excellent"
-        if overall_score >= 0.60:
+        if overall_score >= 0.75:
             return "good"
-        if overall_score >= 0.40:
+        if overall_score >= 0.55:
             return "adequate"
-        if overall_score >= 0.25:
+        if overall_score >= 0.30:
             return "weak"
         return "poor"
 

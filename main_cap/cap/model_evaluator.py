@@ -77,14 +77,15 @@ _CONTRADICTION_THRESHOLD = 0.5
 
 def _grade_from_score(score: float) -> str:
     """Same cutpoints as `HeuristicEvaluator._grade` (duplicated
-    intentionally, not imported — see module docstring)."""
-    if score >= 0.80:
+    intentionally, not imported — see module docstring). Kept in sync with
+    that function's Phase 3 heuristic-calibration review update."""
+    if score >= 0.90:
         return "excellent"
-    if score >= 0.60:
+    if score >= 0.75:
         return "good"
-    if score >= 0.40:
+    if score >= 0.55:
         return "adequate"
-    if score >= 0.25:
+    if score >= 0.30:
         return "weak"
     return "poor"
 

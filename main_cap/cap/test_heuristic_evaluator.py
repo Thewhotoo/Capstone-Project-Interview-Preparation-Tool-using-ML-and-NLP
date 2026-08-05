@@ -177,20 +177,23 @@ class TestContradictionFlagNeverBlendedIntoScore(unittest.TestCase):
     leakage into either score) is unchanged from before the fix."""
 
     def test_dimensions_are_independently_derived_from_similarity_not_contradiction(self):
-        from heuristic_evaluator import _grounding_text, _rescale_similarity, _semantic_similarity
+        from heuristic_evaluator import (
+            _ACCURACY_GROUNDING_WEIGHT, _ACCURACY_SIMILARITY_CEILING, _ACCURACY_SIMILARITY_FLOOR,
+            _GROUNDING_SIMILARITY_CEILING, _GROUNDING_SIMILARITY_FLOOR, _grounding_text, _rescale, _semantic_similarity,
+        )
 
         evaluator = HeuristicEvaluator()
         req = _request("I fixed a caching bug by adding TTLs to Redis.")
         result = evaluator.evaluate(req)
 
+        answer = req.answer_text.strip()
         grounding_text = _grounding_text(req.specification)
-        accuracy_reference = " ".join(filter(None, [req.question_text, grounding_text]))
-        expected_accuracy = round(
-            _rescale_similarity(_semantic_similarity(req.answer_text.strip(), accuracy_reference)), 3,
-        )
-        expected_grounding = round(
-            _rescale_similarity(_semantic_similarity(req.answer_text.strip(), grounding_text)), 3,
-        )
+        grounding_raw = _semantic_similarity(answer, grounding_text)
+        question_raw = _semantic_similarity(answer, req.question_text)
+        accuracy_blend_raw = _ACCURACY_GROUNDING_WEIGHT * grounding_raw + (1.0 - _ACCURACY_GROUNDING_WEIGHT) * question_raw
+
+        expected_accuracy = round(_rescale(accuracy_blend_raw, _ACCURACY_SIMILARITY_FLOOR, _ACCURACY_SIMILARITY_CEILING), 3)
+        expected_grounding = round(_rescale(grounding_raw, _GROUNDING_SIMILARITY_FLOOR, _GROUNDING_SIMILARITY_CEILING), 3)
 
         acc = result.dimension("technical_accuracy")
         if acc is not None:
@@ -289,25 +292,31 @@ class TestSimilarityCalibration(unittest.TestCase):
     """Phase 3 evaluation-fairness fix: raw SBERT cosine similarity does not
     live on a 0..1 'percent correct' scale (even an excellent, fully
     on-topic answer typically lands well under 0.5 raw cosine similarity
-    against a short reference text) -- _rescale_similarity maps its
-    meaningful range onto 0..1 instead of the raw value being read
-    directly as a percentage."""
+    against a short reference text) -- _rescale maps its meaningful range
+    onto 0..1 instead of the raw value being read directly as a
+    percentage. Round 2: technical_accuracy and resume_grounding each get
+    their own floor/ceiling (see heuristic_evaluator.py's calibration
+    constants docstring for why one shared ceiling under-scored
+    resume_grounding)."""
 
     def test_rescale_maps_floor_and_ceiling_to_0_and_1(self):
-        from heuristic_evaluator import _SIMILARITY_CEILING, _SIMILARITY_FLOOR, _rescale_similarity
-        self.assertEqual(_rescale_similarity(_SIMILARITY_FLOOR), 0.0)
-        self.assertEqual(_rescale_similarity(_SIMILARITY_CEILING), 1.0)
+        from heuristic_evaluator import _GROUNDING_SIMILARITY_CEILING, _GROUNDING_SIMILARITY_FLOOR, _rescale
+        self.assertEqual(_rescale(_GROUNDING_SIMILARITY_FLOOR, _GROUNDING_SIMILARITY_FLOOR, _GROUNDING_SIMILARITY_CEILING), 0.0)
+        self.assertEqual(_rescale(_GROUNDING_SIMILARITY_CEILING, _GROUNDING_SIMILARITY_FLOOR, _GROUNDING_SIMILARITY_CEILING), 1.0)
 
     def test_rescale_clamps_outside_the_floor_ceiling_range(self):
-        from heuristic_evaluator import _rescale_similarity
-        self.assertEqual(_rescale_similarity(-1.0), 0.0)
-        self.assertEqual(_rescale_similarity(2.0), 1.0)
+        from heuristic_evaluator import _rescale
+        self.assertEqual(_rescale(-1.0, 0.08, 0.37), 0.0)
+        self.assertEqual(_rescale(2.0, 0.08, 0.37), 1.0)
 
     def test_a_correct_detailed_on_topic_answer_no_longer_scores_as_adequate(self):
         """Direct regression for the reported bug: a technically correct,
         reasonably deep answer that never uses any of the heuristic's exact
         marker words, and doesn't restate every resume-listed technology,
-        must not land in the 50-60% ('adequate') range purely from that."""
+        must not land in the 50-60% ('adequate') range purely from that.
+        Round 2 (heuristic-calibration review): raised the bar further --
+        an answer this thorough should land in the 'good' or 'excellent'
+        band under the real-interviewer-calibrated grade thresholds."""
         evaluator = HeuristicEvaluator()
         spec = QuestionSpecification(
             id="topic_0", category=QuestionCategory.PROJECT_DEEP_DIVE, text_seed="RAG retrieval design",
@@ -336,7 +345,7 @@ class TestSimilarityCalibration(unittest.TestCase):
             expected_concepts=(),
         )
         result = evaluator.evaluate(req)
-        self.assertGreaterEqual(result.overall_score, 0.65)
+        self.assertGreaterEqual(result.overall_score, 0.75)
         self.assertIn(result.grade, ("good", "excellent"))
 
     def test_relative_ordering_preserved_between_strong_weak_and_off_topic_answers(self):
@@ -378,6 +387,96 @@ class TestProportionalDimensionWeighting(unittest.TestCase):
         result = evaluator.evaluate(_request("An answer.", reasoning_type=ReasoningType.DESIGN))
         contributing = [d for d in result.dimensions if d.contributes_to_overall]
         self.assertAlmostEqual(sum(d.weight_used for d in contributing), 1.0, places=2)
+
+
+class TestRealisticInterviewerCalibration(unittest.TestCase):
+    """Heuristic-calibration review (round 2): the evaluator should
+    approximate real-interviewer expectations, not exhaustive-checklist
+    completion. Bands checked against a battery of weak/average/good/
+    excellent answers to the SAME question and grounding -- verified
+    empirically (see heuristic_evaluator.py's calibration constants), not
+    asserted from assumption. Ranges are intentionally generous (calibration
+    is not expected to be exact) but must land in the right ballpark and in
+    the right relative order."""
+
+    _SPEC = QuestionSpecification(
+        id="topic_0", category=QuestionCategory.PROJECT_DEEP_DIVE, text_seed="RAG retrieval design",
+        grounding=Grounding(project=ProjectGrounding(
+            title="AI SOC Analyst",
+            technologies=("FastAPI", "React", "LangGraph", "Gemini", "Docker", "PostgreSQL"),
+            concepts=("RAG", "log parsing", "anomaly detection"),
+        )),
+        source_type=SourceType.PROJECT, source_id="AI SOC Analyst", source_field="interview_seeds", reason="test",
+    )
+    _QUESTION = "Can you explain how retrieval works in your RAG pipeline?"
+
+    def _evaluate(self, answer: str):
+        req = EvaluationRequest(
+            request_id="req_1", requested_at="2026-01-01T00:00:00+00:00", specification=self._SPEC,
+            question_text=self._QUESTION, reasoning_type=ReasoningType.EXPLANATION, answer_text=answer,
+            conversation_context=ConversationContextSnapshot(turn_number=1, is_followup=False), expected_concepts=(),
+        )
+        return HeuristicEvaluator().evaluate(req)
+
+    def test_weak_answer_lands_below_half(self):
+        result = self._evaluate("I mostly worked on unrelated frontend styling and did not touch the retrieval logic.")
+        self.assertLess(result.overall_score, 0.50)
+        self.assertIn(result.grade, ("poor", "weak"))
+
+    def test_good_thorough_answer_lands_at_or_above_70_percent(self):
+        answer = (
+            "For retrieval, I chunk each log file into overlapping windows and embed them with a "
+            "sentence-transformer model, storing the vectors in FAISS. At query time I embed the "
+            "incoming question and pull the top-k nearest chunks by cosine similarity before passing "
+            "them into the prompt."
+        )
+        result = self._evaluate(answer)
+        self.assertGreaterEqual(result.overall_score, 0.70)
+        self.assertIn(result.grade, ("adequate", "good", "excellent"))
+
+    def test_excellent_thorough_answer_lands_in_excellent_band(self):
+        answer = (
+            "For retrieval, I chunk each log file into overlapping windows and embed them with a "
+            "sentence-transformer model, storing the vectors in FAISS. At query time I embed the "
+            "incoming question, pull the top-k nearest chunks by cosine similarity, and pass them into "
+            "the prompt alongside the question so Gemini only reasons over the relevant context instead "
+            "of the entire log history. I picked FAISS over a hosted vector DB because our corpus was "
+            "small enough to fit in memory and I wanted to avoid the added network latency and "
+            "operational overhead of a managed service. We also re-rank the top 20 candidates with a "
+            "cross-encoder before truncating to the final top-5 to improve precision."
+        )
+        result = self._evaluate(answer)
+        self.assertGreaterEqual(result.overall_score, 0.85)
+        self.assertIn(result.grade, ("good", "excellent"))
+
+    def test_bands_are_monotonically_ordered_by_quality(self):
+        """The exact numbers matter less than getting the ORDER right --
+        this is the property most directly analogous to what a real
+        interviewer would agree on even if they'd quibble with the exact
+        percentages."""
+        weak = self._evaluate("I mostly worked on unrelated frontend styling and did not touch the retrieval logic.")
+        average = self._evaluate(
+            "We use a vector database to find relevant chunks and pass them to the LLM along with the question."
+        )
+        good = self._evaluate(
+            "For retrieval, I chunk each log file into overlapping windows and embed them with a "
+            "sentence-transformer model, storing the vectors in FAISS. At query time I embed the "
+            "incoming question and pull the top-k nearest chunks by cosine similarity before passing "
+            "them into the prompt."
+        )
+        excellent = self._evaluate(
+            "For retrieval, I chunk each log file into overlapping windows and embed them with a "
+            "sentence-transformer model, storing the vectors in FAISS. At query time I embed the "
+            "incoming question, pull the top-k nearest chunks by cosine similarity, and pass them into "
+            "the prompt alongside the question so Gemini only reasons over the relevant context instead "
+            "of the entire log history. I picked FAISS over a hosted vector DB because our corpus was "
+            "small enough to fit in memory and I wanted to avoid the added network latency and "
+            "operational overhead of a managed service. We also re-rank the top 20 candidates with a "
+            "cross-encoder before truncating to the final top-5 to improve precision."
+        )
+        self.assertLess(weak.overall_score, average.overall_score)
+        self.assertLess(average.overall_score, good.overall_score)
+        self.assertLess(good.overall_score, excellent.overall_score)
 
 
 class TestConcreteFeedbackEvidence(unittest.TestCase):

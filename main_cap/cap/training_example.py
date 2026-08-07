@@ -245,6 +245,15 @@ class TrainingExampleSyntheticMeta(BaseModel):
     diversity_seed: str
     style_seed: str
 
+    # Experiment 4 (rewrite augmentation) additive fields — both default to
+    # None, so every example produced before this milestone (Experiment 2,
+    # Experiment 3) remains valid with zero migration. Present together iff
+    # this example is a rewrite of an existing labeled example: a rewrite
+    # always has both an origin and a style; an original (non-rewrite)
+    # example has neither. Enforced below, not left to convention.
+    rewritten_from_example_id: Optional[str] = None
+    rewrite_style: Optional[str] = None
+
     @model_validator(mode="after")
     def _validate(self) -> "TrainingExampleSyntheticMeta":
         for field_name in (
@@ -252,6 +261,17 @@ class TrainingExampleSyntheticMeta(BaseModel):
             "generation_batch_id", "diversity_seed", "style_seed",
         ):
             _require_non_empty(getattr(self, field_name), field_name)
+
+        has_origin = self.rewritten_from_example_id is not None
+        has_style = self.rewrite_style is not None
+        if has_origin != has_style:
+            raise ValueError(
+                "rewritten_from_example_id and rewrite_style must both be set or both be "
+                "None — a rewrite always has an origin and a style together"
+            )
+        if has_origin:
+            _require_non_empty(self.rewritten_from_example_id, "rewritten_from_example_id")
+            _require_non_empty(self.rewrite_style, "rewrite_style")
 
         # Off-topic controller override (Promptbook Section 2): an off-topic
         # example carries no concept/reasoning targets — they were

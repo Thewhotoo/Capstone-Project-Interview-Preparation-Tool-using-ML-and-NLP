@@ -173,6 +173,43 @@ class TestSyntheticMeta(unittest.TestCase):
             _synthetic_meta(contradiction_type=ContradictionType.FACTUAL)
 
 
+class TestRewriteFields(unittest.TestCase):
+    """Experiment 4 additive fields: rewritten_from_example_id/rewrite_style."""
+
+    def test_default_is_none_for_both(self):
+        meta = _synthetic_meta()
+        self.assertIsNone(meta.rewritten_from_example_id)
+        self.assertIsNone(meta.rewrite_style)
+
+    def test_both_set_together_is_valid(self):
+        meta = _synthetic_meta(rewritten_from_example_id="train_abc123", rewrite_style="concise")
+        self.assertEqual(meta.rewritten_from_example_id, "train_abc123")
+        self.assertEqual(meta.rewrite_style, "concise")
+
+    def test_origin_without_style_is_rejected(self):
+        with self.assertRaises(pydantic.ValidationError):
+            _synthetic_meta(rewritten_from_example_id="train_abc123")
+
+    def test_style_without_origin_is_rejected(self):
+        with self.assertRaises(pydantic.ValidationError):
+            _synthetic_meta(rewrite_style="concise")
+
+    def test_empty_origin_string_is_rejected(self):
+        with self.assertRaises(pydantic.ValidationError):
+            _synthetic_meta(rewritten_from_example_id="", rewrite_style="concise")
+
+    def test_empty_style_string_is_rejected(self):
+        with self.assertRaises(pydantic.ValidationError):
+            _synthetic_meta(rewritten_from_example_id="train_abc123", rewrite_style="")
+
+    def test_pre_experiment_4_example_unaffected(self):
+        # An example built exactly as every Experiment 2/3 example already
+        # is (no rewrite fields passed at all) must remain valid with zero
+        # changes required — the backward-compatibility guarantee.
+        meta = _synthetic_meta()
+        self.assertTrue(meta.model_dump())  # constructs and serializes fine
+
+
 class TestReasoningCategoryTarget(unittest.TestCase):
     def test_absent_target_forbids_nonzero_severity(self):
         with self.assertRaises(pydantic.ValidationError):

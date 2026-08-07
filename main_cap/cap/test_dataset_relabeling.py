@@ -85,7 +85,7 @@ class TestRelabelDimensionScores(unittest.TestCase):
                 if dim_name not in labels:
                     continue
                 baseline = 0.30  # WEAK tier
-                expected = max(0.0, min(1.0, baseline - target.severity))
+                expected = max(0.0, min(1.0, baseline * (1.0 - target.severity)))
                 self.assertAlmostEqual(labels[dim_name], expected)
                 self.assertLess(labels[dim_name], baseline + 1e-9)
                 break
@@ -143,6 +143,89 @@ class TestRelabelDimensionScores(unittest.TestCase):
         for label in labels:
             self.assertGreaterEqual(label.score, 0.0)
             self.assertLessEqual(label.score, 1.0)
+
+    def test_proportional_mapping_never_saturates_weak_or_poor(self):
+        # REVISION 2 regression guard: baseline*(1-severity) must never hit
+        # exactly 0.0 for any severity < 1.0, unlike the old baseline-severity
+        # rule which saturated 100% of WEAK/POOR present cases. Sweep many
+        # recipe_ids for both tiers and assert zero exact-zero scores among
+        # dimensions with a present reasoning gap.
+        from generation_recipe import _DIMENSION_TO_CATEGORY
+        for tier, baseline in ((QualityTier.WEAK, 0.30), (QualityTier.POOR, 0.12)):
+            checked = 0
+            for i in range(100):
+                example, recipe = _assemble(recipe_id=f"sat_{tier.value}_{i}", tier=tier)
+                labels = {l.name: l.score for l in relabel_dimension_scores(example)}
+                for target in recipe.reasoning_targets:
+                    if not target.present:
+                        continue
+                    dim_name = next((d for d, c in _DIMENSION_TO_CATEGORY.items() if c == target.category), None)
+                    if dim_name is None or dim_name not in labels:
+                        continue
+                    checked += 1
+                    self.assertGreater(
+                        labels[dim_name], 0.0,
+                        f"{tier.value}/{dim_name} saturated to exactly 0.0 (severity={target.severity})",
+                    )
+            self.assertGreater(checked, 0, f"expected at least one present reasoning gap sampled for {tier.value}")
+
+    def test_proportional_mapping_preserves_expected_value(self):
+        example, recipe = _assemble(recipe_id="r_prop", tier=QualityTier.POOR)
+        labels = {l.name: l.score for l in relabel_dimension_scores(example)}
+        from generation_recipe import _DIMENSION_TO_CATEGORY
+        baseline = 0.12  # POOR tier
+        for target in recipe.reasoning_targets:
+            if not target.present:
+                continue
+            dim_name = next((d for d, c in _DIMENSION_TO_CATEGORY.items() if c == target.category), None)
+            if dim_name is None or dim_name not in labels:
+                continue
+            self.assertAlmostEqual(labels[dim_name], baseline * (1.0 - target.severity))
+
+    def test_completeness_falls_back_to_reasoning_target_coverage_when_no_concepts(self):
+        # REFLECTION reasoning type: no concept-bearing dimension, but
+        # completeness is still requested (_ALWAYS_RELEVANT). expected_concepts
+        # is passed empty, mirroring how the real pipeline calls sample_recipe
+        # for REFLECTION/OWNERSHIP-shaped questions.
+        example, recipe = _assemble(
+            recipe_id="r_reflection", tier=QualityTier.WEAK,
+            reasoning_type=ReasoningType.REFLECTION, concepts=(),
+        )
+        self.assertEqual(recipe.concept_targets, ())
+        self.assertNotEqual(recipe.reasoning_targets, ())
+        labels = {l.name: l.score for l in relabel_dimension_scores(example)}
+        per_category = [
+            (1.0 - t.severity) if t.present else 1.0
+            for t in recipe.reasoning_targets
+        ]
+        expected = sum(per_category) / len(per_category)
+        self.assertAlmostEqual(labels["completeness"], expected)
+        # Must not silently equal the old flat-tier fallback (0.30) unless
+        # that happens to be the coincidental result — assert it was actually
+        # *derived*, not defaulted, by checking it differs from the flat
+        # baseline in at least one sampled recipe_id across a small sweep.
+        differs = False
+        for i in range(50):
+            ex, rec = _assemble(
+                recipe_id=f"r_reflection_sweep_{i}", tier=QualityTier.WEAK,
+                reasoning_type=ReasoningType.REFLECTION, concepts=(),
+            )
+            lbls = {l.name: l.score for l in relabel_dimension_scores(ex)}
+            if abs(lbls["completeness"] - 0.30) > 1e-9:
+                differs = True
+                break
+        self.assertTrue(differs, "expected at least one REFLECTION example where completeness diverges from flat tier baseline")
+
+    def test_completeness_uses_concept_coverage_when_concepts_exist(self):
+        # Sanity: the concept-coverage branch (sub-case a) still wins when
+        # concept_targets is non-empty, even though reasoning_targets is
+        # also non-empty for the same example.
+        example, recipe = _assemble(recipe_id="r_both_present", tier=QualityTier.WEAK)
+        self.assertNotEqual(recipe.concept_targets, ())
+        omitted = sum(1 for t in recipe.concept_targets if t.status == ConceptObservationStatus.OMITTED)
+        expected = (len(recipe.concept_targets) - omitted) / len(recipe.concept_targets)
+        labels = {l.name: l.score for l in relabel_dimension_scores(example)}
+        self.assertAlmostEqual(labels["completeness"], expected)
 
     def test_raises_for_non_synthetic_example(self):
         example, _ = _assemble()

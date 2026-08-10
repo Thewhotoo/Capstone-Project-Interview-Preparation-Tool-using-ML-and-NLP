@@ -80,6 +80,12 @@ class Section:
     spans: list[TextSpan] = field(default_factory=list)
     header_confidence: float = 0.0
     header_match_reason: str = ""  # e.g. "alias_gazetteer_fuzzy:87", "embedding_fallback:0.81"
+    header_font_elevated: bool = False  # True when the header line's own font size was
+    # larger than body text (not merely bold/all-caps) -- the same visual weight every
+    # confidently-labeled section header in the document carries. Distinguishes a
+    # genuine (but gazetteer-unrecognized) section boundary from a same-size bold
+    # sub-entry header (e.g. a skills category label like "Frontend:") -- see
+    # pipeline.py's `_absorb_repeated_unknown_entries`, the consumer of this field.
 
 
 class _Line:
@@ -311,12 +317,14 @@ def _build_sections(lines: list[_Line], body_font_size: float) -> list[Section]:
                 continue
             if label != "unknown":
                 found_real_section = True
+            font_elevated = body_font_size > 0 and line.max_font_size >= body_font_size * MIN_HEADER_FONT_RATIO
             current = Section(
                 label=label,
                 raw_header_text=line.text,
                 spans=list(line.spans),
                 header_confidence=confidence,
                 header_match_reason=reason,
+                header_font_elevated=font_elevated,
             )
             sections.append(current)
         else:

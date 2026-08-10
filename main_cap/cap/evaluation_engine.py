@@ -39,6 +39,7 @@ from evaluator import Evaluator
 from expected_concepts_registry import expected_concepts_for
 from interview_question import InterviewQuestion
 from planner import Planner
+from question_specification import QuestionCategory
 
 
 def build_request(
@@ -93,15 +94,51 @@ def _lookup_expected_concepts(spec) -> tuple[str, ...]:
     """
     Deterministic lookup only — never predicted, never invented (approved
     RFC's explicit rejection of model-derived expected concepts). Tries
-    every grounding-derived candidate name against
-    `expected_concepts_registry`; an unrecognized name simply contributes
-    nothing (graceful degradation, logged for offline curation).
+    every candidate name against `expected_concepts_registry`; an
+    unrecognized name simply contributes nothing (graceful degradation,
+    logged for offline curation).
+
+    QUESTION -> CONCEPT POOL GROUNDING (real-demo-audit fix): which
+    candidate names are even offered to the registry now depends on
+    `spec.category`, not just "is this grounded in a project" — a project
+    being grounded in FastAPI does not mean every question ABOUT that
+    project is a fair test of FastAPI internals.
+
+      - SKILL_IN_CONTEXT: the ONE candidate is `spec.text_seed` -- already
+        the exact skill/technology topic_pool.py generated this question
+        about (`TopicPool._build`'s Priority 5 loop passes the skill name
+        as `text_seed` when it adds a SKILL_IN_CONTEXT unit; no new field
+        needed, it was already threaded through
+        `QuestionSpecification` -> `InterviewQuestion.specification` ->
+        `build_request` -> here). A project with React+FastAPI+Linux no
+        longer means every skill_in_context question about it is graded
+        against all three technologies' concepts -- only the one the
+        question actually names. A follow-up question reuses the same
+        (immutable) specification, so it's covered by this branch too,
+        with no separate handling needed.
+      - PROJECT_DEEP_DIVE / PROJECT_OVERVIEW: no concept pool at all.
+        These are broad "what/why/how did it fit together" questions, not
+        a fair test of one technology's implementation details -- and
+        there is no separate, broader concept model in this architecture
+        to attach instead (the only mechanism that exists is this same
+        per-technology registry). Confirmed real-demo bug: a project's
+        entire technology list (e.g. FastAPI) used to leak into these
+        broad questions' concept pool just because the project happened
+        to use that technology.
+      - CERTIFICATION: unchanged -- a certification's own name was always
+        the sole candidate, never inflated by an unrelated project's tech
+        list; this is the "existing, intentional concept model for that
+        category" the RFC already provided.
+      - EXPERIENCE (and anything else): unchanged -- no candidates, no
+        concept pool, exactly as before (experience grounding was never
+        given any candidates).
     """
-    grounding = spec.grounding
-    if grounding.project is not None:
-        candidates = (*grounding.project.technologies, *grounding.project.concepts, grounding.project.title)
-    elif grounding.certification is not None:
-        candidates = (grounding.certification.name,)
+    if spec.category == QuestionCategory.SKILL_IN_CONTEXT:
+        candidates = (spec.text_seed,) if spec.text_seed else ()
+    elif spec.category in (QuestionCategory.PROJECT_DEEP_DIVE, QuestionCategory.PROJECT_OVERVIEW):
+        candidates = ()
+    elif spec.grounding.certification is not None:
+        candidates = (spec.grounding.certification.name,)
     else:
         candidates = ()
     return expected_concepts_for(candidates)

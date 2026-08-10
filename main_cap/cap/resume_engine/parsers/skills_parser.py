@@ -19,7 +19,7 @@ import re
 
 from resume_engine.confidence import Confidence
 from resume_engine.interfaces import ParserResult
-from resume_engine.parsers._entry_clustering import strip_section_header_line
+from resume_engine.parsers._entry_clustering import _group_into_lines, strip_section_header_line
 from resume_engine.technology_gazetteer import TECHNOLOGIES
 from resume_engine.validation import Observation
 
@@ -27,14 +27,41 @@ _SPLIT_PATTERN = re.compile(r"[,;|•·•·\n]")
 _TECHNOLOGIES_LOWER = {t.lower(): t for t in TECHNOLOGIES}
 
 
+def _spans_to_text(spans) -> str:
+    """Reconstructs the section's text one VISUAL LINE at a time (grouping
+    word-level `TextSpan`s by y0-proximity via `_entry_clustering._group_into_lines`
+    -- the same line-grouping every other parser in this package already
+    uses), joining lines with '\\n' so a genuine one-skill-per-line template
+    still splits correctly, but words on the SAME line never do.
+
+    Found during resume-intelligence-quality validation: `Section.spans`
+    (sections.py) is word-granular (one `TextSpan` per PDF text run, not
+    per physical line) -- joining every span directly with '\\n' put a line
+    break between every word, including inside a single multi-word skill
+    ("Hugging Face" -> "Hugging", "Face"; "VS Code" -> "VS", "Code"), since
+    '\\n' is one of `_SPLIT_PATTERN`'s delimiters."""
+    lines = _group_into_lines(list(spans))
+    return "\n".join(line.text for line in lines if line.text)
+
+
 def _split_tokens(text: str) -> list[str]:
-    """Splits on common delimiters (comma, pipe, bullet), then dedupes
-    case-insensitively while preserving first-seen casing -- same
-    dedup convention `ProjectParser._extract_technologies` already uses."""
+    """Splits on common delimiters (comma, pipe, bullet, line break), then
+    dedupes case-insensitively while preserving first-seen casing -- same
+    dedup convention `ProjectParser._extract_technologies` already uses.
+
+    A category-labeled skills line ("Languages: Python, Java, ...") has no
+    comma between the label and its first value, so that first split token
+    is "Languages: Python", not "Languages:" and "Python" separately --
+    every such token is resolved the same structural way: whatever precedes
+    the LAST ':' is a category label, never a skill, so only the text after
+    it is kept (a colon-only token, e.g. a standalone "Databases:" label
+    line with nothing after it, resolves to nothing and is dropped)."""
     tokens: list[str] = []
     seen: set[str] = set()
     for raw in _SPLIT_PATTERN.split(text):
         token = raw.strip(" \t.")
+        if ":" in token:
+            token = token.rsplit(":", 1)[-1].strip(" \t.")
         if not token:
             continue
         key = token.lower()
@@ -66,7 +93,7 @@ class SkillsParser:
             return ParserResult(entities=[], confidences=[], observations=[])
 
         spans = strip_section_header_line(section.spans, section.raw_header_text)
-        full_text = "\n".join(s.text for s in spans)
+        full_text = _spans_to_text(spans)
         tokens = _split_tokens(full_text)
 
         if not tokens:

@@ -1914,9 +1914,21 @@
         // "Focus Areas" chip row — same real skills/technologies as
         // before, just no longer a separate panel.
         function getFocusTopics(data) {
+            // Project technologies FIRST, generic resume skills fill any
+            // remaining slots -- project technologies are what the
+            // interview questions are actually grounded in (topic_pool.py
+            // draws project_deep_dive/skill_in_context questions from
+            // projects[].technologies), so they must survive the 8-item
+            // cap ahead of a long generic skills list. Found during a real
+            // production demo: with skills listed first, a 44-skill resume
+            // meant the briefing's own "Focus Areas" preview never showed
+            // the technologies (React/FastAPI/LangGraph) the interview
+            // actually asked about -- only generic languages (Python/Java/
+            // C++/C) that happened to sort earlier in the resume's own
+            // skills list.
             const skills = Array.isArray(data.skills) ? data.skills : [];
             const allTechs = collectProjectTechnologies(data);
-            return uniq([...skills, ...allTechs]).slice(0, 8);
+            return uniq([...allTechs, ...skills]).slice(0, 8);
         }
 
         function renderCandidateProfileCard(data) {
@@ -2013,10 +2025,17 @@
         }
 
         function renderTimelineCard(data) {
+            // Label corrected to match what this card actually renders
+            // (data.projects, below) -- it was previously titled "Experience
+            // Timeline" despite never rendering `experience_detail` (the
+            // candidate's real work-experience entries, e.g. CAVE Labs),
+            // found during a real production demo. Smallest correct fix:
+            // the label now matches its own data, not a redesign of what's
+            // shown on this screen.
             const el = document.createElement("div");
             el.className = "dash-card";
             const projects = Array.isArray(data.projects) ? data.projects : [];
-            let html = `<div class="brief-panel-label">Experience Timeline</div>`;
+            let html = `<div class="brief-panel-label">Projects</div>`;
             if (projects.length === 0) {
                 html += `<div style="color:var(--text-muted); font-size:0.85rem;">No projects detected in resume.</div>`;
             } else {
@@ -2462,6 +2481,20 @@
             return d ? d.raw_score : null;
         }
 
+        // Renders one metric box in the per-question detail grid, or
+        // nothing at all when the dimension wasn't evaluated this turn
+        // (null -- e.g. technical_depth doesn't apply to every reasoning
+        // type). Mirrors the Performance Snapshot's own not-applicable
+        // handling (rdBuildSnapshot: a row is omitted entirely, never
+        // shown as 0%) rather than inventing a second convention here --
+        // found during a real production demo: `(item.technical_depth ||
+        // 0)` was rendering "0%" (a literal failing score) for a
+        // dimension that was simply never assessed that turn.
+        function rdMetricBoxHtml(label, value) {
+            if (value === null || value === undefined) return "";
+            return `<div><div class="rd-timeline-metric-label">${esc(label)}</div><div class="rd-timeline-metric-value">${(value * 100).toFixed(0)}%</div></div>`;
+        }
+
         function rdAvgDimensionPct(evaluations, name) {
             const scored = evaluations.map(e => rdDimScore(e, name)).filter(v => v !== null);
             if (!scored.length) return 0;
@@ -2515,6 +2548,27 @@
             debugging: "There wasn't much on how you actually debugged issues.",
             testing: "Testing didn't really come up.",
             scalability: "Scalability wasn't addressed.",
+        };
+        // Canonical dimension display order/labels -- the same closed set
+        // RD_DIM_STRONG/RD_DIM_WEAK_SENTENCE above already enumerate
+        // (heuristic_evaluator.py's full dimension taxonomy, minus
+        // "authenticity" which rdAllDimensionAverages already excludes).
+        // Reused by rdBuildSnapshot below so the Performance Snapshot
+        // shows every dimension actually evaluated this session -- not a
+        // hardcoded subset -- without needing a second list kept in sync.
+        const RD_DIM_ORDER = Object.keys(RD_DIM_STRONG);
+        const RD_DIM_LABELS = {
+            technical_accuracy: "Technical Accuracy",
+            technical_depth: "Technical Depth",
+            communication: "Communication",
+            completeness: "Completeness",
+            resume_grounding: "Resume Grounding",
+            architecture: "Architecture",
+            tradeoffs: "Trade-offs",
+            ownership: "Ownership",
+            debugging: "Debugging",
+            testing: "Testing",
+            scalability: "Scalability",
         };
         // Same gap taxonomy strong_answer.py uses for the Improved Answer,
         // reworded here in second person for the interviewer's voice.
@@ -2722,16 +2776,19 @@
         // omitted entirely (never shown as 0%) when that dimension never
         // scored this session.
         function rdBuildSnapshot(avgOverallPct, dimAverages, conceptCoverageAvg) {
+            // Every dimension actually evaluated this session appears here
+            // -- not a hardcoded 5-key subset (found during a real
+            // production demo: Ownership scored 25%, the session's single
+            // weakest dimension, explicitly named in the Debrief and Next
+            // Steps, yet was invisible in this table because it wasn't one
+            // of the 5 hardcoded keys). RD_DIM_ORDER is the same closed,
+            // canonical dimension taxonomy RD_DIM_STRONG/RD_DIM_WEAK_SENTENCE
+            // already enumerate -- a row is still omitted entirely (never
+            // shown as 0%) when that dimension never scored this session,
+            // exactly as before.
             const rows = [{ label: "Overall", value: avgOverallPct }];
-            const dimLabels = [
-                ["technical_accuracy", "Technical Accuracy"],
-                ["technical_depth", "Technical Depth"],
-                ["completeness", "Completeness"],
-                ["communication", "Communication"],
-                ["resume_grounding", "Resume Grounding"],
-            ];
-            dimLabels.forEach(([key, label]) => {
-                if (dimAverages[key] !== undefined) rows.push({ label, value: dimAverages[key] * 100 });
+            RD_DIM_ORDER.forEach((key) => {
+                if (dimAverages[key] !== undefined) rows.push({ label: RD_DIM_LABELS[key], value: dimAverages[key] * 100 });
             });
             if (conceptCoverageAvg !== null) rows.push({ label: "Concept Coverage", value: conceptCoverageAvg });
             return rows;
@@ -2773,8 +2830,13 @@
                 technical_depth: rdDimScore(t.evaluation, "technical_depth"),
                 completeness: rdDimScore(t.evaluation, "completeness"),
                 communication: rdDimScore(t.evaluation, "communication"),
-                strengths: (t.evaluation ? t.evaluation.strengths : []).map(s => s.claim),
-                weaknesses: (t.evaluation ? t.evaluation.weaknesses : []).map(w => w.claim),
+                // EvaluationResult.strengths/weaknesses (evaluator.py) are
+                // plain strings, not {claim} objects -- ".claim" on a string
+                // is undefined, which nonEmptyStrings() then silently
+                // filters out, so every per-turn strengths/weaknesses list
+                // in the report was rendering empty. Use the strings as-is.
+                strengths: t.evaluation ? t.evaluation.strengths : [],
+                weaknesses: t.evaluation ? t.evaluation.weaknesses : [],
                 suggested_answer: (t.evaluation && t.evaluation.improved_answer) || null,
             }));
 
@@ -2878,10 +2940,10 @@
 
                         <div class="rd-timeline-detail">
                             <div class="rd-timeline-detail-grid">
-                                <div><div class="rd-timeline-metric-label">Correctness</div><div class="rd-timeline-metric-value">${((item.correctness || 0) * 100).toFixed(0)}%</div></div>
-                                <div><div class="rd-timeline-metric-label">Technical Depth</div><div class="rd-timeline-metric-value">${((item.technical_depth || 0) * 100).toFixed(0)}%</div></div>
-                                <div><div class="rd-timeline-metric-label">Completeness</div><div class="rd-timeline-metric-value">${((item.completeness || 0) * 100).toFixed(0)}%</div></div>
-                                <div><div class="rd-timeline-metric-label">Communication</div><div class="rd-timeline-metric-value">${((item.communication || 0) * 100).toFixed(0)}%</div></div>
+                                ${rdMetricBoxHtml("Correctness", item.correctness)}
+                                ${rdMetricBoxHtml("Technical Depth", item.technical_depth)}
+                                ${rdMetricBoxHtml("Completeness", item.completeness)}
+                                ${rdMetricBoxHtml("Communication", item.communication)}
                             </div>
                             ${strengthsListHtml ? `<div class="rd-timeline-metric-label">Strengths</div><ul class="rd-timeline-list">${strengthsListHtml}</ul>` : ""}
                             ${weaknessesListHtml ? `<div class="rd-timeline-metric-label">To improve</div><ul class="rd-timeline-list">${weaknessesListHtml}</ul>` : ""}

@@ -98,6 +98,30 @@ def test_education_parser_flags_entry_with_no_recognizable_degree(
     assert any(o.category == "missing_degree" for o in result.observations)
 
 
+def test_education_parser_skips_an_entry_with_nothing_extractable(
+    make_section, make_text_span, make_document_model
+):
+    """Direct regression for the real-resume audit: a clustered entry this
+    parser can extract NOTHING from (no degree, major, institution, or
+    graduation_year -- e.g. a pre-university schooling aside with
+    percentage marks, not a degree) must be skipped entirely rather than
+    emitted as an empty {"degree": "", ...} placeholder (which surfaced as
+    raw, unrendered JSON in the frontend)."""
+    real_header = make_text_span(text="Bachelor of Arts in History", bbox=(72.0, 72.0, 300.0, 82.0), is_bold=True)
+    real_body = make_text_span(text="Springfield State University, 2019", bbox=(72.0, 90.0, 300.0, 100.0))
+    empty_header = make_text_span(text="National Centre for Excellence", bbox=(72.0, 120.0, 300.0, 130.0), is_bold=True)
+    empty_body = make_text_span(text="Class XII: 85.4%, Class X: 94.7%", bbox=(72.0, 137.0, 300.0, 147.0))
+    spans = [real_header, real_body, empty_header, empty_body]
+    section = make_section(label="education", raw_header_text="", spans=spans, header_confidence=0.9)
+    doc = make_document_model(spans=spans, body_font_size=10.0)
+
+    result = EducationParser().parse({"education": section}, doc)
+
+    assert len(result.entities) == 1
+    assert result.entities[0]["institution"] == "Springfield State University"
+    assert len(result.confidences) == 1
+
+
 def test_education_parser_returns_empty_result_when_section_missing(make_document_model):
     doc = make_document_model(spans=[])
     result = EducationParser().parse({}, doc)

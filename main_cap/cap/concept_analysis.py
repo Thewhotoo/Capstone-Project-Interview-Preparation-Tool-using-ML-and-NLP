@@ -1,26 +1,37 @@
 """
 Shared lexical concept analysis.
 
-This is the SINGLE source of concept-coverage detection in the system. Both
-consumers depend on it, so they can never disagree:
-
     concept_analysis  (this module)
         ├── strong_answer.build_improved_answer   (which concepts to insert)
-        └── conversation_engine -> dashboard      (Concept Coverage %)
+        └── concept_pool / missing_concepts        (pool reconstruction, still
+            lexical-overlap based -- used by the Improved Answer feature above)
 
-It is deliberately NOT part of the Improved Answer feature — the dashboard
-depends on this shared module, never on strong_answer.py.
+`concept_coverage_percent` (the dashboard's Concept Coverage %) is DELIBERATELY
+NOT part of that lexical-overlap pipeline as of the production-audit fix below
+-- it is derived directly from `EvaluationResult.concept_coverage`, the exact
+per-concept DEMONSTRATED/SUPERFICIAL/OMITTED list already shown to the user,
+so the percentage and the visible breakdown can never disagree.
 
-Method: deterministic, lightweight lexical overlap — normalise -> tokenise ->
-common-prefix word match against each concept's DISTINCTIVE word. So "Network
-Security" is recognised from "security"/"secure"/"secured", "Sensor
-Integration" from "sensor"/"sensors", "Real-time Monitoring" from
+FOUND DURING A REAL END-TO-END DEMO: the percentage used to be computed by
+re-scanning the raw answer text with this module's OWN independent lexical
+detector (`concept_expressed`), entirely decoupled from the `status` values
+already computed (by the evaluator) for the SAME concepts in
+`result.concept_coverage`. The two could and did disagree -- the same 5
+concepts, all shown "omitted" in the array, produced 20%/40%/0% on different
+turns, because the percentage was never actually reading that array. Fixed by
+making the percentage a pure function of `result.concept_coverage`'s own
+statuses (see `concept_coverage_percent` below) -- no new concept-mastery
+model, no change to how the evaluator decides a concept's status.
+
+Method (unchanged, still used by `concept_pool`/`missing_concepts` for the
+Improved Answer feature): deterministic, lightweight lexical overlap --
+normalise -> tokenise -> common-prefix word match against each concept's
+DISTINCTIVE word. So "Network Security" is recognised from
+"security"/"secure"/"secured", "Sensor Integration" from
+"sensor"/"sensors", "Real-time Monitoring" from
 "monitor"/"monitoring"/"real time". No NLP libraries, no embeddings.
 
-DeBERTa / the evaluator / scoring are untouched: this reads only the
-question's grounding concepts, the deterministically-derived expected concepts
-(expected_concepts_registry), the candidate's answer text, and — as extra pool
-members — the evaluator's already-computed non-demonstrated ConceptObservations.
+DeBERTa / the evaluator / scoring are untouched by this module either way.
 """
 
 from __future__ import annotations
@@ -134,18 +145,33 @@ def missing_concepts(
     return missing[:limit]
 
 
-def concept_coverage_percent(
-    question: InterviewQuestion, result: EvaluationResult, answer_text: str,
-) -> Optional[float]:
-    """Fraction of this turn's concept pool the candidate expressed, as a
-    percentage (0-100), using the SAME lexical detector as `missing_concepts`
-    so the two can never disagree. Returns None when there is no concept pool
-    for the question (e.g. experience/certification turns) — the caller must
-    exclude those turns from any average rather than treating them as 0%."""
-    pool = concept_pool(question, result)
+# Credit per per-concept status, applied deterministically in
+# `concept_coverage_percent` below. DEMONSTRATED = full credit, OMITTED =
+# zero -- unambiguous from the schema itself (evaluation_result.py).
+# SUPERFICIAL (mentioned but not clearly demonstrated) is intentionally
+# worth partial, not full or zero, credit -- there is no pre-existing
+# documented weight for it elsewhere in the codebase, so this is the
+# smallest reasonable, explicit choice consistent with the schema's own
+# three-way distinction (a superficial mention is genuinely worth more
+# than an omission and genuinely worth less than a demonstration).
+_STATUS_CREDIT: dict[ConceptObservationStatus, float] = {
+    ConceptObservationStatus.DEMONSTRATED: 1.0,
+    ConceptObservationStatus.SUPERFICIAL: 0.5,
+    ConceptObservationStatus.OMITTED: 0.0,
+}
+
+
+def concept_coverage_percent(result: EvaluationResult) -> Optional[float]:
+    """The dashboard's Concept Coverage % for one turn, as a percentage
+    (0-100) -- derived DETERMINISTICALLY from `result.concept_coverage`,
+    the exact per-concept DEMONSTRATED/SUPERFICIAL/OMITTED list already
+    shown to the user, so the percentage and the visible breakdown can
+    never disagree (see module docstring for the bug this replaced).
+    Returns None when `result.concept_coverage` is empty -- no concept pool
+    for this question (e.g. experience/certification turns), never treated
+    as 0%; the caller must exclude those turns from any average."""
+    pool = result.concept_coverage
     if not pool:
         return None
-    answer_tokens = set(_tokens(answer_text))
-    counts = _pool_counts(pool)
-    covered = sum(1 for c in pool if concept_expressed(c, answer_tokens, counts))
-    return round(100.0 * covered / len(pool), 1)
+    total_credit = sum(_STATUS_CREDIT[obs.status] for obs in pool)
+    return round(100.0 * total_credit / len(pool), 1)

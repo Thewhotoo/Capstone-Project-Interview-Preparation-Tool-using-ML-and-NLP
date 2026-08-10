@@ -121,10 +121,18 @@ def infer_experience_level(experiences: list[dict]) -> str:
 
     if total_years >= 6 or seniority_bump >= 1:
         return "Advanced"
-    if total_years <= 1 and seniority_bump <= -1:
+    if seniority_bump <= -1:
         return "Beginner"
-    if total_years == 0 and seniority_bump == 0:
-        return "Intermediate"
+    # <=1 verifiable year of dated experience (including zero, whether from
+    # no experience section at all or a single short/undated entry, e.g. a
+    # summer internship spanning one calendar year) is entry-level by
+    # definition -- there is no dated/keyword evidence to support anything
+    # higher. Previously this fell through to "Intermediate" as a bare
+    # default whenever there was zero quantitative AND zero keyword signal,
+    # fabricating a mid-level read (e.g. "3 yrs - Mid") for a student with
+    # only a few months of internship experience. Never guess up from an
+    # absence of evidence -- the same rule `classify_domain`'s
+    # `_DEFAULT_DOMAIN` fallback already follows.
     if total_years <= 1:
         return "Beginner"
     return "Intermediate"
@@ -246,7 +254,15 @@ def build_resume_summary(
         return ""
 
     who = candidate_name or "This candidate"
-    parts = [f"{who} is a {experience_level.lower()} {predicted_domain.lower()} professional"]
+    # "beginner professional" reads as a contradiction (flagged during the
+    # production-walkthrough audit) -- use the same Junior/Mid/Senior
+    # wording the rest of the app already shows for this level (frontend
+    # experience.level display, candidate_profile_generator._LEVEL_TO_DISPLAY)
+    # instead of the raw internal Beginner/Intermediate/Advanced enum value.
+    level_word = {"Beginner": "junior", "Intermediate": "mid-level", "Advanced": "senior"}.get(
+        experience_level, experience_level.lower()
+    )
+    parts = [f"{who} is a {level_word} {predicted_domain.lower()} professional"]
     if total_years > 0:
         parts.append(f" with {total_years} years of experience")
     if top_skills:

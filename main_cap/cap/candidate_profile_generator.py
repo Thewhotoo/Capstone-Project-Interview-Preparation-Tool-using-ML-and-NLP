@@ -417,28 +417,32 @@ _MAX_CHARS = 30_000
 # Milestone 7 — Resume Intelligence Engine backend selector
 # ═════════════════════════════════════════════════════════════════════════════
 # Feature flag: which parser backend produces the CandidateProfile.
-# "gemini" (default -- Phase 2 of the cutover keeps Gemini as the default
-# until Shadow Mode, Phase 3, demonstrates the deterministic engine is
-# stable) or "engine" (the Resume Intelligence Engine, Milestones 1-6).
-# Read at call time, not import time, so it can be overridden per-process
-# (env var) or per-test without reloading this module.
-_ENGINE_SUPPORTED_FORMATS = {".pdf": "pdf", ".docx": "docx"}
+# "engine" (default, as of the production cutover -- the deterministic
+# Resume Intelligence Engine, Milestones 1-7) or "gemini" (legacy path,
+# kept only for Shadow Mode's own use -- see shadow_mode.py -- and as a
+# manual escape hatch; not used by any normal request). Read at call
+# time, not import time, so it can be overridden per-process (env var) or
+# per-test without reloading this module.
+_ENGINE_SUPPORTED_FORMATS = {".pdf": "pdf", ".docx": "docx", ".txt": "txt"}
 
 
 def get_active_parser_backend() -> str:
-    """Returns "engine" or "gemini". Defaults to "gemini" for any
-    unrecognized value, never silently falling through to a typo'd
-    setting choosing the untested path."""
-    raw = os.environ.get("CAP_RESUME_PARSER", "gemini").strip().lower()
-    return "engine" if raw == "engine" else "gemini"
+    """Returns "engine" or "gemini". Defaults to "engine" post-cutover.
+    Falls back to "gemini" only when explicitly requested (e.g. by
+    Shadow Mode, or a manual override) -- any other/unrecognized value
+    also defaults to "engine", never silently falling through to the
+    Gemini/API-dependent path on a typo."""
+    raw = os.environ.get("CAP_RESUME_PARSER", "engine").strip().lower()
+    return "gemini" if raw == "gemini" else "engine"
 
 
 def engine_supports_format(file_extension: str) -> bool:
     """The Resume Intelligence Engine's Document Extraction stage
-    (`resume_engine.extractor.PdfDocxExtractor`) only handles PDF/DOCX --
-    .doc/.txt have no engine-side extractor. Callers must fall back to
-    Gemini for those formats regardless of the feature flag; this is a
-    known, documented limitation, not a silent gap."""
+    (`resume_engine.extractor.PdfDocxExtractor`) handles PDF/DOCX/TXT.
+    .doc (legacy binary Word format) has no engine-side extractor and no
+    observed demand in this project -- callers must reject it (or fall
+    back to Gemini, for Shadow Mode's own dev use only) rather than
+    silently mishandling it."""
     return file_extension.lower() in _ENGINE_SUPPORTED_FORMATS
 
 
@@ -467,7 +471,8 @@ def generate_candidate_profile_via_engine(file_path: str) -> dict:
     if source_format is None:
         raise RuntimeError(
             f"Resume Intelligence Engine does not support {extension!r} files "
-            "(only .pdf/.docx) -- caller must fall back to the Gemini path."
+            "(only .pdf/.docx/.txt) -- caller must reject the upload (or, for "
+            "Shadow Mode's own dev use only, fall back to the Gemini path)."
         )
 
     annotated_profile = default_pipeline().run(file_path, source_format)
@@ -1121,9 +1126,17 @@ def profile_to_frontend_format(profile: dict) -> dict:
         profile.get("experience_level", "Intermediate"), "Unknown"
     )
 
-    if total_years == 0:
-        lvl = profile.get("experience_level", "Intermediate")
-        total_years = {"Beginner": 1, "Intermediate": 3, "Advanced": 7}.get(lvl, 1)
+    # `total_years` is left at 0 (never synthesized from `experience_level`
+    # alone) when the resume has no dated evidence to compute a real
+    # span from -- e.g. a single internship entry within one calendar
+    # year, or no Experience section at all. Found during the production
+    # walkthrough audit: this used to backfill a fabricated year count
+    # (Beginner->1, Intermediate->3, Advanced->7) purely from the level
+    # label, with zero supporting dated evidence -- the literal source of
+    # the "3 yrs - Mid" text a prior audit flagged as unsupported. The
+    # frontend's own `expText` fallback (falsy `years` -> show the level
+    # alone, e.g. "Junior") already handles years==0 correctly; this
+    # backend fallback was defeating it.
 
     # Extract interview_blueprint topics as focus_topics for backward compat.
     # technical_topics is now a list of {topic, originating_project,

@@ -39,6 +39,17 @@ from resume_engine.sections import Section
 
 EnrichFn = Callable[[Any], "tuple[dict[str, Any], list[Confidence]]"]
 
+# Sections whose entity parser clusters multiple bold-titled entries out of
+# one section (`_entry_clustering.cluster_entries`) AND where a dropped
+# entry is a real, silent data-loss bug -- exactly the two
+# `_absorb_repeated_unknown_entries`'s single-isolated-unknown absorption
+# rule was built for. "education" also uses `cluster_entries` but is
+# deliberately excluded: its own entries (e.g. a bold institution-name
+# line) routinely trigger the same bold-body signal for reasons unrelated
+# to a second real degree, and an unrecognized trailing entry there yields
+# nothing `EducationParser` can extract -- see that function's docstring.
+_MULTI_ENTRY_ABSORPTION_LABELS = frozenset({"projects", "experience"})
+
 
 def _document_extraction_enrich(doc) -> "tuple[dict[str, Any], list[Confidence]]":
     """Builds document_extraction's StageTrace metadata/confidence from the
@@ -128,32 +139,129 @@ def _absorb_repeated_unknown_entries(sections: list[Section]) -> list[Section]:
     consumption-side grouping decision, the same kind of fix already
     applied for the list/dict interface bridge below.
 
-    Documented residual limitation, not claimed solved: a section with
-    EXACTLY ONE entry still fragments, since one data point can't be
-    distinguished from a genuine one-off ambiguous section. See
-    docs/architecture/ResumeIntelligenceEngine.md Section 4.4's
-    implementation note."""
+    Single-entry residual limitation narrowed (real-resume-audit fix): a
+    single isolated "unknown" immediately after a real section IS now
+    absorbed when that real section already contains its own bold body
+    line -- i.e. the section has already established "bold line = a new
+    entry" as ITS OWN convention (exactly how Projects/Experience entries
+    are typically styled), so another same-style bold line right after it
+    reads as one more entry of that convention, not a random new topic.
+    `ambiguous_header_pdf`'s "Languages" case still correctly stays
+    unabsorbed under this rule: that fixture's "Experience" entry line
+    ("Acme Corp, Senior Engineer, 2021-Present") is NOT bold, so no such
+    convention is established there, and "Languages" (bold) doesn't match
+    it. Found via a real second-project-silently-dropped bug: a project
+    title short enough to pass `sections.py`'s header word-count filter
+    (<=6 words) but long enough to differ from the section's other entries
+    was fragmenting into a standalone, never-consumed "unknown" Section --
+    exactly this single-entry gap, now closed for the case where a
+    same-convention signal genuinely exists. Still no signal exists to
+    resolve the genuinely ambiguous case (a single unknown after a section
+    with NO established bold-entry convention of its own) -- that stays
+    unabsorbed, unchanged.
+
+    This single-entry absorption is deliberately SCOPED to
+    `_MULTI_ENTRY_ABSORPTION_LABELS` ("projects", "experience") only --
+    the two sections `cluster_entries` (`_entry_clustering.py`) is actually
+    designed around, and the two the architecture doc's own motivating
+    examples name ("a job's Company,Role line, a project's title line").
+    Found via a second real bug: "education" also uses `cluster_entries`
+    (a person occasionally has 2+ degrees) and its own entries are
+    routinely bold (e.g. a bold institution-name line), so
+    `_has_bold_body_line` was true there too -- absorbing an unrelated
+    single trailing "unknown" (a pre-university schooling aside, styled
+    with its own bold line but containing no recognizable degree/
+    institution/major/year) as a phantom second Education entry that
+    `EducationParser` had no way to extract anything from, surfacing as an
+    empty entity (`candidate_profile_mapper` then serialized it into the
+    frontend as raw, unrendered JSON -- see `EducationParser`'s own
+    empty-entry guard, which is the second, independent layer of defense
+    for this same failure mode). Certifications also never hits this path
+    -- it doesn't use `cluster_entries` at all (single-line entries, no
+    multi-entry clustering to protect). Not scoped by a resume-specific
+    check (no text/keyword matching on "National Centre for Excellence" or
+    any other literal) -- scoped by section LABEL, the same generic,
+    label-based distinction every other rule in this function already uses.
+
+    A run never includes an unknown section whose header line was
+    font-elevated (`Section.header_font_elevated`, sections.py) -- that's
+    the same visual weight every confidently-labeled section header in the
+    document carries, so it's a genuine (if gazetteer-unrecognized) section
+    boundary, not a same-size bold sub-entry label. Found during resume-
+    intelligence-quality validation: a real "Honors & Awards" section (no
+    gazetteer alias yet) landing right after a run of same-size bold skills
+    category labels ("Frontend:", "Backend:", ...) was being swept into the
+    Skills section along with them, contaminating it with unrelated prose.
+    A font-elevated unknown section is therefore treated like a real
+    section for run purposes: it ends any run in progress and is never
+    itself absorbed."""
     result: list[Section] = []
     i = 0
     while i < len(sections):
         section = sections[i]
-        if section.label != "unknown" or not result or result[-1].label == "unknown":
+        if (
+            section.label != "unknown"
+            or section.header_font_elevated
+            or not result
+            or result[-1].label == "unknown"
+        ):
             result.append(section)
             i += 1
             continue
 
         run_start = i
-        while i < len(sections) and sections[i].label == "unknown":
+        while i < len(sections) and sections[i].label == "unknown" and not sections[i].header_font_elevated:
             i += 1
         run = sections[run_start:i]
 
-        if len(run) >= 2:
+        single_entry_absorbable = (
+            len(run) == 1
+            and result[-1].label in _MULTI_ENTRY_ABSORPTION_LABELS
+            and _has_bold_body_line(result[-1])
+        )
+        if len(run) >= 2 or single_entry_absorbable:
             for unknown_section in run:
                 result[-1].spans.extend(unknown_section.spans)
         else:
             result.extend(run)
 
     return result
+
+
+def _has_bold_body_line(section: Section) -> bool:
+    """True if `section` already has at least one bold line in its own
+    body, excluding the header line itself -- the signal
+    `_absorb_repeated_unknown_entries` uses to tell "this section already
+    styles its own entries in bold, so a same-style single unknown right
+    after it is another entry" apart from "no such convention exists here,
+    so an isolated unknown is a genuinely separate topic" (see that
+    function's docstring). Local, self-contained line-grouping -- the same
+    accepted duplication `sections.py`/`_entry_clustering.py` each already
+    have their own copy of, not a shared import across those layer
+    boundaries. Defensively returns False (the pre-existing, safe default)
+    for spans that don't carry real layout attributes -- e.g. the plain
+    string/object stand-ins some unit tests build directly."""
+    groups: list[list] = []
+    for span in section.spans:
+        try:
+            if groups:
+                last = groups[-1][-1]
+                same_block = span.page_num == last.page_num and span.column_index == last.column_index
+                if same_block and abs(span.bbox[1] - last.bbox[1]) <= 3.0:
+                    groups[-1].append(span)
+                    continue
+            groups.append([span])
+        except AttributeError:
+            return False
+
+    for line_spans in groups[1:]:  # [0] is the section's own header line
+        try:
+            line_text = " ".join(s.text for s in line_spans).strip()
+            if line_text and line_text != section.raw_header_text and any(s.is_bold for s in line_spans):
+                return True
+        except AttributeError:
+            return False
+    return False
 
 
 def _group_sections_by_label(sections: list[Section]) -> dict[str, Section]:

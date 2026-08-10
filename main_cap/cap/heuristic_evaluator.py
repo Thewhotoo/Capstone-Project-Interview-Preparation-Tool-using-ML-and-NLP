@@ -72,6 +72,15 @@ _SEM_MODEL_NAME = "all-MiniLM-L6-v2"
 _NLI_MODEL_NAME = "cross-encoder/nli-MiniLM2-L6-H768"
 _CONTRADICTION_THRESHOLD = 0.5
 
+# Strength/weakness classification thresholds -- named and exported (not
+# just local literals) so `hybrid_evaluator.py` can reclassify claims
+# against the FINAL (possibly DeBERTa-sourced) dimension scores using this
+# exact same rule, rather than a second, independently-chosen threshold
+# that could drift out of sync. See `_claims` below and
+# `hybrid_evaluator._reclassify_claims`.
+STRENGTH_THRESHOLD = 0.65
+WEAKNESS_THRESHOLD = 0.35
+
 _OWNERSHIP_MARKERS = (
     "i designed", "i built", "i implemented", "i developed", "i chose",
     "i decided", "my approach", "i was responsible", "i led", "i managed",
@@ -590,13 +599,13 @@ class HeuristicEvaluator:
                 d.name, answer=answer, sentences=sentences, mentioned_terms=mentioned_terms,
                 missing_terms=missing_terms, has_ownership=has_ownership,
             )
-            if d.raw_score >= 0.65:
+            if d.raw_score >= STRENGTH_THRESHOLD:
                 strengths.append(EvidenceLinkedClaim(
                     claim=f"Strong {d.name.replace('_', ' ')}.",
                     dimension=d.name,
                     evidence=strength_evidence or f"Scored {d.raw_score:.0%} on {d.name.replace('_', ' ')}.",
                 ))
-            elif d.raw_score < 0.35:
+            elif d.raw_score < WEAKNESS_THRESHOLD:
                 weaknesses.append(EvidenceLinkedClaim(
                     claim=f"Weak {d.name.replace('_', ' ')}.",
                     dimension=d.name,

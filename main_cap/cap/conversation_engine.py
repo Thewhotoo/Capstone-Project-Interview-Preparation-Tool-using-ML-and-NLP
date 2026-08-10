@@ -200,10 +200,13 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
     # (results only) is untouched. See strong_answer.py.
     turn_evaluation = _result_payload(result)
     turn_evaluation["improved_answer"] = build_improved_answer(current_question, result, answer)
-    # Concept Coverage % for the dashboard, from the SAME shared lexical
-    # detector the Improved Answer uses. None when the turn has no concept pool
-    # (e.g. experience/certification) — the dashboard averages only non-null turns.
-    turn_evaluation["concept_coverage_pct"] = concept_coverage_percent(current_question, result, answer)
+    # Concept Coverage % for the dashboard, derived directly from
+    # result.concept_coverage's own per-concept statuses (never a separate
+    # re-scan of the answer text -- see concept_analysis.py's module
+    # docstring for the bug this fixed). None when the turn has no concept
+    # pool (e.g. experience/certification) — the dashboard averages only
+    # non-null turns.
+    turn_evaluation["concept_coverage_pct"] = concept_coverage_percent(result)
 
     if next_spec is None:
         session["ended"] = True

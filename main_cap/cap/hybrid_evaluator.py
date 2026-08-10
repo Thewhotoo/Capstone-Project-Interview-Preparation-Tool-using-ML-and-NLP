@@ -1,54 +1,60 @@
 """
-HybridEvaluator — runs both HeuristicEvaluator and TrainedEvaluator on every
-turn. Round 2 (per-dimension agreement-banded decision policy — see
-docs/architecture, Hybrid Evaluator design review + round-2 policy update):
+HybridEvaluator — Round 3 (DeBERTa-primary policy; supersedes Round 2's
+per-dimension agreement-banded BLENDING — see docs/architecture and the
+Experiment 4 head-to-head evaluation that motivated this change).
 
-- Per DIMENSION, the two evaluators' scores are compared and classified
-  into one of three agreement bands:
-    HIGH   (agreement >= _HIGH_AGREEMENT_THRESHOLD)   -> DeBERTa trusted;
-             the dimension's final score is a LIGHT blend biased toward
-             the trained model (not 100% trained -- the heuristic stays a
-             small stabilizing anchor even here).
-    MEDIUM (>= _MEDIUM_AGREEMENT_THRESHOLD, < HIGH)   -> an even blend of
-             both evaluators.
-    LOW    (< _MEDIUM_AGREEMENT_THRESHOLD)            -> the heuristic
-             becomes fully authoritative for that dimension; DeBERTa is
-             logged but does not move the score.
-  This lets the trained model genuinely participate wherever it agrees
-  with the heuristic, while the heuristic remains the safety mechanism for
-  large disagreements -- exactly the requested policy, applied at the
-  finest available granularity rather than only on the aggregate score.
-- overall_score and grade are RECOMPUTED from the final, per-dimension
-  BLENDED scores (using the heuristic's own already-established
-  proportional weight_used per dimension -- that weighting scheme itself
-  is unchanged), not derived by averaging the two evaluators' own overall
-  scores directly.
-- confidence combines TWO real, already-available signals: the agreement
-  band (how much two independent evaluators concur) and the trained
-  model's own analytical self-confidence (`coral_confidence`, already
-  computed by TrainedEvaluator -- never approximated, never invented).
-  Agreement is the dominant term; model confidence provides a bounded
-  secondary adjustment within the band it establishes (see
-  _compute_confidence's docstring for the exact formula and worked
-  examples).
-- strengths, weaknesses, missing_reasoning, suggested_improvements,
-  recommended_topics, and concept_coverage remain ENTIRELY
-  heuristic-sourced, unchanged -- no new NLP/text generation was added.
-  This is a deliberate, documented trade-off: the displayed FEEDBACK TEXT
-  may reference a dimension's ORIGINAL heuristic score even though the
-  DISPLAYED per-dimension number can now differ slightly after blending.
-  Regenerating claims from blended inputs would require new generation
-  logic, explicitly out of scope for this round.
-- TrainedEvaluator runs on every call where available (never skipped,
-  never sampled). Diagnostics (heuristic score, DeBERTa score, final
-  hybrid score, agreement band, and final confidence, per dimension and
-  overall) are recorded via `raw_model_output` (existing open field) and
-  an append-only local JSONL log (`hybrid_diagnostics.jsonl`, gitignored).
+WHY ROUND 2 WAS REPLACED: the Experiment 4 evaluation
+(`run_experiment_4_evaluate.py`, `artifacts/experiment_4_evaluation/report.json`)
+measured, on the same 362-example held-out test set:
+    raw new DeBERTa   QWK = 0.3976
+    HeuristicEvaluator QWK = 0.1341
+    Round-2 Hybrid     QWK = 0.1814   <- worse than raw DeBERTa by >2x
+Round 2's LOW-agreement band made the (much weaker) heuristic FULLY
+authoritative for any dimension where the two evaluators disagreed by more
+than ~0.40 raw-score points. Because the heuristic is frequently the one
+that's wrong (its own QWK is 3x lower than the trained model's), that
+"safety" mechanism was routinely overriding a more-accurate DeBERTa
+prediction with a less-accurate heuristic one -- the opposite of what a
+disagreement-handling policy should do once a trained evaluator has been
+shown to be more accurate than the heuristic it was being blended against.
+
+ROUND 3 POLICY (this module, current):
+- HeuristicEvaluator still runs on every turn -- required for the fallback
+  path, for feedback text, and to compute the SAME agreement/band signal
+  as before, now used PURELY for confidence/observability.
+- TrainedEvaluator (DeBERTa) still runs on every turn.
+- If TrainedEvaluator SUCCEEDS (returns a valid EvaluationResult -- the
+  schema's own pydantic validators already reject a malformed one, so
+  "returned without raising" already means "valid"): its `dimensions`,
+  `overall_score`, `grade`, and `reasoning` are used EXACTLY AS PRODUCED —
+  never blended, never overridden, regardless of how much they disagree
+  with the heuristic. Disagreement no longer downgrades a valid DeBERTa
+  prediction.
+- If TrainedEvaluator FAILS (raises): unchanged graceful degradation to a
+  pure HeuristicEvaluator result for that turn, exactly as Round 2 did.
+- Agreement (heuristic vs. trained, per dimension and overall) is still
+  computed and still feeds `confidence` (reusing the SAME, unmodified
+  `_agreement_band` / `_compute_confidence` formulas Round 2 already
+  established -- no new thresholds, no new confidence model) and the
+  diagnostics log -- it is observability/confidence-only now, never a
+  score override.
+- missing_reasoning, suggested_improvements, recommended_topics, and
+  concept_coverage remain ENTIRELY heuristic-sourced, unchanged from
+  Round 2 -- no new NLP/text generation.
+- strengths/weaknesses text is heuristic-sourced but RECLASSIFIED against
+  the final dimension scores above (`_reclassify_claims`) -- a fix added
+  after a real end-to-end demo caught a dimension displayed at 25% labelled
+  "Strong" because the heuristic's own pre-blend score for that dimension
+  disagreed with DeBERTa's. Same claim text (still accurate content-wise),
+  re-bucketed by the score actually shown to the user.
 
 Satisfies the SAME, unchanged `evaluator.Evaluator` Protocol every other
 implementation does -- no registry change, no call-site change anywhere in
 conversation_engine.py or downstream, no change to evaluator_registry.py
-or deployment_evaluator.py's wiring.
+or deployment_evaluator.py's wiring. The class name, `.name` ("hybrid-v1"),
+and constructor signature are all unchanged from Round 2 -- every existing
+caller that resolves "hybrid-v1" from the registry keeps working exactly
+as before; only what happens INSIDE `.evaluate()` changed.
 """
 
 from __future__ import annotations
@@ -61,29 +67,20 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from evaluation_request import EvaluationRequest
-from evaluation_result import ConfidenceSource, DimensionScore, EvaluationResult
-from heuristic_evaluator import HeuristicEvaluator
+from evaluation_result import ConfidenceSource, DimensionScore, EvaluationResult, EvidenceLinkedClaim
+from heuristic_evaluator import STRENGTH_THRESHOLD, WEAKNESS_THRESHOLD, HeuristicEvaluator
 from model_evaluator import TrainedEvaluator
 
 logger = logging.getLogger(__name__)
 
-# Agreement bands -- per-dimension AND overall use the same thresholds for
-# consistency. "Agreement" is 1 - abs(heuristic_raw_score - trained_raw_score);
-# both evaluators already report every dimension on the same 0..1 scale, so
-# a bounded absolute-difference comparison is a simple, deterministic,
-# explainable proxy. This is NOT the same thing as the QWK-based offline/
-# promotion metrics from the production-promotion roadmap -- QWK needs a
-# labeled POPULATION to mean anything; this is a single live turn.
+# Agreement bands -- UNCHANGED from Round 2 (same thresholds, same
+# "agreement = 1 - abs(heuristic_raw_score - trained_raw_score)" proxy).
+# No longer used to decide WHICH score wins (DeBERTa always wins when
+# available) -- only to inform `confidence` and the diagnostics log, i.e.
+# still exactly the "confidence/disagreement detection" the production
+# wiring is still meant to provide.
 _HIGH_AGREEMENT_THRESHOLD = 0.85
 _MEDIUM_AGREEMENT_THRESHOLD = 0.60
-
-# How much weight the trained model's score gets in each band's blend.
-# HIGH is a LIGHT blend biased toward the trained model, not 100% trained
-# -- the heuristic stays a small stabilizing anchor even at high agreement,
-# so one single-turn measurement never fully displaces the deterministic,
-# already-calibrated authoritative scorer. LOW is 0.0: the heuristic is
-# fully authoritative when the two evaluators diverge sharply.
-_TRAINED_WEIGHT_BY_BAND = {"high": 0.80, "medium": 0.50, "low": 0.0}
 
 _DEFAULT_DIAGNOSTICS_LOG_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "hybrid_diagnostics.jsonl",
@@ -98,47 +95,14 @@ def _agreement_band(agreement: float) -> str:
     return "low"
 
 
-def _blend_dimension(
-    heuristic_dim: DimensionScore, trained_dim: Optional[DimensionScore],
-) -> tuple[DimensionScore, Optional[str], Optional[float]]:
-    """Returns (final_dimension, band, agreement). band/agreement are None
-    when no trained score exists for this specific dimension this turn
-    (graceful per-dimension degradation to pure heuristic -- the same
-    principle as the whole-turn fallback, just at finer granularity)."""
+def _dimension_agreement(heuristic_dim: DimensionScore, trained_dim: Optional[DimensionScore]) -> Optional[float]:
+    """Same agreement proxy Round 2 used, kept for confidence/diagnostics
+    only -- no longer produces a blended score (Round 2's `_blend_dimension`
+    is retired; DeBERTa's own dimension score is used unmodified when
+    available, see module docstring)."""
     if trained_dim is None:
-        return heuristic_dim, None, None
-
-    agreement = max(0.0, min(1.0, 1.0 - abs(heuristic_dim.raw_score - trained_dim.raw_score)))
-    band = _agreement_band(agreement)
-    trained_weight = _TRAINED_WEIGHT_BY_BAND[band]
-
-    if trained_weight == 0.0:
-        return heuristic_dim, band, agreement
-
-    blended_score = round(
-        trained_weight * trained_dim.raw_score + (1.0 - trained_weight) * heuristic_dim.raw_score, 3,
-    )
-    final_dim = heuristic_dim.model_copy(update={
-        "raw_score": blended_score,
-        "confidence_source": f"hybrid_{band}_agreement",
-    })
-    return final_dim, band, agreement
-
-
-def _recompute_overall(dimensions: tuple[DimensionScore, ...]) -> float:
-    """Recomputes overall_score from the FINAL (post-blend) per-dimension
-    scores, reusing each dimension's own already-established weight_used
-    (the heuristic's proportional always-relevant-vs-extra weighting is
-    unchanged) -- never averaging the two evaluators' own overall_score
-    values directly."""
-    contributing = [d for d in dimensions if d.contributes_to_overall]
-    if not contributing:
-        return 0.0
-    weight_sum = sum(d.weight_used for d in contributing)
-    if weight_sum <= 0:
-        return 0.0
-    total = sum(d.raw_score * d.weight_used for d in contributing)
-    return round(max(0.0, min(1.0, total / weight_sum)), 3)
+        return None
+    return max(0.0, min(1.0, 1.0 - abs(heuristic_dim.raw_score - trained_dim.raw_score)))
 
 
 # Confidence: agreement is the DOMINANT term (a band ceiling), model
@@ -146,9 +110,10 @@ def _recompute_overall(dimensions: tuple[DimensionScore, ...]) -> float:
 # model being confident while disagreeing with an independent measure is
 # not, by itself, a reason for extra trust; agreement between two
 # independent sources is stronger evidence than either source's own
-# self-assessment. _MODEL_CONFIDENCE_INFLUENCE bounds how much the model's
-# own confidence can move the multiplier: at model_confidence=0 the factor
-# is (1 - influence); at model_confidence=1 the factor is 1.0.
+# self-assessment. UNCHANGED from Round 2 -- this formula was never the
+# problem (the blending of the SCORE was); it still legitimately informs
+# how much to trust a valid DeBERTa prediction, it just no longer decides
+# whether to use that prediction.
 _BAND_CONFIDENCE_MULTIPLIER = {"high": 1.0, "medium": 0.80, "low": 0.55}
 _MODEL_CONFIDENCE_INFLUENCE = 0.30
 
@@ -164,18 +129,10 @@ def _confidence_tier_label(adjusted_multiplier: float) -> str:
 
 
 def _compute_confidence(heuristic_confidence: float, band: str, model_confidence: float) -> tuple[float, float, str]:
-    """Combines agreement (via `band`) and the trained model's own
-    analytical confidence (`coral_confidence`, from model_heads.py --
-    genuinely computed, never approximated) into a final confidence value.
-    Returns (final_confidence, adjusted_multiplier, tier_label).
-
-    Worked examples (matching the requested design):
-      high agreement + high model confidence   -> multiplier ~0.97-1.00 ("very high")
-      high agreement + low model confidence    -> multiplier ~0.76        ("high")
-      medium agreement + high model confidence -> multiplier ~0.78        ("high")
-      low agreement + low model confidence     -> multiplier ~0.42        ("low")
-      low agreement + high model confidence    -> multiplier ~0.53        ("moderate" at best --
-        a confident-but-disagreeing model is still not fully trusted)."""
+    """Unchanged from Round 2 (see that docstring's worked examples) --
+    combines agreement (via `band`) and the trained model's own analytical
+    confidence into a final confidence value. Returns
+    (final_confidence, adjusted_multiplier, tier_label)."""
     band_multiplier = _BAND_CONFIDENCE_MULTIPLIER[band]
     model_factor = (1.0 - _MODEL_CONFIDENCE_INFLUENCE) + _MODEL_CONFIDENCE_INFLUENCE * model_confidence
     adjusted_multiplier = max(0.0, min(1.0, band_multiplier * model_factor))
@@ -187,14 +144,14 @@ def _record_diagnostics(
     log_path: str, request: EvaluationRequest, heuristic_result: EvaluationResult,
     trained_result: Optional[EvaluationResult], final_overall_score: float,
     overall_agreement: Optional[float], overall_band: Optional[str], final_confidence: float,
-    per_dimension: dict[str, dict], trained_error: Optional[str],
+    per_dimension: dict[str, dict], trained_error: Optional[str], score_source: str,
 ) -> None:
     """Appends one JSON line per turn -- heuristic score, DeBERTa score,
-    final hybrid score, agreement band, and evaluator confidence
-    (requirement 9), plus full per-dimension detail for future retraining.
-    Never allowed to affect the live evaluation -- any failure here is
-    logged and swallowed, the same discipline deployment_evaluator.py
-    already applies to model loading."""
+    final (Round 3: score_source tells you which one won -- always
+    "trained" unless DeBERTa failed this turn), agreement band, and
+    evaluator confidence, plus full per-dimension detail for future
+    calibration work. Never allowed to affect the live evaluation -- any
+    failure here is logged and swallowed, same discipline as before."""
     record = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "request_id": request.request_id,
@@ -202,6 +159,7 @@ def _record_diagnostics(
         "heuristic_overall_score": heuristic_result.overall_score,
         "trained_overall_score": trained_result.overall_score if trained_result is not None else None,
         "final_hybrid_overall_score": final_overall_score,
+        "score_source": score_source,
         "overall_agreement": overall_agreement,
         "overall_agreement_band": overall_band,
         "final_confidence": final_confidence,
@@ -216,12 +174,80 @@ def _record_diagnostics(
         logger.warning("HybridEvaluator: could not write diagnostics log to %r: %s", log_path, e)
 
 
+def _reclassify_claims(
+    final_dimensions: tuple[DimensionScore, ...],
+    heuristic_strengths: tuple[EvidenceLinkedClaim, ...],
+    heuristic_weaknesses: tuple[EvidenceLinkedClaim, ...],
+) -> tuple[tuple[EvidenceLinkedClaim, ...], tuple[EvidenceLinkedClaim, ...]]:
+    """Rebuilds strengths/weaknesses against the FINAL dimension scores
+    (Round 3: DeBERTa's, when available -- the numbers actually shown to
+    the user), never the heuristic's own pre-blend view of that dimension.
+
+    Confirmed production bug (real end-to-end demo): `_claims()` classifies
+    a dimension as a strength/weakness using the HEURISTIC evaluator's OWN
+    `raw_score` for that dimension, computed BEFORE Round 3 potentially
+    replaces the whole `dimensions` tuple with DeBERTa's. Carrying those
+    claims over unchanged (the prior "heuristic-sourced, unchanged" policy)
+    let a dimension DISPLAYED at 25% get labelled "Strong" purely because
+    the heuristic's own (unseen, unpublished) score for that same dimension
+    happened to be high -- a direct contradiction between the text and the
+    number sitting right next to it.
+
+    Uses the exact same `STRENGTH_THRESHOLD`/`WEAKNESS_THRESHOLD` cutpoints
+    `HeuristicEvaluator._claims` uses (imported, not re-chosen -- the one
+    shared classification rule) so a given raw_score always gets the same
+    label regardless of which evaluator produced it. Evidence text is
+    reused from the heuristic's ORIGINAL claim for that dimension in the
+    SAME bucket only (a strength's evidence for a new strength, a
+    weakness's for a new weakness -- `_concrete_evidence` deliberately
+    phrases the two differently, e.g. a plain quote for a strength vs.
+    "... — not closely aligned..." for a weakness, so citing the wrong
+    bucket's text would itself read as self-contradictory) when one
+    exists, falling back to a plain "Scored X% on Y" line built from the
+    FINAL score otherwise -- never inventing new evaluative text, only
+    re-deriving which bucket (strength/weakness/neither) each real score
+    belongs in."""
+    strength_evidence = {c.dimension: c.evidence for c in heuristic_strengths}
+    weakness_evidence = {c.dimension: c.evidence for c in heuristic_weaknesses}
+
+    strengths: list[EvidenceLinkedClaim] = []
+    weaknesses: list[EvidenceLinkedClaim] = []
+    for d in final_dimensions:
+        if d.raw_score >= STRENGTH_THRESHOLD:
+            evidence = strength_evidence.get(d.name)
+            strengths.append(EvidenceLinkedClaim(
+                claim=f"Strong {d.name.replace('_', ' ')}.",
+                dimension=d.name,
+                evidence=evidence or f"Scored {d.raw_score:.0%} on {d.name.replace('_', ' ')}.",
+            ))
+        elif d.raw_score < WEAKNESS_THRESHOLD:
+            evidence = weakness_evidence.get(d.name)
+            weaknesses.append(EvidenceLinkedClaim(
+                claim=f"Weak {d.name.replace('_', ' ')}.",
+                dimension=d.name,
+                evidence=evidence or f"Scored only {d.raw_score:.0%} on {d.name.replace('_', ' ')}.",
+            ))
+
+    if not strengths:
+        strengths.append(EvidenceLinkedClaim(
+            claim="Attempted to address the question.",
+            dimension=final_dimensions[0].name,
+            evidence=f"Scored {final_dimensions[0].raw_score:.0%} on {final_dimensions[0].name}.",
+        ))
+    if not weaknesses:
+        weaknesses.append(EvidenceLinkedClaim(
+            claim="Minor areas for deeper elaboration.",
+            dimension=final_dimensions[-1].name,
+            evidence=f"Scored {final_dimensions[-1].raw_score:.0%} on {final_dimensions[-1].name}.",
+        ))
+    return tuple(strengths), tuple(weaknesses)
+
+
 class HybridEvaluator:
     """Evaluator Protocol implementation. Wraps a HeuristicEvaluator
-    (authoritative for all feedback text; the safety mechanism for
-    per-dimension low agreement) and a TrainedEvaluator (runs every call;
-    genuinely participates in scoring wherever it agrees with the
-    heuristic, via per-dimension agreement-banded blending).
+    (feedback text, fallback, and the confidence/disagreement signal) and a
+    TrainedEvaluator (the authoritative scorer whenever it succeeds --
+    Round 3 policy, see module docstring).
 
     Stateless per call, same contract as both wrapped evaluators."""
 
@@ -241,13 +267,13 @@ class HybridEvaluator:
 
     def evaluate(self, request: EvaluationRequest) -> EvaluationResult:
         # HeuristicEvaluator is authoritative for feedback text and is the
-        # safety mechanism for disagreement; a failure here is a genuine
-        # bug, not something this module papers over.
+        # fallback when DeBERTa fails; a failure here is a genuine bug, not
+        # something this module papers over.
         heuristic_result = self.heuristic.evaluate(request)
 
-        # TrainedEvaluator MUST run whenever available -- but a runtime
-        # failure on THIS specific request degrades gracefully to
-        # heuristic-only for this turn, not a session crash.
+        # TrainedEvaluator MUST run whenever available -- a runtime failure
+        # on THIS specific request degrades gracefully to heuristic-only
+        # for this turn, not a session crash.
         trained_result: Optional[EvaluationResult] = None
         trained_error: Optional[str] = None
         try:
@@ -261,6 +287,8 @@ class HybridEvaluator:
             )
 
         if trained_result is None:
+            # ── Fallback path: DeBERTa unavailable this turn ──
+            score_source = "heuristic_fallback"
             final_dimensions = heuristic_result.dimensions
             final_overall_score = heuristic_result.overall_score
             final_grade = heuristic_result.grade
@@ -268,7 +296,8 @@ class HybridEvaluator:
             confidence_source = heuristic_result.confidence_source
             confidence_rationale = (
                 f"{heuristic_result.confidence_rationale} (No trained-model comparison was available "
-                f"for this turn.)"
+                f"for this turn -- DeBERTa failed or was unavailable, so the heuristic result is used "
+                f"as-is.)"
             )
             reasoning = heuristic_result.reasoning
             raw_model_output = heuristic_result.raw_model_output
@@ -277,29 +306,33 @@ class HybridEvaluator:
             overall_band: Optional[str] = None
             per_dimension_diag: dict[str, dict] = {}
         else:
-            trained_by_name = {d.name: d for d in trained_result.dimensions}
-            final_dimensions_list: list[DimensionScore] = []
+            # ── Primary path: DeBERTa succeeded -- its dimensions/overall
+            # score/grade/reasoning are used EXACTLY AS PRODUCED, never
+            # blended or overridden by the heuristic, regardless of
+            # agreement (Round 3 policy -- see module docstring for why). ──
+            score_source = "trained"
+            final_dimensions = trained_result.dimensions
+            final_overall_score = trained_result.overall_score
+            final_grade = trained_result.grade
+            reasoning = trained_result.reasoning
+
+            # Agreement/band computed for CONFIDENCE and DIAGNOSTICS only --
+            # does not touch final_dimensions/final_overall_score/final_grade
+            # above.
+            heuristic_by_name = {d.name: d for d in heuristic_result.dimensions}
             per_dimension_diag = {}
             agreements: list[float] = []
-
-            for h_dim in heuristic_result.dimensions:
-                t_dim = trained_by_name.get(h_dim.name)
-                final_dim, band, agreement = _blend_dimension(h_dim, t_dim)
-                final_dimensions_list.append(final_dim)
-                per_dimension_diag[h_dim.name] = {
-                    "heuristic": h_dim.raw_score,
-                    "trained": t_dim.raw_score if t_dim is not None else None,
-                    "final": final_dim.raw_score,
-                    "band": band,
+            for t_dim in trained_result.dimensions:
+                h_dim = heuristic_by_name.get(t_dim.name)
+                agreement = _dimension_agreement(h_dim, t_dim) if h_dim is not None else None
+                per_dimension_diag[t_dim.name] = {
+                    "heuristic": h_dim.raw_score if h_dim is not None else None,
+                    "trained": t_dim.raw_score,
+                    "final": t_dim.raw_score,  # Round 3: final == trained, always, when available
                     "agreement": agreement,
                 }
                 if agreement is not None:
                     agreements.append(agreement)
-
-            final_dimensions = tuple(final_dimensions_list)
-            final_overall_score = _recompute_overall(final_dimensions)
-            final_grade = HeuristicEvaluator._grade(final_overall_score)
-            reasoning = "\n".join(f"{d.name}: {d.raw_score:.0%}" for d in final_dimensions)
 
             overall_agreement = round(sum(agreements) / len(agreements), 3) if agreements else None
             overall_band = _agreement_band(overall_agreement) if overall_agreement is not None else None
@@ -309,31 +342,43 @@ class HybridEvaluator:
                 final_confidence, adjusted_multiplier, tier_label = _compute_confidence(
                     heuristic_result.confidence, overall_band, model_confidence,
                 )
-                # Always HYBRID when a trained comparison was available --
-                # even a "high agreement" result had its confidence
-                # genuinely derived from both signals (band + model
-                # confidence), not just copied from the heuristic.
                 confidence_source = ConfidenceSource.HYBRID
                 confidence_rationale = (
-                    f"{heuristic_result.confidence_rationale} An independent trained-model comparison showed "
-                    f"{overall_agreement:.0%} agreement ({overall_band} band) with model confidence "
-                    f"{model_confidence:.0%}, yielding {tier_label} combined confidence."
+                    f"DeBERTa's prediction is used as the authoritative score. An independent "
+                    f"heuristic comparison showed {overall_agreement:.0%} agreement ({overall_band} "
+                    f"band) with model confidence {model_confidence:.0%}, yielding {tier_label} "
+                    f"combined confidence. (Disagreement is recorded for observability; it does not "
+                    f"override the DeBERTa prediction.)"
                 )
             else:
-                final_confidence = heuristic_result.confidence
-                confidence_source = heuristic_result.confidence_source
-                confidence_rationale = heuristic_result.confidence_rationale
+                # No overlapping dimensions to compare (shouldn't normally
+                # happen -- both evaluators mask to the same
+                # relevant_dimensions() for a given reasoning_type -- but
+                # degrade to the trained model's own confidence rather than
+                # inventing a number).
+                final_confidence = model_confidence
+                confidence_source = ConfidenceSource.MODEL
+                confidence_rationale = "DeBERTa's prediction is used as the authoritative score (no heuristic dimensions were available for comparison)."
 
             raw_model_output = heuristic_result.raw_model_output + tuple(
                 (f"trained_{d.name}", d.raw_score) for d in trained_result.dimensions
-            ) + tuple(
-                (f"final_{name}", diag["final"]) for name, diag in per_dimension_diag.items()
             ) + (("agreement_score", overall_agreement if overall_agreement is not None else 0.0),)
             model_version = heuristic_result.model_version + trained_result.model_version
 
         _record_diagnostics(
             self.diagnostics_log_path, request, heuristic_result, trained_result, final_overall_score,
-            overall_agreement, overall_band, final_confidence, per_dimension_diag, trained_error,
+            overall_agreement, overall_band, final_confidence, per_dimension_diag, trained_error, score_source,
+        )
+
+        # missing_reasoning, suggested_improvements, recommended_topics,
+        # concept_coverage, contradiction_* remain heuristic-sourced (base
+        # object), unchanged from Round 2. strengths/weaknesses are
+        # RECLASSIFIED against final_dimensions (see _reclassify_claims
+        # docstring) -- fixed after the real end-to-end demo showed a
+        # dimension displayed at 25% labelled "Strong" because the
+        # heuristic's own pre-blend score for it disagreed with DeBERTa's.
+        final_strengths, final_weaknesses = _reclassify_claims(
+            final_dimensions, heuristic_result.strengths, heuristic_result.weaknesses,
         )
 
         return heuristic_result.model_copy(update={
@@ -349,4 +394,6 @@ class HybridEvaluator:
             "reasoning": reasoning,
             "raw_model_output": raw_model_output,
             "model_version": model_version,
+            "strengths": final_strengths,
+            "weaknesses": final_weaknesses,
         })

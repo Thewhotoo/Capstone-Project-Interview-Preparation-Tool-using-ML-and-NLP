@@ -406,13 +406,34 @@ class TestProfileToFrontendFormat(unittest.TestCase):
             f = profile_to_frontend_format(p)
             self.assertEqual(f["discussion_domain"], expected, msg=f"Domain {domain}")
 
-    def test_empty_experience_estimates_from_level(self):
+    def test_empty_experience_never_fabricates_years_from_level(self):
+        """Regression: with no dated experience evidence at all, `years`
+        must stay 0 -- never backfilled from `experience_level` alone (the
+        literal source of a prior audit's "3 yrs - Mid" finding for a level
+        that had zero years of supporting dated evidence). `level` still
+        reflects the inferred level; only the fabricated year count is
+        gone."""
         p = self._full_profile_dict()
         p["experience"] = []
-        for level, expected in [("Beginner", 1), ("Intermediate", 3), ("Advanced", 7)]:
+        for level, expected_display in [("Beginner", "Junior"), ("Intermediate", "Mid"), ("Advanced", "Senior")]:
             p["experience_level"] = level
             f = profile_to_frontend_format(p)
-            self.assertEqual(f["experience"]["years"], expected, msg=f"Level {level}")
+            self.assertEqual(f["experience"]["years"], 0, msg=f"Level {level}")
+            self.assertEqual(f["experience"]["level"], expected_display, msg=f"Level {level}")
+
+    def test_short_undated_experience_does_not_fabricate_years(self):
+        """Direct regression for the real-resume audit: a single entry
+        whose duration falls within one calendar year (so the year-span
+        heuristic computes 0) must not have that 0 backfilled into a fake
+        year count just because a level was still inferred."""
+        p = self._full_profile_dict()
+        p["experience"] = [
+            {"company": "PES University EC Campus", "role": "CAVE Labs", "duration": "Jun 2025 - Aug 2025", "summary": ""}
+        ]
+        p["experience_level"] = "Beginner"
+        f = profile_to_frontend_format(p)
+        self.assertEqual(f["experience"]["years"], 0)
+        self.assertEqual(f["experience"]["level"], "Junior")
 
     def test_detail_fields(self):
         f = profile_to_frontend_format(self._full_profile_dict())

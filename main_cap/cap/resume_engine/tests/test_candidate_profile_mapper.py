@@ -54,8 +54,35 @@ def test_infer_experience_level_beginner_from_junior_keyword():
     assert infer_experience_level(experiences) == "Beginner"
 
 
-def test_infer_experience_level_defaults_intermediate_with_no_signal():
-    assert infer_experience_level([]) == "Intermediate"
+def test_infer_experience_level_beginner_with_no_experience_at_all():
+    """Regression: zero experience entries (a student/fresher resume with
+    no Experience section) previously fell through to a bare "Intermediate"
+    default -- fabricating a mid-level read from zero evidence. Never guess
+    up from an absence of evidence."""
+    assert infer_experience_level([]) == "Beginner"
+
+
+def test_infer_experience_level_beginner_from_single_short_undated_internship():
+    """Direct regression for the real-resume audit finding: a single
+    internship-style entry spanning one calendar year (start and end dates
+    both in the same year, so the year-span heuristic computes 0 total
+    years) with no seniority keyword in the role text previously defaulted
+    to "Intermediate" (observed in production as "3 yrs - Mid" surfacing in
+    the generated interview summary) despite there being zero dated or
+    keyword evidence of more than entry-level experience."""
+    experiences = [
+        {"company": "PES University EC Campus", "role": "CAVE Labs", "duration": "Jun 2025 - Aug 2025"}
+    ]
+    assert infer_experience_level(experiences) == "Beginner"
+
+
+def test_infer_experience_level_preserves_genuine_multi_year_professional():
+    """A genuine multi-year candidate (dated experience spanning several
+    years, no explicit seniority keyword) must stay "Intermediate", not be
+    downgraded by the same fix that stops zero-evidence cases from
+    defaulting there."""
+    experiences = [{"role": "Software Engineer", "company": "Acme", "duration": "2021 - 2024"}]
+    assert infer_experience_level(experiences) == "Intermediate"
 
 
 # ── build_technical_topics ─────────────────────────────────────────────
@@ -150,6 +177,16 @@ def test_resume_summary_grounded_in_extracted_data():
     assert "Jordan" in summary
     assert "6 years" in summary
     assert "Python" in summary
+
+
+def test_resume_summary_never_says_beginner_professional():
+    """Regression for the production-walkthrough audit: "beginner
+    professional" reads as a contradiction. The summary should use the
+    same Junior/Mid/Senior wording the rest of the app already shows for
+    this level."""
+    summary = build_resume_summary("Jordan", "Software Engineering", "Beginner", 0, ["Python"])
+    assert "beginner" not in summary.lower()
+    assert "junior" in summary.lower()
 
 
 # ── map_to_candidate_profile (full integration) ─────────────────────────

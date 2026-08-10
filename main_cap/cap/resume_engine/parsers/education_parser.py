@@ -134,6 +134,20 @@ class EducationParser:
             institution, institution_gazetteer_matched = _find_institution(lines)
             graduation_year = _find_graduation_year(entry_text)
 
+            # An entry with nothing recognizable at all (degree, major,
+            # institution, AND graduation_year all empty) is not a real
+            # education entity -- emitting one produces an empty
+            # {"degree": "", ...} placeholder with nothing for a caller to
+            # display (candidate_profile_mapper has surfaced this as raw,
+            # unrendered JSON in the frontend). Most often a clustered
+            # entry this parser has no field for (e.g. a pre-university
+            # schooling aside with percentage marks, not a degree) rather
+            # than a genuine second education entity -- skip it entirely
+            # rather than fabricate a placeholder, the same "no fabricated
+            # empty content" rule seed_synthesis.py already follows.
+            if not (degree or major or institution or graduation_year):
+                continue
+
             reasons = []
             score = 0.0
             if degree:

@@ -16,7 +16,7 @@ from rapidfuzz import fuzz, process
 from resume_engine.certification_gazetteer import CERTIFICATIONS
 from resume_engine.confidence import Confidence
 from resume_engine.interfaces import ParserResult
-from resume_engine.parsers._entry_clustering import strip_section_header_line
+from resume_engine.parsers._entry_clustering import _group_into_lines, strip_section_header_line
 from resume_engine.validation import Observation
 
 # Validation-derived, tunable, same discipline as the other parsers' match
@@ -26,10 +26,26 @@ STRAY_MENTION_MATCH_THRESHOLD = 90
 
 
 def _lines_from_spans(spans) -> list[str]:
+    """One entry per VISUAL line/bullet, not one entry per span.
+
+    Found during a real-resume demo audit: some PDFs' text extraction
+    produces one `TextSpan` per WORD (justified-text spacing splits runs at
+    each space) rather than one span per bullet line. Treating each raw
+    span as its own "line" -- the previous behavior here -- silently
+    shredded a single certification like "Introduction to Data Engineering
+    on Google Cloud" into five bogus one-word certifications ("Introduction",
+    "to", "Data", "Engineering", "on"), each then driving its own nonsense
+    interview question. `_group_into_lines` (the same bbox-Y-position-based
+    grouping `ExperienceParser`/`ProjectParser` already rely on via this
+    module) reconstructs the real visual line first, so this parser now
+    sees "Introduction to Data Engineering on Google Cloud" as ONE entry --
+    exactly like it already would for a PDF whose extractor happens to
+    produce one span per line."""
+    lines_grouped = _group_into_lines(list(spans))
     seen: set[str] = set()
     lines: list[str] = []
-    for span in spans:
-        text = span.text.strip(" \t•·-")
+    for line in lines_grouped:
+        text = line.text.strip(" \t•·-")
         if text and text not in seen:
             seen.add(text)
             lines.append(text)

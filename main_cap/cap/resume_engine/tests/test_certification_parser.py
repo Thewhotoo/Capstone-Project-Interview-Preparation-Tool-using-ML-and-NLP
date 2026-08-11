@@ -41,6 +41,38 @@ def test_certification_parser_normalizes_near_variant_via_gazetteer(
     assert "certification_gazetteer_match" in result.confidences[0].reasons[1]
 
 
+def test_certification_parser_joins_word_per_span_line_into_one_entity(
+    make_section, make_text_span, make_document_model
+):
+    """Regression test (demo audit finding): some PDFs' text extraction
+    produces one TextSpan per WORD (justified-text spacing splits runs at
+    each space) rather than one span per bullet line -- reproduced from a
+    real resume where "Introduction to Data Engineering on Google Cloud"
+    was one bulleted line but extracted as one span per word, all at the
+    same y-position. Before the fix, each word became its own bogus
+    certification ("Introduction", "to", "Data", "Engineering", "on",
+    each driving its own nonsense interview question); the parser must
+    reconstruct the single visual line first."""
+    header = make_text_span(text="Certifications", bbox=(72.0, 72.0, 200.0, 90.0), is_bold=True)
+    y0 = 100.0
+    words = ["Introduction", "to", "Data", "Engineering", "on", "Google", "Cloud"]
+    word_spans = []
+    x = 72.0
+    for word in words:
+        word_spans.append(make_text_span(text=word, bbox=(x, y0, x + len(word) * 6, y0 + 10.0)))
+        x += len(word) * 6 + 4.0
+    section = make_section(
+        label="certifications", raw_header_text="Certifications", spans=[header, *word_spans],
+        header_confidence=0.9,
+    )
+    doc = make_document_model(spans=[header, *word_spans], body_font_size=10.0)
+
+    result = CertificationParser().parse({"certifications": section}, doc)
+
+    assert result.entities == ["Introduction to Data Engineering on Google Cloud"]
+    assert len(result.confidences) == 1
+
+
 def test_certification_parser_dedupes_case_insensitively(make_section, make_text_span, make_document_model):
     header = make_text_span(text="Certifications", bbox=(72.0, 72.0, 200.0, 90.0), is_bold=True)
     body1 = make_text_span(text="PMP", bbox=(72.0, 100.0, 150.0, 110.0))

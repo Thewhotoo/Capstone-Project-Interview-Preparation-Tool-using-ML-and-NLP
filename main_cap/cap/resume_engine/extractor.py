@@ -58,6 +58,8 @@ class PdfDocxExtractor:
             doc = self._extract_pdf(file_path)
         elif source_format == "docx":
             doc = self._extract_docx(file_path)
+        elif source_format == "txt":
+            doc = self._extract_txt(file_path)
         else:
             raise ExtractionFailure(f"Unsupported source_format: {source_format!r}")
 
@@ -272,5 +274,54 @@ class PdfDocxExtractor:
                 chars_extracted=chars_extracted,
                 span_count=len(spans),
                 notes=notes,
+            ),
+        )
+
+    def _extract_txt(self, file_path: str) -> DocumentModel:
+        """Plain-text extraction: no styling, no hyperlinks, no tables, no
+        page breaks to detect -- genuinely the simplest of the three
+        formats. Each non-blank line becomes one TextSpan with the same
+        synthetic single-column geometry the DOCX path already uses
+        (DOCX_* constants), so Layout Reconstruction and everything
+        downstream sees ordinary single-column body text and needs no
+        format-specific handling. Uniform body_font_size (there's no font
+        information in a .txt file to infer from)."""
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+                raw_text = f.read()
+        except OSError as exc:
+            raise ExtractionFailure(f"Could not open TXT {file_path}: {exc}") from exc
+
+        spans: list[TextSpan] = []
+        x0 = DOCX_LEFT_MARGIN
+        x1 = DOCX_LEFT_MARGIN + DOCX_USABLE_WIDTH
+        y = DOCX_TOP_MARGIN
+        for line in raw_text.splitlines():
+            text = line.strip()
+            if not text:
+                continue
+            spans.append(
+                TextSpan(
+                    text=text,
+                    bbox=(x0, y, x1, y + DOCX_LINE_HEIGHT),
+                    font_size=DOCX_DEFAULT_FONT_SIZE,
+                    is_bold=False,
+                    page_num=0,
+                )
+            )
+            y += DOCX_LINE_HEIGHT
+
+        chars_extracted = sum(len(s.text) for s in spans)
+
+        return DocumentModel(
+            spans=spans,
+            hyperlinks=[],
+            page_count=1,
+            source_format="txt",
+            body_font_size=DOCX_DEFAULT_FONT_SIZE,
+            extraction_quality=ExtractionQuality(
+                chars_extracted=chars_extracted,
+                span_count=len(spans),
+                notes=[],
             ),
         )

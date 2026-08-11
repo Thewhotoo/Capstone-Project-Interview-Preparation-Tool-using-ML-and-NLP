@@ -93,5 +93,8 @@ def test_extract_raises_extraction_failure_for_corrupt_pdf(tmp_path):
 
 
 def test_extract_raises_extraction_failure_for_unsupported_format(simple_pdf):
+    # "txt" became a supported source_format alongside the production
+    # cutover -- "doc" (legacy binary Word format) remains genuinely
+    # unsupported, so it's the unsupported-format case now.
     with pytest.raises(ExtractionFailure):
-        PdfDocxExtractor().extract(str(simple_pdf), "txt")
+        PdfDocxExtractor().extract(str(simple_pdf), "doc")

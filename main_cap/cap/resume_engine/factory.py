@@ -14,8 +14,10 @@ Milestone 6, all eight stages are real: the six entity parsers (Milestone
 tagging), Normalization, Validation, and Confidence Scoring (all three
 Milestone 6). `default_pipeline().run(...)` now completes end-to-end
 without raising -- see `resume_engine/tests/test_pipeline_end_to_end.py`.
-Not yet wired into the live application (`app.py` still calls Gemini) --
-that cutover is Milestone 7.
+Wired into the live application as of the Milestone 7 production cutover
+-- `app.py`'s `/api/classify-resume` route calls this pipeline (via
+`candidate_profile_generator.generate_candidate_profile_via_engine`) by
+default; Gemini is no longer in that request path.
 """
 
 from __future__ import annotations

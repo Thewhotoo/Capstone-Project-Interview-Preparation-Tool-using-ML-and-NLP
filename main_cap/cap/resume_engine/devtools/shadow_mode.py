@@ -69,6 +69,12 @@ class ShadowComparisonResult:
     gemini_profile: dict
     engine_profile: dict
     discrepancies: list[Discrepancy] = field(default_factory=list)
+    # Structural check, not a discrepancy category -- see
+    # check_engine_topic_pool_health()'s docstring. Defaults to {} so
+    # existing callers/tests that construct a ShadowComparisonResult
+    # directly (without running the real pipelines) don't need to know
+    # about this field.
+    topic_pool_check: dict = field(default_factory=dict)
 
     def category_counts(self) -> dict[str, int]:
         counts: dict[str, int] = {}
@@ -194,6 +200,52 @@ def compare_profiles(gemini_profile: dict[str, Any], engine_profile: dict[str, A
     return discrepancies
 
 
+class GeminiComparisonError(RuntimeError):
+    """Raised by run_shadow_comparison when the Gemini side of the
+    comparison fails (rate limit, timeout, malformed response, etc). Lets
+    shadow_mode_batch.py's report distinguish "Gemini is unavailable,
+    nothing was learned about the engine on this resume" from a genuine
+    engine-side problem -- without this, both failure modes previously
+    looked identical (an opaque error string) in the batch report, which
+    matters because a human reviewing a large batch needs to triage
+    engine failures urgently and Gemini quota failures not at all."""
+
+
+class EngineComparisonError(RuntimeError):
+    """Raised by run_shadow_comparison when the engine side of the
+    comparison fails. Per Milestone7_EvaluationGuide.md Section 5, an
+    unhandled exception on a normal (non-corrupt, non-scanned) resume is
+    itself a CRITICAL FAILURE -- this tag lets the batch report surface
+    it distinctly and prominently, not bury it alongside routine Gemini
+    quota noise."""
+
+
+def check_engine_topic_pool_health(engine_profile: dict) -> dict:
+    """Structural check mirroring Milestone7_EvaluationGuide.md's
+    acceptance criterion #4 ("every engine-produced profile survives the
+    real TopicPool non-empty") -- runs the actual, unmodified `TopicPool`
+    against the engine's profile using the exact same check
+    test_candidate_profile_mapper.py's schema-compatibility test already
+    runs on synthetic data, just against a real resume now.
+
+    This is a factual, mechanical check (did TopicPool raise / end up
+    empty), never a verdict on resume quality -- a resume can legitimately
+    have thin content (Milestone 4's graceful-degradation rule), so an
+    empty pool here is a signal for human review against the guide's
+    criteria, not an automatic failure verdict."""
+    from topic_pool import TopicPool
+
+    try:
+        pool = TopicPool(engine_profile)
+    except Exception as e:  # noqa: BLE001 -- deliberately broad, this itself is the signal
+        return {"ok": False, "error": str(e), "specifications_count": 0, "rejected_count": None}
+    return {
+        "ok": len(pool.specifications) > 0 and pool.rejected == [],
+        "specifications_count": len(pool.specifications),
+        "rejected_count": len(pool.rejected),
+    }
+
+
 def run_shadow_comparison(resume_file_path: str, resume_text: str) -> ShadowComparisonResult:
     """Runs BOTH pipelines on the same resume and returns the categorized
     diff for human review. Gemini is called via the existing production
@@ -203,13 +255,29 @@ def run_shadow_comparison(resume_file_path: str, resume_text: str) -> ShadowComp
     public `CandidateProfile` shape, so this is a genuine apples-to-apples
     comparison for the first time (Milestone 0's version of this function
     could not do this, since the engine had no output-shape translation
-    yet)."""
+    yet).
+
+    Each side's call is wrapped separately so a failure is tagged with
+    which pipeline actually failed (see GeminiComparisonError /
+    EngineComparisonError) -- important for batch triage, since these two
+    failure modes call for completely different reviewer action."""
     import candidate_profile_generator
 
-    gemini_profile = candidate_profile_generator.generate_candidate_profile(resume_text)
-    engine_profile = candidate_profile_generator.generate_candidate_profile_via_engine(resume_file_path)
+    try:
+        gemini_profile = candidate_profile_generator.generate_candidate_profile(resume_text)
+    except Exception as e:
+        raise GeminiComparisonError(str(e)) from e
+
+    try:
+        engine_profile = candidate_profile_generator.generate_candidate_profile_via_engine(resume_file_path)
+    except Exception as e:
+        raise EngineComparisonError(str(e)) from e
 
     discrepancies = compare_profiles(gemini_profile, engine_profile)
+    topic_pool_check = check_engine_topic_pool_health(engine_profile)
     return ShadowComparisonResult(
-        gemini_profile=gemini_profile, engine_profile=engine_profile, discrepancies=discrepancies
+        gemini_profile=gemini_profile,
+        engine_profile=engine_profile,
+        discrepancies=discrepancies,
+        topic_pool_check=topic_pool_check,
     )

@@ -9,7 +9,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from resume_engine.devtools.shadow_mode import compare_profiles, run_shadow_comparison
+from resume_engine.devtools.shadow_mode import (
+    EngineComparisonError,
+    GeminiComparisonError,
+    check_engine_topic_pool_health,
+    compare_profiles,
+    run_shadow_comparison,
+)
 
 GOLDEN_CORPUS_DIR = Path(__file__).parent / "golden_corpus"
 
@@ -141,3 +147,69 @@ def test_run_shadow_comparison_produces_a_result_with_category_counts(monkeypatc
     counts = result.category_counts()
     assert isinstance(counts, dict)
     assert sum(counts.values()) == len(result.discrepancies)
+    # Real engine profile, real golden-corpus fixture with genuine
+    # project/experience content -- TopicPool should come back healthy.
+    assert result.topic_pool_check["ok"] is True
+    assert result.topic_pool_check["specifications_count"] > 0
+
+
+def test_run_shadow_comparison_tags_gemini_failure(monkeypatch):
+    """A Gemini-side failure must raise GeminiComparisonError, not a bare
+    exception -- this is what lets the batch report distinguish it from
+    an engine bug."""
+    import candidate_profile_generator
+
+    def _fake_generate(resume_text: str) -> dict:
+        raise RuntimeError("Gemini API rate limit exceeded. Please wait and try again.")
+
+    monkeypatch.setattr(candidate_profile_generator, "generate_candidate_profile", _fake_generate)
+
+    resume_path = GOLDEN_CORPUS_DIR / "full_entity_resume_pdf" / "resume.pdf"
+    try:
+        run_shadow_comparison(str(resume_path), resume_text="irrelevant")
+        assert False, "expected GeminiComparisonError"
+    except GeminiComparisonError as e:
+        assert "rate limit" in str(e)
+
+
+def test_run_shadow_comparison_tags_engine_failure(monkeypatch):
+    """An engine-side failure must raise EngineComparisonError, not a bare
+    exception -- per the eval guide, an unhandled engine exception on a
+    normal resume is a critical failure and must be surfaced distinctly
+    from routine Gemini quota noise."""
+    import candidate_profile_generator
+
+    def _fake_generate(resume_text: str) -> dict:
+        return _base_profile()
+
+    def _fake_engine(file_path: str) -> dict:
+        raise ValueError("boom")
+
+    monkeypatch.setattr(candidate_profile_generator, "generate_candidate_profile", _fake_generate)
+    monkeypatch.setattr(candidate_profile_generator, "generate_candidate_profile_via_engine", _fake_engine)
+
+    resume_path = GOLDEN_CORPUS_DIR / "full_entity_resume_pdf" / "resume.pdf"
+    try:
+        run_shadow_comparison(str(resume_path), resume_text="irrelevant")
+        assert False, "expected EngineComparisonError"
+    except EngineComparisonError as e:
+        assert "boom" in str(e)
+
+
+def test_check_engine_topic_pool_health_flags_empty_pool():
+    """A profile with no experience/projects/skills/certifications should
+    fail the health check (ok=False) rather than silently reporting
+    healthy -- TopicPool can also build specs from certifications, so all
+    spec-bearing fields must be empty to genuinely exercise this."""
+    empty_profile = _base_profile(experience=[], projects=[], skills=[], certifications=[])
+    result = check_engine_topic_pool_health(empty_profile)
+    assert result["ok"] is False
+
+
+def test_check_engine_topic_pool_health_never_raises_on_malformed_input():
+    """A completely malformed profile must produce a diagnostic dict, not
+    propagate an exception -- this check itself must never crash the
+    batch it's meant to protect."""
+    result = check_engine_topic_pool_health({})
+    assert result["ok"] is False
+    assert "specifications_count" in result

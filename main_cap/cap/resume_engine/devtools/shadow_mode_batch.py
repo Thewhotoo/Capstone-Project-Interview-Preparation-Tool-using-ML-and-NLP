@@ -23,9 +23,22 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
-from resume_engine.devtools.shadow_mode import ShadowComparisonResult, run_shadow_comparison
+from resume_engine.devtools.shadow_mode import (
+    EngineComparisonError,
+    GeminiComparisonError,
+    ShadowComparisonResult,
+    run_shadow_comparison,
+)
 
 _SUPPORTED_SUFFIXES = (".pdf", ".docx")
+
+
+class ExtractionComparisonError(RuntimeError):
+    """Stored (not raised past this module) when text/file extraction
+    itself fails before either pipeline runs -- distinguishes "we never
+    got far enough to compare anything" (a corrupt/scanned file, most
+    likely) from a Gemini-side or engine-side failure. See
+    GeminiComparisonError / EngineComparisonError in shadow_mode.py."""
 
 
 def _extract_text(resume_path: Path) -> str:
@@ -42,9 +55,10 @@ def _extract_text(resume_path: Path) -> str:
 def run_batch_shadow_comparison(resume_dir: str) -> dict[str, ShadowComparisonResult]:
     """Runs `run_shadow_comparison` over every supported resume file in
     `resume_dir` (non-recursive). Returns {filename: ShadowComparisonResult}.
-    A single resume's failure (e.g. a corrupt file) is recorded as an
-    error entry, not allowed to abort the whole batch -- one bad fixture
-    shouldn't block reviewing the other 49."""
+    A single resume's failure (e.g. a corrupt file, a Gemini quota error,
+    or a real engine bug) is recorded as an error entry, tagged with which
+    stage failed, and never allowed to abort the whole batch -- one bad
+    fixture shouldn't block reviewing the other 29."""
     results: dict[str, ShadowComparisonResult] = {}
     directory = Path(resume_dir)
     for resume_path in sorted(directory.iterdir()):
@@ -52,10 +66,29 @@ def run_batch_shadow_comparison(resume_dir: str) -> dict[str, ShadowComparisonRe
             continue
         try:
             text = _extract_text(resume_path)
-            results[resume_path.name] = run_shadow_comparison(str(resume_path), text)
         except Exception as e:  # noqa: BLE001 -- deliberately broad: one bad fixture must not abort the batch
+            results[resume_path.name] = ExtractionComparisonError(str(e))
+            continue
+        try:
+            results[resume_path.name] = run_shadow_comparison(str(resume_path), text)
+        except Exception as e:  # noqa: BLE001 -- includes GeminiComparisonError/EngineComparisonError, already tagged
             results[resume_path.name] = e
     return results
+
+
+def _error_stage(exc: Exception) -> str:
+    """Classifies a stored error entry by which stage produced it, for
+    report grouping. Anything not one of the three tagged types (e.g. a
+    plain Exception from code predating this tagging, or from a test's
+    hand-built fixture) is reported as "unknown_error" rather than
+    guessed at from its message text."""
+    if isinstance(exc, GeminiComparisonError):
+        return "gemini_error"
+    if isinstance(exc, EngineComparisonError):
+        return "engine_error"
+    if isinstance(exc, ExtractionComparisonError):
+        return "extraction_error"
+    return "unknown_error"
 
 
 def aggregate_category_counts(results: dict[str, ShadowComparisonResult]) -> dict[str, int]:
@@ -72,18 +105,62 @@ def aggregate_category_counts(results: dict[str, ShadowComparisonResult]) -> dic
 
 
 def write_report(results: dict[str, ShadowComparisonResult], report_path: str) -> None:
-    """Writes a human-reviewable JSON report -- one entry per resume, with
-    every discrepancy's field/category/gemini_value/engine_value, plus a
-    batch-level category summary. Never auto-resolves anything; this is
-    exclusively for a human to read and decide from."""
-    report = {"summary": aggregate_category_counts(results), "resumes": {}}
+    """Writes a human-reviewable JSON report structured so the top-level
+    keys answer the review questions in order, before drilling into any
+    one resume:
+
+      - meta: how much of the batch actually completed vs. errored, and
+        which stage each error came from (gemini/engine/extraction) --
+        this is what makes a quota-starved run ("18/30 completed, 12
+        gemini_error") immediately distinguishable from a run with real
+        engine problems ("28/30 completed, 2 engine_error") at a glance.
+      - summary: batch-level discrepancy category totals (existing).
+      - critical_failure_candidates: resumes where the engine's own
+        output failed the real TopicPool health check (see
+        check_engine_topic_pool_health) -- a structural pointer to
+        Milestone7_EvaluationGuide.md Section 5's critical-failure
+        criteria, not a verdict; still needs human confirmation.
+      - errors_by_stage: filenames grouped by which stage failed, so a
+        reviewer can jump straight to (for example) every engine_error
+        without reading every per-resume entry.
+      - resumes: full per-resume detail (unchanged shape for successful
+        comparisons; error entries now also carry a "stage" tag).
+
+    Never auto-resolves or auto-declares a side "better" -- every added
+    field is either a raw count or a factual/mechanical check, exactly
+    like the pre-existing discrepancy categories."""
+    completed = {k: v for k, v in results.items() if isinstance(v, ShadowComparisonResult)}
+    errored = {k: v for k, v in results.items() if isinstance(v, Exception)}
+
+    errors_by_stage: dict[str, list[str]] = {}
+    for filename, exc in errored.items():
+        errors_by_stage.setdefault(_error_stage(exc), []).append(filename)
+
+    critical_failure_candidates = [
+        filename for filename, result in completed.items()
+        if not result.topic_pool_check.get("ok", True)
+    ]
+
+    report = {
+        "meta": {
+            "total_resumes": len(results),
+            "completed": len(completed),
+            "errored": len(errored),
+            "errors_by_stage_count": {stage: len(files) for stage, files in errors_by_stage.items()},
+        },
+        "summary": aggregate_category_counts(results),
+        "critical_failure_candidates": critical_failure_candidates,
+        "errors_by_stage": errors_by_stage,
+        "resumes": {},
+    }
     for filename, result in results.items():
         if isinstance(result, Exception):
-            report["resumes"][filename] = {"error": str(result)}
+            report["resumes"][filename] = {"error": str(result), "stage": _error_stage(result)}
         else:
             report["resumes"][filename] = {
                 "category_counts": result.category_counts(),
                 "discrepancies": [asdict(d) for d in result.discrepancies],
+                "topic_pool_check": result.topic_pool_check,
             }
     Path(report_path).write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
 
@@ -98,7 +175,9 @@ def main() -> None:  # pragma: no cover -- thin CLI wrapper, exercised via the f
 
     results = run_batch_shadow_comparison(args.dir)
     write_report(results, args.report)
-    print(f"Compared {len(results)} resumes. Category totals: {aggregate_category_counts(results)}")
+    completed = sum(1 for r in results.values() if isinstance(r, ShadowComparisonResult))
+    print(f"Compared {len(results)} resumes: {completed} completed, {len(results) - completed} errored.")
+    print(f"Category totals: {aggregate_category_counts(results)}")
     print(f"Full report written to {args.report}")
 
 

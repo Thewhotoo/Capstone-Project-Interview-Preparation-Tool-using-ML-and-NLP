@@ -1,1 +1,1 @@
-{"approved":true,"rationale":"candidate QWK 0.4344 meets the required threshold of 0.0818 (baseline 0.0818 + minimum_qwk_improvement 0.0000)","checkpoint_model_version":"deberta_v3_base_experiment_2_tuned_epoch5","benchmark_id":"benchmark_a5e5f4364c924723"}
+{"approved":true,"rationale":"candidate QWK 0.3976 meets the required threshold of 0.1341 (baseline 0.1341 + minimum_qwk_improvement 0.0000)","checkpoint_model_version":"deberta_v3_base_experiment_4_epoch4","benchmark_id":"benchmark_de6b3f927562484b"}

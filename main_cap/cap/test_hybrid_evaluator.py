@@ -15,11 +15,15 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from evaluation_request import ConversationContextSnapshot, EvaluationRequest
-from evaluation_result import ConfidenceSource, DimensionScore, EvaluationResult, EvidenceLinkedClaim
+from evaluation_result import (
+    ConceptObservation, ConceptObservationStatus, ConfidenceSource, DimensionScore, EvaluationResult,
+    EvidenceLinkedClaim,
+)
 from evaluator import Evaluator, check_conformance
 from heuristic_evaluator import HeuristicEvaluator
 from hybrid_evaluator import (
-    _agreement_band, _compute_confidence, _dimension_agreement, _reclassify_claims, HybridEvaluator,
+    _agreement_band, _compute_confidence, _dimension_agreement, _reclassify_claims,
+    _reconcile_concept_coverage, HybridEvaluator,
 )
 from model_backbone import BackboneConfig, build_tiny_random_encoder, build_tokenizer
 from model_evaluator import TrainedEvaluator
@@ -321,13 +325,21 @@ class TestValidDebertaResultReturnedUnchanged(unittest.TestCase):
 
 
 class TestFeedbackStaysHeuristicSourced(unittest.TestCase):
-    """missing_reasoning, suggested_improvements, recommended_topics,
-    concept_coverage, and contradiction_detected remain entirely
-    heuristic-sourced regardless of how much DeBERTa's scores disagree with
-    the heuristic's -- unchanged from Round 2. strengths/weaknesses are
-    NOT included here anymore -- see TestStrengthsWeaknessesMatchFinalScores
-    below for the Round-3-fix behavior (they're reclassified against the
-    final, possibly-DeBERTa-sourced dimension scores)."""
+    """missing_reasoning, suggested_improvements, recommended_topics, and
+    contradiction_detected remain entirely heuristic-sourced regardless of
+    how much DeBERTa's scores disagree with the heuristic's -- unchanged
+    from Round 2. strengths/weaknesses are NOT included here anymore -- see
+    TestStrengthsWeaknessesMatchFinalScores below for the Round-3-fix
+    behavior (they're reclassified against the final, possibly-DeBERTa-
+    sourced dimension scores). concept_coverage is NOT included here either
+    as of the Concept Evidence Layer follow-up -- it's heuristic-sourced
+    only as a BASE, then downgrade-only reconciled against the trained
+    model's own per-concept read; see TestConceptEvidenceReconciliation
+    below. This fixture's `_request()` carries `expected_concepts=()`
+    (empty pool) so concept_coverage happens to equal the heuristic's here
+    regardless -- that's the genuinely-empty-pool case, asserted
+    explicitly, not a coincidence of this test no longer covering the
+    reconciliation behavior."""
 
     def test_non_claim_feedback_fields_equal_heuristic_exactly(self):
         req = _request()
@@ -339,8 +351,16 @@ class TestFeedbackStaysHeuristicSourced(unittest.TestCase):
         self.assertEqual(result.missing_reasoning, heuristic_result.missing_reasoning)
         self.assertEqual(result.suggested_improvements, heuristic_result.suggested_improvements)
         self.assertEqual(result.recommended_topics, heuristic_result.recommended_topics)
-        self.assertEqual(result.concept_coverage, heuristic_result.concept_coverage)
         self.assertEqual(result.contradiction_detected, heuristic_result.contradiction_detected)
+
+    def test_empty_concept_pool_stays_empty(self):
+        req = _request()  # expected_concepts=() -- no applicable concept pool
+        heuristic_result = HeuristicEvaluator().evaluate(req)
+        self.assertEqual(heuristic_result.concept_coverage, ())
+        overrides = {d.name: 0.02 for d in heuristic_result.dimensions}
+        hybrid = _hybrid_with_stub(_with_dimension_overrides(overrides))
+        result = hybrid.evaluate(req)
+        self.assertEqual(result.concept_coverage, ())
 
 
 class TestStrengthsWeaknessesMatchFinalScores(unittest.TestCase):
@@ -479,6 +499,171 @@ class TestReclassifyClaimsUnit(unittest.TestCase):
         old_weaknesses = (self._claim("Weak technical accuracy.", "technical_accuracy", "the bad quote"),)
         strengths, _ = _reclassify_claims(final_dims, old_strengths, old_weaknesses)
         self.assertEqual(strengths[0].evidence, "the good quote")
+
+
+class TestReconcileConceptCoverageUnit(unittest.TestCase):
+    """Direct, fully-controlled unit tests of `_reconcile_concept_coverage`
+    itself (Concept Evidence Layer follow-up) -- constructing
+    `ConceptObservation`s by hand so each case is exact, not dependent on
+    a real model's actual (imperfect, still-generalizing) predictions."""
+
+    @staticmethod
+    def _obs(concept: str, status: ConceptObservationStatus, evidence=None, confidence=0.7,
+              source="heuristic") -> ConceptObservation:
+        return ConceptObservation(
+            concept=concept, status=status, evidence=evidence, confidence=confidence,
+            confidence_source=source,
+        )
+
+    def test_trained_downgrade_wins_demonstrated_to_superficial(self):
+        """B: an exact-keyword hit the heuristic scored DEMONSTRATED (long
+        enough sentence, no read of what the sentence actually says) but the
+        trained model reads as merely SUPERFICIAL -- the more conservative
+        (trained) verdict wins, evidence/confidence taken from the trained
+        observation, never blended."""
+        heuristic = (self._obs("dependency injection", ConceptObservationStatus.DEMONSTRATED,
+                                evidence="We used dependency injection, routing, and modularity extensively."),)
+        trained = (self._obs("dependency injection", ConceptObservationStatus.SUPERFICIAL,
+                              evidence="model-derived observation for 'dependency injection'",
+                              confidence=0.81, source="model_derived"),)
+        result = _reconcile_concept_coverage(heuristic, trained)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].status, ConceptObservationStatus.SUPERFICIAL)
+        self.assertEqual(result[0].evidence, "model-derived observation for 'dependency injection'")
+        self.assertEqual(result[0].confidence, 0.81)
+
+    def test_trained_downgrade_wins_demonstrated_to_omitted(self):
+        heuristic = (self._obs("caching", ConceptObservationStatus.DEMONSTRATED, evidence="we used caching a lot"),)
+        trained = (self._obs("caching", ConceptObservationStatus.OMITTED, source="model_derived"),)
+        result = _reconcile_concept_coverage(heuristic, trained)
+        self.assertEqual(result[0].status, ConceptObservationStatus.OMITTED)
+
+    def test_never_upgrades_when_trained_disagrees_upward(self):
+        """A (documented limitation, deliberate): even if the trained model
+        were to call a concept the heuristic found no lexical evidence for
+        at all DEMONSTRATED, reconciliation must NOT invent credit the
+        heuristic never found -- a probe against genuinely novel phrasing
+        found the trained concept head does not yet reliably generalize to
+        crediting true zero-keyword-overlap paraphrase, so upgrading was
+        deliberately never attempted; this is the safety property that
+        follows from that decision, not a bug."""
+        heuristic = (self._obs("dependency injection", ConceptObservationStatus.OMITTED),)
+        trained = (self._obs("dependency injection", ConceptObservationStatus.DEMONSTRATED,
+                              evidence="model-derived observation for 'dependency injection'",
+                              source="model_derived"),)
+        result = _reconcile_concept_coverage(heuristic, trained)
+        self.assertEqual(result[0].status, ConceptObservationStatus.OMITTED)
+
+    def test_agreement_keeps_heuristic_observation_object(self):
+        """C: genuine superficial mention both evaluators agree on -- the
+        heuristic's own observation object is kept as-is (no needless
+        substitution when there's nothing to correct)."""
+        heuristic = (self._obs("caching", ConceptObservationStatus.SUPERFICIAL, evidence="touched on caching briefly"),)
+        trained = (self._obs("caching", ConceptObservationStatus.SUPERFICIAL,
+                              evidence="model-derived observation for 'caching'", source="model_derived"),)
+        result = _reconcile_concept_coverage(heuristic, trained)
+        self.assertEqual(result[0].evidence, "touched on caching briefly")
+
+    def test_genuine_omission_both_agree_stays_omitted(self):
+        """D."""
+        heuristic = (self._obs("goroutines", ConceptObservationStatus.OMITTED),)
+        trained = (self._obs("goroutines", ConceptObservationStatus.OMITTED, source="model_derived"),)
+        result = _reconcile_concept_coverage(heuristic, trained)
+        self.assertEqual(result[0].status, ConceptObservationStatus.OMITTED)
+
+    def test_concept_not_scored_by_trained_keeps_heuristic_unchanged(self):
+        """Defensive: no matching concept name in the trained side (e.g. a
+        name-mismatch edge case) leaves the heuristic verdict untouched --
+        never a crash, never invented comparison."""
+        heuristic = (self._obs("routing", ConceptObservationStatus.DEMONSTRATED, evidence="e"),)
+        result = _reconcile_concept_coverage(heuristic, ())
+        self.assertEqual(result, heuristic)
+
+    def test_preserves_heuristic_order_across_multiple_concepts(self):
+        heuristic = (
+            self._obs("a", ConceptObservationStatus.DEMONSTRATED, evidence="e1"),
+            self._obs("b", ConceptObservationStatus.OMITTED),
+            self._obs("c", ConceptObservationStatus.SUPERFICIAL, evidence="e3"),
+        )
+        trained = (
+            self._obs("c", ConceptObservationStatus.OMITTED, source="model_derived"),
+            self._obs("a", ConceptObservationStatus.SUPERFICIAL, evidence="downgraded a", source="model_derived"),
+        )
+        result = _reconcile_concept_coverage(heuristic, trained)
+        self.assertEqual([o.concept for o in result], ["a", "b", "c"])
+        self.assertEqual(result[0].status, ConceptObservationStatus.SUPERFICIAL)  # a: downgraded
+        self.assertEqual(result[1].status, ConceptObservationStatus.OMITTED)      # b: untouched (no trained match)
+        self.assertEqual(result[2].status, ConceptObservationStatus.OMITTED)      # c: downgraded
+
+
+class TestConceptEvidenceReconciliationIntegration(unittest.TestCase):
+    """Integration through the real `HybridEvaluator.evaluate()` -- a stub
+    trained evaluator controls concept_coverage directly (a real, tiny
+    untrained-backbone TrainedEvaluator's concept predictions are random,
+    not controllable), everything else flows through the real pipeline."""
+
+    def _req_with_concepts(self, concepts: tuple[str, ...]) -> EvaluationRequest:
+        return EvaluationRequest(
+            request_id="cr1", requested_at="2026-08-12T00:00:00+00:00",
+            specification=_spec(), question_text="Did Redis caching give you trouble?",
+            reasoning_type=ReasoningType.DEBUGGING,
+            answer_text="I fixed a caching bug by adding TTLs to Redis.",
+            conversation_context=ConversationContextSnapshot(turn_number=1, is_followup=False),
+            expected_concepts=concepts,
+        )
+
+    def _hybrid_with_concept_override(self, trained_concept_coverage):
+        def _transform(heuristic_result, request):
+            return heuristic_result.model_copy(update={"concept_coverage": trained_concept_coverage})
+        heuristic = HeuristicEvaluator()
+        return HybridEvaluator(heuristic, _StubEvaluatorWrapper(_transform), diagnostics_log_path=os.devnull)
+
+    def test_downgrade_reduces_final_concept_coverage_percent(self):
+        """G: the aggregate percentage (concept_analysis.concept_coverage_percent)
+        stays a correct, pure function of the final (post-reconciliation)
+        concept_coverage -- a downgrade here must visibly lower it, not
+        leave a stale heuristic-only number."""
+        from concept_analysis import concept_coverage_percent
+
+        req = self._req_with_concepts(("caching",))
+        heuristic_result = HeuristicEvaluator().evaluate(req)
+        # Confirm the fixture actually produces a lexical DEMONSTRATED hit
+        # to downgrade (the point of this test) rather than trivially
+        # already being non-demonstrated.
+        self.assertEqual(heuristic_result.concept_coverage[0].status, ConceptObservationStatus.DEMONSTRATED)
+
+        trained_coverage = (ConceptObservation(
+            concept="caching", status=ConceptObservationStatus.SUPERFICIAL,
+            evidence="model-derived observation for 'caching'", confidence=0.75, confidence_source="model_derived",
+        ),)
+        hybrid = self._hybrid_with_concept_override(trained_coverage)
+        result = hybrid.evaluate(req)
+
+        self.assertEqual(result.concept_coverage[0].status, ConceptObservationStatus.SUPERFICIAL)
+        self.assertEqual(concept_coverage_percent(result), 50.0)
+        self.assertLess(concept_coverage_percent(result), concept_coverage_percent(heuristic_result))
+
+    def test_trained_failure_leaves_concept_coverage_purely_heuristic(self):
+        """E/fallback: when TrainedEvaluator fails outright, concept_coverage
+        is untouched -- exactly the pre-existing (Round 2) behavior, not a
+        regression introduced by reconciliation."""
+        req = self._req_with_concepts(("caching",))
+        heuristic_result = HeuristicEvaluator().evaluate(req)
+        hybrid = HybridEvaluator(HeuristicEvaluator(), _RaisingTrainedEvaluator(), diagnostics_log_path=os.devnull)
+        result = hybrid.evaluate(req)
+        self.assertEqual(result.concept_coverage, heuristic_result.concept_coverage)
+
+    def test_no_applicable_concept_pool_stays_empty_through_reconciliation(self):
+        """F: no expected_concepts at all -- both sides empty, reconciliation
+        is a no-op, concept_coverage_percent stays None (excluded from any
+        average), never coerced to 0%."""
+        from concept_analysis import concept_coverage_percent
+
+        req = self._req_with_concepts(())
+        hybrid = self._hybrid_with_concept_override(())
+        result = hybrid.evaluate(req)
+        self.assertEqual(result.concept_coverage, ())
+        self.assertIsNone(concept_coverage_percent(result))
 
 
 class TestGracefulDegradationOnTrainedFailure(unittest.TestCase):

@@ -38,9 +38,23 @@ ROUND 3 POLICY (this module, current):
   established -- no new thresholds, no new confidence model) and the
   diagnostics log -- it is observability/confidence-only now, never a
   score override.
-- missing_reasoning, suggested_improvements, recommended_topics, and
-  concept_coverage remain ENTIRELY heuristic-sourced, unchanged from
-  Round 2 -- no new NLP/text generation.
+- missing_reasoning, suggested_improvements, recommended_topics remain
+  ENTIRELY heuristic-sourced, unchanged from Round 2 -- no new NLP/text
+  generation.
+- concept_coverage (Concept Evidence Layer follow-up, after Round 3): base
+  is still heuristic-sourced, but each concept's status is now reconciled
+  DOWNGRADE-ONLY against TrainedEvaluator's own per-concept read (already
+  computed above, previously discarded) when DeBERTa succeeded this turn --
+  see `_reconcile_concept_coverage`. The heuristic's lexical detector
+  unconditionally scores an exact-phrase-in-a-long-enough-sentence hit as
+  DEMONSTRATED regardless of what the sentence actually says ("mentioned
+  briefly" and "demonstrated with concrete detail" score identically); the
+  trained concept head reads that qualifying language and can only ever
+  pull an over-credited verdict down, never invent credit the heuristic
+  found no lexical evidence for at all (a probe against genuinely novel
+  phrasing found the trained head does not yet reliably generalize to
+  crediting true zero-keyword-overlap paraphrase, so upgrading was
+  deliberately not attempted).
 - strengths/weaknesses text is heuristic-sourced but RECLASSIFIED against
   the final dimension scores above (`_reclassify_claims`) -- a fix added
   after a real end-to-end demo caught a dimension displayed at 25% labelled
@@ -67,7 +81,10 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from evaluation_request import EvaluationRequest
-from evaluation_result import ConfidenceSource, DimensionScore, EvaluationResult, EvidenceLinkedClaim
+from evaluation_result import (
+    ConceptObservation, ConceptObservationStatus, ConfidenceSource, DimensionScore, EvaluationResult,
+    EvidenceLinkedClaim,
+)
 from heuristic_evaluator import STRENGTH_THRESHOLD, WEAKNESS_THRESHOLD, HeuristicEvaluator
 from model_evaluator import TrainedEvaluator
 
@@ -243,6 +260,64 @@ def _reclassify_claims(
     return tuple(strengths), tuple(weaknesses)
 
 
+# Concept evidence reconciliation (Round 3 follow-up: Concept Evidence
+# Layer). WHY: HeuristicEvaluator's `_concept_status` is lexical -- an exact
+# phrase (or bare token-overlap) hit inside a long-enough sentence is
+# unconditionally DEMONSTRATED, blind to what the surrounding words
+# actually SAY (a battery of held-out concept-labeled test examples found
+# this conflates "X was mentioned briefly" with "X was demonstrated with
+# concrete functional detail" every time -- 216/702 genuinely-superficial
+# concepts scored as DEMONSTRATED). TrainedEvaluator's concept head is a
+# real, already-trained, already-deployed (jointly trained with the promoted
+# dimension heads, ALREADY invoked by HybridEvaluator on every turn --
+# nothing new to compute) cross-encoder pass over (answer, concept) that
+# reads the qualifying language a lexical scan cannot.
+#
+# WHY DOWNGRADE-ONLY (never upgrade): a manual probe against genuinely
+# novel, non-templated phrasing (not the synthetic training distribution)
+# found the trained concept head does NOT reliably generalize to crediting
+# real paraphrase with zero lexical overlap -- it call a hand-written,
+# clearly-demonstrating answer using none of the concept's own words
+# OMITTED, same as the heuristic. Letting a model invent DEMONSTRATED/
+# SUPERFICIAL credit the heuristic found no lexical evidence for at all
+# would violate ConceptObservation's own "never invented" evidence
+# discipline on exactly the cases where it's least trustworthy. Only ever
+# pulling a lexically-over-credited verdict DOWN to the trained model's more
+# conservative read is the smallest change that is monotonically safer than
+# the status quo on every case checked (never produces a HIGHER coverage
+# number than the pure heuristic would have) while still catching the
+# concrete, confirmed over-crediting failure mode above.
+_CONCEPT_STATUS_CREDIT = {
+    ConceptObservationStatus.DEMONSTRATED: 2,
+    ConceptObservationStatus.SUPERFICIAL: 1,
+    ConceptObservationStatus.OMITTED: 0,
+}
+
+
+def _reconcile_concept_coverage(
+    heuristic_coverage: tuple[ConceptObservation, ...],
+    trained_coverage: tuple[ConceptObservation, ...],
+) -> tuple[ConceptObservation, ...]:
+    """Per-concept minimum of the heuristic's (lexical) and the trained
+    model's (semantic) status, matched by concept name, order-preserving
+    from `heuristic_coverage` (the same order downstream consumers --
+    concept_analysis.py, the dashboard -- already expect). A concept the
+    trained model didn't independently score (e.g. `trained_coverage` empty
+    because DeBERTa failed this turn, or, defensively, name mismatch) keeps
+    its heuristic verdict unchanged -- this function can only ever lower a
+    turn's concept coverage, never raise it, and never touches a concept
+    pair it can't compare."""
+    trained_by_concept = {c.concept.strip().lower(): c for c in trained_coverage}
+    reconciled: list[ConceptObservation] = []
+    for h_obs in heuristic_coverage:
+        t_obs = trained_by_concept.get(h_obs.concept.strip().lower())
+        if t_obs is not None and _CONCEPT_STATUS_CREDIT[t_obs.status] < _CONCEPT_STATUS_CREDIT[h_obs.status]:
+            reconciled.append(t_obs)
+        else:
+            reconciled.append(h_obs)
+    return tuple(reconciled)
+
+
 class HybridEvaluator:
     """Evaluator Protocol implementation. Wraps a HeuristicEvaluator
     (feedback text, fallback, and the confidence/disagreement signal) and a
@@ -371,14 +446,25 @@ class HybridEvaluator:
         )
 
         # missing_reasoning, suggested_improvements, recommended_topics,
-        # concept_coverage, contradiction_* remain heuristic-sourced (base
-        # object), unchanged from Round 2. strengths/weaknesses are
-        # RECLASSIFIED against final_dimensions (see _reclassify_claims
-        # docstring) -- fixed after the real end-to-end demo showed a
-        # dimension displayed at 25% labelled "Strong" because the
-        # heuristic's own pre-blend score for it disagreed with DeBERTa's.
+        # contradiction_* remain heuristic-sourced (base object), unchanged
+        # from Round 2. strengths/weaknesses are RECLASSIFIED against
+        # final_dimensions (see _reclassify_claims docstring) -- fixed after
+        # the real end-to-end demo showed a dimension displayed at 25%
+        # labelled "Strong" because the heuristic's own pre-blend score for
+        # it disagreed with DeBERTa's.
         final_strengths, final_weaknesses = _reclassify_claims(
             final_dimensions, heuristic_result.strengths, heuristic_result.weaknesses,
+        )
+
+        # concept_coverage: heuristic-sourced base, DOWNGRADE-ONLY
+        # reconciled against the trained model's own per-concept read when
+        # DeBERTa succeeded this turn (see _reconcile_concept_coverage
+        # docstring -- Concept Evidence Layer). When DeBERTa failed
+        # (trained_result is None), concept_coverage is untouched, exactly
+        # the prior "entirely heuristic-sourced" behavior.
+        final_concept_coverage = (
+            _reconcile_concept_coverage(heuristic_result.concept_coverage, trained_result.concept_coverage)
+            if trained_result is not None else heuristic_result.concept_coverage
         )
 
         return heuristic_result.model_copy(update={
@@ -396,4 +482,5 @@ class HybridEvaluator:
             "model_version": model_version,
             "strengths": final_strengths,
             "weaknesses": final_weaknesses,
+            "concept_coverage": final_concept_coverage,
         })

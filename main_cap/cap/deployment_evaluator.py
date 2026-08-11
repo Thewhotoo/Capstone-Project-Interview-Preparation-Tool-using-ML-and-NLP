@@ -4,16 +4,20 @@ Deployment Evaluator Bootstrap — wires the trained DeBERTa evaluator
 into the live application's evaluator registry, with `HeuristicEvaluator` as
 the mandatory fallback.
 
-HYBRID WIRING: when the trained checkpoint loads and is promotion-approved,
-it is NOT registered as the active evaluator directly. It's registered
-under its own name (inspectable, available for a future direct rollout)
-and wrapped in a `HybridEvaluator` alongside a fresh `HeuristicEvaluator` --
-the HybridEvaluator is what actually goes active. HeuristicEvaluator stays
-authoritative for every candidate-facing field; the trained model
-participates by running on every turn and adjusting only the reported
-confidence (see hybrid_evaluator.py). If the trained checkpoint isn't
-available at all, the fallback path is unchanged: a bare HeuristicEvaluator,
-exactly as before this wiring existed.
+HYBRID WIRING (Round 3 -- DeBERTa-primary, see hybrid_evaluator.py's module
+docstring for the full rationale/evaluation numbers): when the trained
+checkpoint loads and is promotion-approved, it is NOT registered as the
+active evaluator directly. It's registered under its own name (inspectable,
+available for a future direct rollout) and wrapped in a `HybridEvaluator`
+alongside a fresh `HeuristicEvaluator` -- the HybridEvaluator is what
+actually goes active. The trained model is now AUTHORITATIVE for scoring
+(dimensions/overall_score/grade) whenever it produces a valid result on a
+given turn; HeuristicEvaluator supplies feedback text (strengths/
+weaknesses/missing_reasoning/etc.), the confidence/disagreement signal, and
+is the fallback scorer ONLY when the trained model fails on that turn. If
+the trained checkpoint isn't available at all, the fallback path is
+unchanged: a bare HeuristicEvaluator, exactly as before this wiring
+existed.
 
 NOT A NEW SUBSYSTEM: reuses `evaluator_registry.register_evaluator`,
 `model_evaluator.{TrainedEvaluator, promote_trained_model}`,
@@ -95,9 +99,10 @@ def bootstrap_production_evaluator() -> None:
         register_evaluator(hybrid_evaluator, make_active=True)
 
         logger.info(
-            "Production evaluator ACTIVE: %r (HeuristicEvaluator authoritative for candidate-facing "
-            "scores; trained checkpoint %r, dataset_version=%r, loaded from %r and promotion-approved, "
-            "runs every turn to adjust reported confidence -- promotion decision approved: %s)",
+            "Production evaluator ACTIVE: %r (trained checkpoint %r is authoritative for scoring on any "
+            "turn it succeeds on; HeuristicEvaluator supplies feedback text, the confidence/disagreement "
+            "signal, and is the fallback scorer if the trained model fails; dataset_version=%r, loaded "
+            "from %r, promotion decision approved: %s)",
             hybrid_evaluator.name, checkpoint.model_version, checkpoint.dataset_version,
             DEPLOYED_MODEL_DIR, decision.rationale,
         )

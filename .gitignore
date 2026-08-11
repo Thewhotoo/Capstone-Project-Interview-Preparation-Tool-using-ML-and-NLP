@@ -52,3 +52,8 @@ main_cap/cap/hybrid_diagnostics.jsonl
 
 # Personal Claude session notes
 session_handover.md
+
+# --- deployed-model rollback snapshots (large binary checkpoint backups
+# taken before promoting a new checkpoint -- not reproducible from source,
+# not meant to live in git history) ---
+main_cap/cap/deployed_model_backup_*/

@@ -172,6 +172,79 @@ class GeminiSemanticVerifierClient:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
+# SBERT implementation — API-FREE, real (non-fake) semantic-drift check
+# ═════════════════════════════════════════════════════════════════════════════
+
+_SEM_MODEL_NAME = "all-MiniLM-L6-v2"
+# Deliberately stricter than rewrite_validation._SIMILARITY_FLOOR (0.55):
+# that check is a coarse gate against gross drift; this one stands in for
+# the LLM judge's finer-grained "did the technical MEANING change" read,
+# so it should catch more subtle drift than the coarse gate alone would.
+_DRIFT_SIMILARITY_FLOOR = 0.70
+
+
+class _LazySemanticModel:
+    """Lazy singleton, private to this module — duplicated from
+    `rewrite_validation._LazySemanticModel` / `heuristic_evaluator._LazyModels`
+    rather than imported, per this codebase's "deliberate independence
+    between pipeline stages" precedent (this module's own docstring)."""
+
+    _model = None
+
+    @classmethod
+    def get(cls):
+        if cls._model is None:
+            try:
+                from sentence_transformers import SentenceTransformer
+                cls._model = SentenceTransformer(_SEM_MODEL_NAME)
+            except Exception as e:  # pragma: no cover - environment-dependent
+                logger.warning("SentenceTransformer unavailable, using fallback: %s", e)
+                cls._model = False
+        return cls._model if cls._model is not False else None
+
+
+def _semantic_similarity(text_a: str, text_b: str) -> float:
+    model = _LazySemanticModel.get()
+    if model is None or not text_a.strip() or not text_b.strip():
+        words_a, words_b = set(text_a.lower().split()), set(text_b.lower().split())
+        if not words_a or not words_b:
+            return 0.0
+        return len(words_a & words_b) / max(len(words_a | words_b), 1)
+    import numpy as np
+    embs = model.encode([text_a, text_b])
+    dot = np.dot(embs[0], embs[1])
+    norm = np.linalg.norm(embs[0]) * np.linalg.norm(embs[1])
+    return float(dot / norm) if norm > 0 else 0.0
+
+
+class SBERTDriftVerifierClient:
+    """API-FREE `RewriteVerifierClient` implementation — an SBERT
+    cosine-similarity judge standing in for the Gemini semantic-drift
+    judge when no external LLM API is available (Track B: the dataset
+    must be producible without Gemini/OpenAI/any external LLM API).
+    Not a "fake" (see `FakeSemanticVerifierClient` above, which is
+    test-only and never judges real content) — this is a genuine,
+    real signal, just a different (embedding-similarity) kind of
+    signal than an LLM's judgment. Flags `meaning_changed=True` when
+    similarity falls below `_DRIFT_SIMILARITY_FLOOR`."""
+
+    def __init__(self, model_name: str = "sbert-drift-verifier-v1") -> None:
+        self.model_name = model_name
+
+    def verify(self, original_answer: str, rewritten_answer: str) -> SemanticDriftVerdict:
+        similarity = _semantic_similarity(original_answer, rewritten_answer)
+        if similarity < _DRIFT_SIMILARITY_FLOOR:
+            return SemanticDriftVerdict(
+                meaning_changed=True,
+                explanation=f"SBERT cosine similarity {similarity:.3f} is below the drift floor {_DRIFT_SIMILARITY_FLOOR}.",
+            )
+        return SemanticDriftVerdict(
+            meaning_changed=False,
+            explanation=f"SBERT cosine similarity {similarity:.3f} is at/above the drift floor {_DRIFT_SIMILARITY_FLOOR}.",
+        )
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 # Deterministic fake — network-free, for tests and local pipeline exercises
 # ═════════════════════════════════════════════════════════════════════════════
 

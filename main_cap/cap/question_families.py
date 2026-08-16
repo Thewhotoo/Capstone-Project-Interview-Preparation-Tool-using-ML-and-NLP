@@ -143,7 +143,40 @@ def _seed_clause(ctx: PhrasingContext) -> str:
 
 
 def _experience_label(ctx: PhrasingContext) -> str:
-    return f"{ctx.role} at {ctx.company}" if ctx.company else (ctx.role or "that role")
+    """Renders "Role at Company" when both are known; the role alone, or the
+    company alone, when only one is known -- e.g. when
+    experience_parser.py's institution-marker fallback correctly left
+    `role` empty rather than inventing a job title for an entry like "CAVE
+    Labs - PES University EC Campus" (an organization hosted at a
+    university, not a personal title). Templates that hardcode "as"
+    immediately before this label use `_experience_preposition_label`
+    below instead -- "as <company name>" would misrepresent an
+    organization as a job title."""
+    if ctx.role and ctx.company:
+        return f"{ctx.role} at {ctx.company}"
+    return ctx.role or ctx.company or "that role"
+
+
+def _experience_preposition_label(ctx: PhrasingContext) -> str:
+    """The full "as <role...>" / "at <company>" phrase for templates that
+    would otherwise hardcode "as" immediately before an experience label.
+    Never produces "as <company name>" -- when role is unknown (see
+    `_experience_label`), the phrase uses "at <company>" instead, which
+    is factually accurate (the candidate worked AT that organization)
+    without claiming an organization name is a personal job title."""
+    if ctx.role:
+        return f"as {_experience_label(ctx)}"
+    if ctx.company:
+        return f"at {ctx.company}"
+    return "in that role"
+
+
+def _capitalize_first(text: str) -> str:
+    """Capitalizes only the first character, unlike `str.capitalize()`
+    (which also lowercases the rest of the string -- destructive to a
+    proper-noun-heavy company name like "CAVE Labs"). Used for sentence-
+    initial phrasing variants."""
+    return text[:1].upper() + text[1:] if text else text
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -297,8 +330,8 @@ register_family(FamilyDefinition(
     reasoning_type=ReasoningType.OWNERSHIP,
     applicable_categories=frozenset({QuestionCategory.EXPERIENCE}),
     phrasing_variants=(
-        lambda ctx: f"You worked as {_experience_label(ctx)}. What were your day-to-day responsibilities there?",
-        lambda ctx: f"What did a typical day look like for you as {_experience_label(ctx)}?",
+        lambda ctx: f"You worked {_experience_preposition_label(ctx)}. What were your day-to-day responsibilities there?",
+        lambda ctx: f"What did a typical day look like for you {_experience_preposition_label(ctx)}?",
     ),
 ))
 
@@ -307,8 +340,8 @@ register_family(FamilyDefinition(
     reasoning_type=ReasoningType.OWNERSHIP,
     applicable_categories=frozenset({QuestionCategory.EXPERIENCE}),
     phrasing_variants=(
-        lambda ctx: f"During your time as {_experience_label(ctx)}, how did you collaborate with your team on technical decisions?",
-        lambda ctx: f"As {_experience_label(ctx)}, how did you work with the rest of your team day to day?",
+        lambda ctx: f"During your time {_experience_preposition_label(ctx)}, how did you collaborate with your team on technical decisions?",
+        lambda ctx: f"{_capitalize_first(_experience_preposition_label(ctx))}, how did you work with the rest of your team day to day?",
     ),
 ))
 

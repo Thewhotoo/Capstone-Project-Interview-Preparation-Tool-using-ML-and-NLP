@@ -31,6 +31,22 @@ _SPLIT_PATTERNS = (
     re.compile(r"\s*,\s*"),
 )
 
+# General (not resume-specific) markers for "this half names a hosting
+# institution/organization, not a personal job title" -- used ONLY inside
+# the existing no-confident-gazetteer-match fallback below, to catch the
+# "Org, Host Institution" header shape (e.g. a lab hosted at a university)
+# that the position-based guess otherwise misreads as "Title, Company".
+# Deliberately a small, generic lexical class (institution-type nouns),
+# not any specific school/company name.
+_INSTITUTION_MARKERS = ("university", "college", "institute", "polytechnic", "campus")
+_INSTITUTION_MARKER_PATTERN = re.compile(
+    r"\b(?:" + "|".join(_INSTITUTION_MARKERS) + r")\b", re.IGNORECASE,
+)
+
+
+def _looks_like_institution(text: str) -> bool:
+    return bool(_INSTITUTION_MARKER_PATTERN.search(text))
+
 
 def _split_role_company(text: str) -> tuple[str, str]:
     """Tries delimiters in priority order (" at " > dash > comma); the
@@ -115,6 +131,24 @@ class ExperienceParser:
             part_a, part_b = _split_role_company(header_for_split)
             role, company, gazetteer_matched = _disambiguate_role_company(part_a, part_b)
 
+            institution_fallback = False
+            if not gazetteer_matched and part_b and (_looks_like_institution(part_a) or _looks_like_institution(part_b)):
+                # Neither half read as a job title, and at least one half
+                # reads as a hosting institution/organization (university,
+                # college, institute, campus, polytechnic) rather than a
+                # personal role -- e.g. "CAVE Labs – PES University EC
+                # Campus" (a lab hosted at a university, not "Title –
+                # Company"). Guessing which half is the role by position
+                # here would fabricate a job title the resume never
+                # actually stated. Preserve the header VERBATIM as the
+                # organizational context instead of reconstructing it from
+                # the split pieces (which could pick the wrong delimiter/
+                # spacing), and leave role genuinely unknown rather than
+                # invented -- the schema already supports role="" (see
+                # module docstring / ExperienceEntry's default).
+                role, company = "", header_for_split
+                institution_fallback = True
+
             body_lines = [
                 line for i, line in enumerate(entry.body_lines) if i != date_line_index
             ]
@@ -125,6 +159,9 @@ class ExperienceParser:
             if gazetteer_matched:
                 reasons.append("+role_gazetteer_matched")
                 score += 0.4
+            elif institution_fallback:
+                reasons.append("-role_not_gazetteer_matched")
+                reasons.append("+role_left_empty_institutional_pattern")
             else:
                 reasons.append("-role_not_gazetteer_matched")
             if date_range is not None and date_range.start is not None:

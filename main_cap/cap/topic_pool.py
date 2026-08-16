@@ -225,10 +225,16 @@ class TopicPool:
         # ── Priority 3: experience ────────────────────────────────────────
         for exp in experiences:
             role = exp.get("role", "")
-            if not role:
-                continue
             company = exp.get("company", "")
-            label = f"{role} at {company}" if company else role
+            # An entry is only skipped when there's genuinely nothing to
+            # ground a question in. A role-empty entry (e.g.
+            # experience_parser.py's institution-marker fallback, which
+            # deliberately leaves role="" rather than inventing a job
+            # title for an "Org – Host Institution" header) still has a
+            # real organization/summary worth asking about.
+            if not role and not company:
+                continue
+            label = f"{role} at {company}" if role and company else (company or role)
             self._add(
                 QuestionCategory.EXPERIENCE,
                 None,
@@ -300,7 +306,7 @@ class TopicPool:
                 matched_experience = find_experience_by_label(origin_experience, experiences)
                 role = matched_experience.get("role", "")
                 company = matched_experience.get("company", "")
-                label = f"{role} at {company}" if company else role
+                label = f"{role} at {company}" if role and company else (company or role)
                 self._add(
                     QuestionCategory.SKILL_IN_CONTEXT,
                     topic,

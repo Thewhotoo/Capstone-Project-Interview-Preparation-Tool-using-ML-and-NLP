@@ -61,6 +61,45 @@ class TestTopicPoolGeneration(unittest.TestCase):
         self.assertEqual(len(experiences), 1)
         self.assertEqual(experiences[0].source_id, "Software Engineering Intern at Acme Corp")
 
+    def test_experience_with_empty_role_and_nonempty_company_still_enters_pool(self):
+        """Phase 2 companion fix: experience_parser.py's institution-marker
+        fallback (e.g. "CAVE Labs - PES University EC Campus") leaves
+        role="" rather than inventing a job title -- that entry must NOT
+        be silently dropped from question generation just because role is
+        empty; company alone is enough to ground a question."""
+        profile = sample_profile_dict()
+        profile["experience"] = [
+            {
+                "company": "CAVE Labs – PES University EC Campus",
+                "role": "",
+                "duration": "Jun 2025 - Aug 2025",
+                "summary": "Developed an immersive Unity VR training application.",
+            }
+        ]
+        pool = TopicPool(profile)
+        experiences = [
+            s for s in pool.specifications.values()
+            if s.category == QuestionCategory.EXPERIENCE
+        ]
+        self.assertEqual(len(experiences), 1)
+        # No fabricated role -- the source_id is the company alone, not
+        # "<empty> at CAVE Labs...".
+        self.assertEqual(experiences[0].source_id, "CAVE Labs – PES University EC Campus")
+
+    def test_experience_with_both_role_and_company_empty_is_skipped(self):
+        """The gate still correctly skips an entry with genuinely nothing
+        to ground a question in."""
+        profile = sample_profile_dict()
+        profile["experience"] = [
+            {"company": "", "role": "", "duration": "", "summary": "Nothing to ground here."}
+        ]
+        pool = TopicPool(profile)
+        experiences = [
+            s for s in pool.specifications.values()
+            if s.category == QuestionCategory.EXPERIENCE
+        ]
+        self.assertEqual(experiences, [])
+
     def test_certification_unit_built_per_certification(self):
         certs = [
             s for s in self.pool.specifications.values()

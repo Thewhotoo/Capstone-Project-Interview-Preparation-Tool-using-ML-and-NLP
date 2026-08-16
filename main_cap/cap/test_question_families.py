@@ -16,6 +16,7 @@ from question_families import (
     get_family,
     register_family,
 )
+from question_families import _experience_label, _experience_preposition_label
 from question_specification import QuestionCategory
 
 
@@ -99,6 +100,73 @@ class TestPhrasingVariantsRender(unittest.TestCase):
     def test_each_family_has_at_least_two_variants(self):
         for name in all_family_names():
             self.assertGreaterEqual(len(get_family(name).phrasing_variants), 1)
+
+
+def _ctx(role="", company="", category=QuestionCategory.EXPERIENCE):
+    return PhrasingContext(
+        category=category, text_seed="a specific detail",
+        title="", technologies=(), role=role, company=company, certification_name="",
+        source_id="test",
+    )
+
+
+class TestExperienceLabelEmptyRole(unittest.TestCase):
+    """Phase 2 companion fix: experience_parser.py's institution-marker
+    fallback can leave role="" with a real company (e.g. "CAVE Labs -
+    PES University EC Campus"). Labels/phrasing must never fabricate a
+    job title in that case."""
+
+    def test_label_is_company_alone_when_role_empty(self):
+        ctx = _ctx(role="", company="CAVE Labs – PES University EC Campus")
+        self.assertEqual(_experience_label(ctx), "CAVE Labs – PES University EC Campus")
+
+    def test_label_is_role_at_company_when_both_present(self):
+        ctx = _ctx(role="Senior Engineer", company="Acme Corp")
+        self.assertEqual(_experience_label(ctx), "Senior Engineer at Acme Corp")
+
+    def test_label_is_role_alone_when_company_empty(self):
+        ctx = _ctx(role="Senior Engineer", company="")
+        self.assertEqual(_experience_label(ctx), "Senior Engineer")
+
+    def test_label_falls_back_to_that_role_when_both_empty(self):
+        ctx = _ctx(role="", company="")
+        self.assertEqual(_experience_label(ctx), "that role")
+
+    def test_preposition_label_uses_at_not_as_when_role_empty(self):
+        ctx = _ctx(role="", company="CAVE Labs – PES University EC Campus")
+        phrase = _experience_preposition_label(ctx)
+        self.assertEqual(phrase, "at CAVE Labs – PES University EC Campus")
+        self.assertNotIn("as ", phrase)
+
+    def test_preposition_label_uses_as_when_role_present(self):
+        ctx = _ctx(role="Senior Engineer", company="Acme Corp")
+        self.assertEqual(_experience_preposition_label(ctx), "as Senior Engineer at Acme Corp")
+
+    def test_responsibilities_family_never_says_worked_as_company(self):
+        """Direct regression for the reported bug: "You worked as CAVE
+        Labs at PES University EC Campus" must never be produced again."""
+        ctx = _ctx(role="", company="CAVE Labs – PES University EC Campus")
+        defn = get_family("responsibilities")
+        for variant in defn.phrasing_variants:
+            text = variant(ctx)
+            self.assertNotIn("as CAVE Labs", text)
+            self.assertIn("at CAVE Labs", text)
+
+    def test_team_collaboration_family_never_says_as_company(self):
+        ctx = _ctx(role="", company="CAVE Labs – PES University EC Campus")
+        defn = get_family("team_collaboration")
+        for variant in defn.phrasing_variants:
+            text = variant(ctx)
+            self.assertNotIn("As CAVE Labs", text)
+            self.assertNotIn("as CAVE Labs", text)
+            self.assertTrue("At CAVE Labs" in text or "at CAVE Labs" in text)
+
+    def test_responsibilities_family_still_says_worked_as_role_when_role_present(self):
+        """Regression guard: normal role+company entries are unaffected."""
+        ctx = _ctx(role="Senior Engineer", company="Acme Corp")
+        defn = get_family("responsibilities")
+        texts = [variant(ctx) for variant in defn.phrasing_variants]
+        self.assertTrue(any("as Senior Engineer at Acme Corp" in t for t in texts))
 
 
 if __name__ == "__main__":

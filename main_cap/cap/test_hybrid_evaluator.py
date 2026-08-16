@@ -1195,5 +1195,81 @@ class TestSevenReproducedRegressionCases(unittest.TestCase):
             self.assertAlmostEqual(final_val, trained_val, places=3)
 
 
+def _skill_in_context_decision_making_request() -> EvaluationRequest:
+    spec = QuestionSpecification(
+        id="topic_cat", category=QuestionCategory.SKILL_IN_CONTEXT, text_seed="Linux",
+        grounding=Grounding(project=ProjectGrounding(
+            title="AI SOC Analyst", technologies=("Linux",), concepts=(),
+        )),
+        source_type=SourceType.PROJECT, source_id="AI SOC Analyst",
+        source_field="technical_topics", reason="test",
+    )
+    return EvaluationRequest(
+        request_id="req_cat", requested_at="2026-07-24T00:00:00+00:00",
+        specification=spec, question_text="Why did you take the approach you did for Linux?",
+        reasoning_type=ReasoningType.DECISION_MAKING,
+        answer_text="I used it for log analysis.",
+        conversation_context=ConversationContextSnapshot(turn_number=1, is_followup=False),
+        expected_concepts=(),
+    )
+
+
+class TestCategoryAwareDimensionSelectionThroughHybrid(unittest.TestCase):
+    """Phase 6 (question-specific dimensions), integration through the
+    REAL HybridEvaluator (heuristic + real TrainedEvaluator, tiny random
+    backbone): the narrower SKILL_IN_CONTEXT + DECISION_MAKING dimension
+    set must work end-to-end -- no crash, correct aggregation, and fully
+    compatible with the Phase 1 Dimension Plausibility Guardrail (which
+    iterates whatever `trained_result.dimensions` contains, generically)."""
+
+    def test_no_crash_and_architecture_tradeoffs_absent(self):
+        hybrid = HybridEvaluator(HeuristicEvaluator(), _real_trained_evaluator(), diagnostics_log_path=os.devnull)
+        result = hybrid.evaluate(_skill_in_context_decision_making_request())  # must not raise
+        dim_names = {d.name for d in result.dimensions}
+        self.assertNotIn("architecture", dim_names)
+        self.assertNotIn("tradeoffs", dim_names)
+
+    def test_weight_normalization_still_correct_with_narrower_set(self):
+        hybrid = HybridEvaluator(HeuristicEvaluator(), _real_trained_evaluator(), diagnostics_log_path=os.devnull)
+        result = hybrid.evaluate(_skill_in_context_decision_making_request())
+        contributing = [d for d in result.dimensions if d.contributes_to_overall]
+        self.assertAlmostEqual(sum(d.weight_used for d in contributing), 1.0, places=2)
+
+    def test_guardrail_and_reclassification_remain_compatible(self):
+        """The Phase 1 guardrail loop and _reclassify_claims both iterate
+        `dimensions` generically -- confirms neither breaks or silently
+        skips anything when the set is smaller than usual."""
+        hybrid = HybridEvaluator(HeuristicEvaluator(), _real_trained_evaluator(), diagnostics_log_path=os.devnull)
+        result = hybrid.evaluate(_skill_in_context_decision_making_request())
+        self.assertTrue(result.dimensions)
+        self.assertIsInstance(result.overall_score, float)
+        self.assertTrue(result.strengths or result.weaknesses)
+
+    def test_project_overview_decision_making_unaffected_through_hybrid(self):
+        """Regression guard: the same reasoning_type on a category outside
+        the exclusion table still gets architecture/tradeoffs, end to end."""
+        spec = QuestionSpecification(
+            id="topic_cat2", category=QuestionCategory.PROJECT_OVERVIEW, text_seed="Linux",
+            grounding=Grounding(project=ProjectGrounding(
+                title="AI SOC Analyst", technologies=("Linux",), concepts=(),
+            )),
+            source_type=SourceType.PROJECT, source_id="AI SOC Analyst",
+            source_field="technical_topics", reason="test",
+        )
+        req = EvaluationRequest(
+            request_id="req_cat2", requested_at="2026-07-24T00:00:00+00:00",
+            specification=spec, question_text="Why did you take the approach you did?",
+            reasoning_type=ReasoningType.DECISION_MAKING,
+            answer_text="I chose this approach because it fit the constraints.",
+            conversation_context=ConversationContextSnapshot(turn_number=1, is_followup=False),
+            expected_concepts=(),
+        )
+        hybrid = HybridEvaluator(HeuristicEvaluator(), _real_trained_evaluator(), diagnostics_log_path=os.devnull)
+        result = hybrid.evaluate(req)
+        dim_names = {d.name for d in result.dimensions}
+        self.assertIn("architecture", dim_names)
+        self.assertIn("tradeoffs", dim_names)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -36,7 +36,7 @@ import discussion_policy
 from conversation_memory import ConversationMemory
 from interview_question import InterviewQuestion
 from question_families import PhrasingContext, ReasoningType, get_family
-from question_specification import QuestionSpecification
+from question_specification import QuestionCategory, QuestionSpecification
 
 
 def _stable_index(*parts: str, modulus: int) -> int:
@@ -166,6 +166,33 @@ FOLLOWUP_ANGLES: tuple[str, ...] = tuple(sorted(
     set(_FOLLOWUP_ANGLE_FAMILY) | set(_FOLLOWUP_TEMPLATES)
 ))
 
+# Phase 5 follow-up fix (session handover): an angle mapped to a
+# registered family (_FOLLOWUP_ANGLE_FAMILY) is structurally renderable
+# for any category that family's own `applicable_categories` lists --
+# but "structurally renderable" and "evidence-appropriate" are different
+# questions. "tradeoff_probing" -> "tradeoffs" is still formally
+# applicable to SKILL_IN_CONTEXT (the template renders fine for a bare
+# technology name), yet SKILL_IN_CONTEXT's only evidence is that bare
+# name co-occurring somewhere in a project's text -- no comparison
+# language, no per-technology decision signal -- exactly the gap
+# discussion_policy._ARC[SKILL_IN_CONTEXT] was already fixed to avoid for
+# FRESH turns (Phase 5). This follow-up path is a second, independent
+# selection mechanism that fix never touched, and it reproduces the
+# identical bug (confirmed live: `realize_followup(linux_spec, ...,
+# angle="tradeoff_probing")` still produced "What tradeoffs did you
+# weigh around Linux in AI SOC Analyst?"). A narrow, evidenced exclusion
+# -- NOT a global disable: "tradeoff_probing" remains fully selectable
+# for every other category (PROJECT_DEEP_DIVE in particular, where
+# seed_synthesis.py's own tradeoff_probe precondition already governs
+# whether real evidence exists).
+_FOLLOWUP_ANGLE_CATEGORY_EXCLUSIONS: dict[str, frozenset[QuestionCategory]] = {
+    "tradeoff_probing": frozenset({QuestionCategory.SKILL_IN_CONTEXT}),
+}
+
+
+def _angle_available(angle: str, category: QuestionCategory) -> bool:
+    return category not in _FOLLOWUP_ANGLE_CATEGORY_EXCLUSIONS.get(angle, frozenset())
+
 
 def _followup_focus(spec: QuestionSpecification, focus_hint: Optional[str]) -> str:
     """The subject a follow-up is actually about — Phase 3's evaluator hint
@@ -182,11 +209,18 @@ def select_followup_angle(spec: QuestionSpecification, memory: ConversationMemor
                            followups_used_on_this_spec: int) -> str:
     """Deterministically pick a follow-up angle, rotating so consecutive
     follow-ups on the same spec don't repeat an angle, and preferring one
-    not used in the immediately preceding turn overall."""
-    idx = _stable_index(spec.id, str(followups_used_on_this_spec), modulus=len(FOLLOWUP_ANGLES))
-    angle = FOLLOWUP_ANGLES[idx]
-    if angle == memory.last_family():
-        angle = FOLLOWUP_ANGLES[(idx + 1) % len(FOLLOWUP_ANGLES)]
+    not used in the immediately preceding turn overall. Restricted to
+    angles available for `spec.category` (see
+    _FOLLOWUP_ANGLE_CATEGORY_EXCLUSIONS) before any of that -- an
+    unavailable angle is never a candidate in the first place, not
+    filtered out after the fact."""
+    available = tuple(a for a in FOLLOWUP_ANGLES if _angle_available(a, spec.category))
+    if not available:  # pragma: no cover - defensive; template-only angles are always available
+        available = FOLLOWUP_ANGLES
+    idx = _stable_index(spec.id, str(followups_used_on_this_spec), modulus=len(available))
+    angle = available[idx]
+    if angle == memory.last_family() and len(available) > 1:
+        angle = available[(idx + 1) % len(available)]
     return angle
 
 
@@ -202,6 +236,15 @@ def realize_followup(
     (Chapter 17: a follow-up is a continuation, not a new topic — the
     caller keeps using the same `spec`, there is no new specification)."""
     chosen_angle = angle or select_followup_angle(spec, memory, followups_used_on_this_spec)
+    if not _angle_available(chosen_angle, spec.category):
+        # An explicitly-requested angle (a future caller, not
+        # select_followup_angle's own deterministic pick) is unavailable
+        # for this category -- e.g. "tradeoff_probing" on a
+        # SKILL_IN_CONTEXT spec. Never render an evidence-unsupported
+        # question just because a caller asked for it explicitly; fall
+        # back to the same deterministic, category-aware selection
+        # everything else uses.
+        chosen_angle = select_followup_angle(spec, memory, followups_used_on_this_spec)
     focus = _followup_focus(spec, focus_hint)
     ctx = _build_context(spec)
 

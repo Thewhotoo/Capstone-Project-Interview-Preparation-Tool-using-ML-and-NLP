@@ -214,5 +214,67 @@ class TestPromoteTrainedModel(unittest.TestCase):
         self.assertIn(evaluator.name, evaluator_registry.registered_evaluator_names())
 
 
+def _spec_with_category(category: QuestionCategory) -> QuestionSpecification:
+    return QuestionSpecification(
+        id="topic_cat", category=category, text_seed="Linux",
+        grounding=Grounding(project=ProjectGrounding(
+            title="AI SOC Analyst", technologies=("Linux",), concepts=(),
+        )),
+        source_type=SourceType.PROJECT, source_id="AI SOC Analyst",
+        source_field="technical_topics", reason="test",
+    )
+
+
+def _request_with(spec: QuestionSpecification, reasoning_type: ReasoningType) -> EvaluationRequest:
+    return EvaluationRequest(
+        request_id="req_cat", requested_at="2026-07-24T00:00:00+00:00",
+        specification=spec, question_text="Why did you take the approach you did for Linux?",
+        reasoning_type=reasoning_type,
+        answer_text="I used it for log analysis.",
+        conversation_context=ConversationContextSnapshot(turn_number=1, is_followup=False),
+        expected_concepts=(),
+    )
+
+
+class TestCategoryAwareDimensionSelection(unittest.TestCase):
+    """Phase 6 (question-specific dimensions): TrainedEvaluator must skip
+    the architecture/tradeoffs dimension heads for SKILL_IN_CONTEXT +
+    DECISION_MAKING -- the same evidenced exclusion HeuristicEvaluator
+    applies, since both consult the same relevant_dimensions() table."""
+
+    def test_skill_in_context_decision_making_excludes_architecture_and_tradeoffs(self):
+        evaluator = _trained_evaluator()
+        spec = _spec_with_category(QuestionCategory.SKILL_IN_CONTEXT)
+        result = evaluator.evaluate(_request_with(spec, ReasoningType.DECISION_MAKING))
+        dim_names = {d.name for d in result.dimensions}
+        self.assertNotIn("architecture", dim_names)
+        self.assertNotIn("tradeoffs", dim_names)
+
+    def test_project_overview_decision_making_still_includes_architecture_and_tradeoffs(self):
+        evaluator = _trained_evaluator()
+        spec = _spec_with_category(QuestionCategory.PROJECT_OVERVIEW)
+        result = evaluator.evaluate(_request_with(spec, ReasoningType.DECISION_MAKING))
+        dim_names = {d.name for d in result.dimensions}
+        self.assertIn("architecture", dim_names)
+        self.assertIn("tradeoffs", dim_names)
+
+    def test_project_deep_dive_decision_making_still_includes_architecture_and_tradeoffs(self):
+        evaluator = _trained_evaluator()
+        spec = _spec_with_category(QuestionCategory.PROJECT_DEEP_DIVE)
+        result = evaluator.evaluate(_request_with(spec, ReasoningType.DECISION_MAKING))
+        dim_names = {d.name for d in result.dimensions}
+        self.assertIn("architecture", dim_names)
+        self.assertIn("tradeoffs", dim_names)
+
+    def test_weights_still_sum_to_one_with_narrower_dimension_set(self):
+        """Aggregation stays generic -- proportional weighting normalizes
+        correctly even with two fewer dimensions than usual."""
+        evaluator = _trained_evaluator()
+        spec = _spec_with_category(QuestionCategory.SKILL_IN_CONTEXT)
+        result = evaluator.evaluate(_request_with(spec, ReasoningType.DECISION_MAKING))
+        contributing = [d for d in result.dimensions if d.contributes_to_overall]
+        self.assertAlmostEqual(sum(d.weight_used for d in contributing), 1.0, places=2)
+
+
 if __name__ == "__main__":
     unittest.main()

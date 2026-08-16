@@ -193,7 +193,11 @@ class TrainedEvaluator:
             main_attention_mask = main_batch["attention_mask"].to(self.device)
             outputs = self.model.forward_dimensions(main_input_ids, main_attention_mask)
 
-            relevant = relevant_dimensions(request.reasoning_type)
+            # Phase 6: category passed through -- same rationale as
+            # heuristic_evaluator.py's own call site, see
+            # reasoning_dimension_relevance.py's
+            # DIMENSION_EXCLUSIONS_BY_CATEGORY docstring.
+            relevant = relevant_dimensions(request.reasoning_type, request.specification.category)
             # Proportional, not uniform, weighting -- same Phase 3
             # evaluation-fairness fix as heuristic_evaluator.py's `evaluate()`
             # (see that module for the full rationale). The four

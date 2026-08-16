@@ -508,5 +508,61 @@ class TestConcreteFeedbackEvidence(unittest.TestCase):
             self.assertIn("i designed", ownership_strength.evidence.lower())
 
 
+def _spec_with_category(category: QuestionCategory) -> QuestionSpecification:
+    return QuestionSpecification(
+        id="topic_cat", category=category, text_seed="Linux",
+        grounding=Grounding(project=ProjectGrounding(
+            title="AI SOC Analyst", technologies=("Linux",), concepts=(),
+        )),
+        source_type=SourceType.PROJECT, source_id="AI SOC Analyst",
+        source_field="technical_topics", reason="test",
+    )
+
+
+class TestCategoryAwareDimensionSelection(unittest.TestCase):
+    """Phase 6 (question-specific dimensions): SKILL_IN_CONTEXT's
+    DECISION_MAKING questions must not be scored on architecture/
+    tradeoffs -- the only evidence is a bare technology name, no
+    comparison/decision signal (see session handover investigation)."""
+
+    def test_skill_in_context_decision_making_excludes_architecture_and_tradeoffs(self):
+        evaluator = HeuristicEvaluator()
+        spec = _spec_with_category(QuestionCategory.SKILL_IN_CONTEXT)
+        req = _request(
+            "I used it for log analysis.", reasoning_type=ReasoningType.DECISION_MAKING, spec=spec,
+        )
+        result = evaluator.evaluate(req)
+        dim_names = {d.name for d in result.dimensions}
+        self.assertNotIn("architecture", dim_names)
+        self.assertNotIn("tradeoffs", dim_names)
+
+    def test_project_overview_decision_making_still_includes_architecture_and_tradeoffs(self):
+        """Regression guard: the exclusion is scoped to SKILL_IN_CONTEXT
+        only -- the same reasoning_type on a genuinely project-level
+        question is unaffected."""
+        evaluator = HeuristicEvaluator()
+        spec = _spec_with_category(QuestionCategory.PROJECT_OVERVIEW)
+        req = _request(
+            "I chose this approach because it fit the constraints.",
+            reasoning_type=ReasoningType.DECISION_MAKING, spec=spec,
+        )
+        result = evaluator.evaluate(req)
+        dim_names = {d.name for d in result.dimensions}
+        self.assertIn("architecture", dim_names)
+        self.assertIn("tradeoffs", dim_names)
+
+    def test_project_deep_dive_decision_making_still_includes_architecture_and_tradeoffs(self):
+        evaluator = HeuristicEvaluator()
+        spec = _spec_with_category(QuestionCategory.PROJECT_DEEP_DIVE)
+        req = _request(
+            "I chose this approach because it fit the constraints.",
+            reasoning_type=ReasoningType.DECISION_MAKING, spec=spec,
+        )
+        result = evaluator.evaluate(req)
+        dim_names = {d.name for d in result.dimensions}
+        self.assertIn("architecture", dim_names)
+        self.assertIn("tradeoffs", dim_names)
+
+
 if __name__ == "__main__":
     unittest.main()

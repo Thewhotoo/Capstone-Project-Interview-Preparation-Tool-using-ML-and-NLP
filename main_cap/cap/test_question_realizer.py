@@ -158,5 +158,72 @@ class TestFollowupInfrastructure(unittest.TestCase):
         self.assertIsInstance(question, InterviewQuestion)
 
 
+class TestFollowupAngleCategoryAwareness(unittest.TestCase):
+    """Phase 5 follow-up fix (session handover): a follow-up on a
+    SKILL_IN_CONTEXT spec must never select "tradeoff_probing" -- the
+    same evidence gap discussion_policy._ARC[SKILL_IN_CONTEXT] was
+    already fixed to avoid for fresh turns (Phase 5), reproduced live via
+    this SEPARATE, previously-unaudited selection path."""
+
+    def setUp(self):
+        self.memory = ConversationMemory()
+        self.linux_spec = _spec(
+            spec_id="topic_linux", title="AI SOC Analyst – Intelligent Security Log Analysis Platform",
+            text_seed="Linux", category=QuestionCategory.SKILL_IN_CONTEXT,
+        )
+
+    def test_auto_selection_never_picks_tradeoff_probing_for_skill_in_context(self):
+        """Direct regression for the reported bug: walking several
+        follow-up positions on the real Linux SKILL_IN_CONTEXT spec must
+        never land on tradeoff_probing."""
+        seen = []
+        for followups_used in range(6):
+            angle = question_realizer.select_followup_angle(self.linux_spec, self.memory, followups_used)
+            seen.append(angle)
+        self.assertNotIn("tradeoff_probing", seen)
+
+    def test_explicit_tradeoff_probing_request_is_reassigned_for_skill_in_context(self):
+        """Even an EXPLICITLY requested unavailable angle (bypassing
+        select_followup_angle entirely) must never render the
+        unsupported tradeoff question -- realize_followup itself must
+        refuse and fall back to a category-appropriate angle."""
+        question, _ = realize_followup(self.linux_spec, self.memory, turn_number=2, angle="tradeoff_probing")
+        self.assertNotEqual(question.family, "tradeoff_probing")
+        self.assertNotIn("tradeoffs did you weigh", question.question_text.lower())
+        self.assertNotIn("other options you considered", question.question_text.lower())
+
+    def test_reproduces_and_fixes_the_exact_reported_linux_followup_case(self):
+        question, _ = realize_followup(self.linux_spec, self.memory, turn_number=2, angle="tradeoff_probing")
+        self.assertNotEqual(
+            question.question_text,
+            "What tradeoffs did you weigh around Linux in AI SOC Analyst – Intelligent Security Log Analysis Platform?",
+        )
+
+    def test_project_deep_dive_tradeoff_probing_remains_available(self):
+        """Positive control: the exclusion is scoped to SKILL_IN_CONTEXT
+        only -- PROJECT_DEEP_DIVE (where seed_synthesis.py's own
+        tradeoff_probe precondition already governs real evidence) can
+        still explicitly select tradeoff_probing."""
+        deep_dive_spec = _spec(
+            spec_id="topic_dd", title="RD Platform", text_seed="Redis vs Memcached",
+            category=QuestionCategory.PROJECT_DEEP_DIVE,
+        )
+        question, _ = realize_followup(deep_dive_spec, self.memory, turn_number=2, angle="tradeoff_probing")
+        self.assertEqual(question.family, "tradeoff_probing")
+        self.assertIn("tradeoffs did you weigh", question.question_text.lower())
+
+    def test_project_deep_dive_auto_selection_can_still_reach_tradeoff_probing(self):
+        deep_dive_spec = _spec(
+            spec_id="topic_dd2", title="RD Platform", text_seed="Redis vs Memcached",
+            category=QuestionCategory.PROJECT_DEEP_DIVE,
+        )
+        memory = ConversationMemory()
+        seen = [
+            question_realizer.select_followup_angle(deep_dive_spec, memory, i)
+            for i in range(len(FOLLOWUP_ANGLES))
+        ]
+        self.assertIn("tradeoff_probing", seen)
+
+
 if __name__ == "__main__":
     unittest.main()

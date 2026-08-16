@@ -382,7 +382,13 @@ class HeuristicEvaluator:
             AUTHENTICITY: 1.0 if has_ownership else 0.3,
         }
 
-        wanted = relevant_dimensions(request.reasoning_type)
+        # Phase 6: category passed through so the (reasoning_type, category)
+        # exclusion table can narrow the reasoning-type-level set for the
+        # one evidenced case (DECISION_MAKING + SKILL_IN_CONTEXT) -- see
+        # reasoning_dimension_relevance.py's DIMENSION_EXCLUSIONS_BY_CATEGORY
+        # docstring. Every other (reasoning_type, category) pair is
+        # unaffected by this parameter.
+        wanted = relevant_dimensions(request.reasoning_type, request.specification.category)
         # Proportional, not uniform, weighting (Phase 3 evaluation-fairness
         # fix). The four ALWAYS-relevant dimensions -- did they address what
         # was actually asked, communicate clearly, answer completely, and

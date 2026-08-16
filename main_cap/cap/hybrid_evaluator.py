@@ -26,10 +26,24 @@ ROUND 3 POLICY (this module, current):
 - If TrainedEvaluator SUCCEEDS (returns a valid EvaluationResult -- the
   schema's own pydantic validators already reject a malformed one, so
   "returned without raising" already means "valid"): its `dimensions`,
-  `overall_score`, `grade`, and `reasoning` are used EXACTLY AS PRODUCED —
-  never blended, never overridden, regardless of how much they disagree
-  with the heuristic. Disagreement no longer downgrades a valid DeBERTa
-  prediction.
+  `overall_score`, `grade`, and `reasoning` are used AS PRODUCED — never
+  blended, never overridden merely because the heuristic disagrees.
+  Disagreement alone no longer downgrades a valid DeBERTa prediction.
+- Dimension Plausibility Guardrail (Round 3 follow-up, evaluator-robustness
+  hardening): ONE narrow, downgrade-only exception to the line above. A
+  single dimension's raw_score is pulled down to
+  `min(trained, heuristic)` ONLY when that dimension's OWN agreement band
+  is "low" AND the heuristic's OWN score for that same dimension is below
+  `WEAKNESS_THRESHOLD` -- i.e. two independent signals both flag the same
+  dimension as implausible, not merely "heuristic scored it lower." Every
+  other dimension is left exactly as DeBERTa produced it. When this fires,
+  `overall_score`/`grade` are recomputed from the adjusted dimensions
+  (same weighting formula, no new formula) so the number shown to the user
+  and the per-dimension breakdown never contradict each other. See
+  `HybridEvaluator.evaluate`'s per-dimension loop for the full rationale
+  and the empirical boundary check (7 reproduced cases) that motivated
+  gating on PER-dimension agreement rather than the coarser overall
+  average.
 - If TrainedEvaluator FAILS (raises): unchanged graceful degradation to a
   pure HeuristicEvaluator result for that turn, exactly as Round 2 did.
 - Agreement (heuristic vs. trained, per dimension and overall) is still
@@ -110,6 +124,27 @@ def _agreement_band(agreement: float) -> str:
     if agreement >= _MEDIUM_AGREEMENT_THRESHOLD:
         return "medium"
     return "low"
+
+
+def _grade_from_final_score(score: float) -> str:
+    """Same cutpoints as `HeuristicEvaluator._grade` / `model_evaluator._grade_from_score`
+    -- duplicated locally rather than imported, the same "deliberate
+    independence between modules" precedent `model_evaluator.py`'s own
+    `_grade_from_score` docstring already establishes for this exact
+    function. Only reached when the Dimension Plausibility Guardrail below
+    actually adjusted at least one dimension (i.e. `final_overall_score` no
+    longer equals `trained_result.overall_score`), so a grade re-derived
+    from the ORIGINAL cutpoints, not trained_result's own (now stale)
+    grade, is required to stay consistent with the adjusted score."""
+    if score >= 0.90:
+        return "excellent"
+    if score >= 0.75:
+        return "good"
+    if score >= 0.55:
+        return "adequate"
+    if score >= 0.30:
+        return "weak"
+    return "poor"
 
 
 def _dimension_agreement(heuristic_dim: DimensionScore, trained_dim: Optional[DimensionScore]) -> Optional[float]:
@@ -382,32 +417,93 @@ class HybridEvaluator:
             per_dimension_diag: dict[str, dict] = {}
         else:
             # ── Primary path: DeBERTa succeeded -- its dimensions/overall
-            # score/grade/reasoning are used EXACTLY AS PRODUCED, never
-            # blended or overridden by the heuristic, regardless of
-            # agreement (Round 3 policy -- see module docstring for why). ──
+            # score/grade/reasoning are used AS PRODUCED, with ONE narrow,
+            # downgrade-only exception: the Dimension Plausibility Guardrail
+            # below. Never blended, never overridden merely because the
+            # heuristic disagrees -- see that guardrail's own comment for
+            # exactly when (rarely) it fires. ──
             score_source = "trained"
-            final_dimensions = trained_result.dimensions
-            final_overall_score = trained_result.overall_score
-            final_grade = trained_result.grade
             reasoning = trained_result.reasoning
 
-            # Agreement/band computed for CONFIDENCE and DIAGNOSTICS only --
-            # does not touch final_dimensions/final_overall_score/final_grade
-            # above.
+            # Agreement/band computed PER DIMENSION -- the SAME, unmodified
+            # _dimension_agreement/_agreement_band Round 2 already
+            # established (no new thresholds, no new formula). Used for
+            # CONFIDENCE/DIAGNOSTICS as before, and now ALSO gates the
+            # Dimension Plausibility Guardrail immediately below.
             heuristic_by_name = {d.name: d for d in heuristic_result.dimensions}
             per_dimension_diag = {}
             agreements: list[float] = []
+            adjusted_dimensions: list[DimensionScore] = []
+            any_dimension_downgraded = False
             for t_dim in trained_result.dimensions:
                 h_dim = heuristic_by_name.get(t_dim.name)
                 agreement = _dimension_agreement(h_dim, t_dim) if h_dim is not None else None
+                dim_band = _agreement_band(agreement) if agreement is not None else None
+                if agreement is not None:
+                    agreements.append(agreement)
+
+                # Dimension Plausibility Guardrail (Round 3 follow-up,
+                # empirically validated turn-by-turn against 7 reproduced
+                # cases before implementation -- see session handover). A
+                # single dimension is pulled DOWN to the more conservative
+                # of the two evaluators' own reads ONLY when BOTH:
+                #   1. THIS dimension's own agreement band is "low" -- not
+                #      the coarser OVERALL average, which was found to
+                #      dilute a single badly-disagreeing dimension (e.g.
+                #      completeness on a gibberish answer) into a "medium"
+                #      average alongside other dimensions that happened to
+                #      agree -- and
+                #   2. the heuristic's OWN score for this same dimension is
+                #      itself below WEAKNESS_THRESHOLD (the heuristic must
+                #      independently call this dimension weak, not merely
+                #      lower than DeBERTa's read).
+                # Every dimension that doesn't satisfy both conditions --
+                # including ones where the heuristic simply scores lower
+                # without an independent low-agreement signal -- is left
+                # EXACTLY as DeBERTa produced it (same object, unchanged).
+                # This never upgrades a dimension, never fires on
+                # medium/high agreement, and never fires solely because
+                # heuristic < trained -- the heuristic is never given
+                # general authority to override a valid DeBERTa read, only
+                # this one, narrow, doubly-corroborated exception.
+                final_dim = t_dim
+                if h_dim is not None and dim_band == "low" and h_dim.raw_score < WEAKNESS_THRESHOLD:
+                    adjusted_raw = min(t_dim.raw_score, h_dim.raw_score)
+                    if adjusted_raw != t_dim.raw_score:
+                        any_dimension_downgraded = True
+                        final_dim = t_dim.model_copy(update={"raw_score": adjusted_raw})
+                adjusted_dimensions.append(final_dim)
+
                 per_dimension_diag[t_dim.name] = {
                     "heuristic": h_dim.raw_score if h_dim is not None else None,
                     "trained": t_dim.raw_score,
-                    "final": t_dim.raw_score,  # Round 3: final == trained, always, when available
+                    "final": final_dim.raw_score,
                     "agreement": agreement,
+                    "agreement_band": dim_band,
                 }
-                if agreement is not None:
-                    agreements.append(agreement)
+
+            final_dimensions = tuple(adjusted_dimensions)
+            if any_dimension_downgraded:
+                # Recompute overall_score/grade from the ADJUSTED dimensions
+                # using the EXACT SAME weighted-aggregation formula
+                # TrainedEvaluator/HeuristicEvaluator already use (no new
+                # formula) -- keeps overall_score, grade, and the displayed
+                # per-dimension breakdown internally consistent, instead of
+                # a downgraded overall number sitting next to an unchanged,
+                # still-inflated dimension list.
+                contributing = [d for d in final_dimensions if d.contributes_to_overall]
+                final_overall_score = (
+                    sum(d.raw_score * d.weight_used for d in contributing) / sum(d.weight_used for d in contributing)
+                    if contributing else 0.0
+                )
+                final_overall_score = round(max(0.0, min(1.0, final_overall_score)), 3)
+                final_grade = _grade_from_final_score(final_overall_score)
+            else:
+                # No dimension was adjusted -- overall_score/grade are
+                # byte-for-byte the same values DeBERTa produced, exactly
+                # as Round 3 always did.
+                final_overall_score = trained_result.overall_score
+                final_grade = trained_result.grade
 
             overall_agreement = round(sum(agreements) / len(agreements), 3) if agreements else None
             overall_band = _agreement_band(overall_agreement) if overall_agreement is not None else None

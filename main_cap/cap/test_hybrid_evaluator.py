@@ -11,6 +11,7 @@ import json
 import os
 import sys
 import unittest
+from typing import Optional
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -20,16 +21,18 @@ from evaluation_result import (
     EvidenceLinkedClaim,
 )
 from evaluator import Evaluator, check_conformance
-from heuristic_evaluator import HeuristicEvaluator
+from heuristic_evaluator import HeuristicEvaluator, STRENGTH_THRESHOLD, WEAKNESS_THRESHOLD
 from hybrid_evaluator import (
-    _agreement_band, _compute_confidence, _dimension_agreement, _reclassify_claims,
+    _agreement_band, _compute_confidence, _dimension_agreement, _grade_from_final_score, _reclassify_claims,
     _reconcile_concept_coverage, HybridEvaluator,
 )
 from model_backbone import BackboneConfig, build_tiny_random_encoder, build_tokenizer
 from model_evaluator import TrainedEvaluator
 from model_heads import MultiTaskModel
 from question_families import ReasoningType
-from question_specification import Grounding, ProjectGrounding, QuestionCategory, QuestionSpecification, SourceType
+from question_specification import (
+    ExperienceGrounding, Grounding, ProjectGrounding, QuestionCategory, QuestionSpecification, SourceType,
+)
 from training_experimentation import ExperimentConfig, assemble_checkpoint
 
 _TOKENIZER = build_tokenizer(BackboneConfig())
@@ -50,6 +53,63 @@ def _request(request_id: str = "r1", answer: str = "I fixed a caching bug by add
         request_id=request_id, requested_at="2026-07-24T00:00:00+00:00",
         specification=_spec(), question_text="Did Redis caching give you trouble?",
         reasoning_type=ReasoningType.DEBUGGING, answer_text=answer,
+        conversation_context=ConversationContextSnapshot(turn_number=1, is_followup=False),
+        expected_concepts=(),
+    )
+
+
+# ─── Real-resume grounding fixtures (mayurans_resume.pdf) -- Dimension
+# Plausibility Guardrail regression cases below need meaningful, real
+# project/experience context (not arbitrary strings) so cases 1/4/5/6/7
+# are genuine reproductions of the audited production bug, per the
+# approved 2026-08-17 boundary-check investigation. ─────────────────────
+
+def _soc_spec() -> QuestionSpecification:
+    return QuestionSpecification(
+        id="topic_soc", category=QuestionCategory.PROJECT_DEEP_DIVE,
+        text_seed="AI SOC Analyst - Intelligent Security Log Analysis Platform",
+        grounding=Grounding(project=ProjectGrounding(
+            title="AI SOC Analyst",
+            technologies=("FastAPI", "React", "LangGraph", "Gemini", "Docker", "PostgreSQL", "Linux", "Windows"),
+            concepts=("brute force detection", "password spraying", "privilege escalation", "data exfiltration"),
+            summary=(
+                "An AI-assisted SOC platform using FastAPI, React, LangGraph and Gemini to analyze "
+                "Windows, Linux and CSV logs, detecting brute force, password spraying, privilege "
+                "escalation and data exfiltration attacks through modular detection rules."
+            ),
+        )),
+        source_type=SourceType.PROJECT, source_id="AI SOC Analyst",
+        source_field="interview_seeds", reason="test",
+    )
+
+
+def _interview_platform_spec() -> QuestionSpecification:
+    return QuestionSpecification(
+        id="topic_interview_platform", category=QuestionCategory.PROJECT_DEEP_DIVE,
+        text_seed="AI-Powered Adaptive Interview Preparation Platform",
+        grounding=Grounding(project=ProjectGrounding(
+            title="AI-Powered Adaptive Interview Preparation Platform",
+            technologies=("LangGraph", "LangChain", "TensorFlow", "Hugging Face", "DeBERTa"),
+            concepts=("synthetic dataset generation", "automated labeling", "continuous evaluator deployment"),
+            summary=(
+                "An AI-powered resume discussion platform that parses resumes, identifies technical "
+                "projects, and generates personalized multi-turn interviews using LLMs and "
+                "deterministic planning, with an end-to-end ML pipeline for synthetic dataset "
+                "generation, automated labeling, DeBERTa-v3 training, benchmarking, and continuous "
+                "evaluator deployment."
+            ),
+        )),
+        source_type=SourceType.PROJECT, source_id="AI-Powered Adaptive Interview Preparation Platform",
+        source_field="interview_seeds", reason="test",
+    )
+
+
+def _soc_request(answer: str, question_text: str, reasoning_type: ReasoningType = ReasoningType.EXPLANATION,
+                  spec: Optional[QuestionSpecification] = None) -> EvaluationRequest:
+    return EvaluationRequest(
+        request_id="req_guardrail", requested_at="2026-08-17T00:00:00+00:00",
+        specification=spec or _soc_spec(), question_text=question_text, reasoning_type=reasoning_type,
+        answer_text=answer,
         conversation_context=ConversationContextSnapshot(turn_number=1, is_followup=False),
         expected_concepts=(),
     )
@@ -795,6 +855,344 @@ class TestRealEndToEndWiring(unittest.TestCase):
         # scores are NOT simply the heuristic's own.
         heuristic_result = HeuristicEvaluator().evaluate(req)
         self.assertEqual([d.name for d in result.dimensions], [d.name for d in trained_result.dimensions])
+
+
+class TestDimensionPlausibilityGuardrailBoundaries(unittest.TestCase):
+    """Direct, fully-controlled boundary tests of the Dimension
+    Plausibility Guardrail's trigger condition. BOTH sides are stubbed
+    (a stub standing in for HeuristicEvaluator too, not just
+    TrainedEvaluator) so WEAKNESS_THRESHOLD and the agreement-band
+    boundary can be hit at exact, engineered values -- a real
+    HeuristicEvaluator can't be forced to a specific raw_score on
+    demand."""
+
+    TARGET = "technical_accuracy"  # always-relevant -- present for every reasoning_type
+
+    @staticmethod
+    def _hybrid(heuristic_overrides, trained_overrides):
+        heuristic_stub = _StubEvaluatorWrapper(_with_dimension_overrides(heuristic_overrides))
+        trained_stub = _StubEvaluatorWrapper(_with_dimension_overrides(trained_overrides))
+        return HybridEvaluator(heuristic_stub, trained_stub, diagnostics_log_path=os.devnull)
+
+    def _run(self, heuristic_score: float, trained_score: float):
+        req = _request()
+        base = HeuristicEvaluator().evaluate(req)
+        h_overrides = {d.name: d.raw_score for d in base.dimensions}
+        h_overrides[self.TARGET] = heuristic_score
+        t_overrides = dict(h_overrides)
+        t_overrides[self.TARGET] = trained_score
+        result = self._hybrid(h_overrides, t_overrides).evaluate(req)
+        final = next(d.raw_score for d in result.dimensions if d.name == self.TARGET)
+        return final, result
+
+    def test_heuristic_exactly_at_weakness_threshold_does_not_fire(self):
+        """Strictly-less-than semantics: AT the threshold is not 'weak'."""
+        final, _ = self._run(heuristic_score=WEAKNESS_THRESHOLD, trained_score=0.95)
+        self.assertAlmostEqual(final, 0.95, places=3)
+
+    def test_heuristic_just_below_weakness_threshold_fires(self):
+        final, _ = self._run(heuristic_score=WEAKNESS_THRESHOLD - 0.01, trained_score=0.95)
+        self.assertAlmostEqual(final, WEAKNESS_THRESHOLD - 0.01, places=3)
+
+    def test_agreement_exactly_at_medium_boundary_does_not_fire(self):
+        # agreement = 1 - |h - t| = 0.60 exactly -> "medium", not "low"
+        # (_agreement_band's own >= cutpoint).
+        h, t = 0.10, 0.50
+        self.assertEqual(round(1.0 - abs(h - t), 3), 0.60)
+        final, _ = self._run(heuristic_score=h, trained_score=t)
+        self.assertAlmostEqual(final, t, places=3)
+
+    def test_agreement_just_below_medium_boundary_fires(self):
+        h, t = 0.10, 0.51
+        self.assertLess(1.0 - abs(h - t), 0.60)
+        final, _ = self._run(heuristic_score=h, trained_score=t)
+        self.assertAlmostEqual(final, h, places=3)
+
+    def test_low_agreement_and_weak_heuristic_downgrades(self):
+        final, _ = self._run(heuristic_score=0.10, trained_score=0.90)
+        self.assertAlmostEqual(final, 0.10, places=3)
+
+    def test_low_agreement_and_non_weak_heuristic_does_not_downgrade(self):
+        """The heuristic disagreeing sharply is NOT, by itself, enough --
+        it must also independently call the dimension weak. This is the
+        guardrail in Question 5's answer: it never becomes a general
+        scoring authority."""
+        final, _ = self._run(heuristic_score=0.50, trained_score=0.95)
+        self.assertAlmostEqual(final, 0.95, places=3)
+
+    def test_medium_agreement_and_weak_heuristic_does_not_downgrade(self):
+        final, _ = self._run(heuristic_score=0.10, trained_score=0.45)  # agreement .65 -> medium
+        self.assertAlmostEqual(final, 0.45, places=3)
+
+    def test_high_agreement_and_weak_heuristic_does_not_downgrade(self):
+        final, _ = self._run(heuristic_score=0.10, trained_score=0.15)  # agreement .95 -> high
+        self.assertAlmostEqual(final, 0.15, places=3)
+
+    def test_never_upgrades_a_dimension(self):
+        """Downgrade-only: even when both conditions hold, the adjusted
+        value must never exceed EITHER evaluator's own score."""
+        final, _ = self._run(heuristic_score=0.10, trained_score=0.90)
+        self.assertLessEqual(final, 0.10)
+        self.assertLessEqual(final, 0.90)
+
+    def test_unaffected_dimensions_remain_value_for_value_identical(self):
+        req = _request()
+        base = HeuristicEvaluator().evaluate(req)
+        h_overrides = {d.name: d.raw_score for d in base.dimensions}
+        t_overrides = dict(h_overrides)
+        # Only TARGET is engineered to fire the guardrail; every other
+        # dimension agrees exactly between the two stubs (untouched).
+        h_overrides[self.TARGET] = 0.10
+        t_overrides[self.TARGET] = 0.90
+        result = self._hybrid(h_overrides, t_overrides).evaluate(req)
+        expected_trained = _with_dimension_overrides(t_overrides)(base, req)
+        for d in result.dimensions:
+            if d.name == self.TARGET:
+                continue
+            expected = next(td for td in expected_trained.dimensions if td.name == d.name)
+            self.assertEqual(d.raw_score, expected.raw_score)
+            self.assertEqual(d.weight_used, expected.weight_used)
+            self.assertEqual(d.confidence, expected.confidence)
+            self.assertEqual(d.confidence_source, expected.confidence_source)
+            self.assertEqual(d.contributes_to_overall, expected.contributes_to_overall)
+            self.assertEqual(d.evidence_refs, expected.evidence_refs)
+
+    def test_trained_unavailable_fallback_bypasses_guardrail_entirely(self):
+        """The guardrail lives entirely inside the 'trained succeeded'
+        branch -- when TrainedEvaluator fails, the pre-existing fallback
+        must be completely untouched by this change."""
+        heuristic = HeuristicEvaluator()
+        req = _request()
+        heuristic_result = heuristic.evaluate(req)
+        hybrid = HybridEvaluator(heuristic, _RaisingTrainedEvaluator(), diagnostics_log_path=os.devnull)
+        result = hybrid.evaluate(req)
+        self.assertEqual(
+            [(d.name, d.raw_score) for d in result.dimensions],
+            [(d.name, d.raw_score) for d in heuristic_result.dimensions],
+        )
+        self.assertEqual(result.overall_score, heuristic_result.overall_score)
+        self.assertEqual(result.grade, heuristic_result.grade)
+
+    def test_overall_score_and_grade_recomputed_consistently_with_adjusted_dimension(self):
+        _, result = self._run(heuristic_score=0.10, trained_score=0.90)
+        contributing = [d for d in result.dimensions if d.contributes_to_overall]
+        expected_overall = round(max(0.0, min(
+            1.0, sum(d.raw_score * d.weight_used for d in contributing) / sum(d.weight_used for d in contributing),
+        )), 3)
+        self.assertAlmostEqual(result.overall_score, expected_overall, places=3)
+        self.assertEqual(result.grade, _grade_from_final_score(expected_overall))
+
+    def test_no_dimension_adjusted_keeps_trained_overall_score_and_grade_byte_identical(self):
+        """When nothing is downgraded, overall_score/grade must be the
+        EXACT trained values -- no recomputation drift from re-deriving
+        them via the weighted-average formula a second time."""
+        req = _request()
+        base = HeuristicEvaluator().evaluate(req)
+        overrides = {d.name: 0.6 for d in base.dimensions}  # agrees with nothing weak, no fire anywhere
+        transform = _with_dimension_overrides(overrides)
+        expected = transform(base, req)
+        hybrid = _hybrid_with_stub(transform)
+        result = hybrid.evaluate(req)
+        self.assertEqual(result.overall_score, expected.overall_score)
+        self.assertEqual(result.grade, expected.grade)
+
+
+class TestSevenReproducedRegressionCases(unittest.TestCase):
+    """The 7 cases from the approved 2026-08-17 evaluator-robustness
+    boundary check, run through the REAL HeuristicEvaluator against real
+    `mayurans_resume.pdf` grounding (AI SOC Analyst / interview platform /
+    Unity VR). TrainedEvaluator is stubbed with the ACTUAL per-dimension
+    values recorded against the real deployed DeBERTa checkpoint during
+    that investigation (frozen here as fixtures, not re-derived on every
+    test run, since loading the real checkpoint is slow and the model's
+    own output is sensitive to exact phrasing -- the point of these tests
+    is the RECONCILIATION MECHANISM, which is deterministic, not
+    re-proving what the live model outputs today). Assertions are
+    self-verifying against WEAKNESS_THRESHOLD/agreement rather than
+    hardcoding expected outcomes, so they hold even if HeuristicEvaluator's
+    own calibration is retuned later."""
+
+    def _run_case(self, answer, question_text, spec, reasoning_type, trained_overrides_partial):
+        req = _soc_request(answer, question_text, reasoning_type=reasoning_type, spec=spec)
+        heuristic_result = HeuristicEvaluator().evaluate(req)
+        overrides = {d.name: d.raw_score for d in heuristic_result.dimensions}
+        overrides.update(trained_overrides_partial)
+        hybrid = _hybrid_with_stub(_with_dimension_overrides(overrides), confidence=0.7)
+        result = hybrid.evaluate(req)
+        return heuristic_result, result
+
+    def _assert_guardrail_applied_correctly(self, heuristic_result, result, trained_overrides_partial):
+        """Self-verifying: for each dimension we deliberately engineered a
+        trained value for, checks the EXACT same trigger condition the
+        production code uses and asserts the resulting dimension matches
+        what that condition implies -- downgraded to min(trained,
+        heuristic) when both guardrail conditions hold, left as the
+        trained value otherwise."""
+        heuristic_by_name = {d.name: d.raw_score for d in heuristic_result.dimensions}
+        final_by_name = {d.name: d.raw_score for d in result.dimensions}
+        for name, trained_val in trained_overrides_partial.items():
+            h_val = heuristic_by_name[name]
+            final_val = final_by_name[name]
+            agreement = max(0.0, min(1.0, 1.0 - abs(h_val - trained_val)))
+            should_fire = agreement < 0.60 and h_val < WEAKNESS_THRESHOLD
+            if should_fire:
+                self.assertAlmostEqual(final_val, min(trained_val, h_val), places=3,
+                                        msg=f"{name}: expected downgrade to min({trained_val}, {h_val})")
+            else:
+                self.assertAlmostEqual(final_val, trained_val, places=3,
+                                        msg=f"{name}: expected to stay at trained value {trained_val}")
+
+    # ── Case 1: gibberish ────────────────────────────────────────────
+    def test_case_1_gibberish_answer(self):
+        heuristic_result, result = self._run_case(
+            "asdkjfh qwerty banana rocket",
+            "Can you walk me through how you built the AI SOC Analyst platform?",
+            _soc_spec(), ReasoningType.EXPLANATION,
+            # Real DeBERTa output recorded 2026-08-17 against this exact
+            # answer/question/grounding.
+            {"technical_accuracy": 0.25, "technical_depth": 0.25, "communication": 0.0,
+             "completeness": 0.75, "architecture": 0.0, "resume_grounding": 0.25},
+        )
+        self._assert_guardrail_applied_correctly(
+            heuristic_result, result,
+            {"technical_accuracy": 0.25, "technical_depth": 0.25, "communication": 0.0,
+             "completeness": 0.75, "architecture": 0.0, "resume_grounding": 0.25},
+        )
+        # The originally-reported symptom: completeness must no longer be
+        # inflated to a "strong" reading for pure gibberish.
+        completeness = next(d for d in result.dimensions if d.name == "completeness")
+        self.assertLess(completeness.raw_score, STRENGTH_THRESHOLD)
+
+    # ── Case 2: "Good." ──────────────────────────────────────────────
+    def test_case_2_good_period(self):
+        heuristic_result, result = self._run_case(
+            "Good.",
+            "Can you walk me through how you built the AI SOC Analyst platform?",
+            _soc_spec(), ReasoningType.EXPLANATION,
+            # Real DeBERTa output recorded 2026-08-17 -- already correctly
+            # near-zero; the guardrail must not disturb an already-correct
+            # low score.
+            {"technical_accuracy": 0.0, "technical_depth": 0.0, "communication": 0.0,
+             "completeness": 0.0, "architecture": 0.0, "resume_grounding": 0.0},
+        )
+        self.assertEqual(result.overall_score, 0.0)
+        self.assertEqual(result.grade, "poor")
+
+    # ── Case 3: "idk it just worked" ─────────────────────────────────
+    def test_case_3_idk_it_just_worked(self):
+        heuristic_result, result = self._run_case(
+            "idk it just worked",
+            "Can you walk me through how you built the AI SOC Analyst platform?",
+            _soc_spec(), ReasoningType.EXPLANATION,
+            # Real DeBERTa output recorded 2026-08-17 -- already correctly
+            # near-zero (the ONE case that already worked before this fix).
+            {"technical_accuracy": 0.0, "technical_depth": 0.0, "communication": 0.0,
+             "completeness": 0.25, "architecture": 0.0, "resume_grounding": 0.0},
+        )
+        self._assert_guardrail_applied_correctly(
+            heuristic_result, result,
+            {"technical_accuracy": 0.0, "technical_depth": 0.0, "communication": 0.0,
+             "completeness": 0.25, "architecture": 0.0, "resume_grounding": 0.0},
+        )
+        self.assertLess(result.overall_score, WEAKNESS_THRESHOLD)
+        self.assertIn(result.grade, ("poor", "weak"))
+
+    # ── Case 4: substantive wrong-project answer ─────────────────────
+    def test_case_4_substantive_wrong_project_answer(self):
+        heuristic_result, result = self._run_case(
+            "For the SOC platform, I used FastAPI to expose detection endpoints and wrote modular "
+            "detection rules for brute force and password spraying, correlating failed login events "
+            "within a sliding time window and flagging IPs that crossed a threshold, then surfaced "
+            "them on the incident timeline dashboard.",
+            "How did you approach synthetic dataset generation for the interview platform's DeBERTa training?",
+            _interview_platform_spec(), ReasoningType.EXPLANATION,
+            # Real DeBERTa output recorded 2026-08-17 -- the clean
+            # reproduction of the "praised while off-topic" bug.
+            {"technical_accuracy": 0.75, "technical_depth": 0.75, "communication": 0.5,
+             "completeness": 1.0, "architecture": 0.5, "resume_grounding": 0.75},
+        )
+        self._assert_guardrail_applied_correctly(
+            heuristic_result, result,
+            {"technical_accuracy": 0.75, "technical_depth": 0.75, "communication": 0.5,
+             "completeness": 1.0, "architecture": 0.5, "resume_grounding": 0.75},
+        )
+        # The unguarded (pre-fix) score for this exact fixture was 0.719 /
+        # "adequate" -- the guardrail must pull it down measurably.
+        self.assertLess(result.overall_score, 0.719)
+        self.assertNotIn(result.grade, ("good", "excellent"))
+
+    # ── Case 5: coherent Unity VR/C# answer to a Linux/SOC question ──
+    def test_case_5_unity_vr_answer_to_linux_tradeoff_question(self):
+        heuristic_result, result = self._run_case(
+            "In the VR training app we used Unity's XR Interaction Toolkit with C# to script the "
+            "grab-and-place interactions for the blood pressure cuff, and I set up scene management "
+            "so the different training stages loaded independently, with UI feedback triggered on "
+            "correct or incorrect cuff placement.",
+            "What tradeoffs did you weigh around Linux log analysis in the AI SOC Analyst project?",
+            _soc_spec(), ReasoningType.TRADE_OFF_ANALYSIS,
+            # Real DeBERTa output recorded 2026-08-17.
+            {"technical_accuracy": 0.5, "communication": 0.25, "completeness": 0.75,
+             "architecture": 0.25, "tradeoffs": 0.5, "resume_grounding": 0.5},
+        )
+        self._assert_guardrail_applied_correctly(
+            heuristic_result, result,
+            {"technical_accuracy": 0.5, "communication": 0.25, "completeness": 0.75,
+             "architecture": 0.25, "tradeoffs": 0.5, "resume_grounding": 0.5},
+        )
+        # The unguarded (pre-fix) score for this exact fixture was 0.469 /
+        # "weak" -- the guardrail must not leave a wrong-topic answer
+        # scoring higher than that.
+        self.assertLessEqual(result.overall_score, 0.469)
+
+    # ── Case 6: legitimate strong SOC answer -- must NOT be touched ──
+    def test_case_6_legitimate_strong_soc_answer_unaffected(self):
+        heuristic_result, result = self._run_case(
+            "I built the AI SOC Analyst backend with FastAPI, exposing endpoints that ingest "
+            "Windows, Linux and CSV logs and run them through modular detection rules for brute "
+            "force, password spraying, privilege escalation and data exfiltration. I chose FastAPI "
+            "over Flask because of its async support and built-in Pydantic validation, which "
+            "mattered once I was streaming large log files. LangGraph orchestrates the multi-step "
+            "Gemini analysis, and I persisted each analysis run in PostgreSQL so the dashboard could "
+            "show incident timelines and historical trends without re-running detection.",
+            "Can you walk me through how you built the AI SOC Analyst platform?",
+            _soc_spec(), ReasoningType.EXPLANATION,
+            # Real DeBERTa output recorded 2026-08-17.
+            {"technical_accuracy": 0.75, "technical_depth": 0.75, "communication": 0.75,
+             "completeness": 1.0, "architecture": 0.75, "resume_grounding": 1.0},
+        )
+        # None of the heuristic's own scores for this genuinely strong
+        # answer should be "weak" -- the guardrail must be a complete
+        # no-op, and every dimension must equal the trained value exactly.
+        for d in heuristic_result.dimensions:
+            self.assertGreaterEqual(d.raw_score, WEAKNESS_THRESHOLD, f"{d.name} unexpectedly weak in fixture")
+        trained_overrides = {"technical_accuracy": 0.75, "technical_depth": 0.75, "communication": 0.75,
+                              "completeness": 1.0, "architecture": 0.75, "resume_grounding": 1.0}
+        for name, trained_val in trained_overrides.items():
+            final_val = next(d.raw_score for d in result.dimensions if d.name == name)
+            self.assertAlmostEqual(final_val, trained_val, places=3)
+        self.assertIn(result.grade, ("good", "excellent"))
+
+    # ── Case 7: legitimate short-but-correct answer -- must NOT be touched ──
+    def test_case_7_legitimate_short_correct_answer_unaffected(self):
+        heuristic_result, result = self._run_case(
+            "I used FastAPI for the backend because it's async and has built-in request "
+            "validation, which made ingesting large log files straightforward.",
+            "Why did you choose FastAPI for the AI SOC Analyst platform?",
+            _soc_spec(), ReasoningType.EXPLANATION,
+            # Real DeBERTa output recorded 2026-08-17 -- genuinely low
+            # agreement here (DeBERTa scores well below the heuristic on
+            # several dimensions), but the heuristic itself never calls
+            # this answer weak, so the guardrail must stay inert.
+            {"technical_accuracy": 0.5, "technical_depth": 0.5, "communication": 0.25,
+             "completeness": 0.75, "architecture": 0.25, "resume_grounding": 0.5},
+        )
+        for d in heuristic_result.dimensions:
+            self.assertGreaterEqual(d.raw_score, WEAKNESS_THRESHOLD, f"{d.name} unexpectedly weak in fixture")
+        trained_overrides = {"technical_accuracy": 0.5, "technical_depth": 0.5, "communication": 0.25,
+                              "completeness": 0.75, "architecture": 0.25, "resume_grounding": 0.5}
+        for name, trained_val in trained_overrides.items():
+            final_val = next(d.raw_score for d in result.dimensions if d.name == name)
+            self.assertAlmostEqual(final_val, trained_val, places=3)
 
 
 if __name__ == "__main__":

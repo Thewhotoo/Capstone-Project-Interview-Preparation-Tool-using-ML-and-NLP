@@ -115,3 +115,79 @@ def test_project_parser_title_is_consistent_for_traceability_join_key(
 
     for entity in result.entities:
         assert entity["title"] == entity["title"].strip()
+
+
+# ─── Technology gazetteer completeness (Phase 3: DeBERTa) ────────────────
+
+def _two_project_section(make_section, make_text_span, second_project_body):
+    """Two projects: the first (control) never mentions DeBERTa anywhere;
+    the second's own prose (no "Tech:" line) mentions it -- proves
+    attribution stays project-local, not just that the term matches
+    somewhere in the section overall."""
+    spans = [
+        make_text_span(text="Projects", bbox=(72.0, 72.0, 150.0, 90.0), font_size=13.0, is_bold=True),
+        make_text_span(text="Task Tracker", bbox=(72.0, 100.0, 200.0, 110.0), is_bold=True),
+        make_text_span(
+            text="A React and Node.js app for tracking personal tasks with authentication.",
+            bbox=(72.0, 117.0, 400.0, 127.0),
+        ),
+        make_text_span(text="Interview Platform", bbox=(72.0, 151.0, 200.0, 161.0), is_bold=True),
+        make_text_span(text=second_project_body, bbox=(72.0, 168.0, 400.0, 178.0)),
+    ]
+    return make_section(label="projects", raw_header_text="Projects", spans=spans, header_confidence=0.9)
+
+
+def test_project_parser_extracts_deberta_from_prose_no_tech_line(
+    make_section, make_text_span, make_document_model
+):
+    """Direct reproduction of the Phase 3 bug: "DeBERTa-v3" appears only
+    in ordinary prose (no explicit "Tech:" line), the same shape as the
+    real resume's Project 2."""
+    body = (
+        "Developed an end-to-end ML pipeline for synthetic dataset generation, "
+        "automated labeling, DeBERTa-v3 training, benchmarking, and continuous "
+        "evaluator deployment."
+    )
+    section = _two_project_section(make_section, make_text_span, body)
+    doc = make_document_model(spans=section.spans, body_font_size=10.0)
+
+    result = ProjectParser().parse({"projects": section}, doc)
+
+    first, second = result.entities
+    assert second["title"] == "Interview Platform"
+    assert "DeBERTa" in second["technologies"]
+
+
+def test_project_parser_does_not_attribute_deberta_to_unrelated_project(
+    make_section, make_text_span, make_document_model
+):
+    """Negative control / no cross-project leakage: a project whose own
+    text never mentions DeBERTa must not gain it merely because a SIBLING
+    project in the same section does."""
+    body = (
+        "Developed an end-to-end ML pipeline for synthetic dataset generation, "
+        "automated labeling, DeBERTa-v3 training, benchmarking, and continuous "
+        "evaluator deployment."
+    )
+    section = _two_project_section(make_section, make_text_span, body)
+    doc = make_document_model(spans=section.spans, body_font_size=10.0)
+
+    result = ProjectParser().parse({"projects": section}, doc)
+
+    first, second = result.entities
+    assert first["title"] == "Task Tracker"
+    assert "DeBERTa" not in first["technologies"]
+
+
+def test_project_parser_existing_extraction_unchanged(make_section, make_text_span, make_document_model):
+    """Regression guard: the pre-existing fixture's technology extraction
+    (Python/Redis/Docker via "Tech:" line, React/Node.js via prose) is
+    completely unaffected by adding a new gazetteer entry."""
+    section = _projects_section(make_section, make_text_span)
+    doc = make_document_model(spans=section.spans, body_font_size=10.0)
+
+    result = ProjectParser().parse({"projects": section}, doc)
+
+    first, second = result.entities
+    assert set(first["technologies"]) == {"Python", "Redis", "Docker"}
+    assert set(second["technologies"]) == {"React", "Node.js"}

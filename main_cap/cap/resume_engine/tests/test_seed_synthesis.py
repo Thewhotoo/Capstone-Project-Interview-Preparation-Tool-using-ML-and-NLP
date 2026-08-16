@@ -54,6 +54,21 @@ def test_tech_probe_names_the_technology_verbatim():
     assert result.seeds == ["Why did you use FastAPI in this project?"]
 
 
+def test_tech_probe_fires_for_newly_gazetteer_recognized_deberta():
+    """Phase 3: once `technologies` correctly includes "DeBERTa" (fixed at
+    the gazetteer level in project_parser.py's dependency, not here --
+    this module never re-derives technologies from raw text), the
+    existing, unmodified tech-probe mechanism activates for it exactly
+    like any other already-extracted technology."""
+    project = _project(
+        title="Interview Platform",
+        summary="Developed an end-to-end ML pipeline including DeBERTa-v3 training.",
+        technologies=["DeBERTa"],
+    )
+    result = synthesize_seeds(project)
+    assert result.seeds == ["Why did you use DeBERTa in this project?"]
+
+
 # ── Concept-probe family ──────────────────────────────────────────────────
 
 

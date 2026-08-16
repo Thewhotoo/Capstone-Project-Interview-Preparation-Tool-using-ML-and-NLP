@@ -28,7 +28,7 @@ TECHNOLOGIES: tuple[str, ...] = (
     "Laravel",
     # Data / ML
     "Pandas", "NumPy", "scikit-learn", "TensorFlow", "PyTorch", "Keras",
-    "Spark", "Hadoop", "Airflow", "Kafka", "dbt",
+    "Spark", "Hadoop", "Airflow", "Kafka", "dbt", "DeBERTa",
     # Databases
     "PostgreSQL", "MySQL", "MongoDB", "Redis", "SQLite", "Cassandra",
     "DynamoDB", "Elasticsearch", "Snowflake", "BigQuery",

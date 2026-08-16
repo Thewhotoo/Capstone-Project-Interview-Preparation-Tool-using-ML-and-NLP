@@ -271,5 +271,105 @@ class TestImplementationFamilyUnchangedForProjectDeepDive(unittest.TestCase):
         )
 
 
+_TRADEOFF_WORDS = ("tradeoff", "other options", "why didn't you go with")
+
+
+class TestSkillContextFamily(unittest.TestCase):
+    """Phase 5 (Linux/tradeoff grounding audit): SKILL_IN_CONTEXT's only
+    evidence is a bare technology name -- no comparison-language signal
+    exists (see session handover investigation). Neutral "what role did
+    it play"/"how did it fit in" phrasing must replace "tradeoffs"
+    family's comparison-presupposing wording for this category only."""
+
+    def test_skill_context_registered_and_applicable_only_to_skill_in_context(self):
+        defn = get_family("skill_context")
+        self.assertEqual(defn.applicable_categories, frozenset({QuestionCategory.SKILL_IN_CONTEXT}))
+
+    def test_skill_context_never_contains_tradeoff_language(self):
+        ctx = _skill_ctx("Linux", "AI SOC Analyst")
+        defn = get_family("skill_context")
+        for variant in defn.phrasing_variants:
+            text = variant(ctx).lower()
+            for phrase in _TRADEOFF_WORDS:
+                self.assertNotIn(phrase, text, f"{phrase!r} found in: {text!r}")
+
+    def test_skill_context_never_contains_ownership_language(self):
+        """Not just tradeoff-safe -- also doesn't reintroduce Phase 4's
+        ownership problem."""
+        ctx = _skill_ctx("Linux", "AI SOC Analyst")
+        defn = get_family("skill_context")
+        for variant in defn.phrasing_variants:
+            text = variant(ctx).lower()
+            for word in _OWNERSHIP_WORDS:
+                self.assertNotIn(word, text, f"{word!r} found in: {text!r}")
+
+    def test_skill_context_names_the_technology_and_project(self):
+        ctx = _skill_ctx("Linux", "AI SOC Analyst")
+        defn = get_family("skill_context")
+        for variant in defn.phrasing_variants:
+            text = variant(ctx)
+            self.assertIn("Linux", text)
+            self.assertIn("AI SOC Analyst", text)
+
+    def test_reproduces_and_fixes_the_exact_reported_linux_case(self):
+        """Direct regression for the reported bug: "What tradeoffs did
+        you weigh around Linux in AI SOC Analyst..." must never be
+        produced by the family SKILL_IN_CONTEXT actually uses now."""
+        ctx = _skill_ctx("Linux", "AI SOC Analyst – Intelligent Security Log Analysis Platform")
+        defn = get_family("skill_context")
+        texts = [variant(ctx) for variant in defn.phrasing_variants]
+        for text in texts:
+            self.assertNotIn("tradeoffs did you weigh", text.lower())
+            self.assertNotIn("other options you considered", text.lower())
+        self.assertIn(
+            "What role did Linux play in AI SOC Analyst – Intelligent Security Log Analysis Platform?",
+            texts,
+        )
+
+    def test_react_fastapi_deberta_also_use_neutral_wording(self):
+        """Not Linux-specific -- every bare technology seed gets the same
+        neutral treatment."""
+        for tech, title in (
+            ("React", "AI SOC Analyst"),
+            ("FastAPI", "AI SOC Analyst"),
+            ("DeBERTa", "AI-Powered Adaptive Interview Preparation Platform"),
+        ):
+            ctx = _skill_ctx(tech, title)
+            defn = get_family("skill_context")
+            for variant in defn.phrasing_variants:
+                text = variant(ctx).lower()
+                for phrase in _TRADEOFF_WORDS:
+                    self.assertNotIn(phrase, text, f"{phrase!r} found for {tech!r}: {text!r}")
+
+
+class TestTradeoffsFamilyUnchangedForProjectDeepDive(unittest.TestCase):
+    """Regression guard: "tradeoffs" itself must remain completely
+    untouched and still available for PROJECT_DEEP_DIVE -- only
+    SKILL_IN_CONTEXT's arc entry changed, not the family."""
+
+    def test_tradeoffs_still_applies_to_project_deep_dive_and_skill_in_context(self):
+        defn = get_family("tradeoffs")
+        self.assertEqual(
+            defn.applicable_categories,
+            frozenset({QuestionCategory.PROJECT_DEEP_DIVE, QuestionCategory.SKILL_IN_CONTEXT}),
+        )
+
+    def test_tradeoffs_wording_unchanged(self):
+        ctx = PhrasingContext(
+            category=QuestionCategory.PROJECT_DEEP_DIVE, text_seed="Redis caching",
+            title="Resume Discussion Platform", technologies=(), role="", company="",
+            certification_name="", source_id="Resume Discussion Platform",
+        )
+        defn = get_family("tradeoffs")
+        texts = [variant(ctx) for variant in defn.phrasing_variants]
+        self.assertEqual(
+            texts,
+            [
+                "What tradeoffs did you weigh around Redis caching in Resume Discussion Platform?",
+                "Were there other options you considered for Redis caching, and why didn't you go with them?",
+            ],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

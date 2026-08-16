@@ -241,6 +241,34 @@ register_family(FamilyDefinition(
 ))
 
 register_family(FamilyDefinition(
+    name="skill_context",
+    reasoning_type=ReasoningType.RECALL,
+    applicable_categories=frozenset({QuestionCategory.SKILL_IN_CONTEXT}),
+    phrasing_variants=(
+        # Phase 5 (Linux/tradeoff grounding audit): SKILL_IN_CONTEXT's only
+        # evidence is a bare technology NAME co-occurring somewhere in a
+        # project's text (candidate_profile_mapper._gazetteer_matches --
+        # plain substring match, no comparison-language signal). The
+        # "tradeoffs" family's "what tradeoffs did you weigh around
+        # {tech}" wording presupposed a deliberate comparison/decision the
+        # evidence never established -- confirmed live against the real
+        # resume ("Windows, Linux and CSV logs" names Linux as one of
+        # several supported log formats, not a weighed tradeoff).
+        # seed_synthesis.py's tradeoff_probe already has the correct,
+        # strict precondition for a genuine tradeoff claim (two
+        # already-extracted technologies AND the resume's own comparison
+        # language -- "instead of"/"chose X over Y"/etc. -- within a
+        # small character window); SKILL_IN_CONTEXT structurally has no
+        # equivalent evidence to check, so this family asks about context
+        # instead of presupposing a decision, an architectural role, or an
+        # ownership level ever happened at all -- "what role did it play"
+        # is true of literally any occurrence, deliberate or incidental.
+        lambda ctx: f"What role did {_seed_clause(ctx)} play in {_project_or_generic(ctx)}?",
+        lambda ctx: f"Can you tell me more about how {_seed_clause(ctx)} fit into {_project_or_generic(ctx)}?",
+    ),
+))
+
+register_family(FamilyDefinition(
     name="tradeoffs",
     reasoning_type=ReasoningType.TRADE_OFF_ANALYSIS,
     applicable_categories=frozenset({QuestionCategory.PROJECT_DEEP_DIVE, QuestionCategory.SKILL_IN_CONTEXT}),

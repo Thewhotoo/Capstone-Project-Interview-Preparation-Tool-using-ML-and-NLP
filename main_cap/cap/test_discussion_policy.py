@@ -254,13 +254,16 @@ class TestSkillInContextArcOwnershipFix(unittest.TestCase):
         self.assertIn("skill_application", arc)
         self.assertNotIn("implementation", arc)
 
-    def test_skill_in_context_arc_length_and_other_entries_unchanged(self):
-        """Only the one entry changed -- same length, same
-        decision_making/tradeoffs neighbors, same position."""
-        self.assertEqual(
-            _ARC[QuestionCategory.SKILL_IN_CONTEXT],
-            ("decision_making", "skill_application", "tradeoffs"),
-        )
+    def test_skill_in_context_arc_length_and_decision_making_position_unchanged(self):
+        """Only the "implementation" entry changed (Phase 4) -- same
+        length, same "decision_making" opening position. (The third
+        entry, originally "tradeoffs", was itself later swapped for
+        "skill_context" in Phase 5 -- see TestSkillInContextArcTradeoffFix
+        below.)"""
+        arc = _ARC[QuestionCategory.SKILL_IN_CONTEXT]
+        self.assertEqual(len(arc), 3)
+        self.assertEqual(arc[0], "decision_making")
+        self.assertEqual(arc[1], "skill_application")
 
     def test_project_deep_dive_arc_still_uses_implementation(self):
         """Regression guard: the swap is scoped to SKILL_IN_CONTEXT only."""
@@ -278,6 +281,61 @@ class TestSkillInContextArcOwnershipFix(unittest.TestCase):
         memory.recent_question_families.append(first)
         second = select_family(spec, memory)
         self.assertEqual(second, "skill_application")
+
+
+class TestSkillInContextArcTradeoffFix(unittest.TestCase):
+    """Phase 5 (Linux/tradeoff grounding audit): SKILL_IN_CONTEXT's arc
+    must use "skill_context", never "tradeoffs" -- the latter presupposes
+    a weighed comparison the category's bare-technology-name evidence
+    never supports (seed_synthesis.py's tradeoff_probe already requires
+    real comparison language before making that claim; SKILL_IN_CONTEXT
+    has no equivalent evidence to check). PROJECT_DEEP_DIVE's own arc
+    must be untouched."""
+
+    def test_skill_in_context_arc_is_exactly_the_approved_sequence(self):
+        self.assertEqual(
+            _ARC[QuestionCategory.SKILL_IN_CONTEXT],
+            ("decision_making", "skill_application", "skill_context"),
+        )
+
+    def test_tradeoffs_not_reachable_from_skill_in_context_arc(self):
+        self.assertNotIn("tradeoffs", _ARC[QuestionCategory.SKILL_IN_CONTEXT])
+
+    def test_project_deep_dive_arc_still_uses_tradeoffs(self):
+        """Regression guard: the swap is scoped to SKILL_IN_CONTEXT only."""
+        self.assertIn("tradeoffs", _ARC[QuestionCategory.PROJECT_DEEP_DIVE])
+
+    def test_third_skill_in_context_touch_selects_skill_context(self):
+        """End-to-end through select_family: the third touch on a
+        skill_in_context spec (arc index 2) must resolve to
+        skill_context, not tradeoffs."""
+        memory = ConversationMemory()
+        spec = _project_spec(QuestionCategory.SKILL_IN_CONTEXT, text_seed="Linux")
+        seen = []
+        for i in range(3):
+            family = select_family(spec, memory)
+            seen.append(family)
+            memory._source_touch_counts[spec.source_id] = i + 1
+            memory._source_category_touch_counts[(spec.source_id, spec.category.value)] = i + 1
+            memory.recent_question_families.append(family)
+        self.assertEqual(seen, ["decision_making", "skill_application", "skill_context"])
+        self.assertNotIn("tradeoffs", seen)
+
+    def test_arc_still_cycles_through_all_three_distinct_families(self):
+        """Regression guard for the pre-existing cycling behavior (see
+        TestSelectFamily.test_arc_cycles_instead_of_clamping_on_a_long_tail
+        below, updated for the new third entry's name only)."""
+        memory = ConversationMemory()
+        spec = _project_spec(QuestionCategory.SKILL_IN_CONTEXT, text_seed="x")
+        seen = []
+        for i in range(6):  # 2 full cycles of the 3-entry skill_in_context arc
+            family = select_family(spec, memory)
+            seen.append(family)
+            memory._source_touch_counts[spec.source_id] = i + 1
+            memory._source_category_touch_counts[(spec.source_id, spec.category.value)] = i + 1
+            memory.recent_question_families.append(family)
+        self.assertEqual(len(set(seen)), 3)
+        self.assertEqual(seen[0:3], seen[3:6])
 
 
 if __name__ == "__main__":

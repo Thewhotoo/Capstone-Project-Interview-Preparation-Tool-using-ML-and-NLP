@@ -69,7 +69,15 @@ _ARC: dict[QuestionCategory, tuple[str, ...]] = {
         # "implementation" itself is untouched and stays in
         # PROJECT_DEEP_DIVE's own arc below -- see question_families.py's
         # "skill_application" family docstring for the full rationale.
-        "decision_making", "skill_application", "tradeoffs",
+        #
+        # "tradeoffs" swapped for "skill_context" here only (Phase 5,
+        # Linux/tradeoff grounding audit) -- the same evidence gap:
+        # SKILL_IN_CONTEXT never carries the comparison-language signal
+        # seed_synthesis.py's own tradeoff_probe correctly requires before
+        # asserting a tradeoff was weighed. "tradeoffs" itself is
+        # untouched and stays in PROJECT_DEEP_DIVE's own arc below -- see
+        # question_families.py's "skill_context" family docstring.
+        "decision_making", "skill_application", "skill_context",
     ),
 }
 

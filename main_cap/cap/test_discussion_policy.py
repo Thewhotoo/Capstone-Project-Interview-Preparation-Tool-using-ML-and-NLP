@@ -243,5 +243,42 @@ class TestSelectTransition(unittest.TestCase):
         self.assertEqual(select_transition(spec, ConversationMemory()), select_transition(spec, ConversationMemory()))
 
 
+class TestSkillInContextArcOwnershipFix(unittest.TestCase):
+    """Phase 4 (ownership audit): SKILL_IN_CONTEXT's arc must use
+    "skill_application", never "implementation" -- the latter asserts
+    ownership ("building X") the category's bare-technology-name evidence
+    never supports. PROJECT_DEEP_DIVE's own arc must be untouched."""
+
+    def test_skill_in_context_arc_uses_skill_application_not_implementation(self):
+        arc = _ARC[QuestionCategory.SKILL_IN_CONTEXT]
+        self.assertIn("skill_application", arc)
+        self.assertNotIn("implementation", arc)
+
+    def test_skill_in_context_arc_length_and_other_entries_unchanged(self):
+        """Only the one entry changed -- same length, same
+        decision_making/tradeoffs neighbors, same position."""
+        self.assertEqual(
+            _ARC[QuestionCategory.SKILL_IN_CONTEXT],
+            ("decision_making", "skill_application", "tradeoffs"),
+        )
+
+    def test_project_deep_dive_arc_still_uses_implementation(self):
+        """Regression guard: the swap is scoped to SKILL_IN_CONTEXT only."""
+        self.assertIn("implementation", _ARC[QuestionCategory.PROJECT_DEEP_DIVE])
+
+    def test_second_skill_in_context_touch_selects_skill_application(self):
+        """End-to-end through select_family: the second touch on a
+        skill_in_context spec (arc index 1) must resolve to
+        skill_application, not implementation."""
+        memory = ConversationMemory()
+        spec = _project_spec(QuestionCategory.SKILL_IN_CONTEXT, text_seed="FastAPI")
+        first = select_family(spec, memory)
+        memory._source_touch_counts[spec.source_id] = 1
+        memory._source_category_touch_counts[(spec.source_id, spec.category.value)] = 1
+        memory.recent_question_families.append(first)
+        second = select_family(spec, memory)
+        self.assertEqual(second, "skill_application")
+
+
 if __name__ == "__main__":
     unittest.main()

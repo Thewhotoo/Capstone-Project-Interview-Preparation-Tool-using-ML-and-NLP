@@ -60,7 +60,16 @@ _ARC: dict[QuestionCategory, tuple[str, ...]] = {
         "motivation", "application",
     ),
     QuestionCategory.SKILL_IN_CONTEXT: (
-        "decision_making", "implementation", "tradeoffs",
+        # "implementation" family swapped for "skill_application" here
+        # only (Phase 4, ownership audit) -- SKILL_IN_CONTEXT's only
+        # evidence is a bare technology NAME co-occurring somewhere in a
+        # project's text, never a per-technology ownership signal, so
+        # "implementation"'s "how did you go about BUILDING {tech}"
+        # wording was asserting ownership the evidence never supported.
+        # "implementation" itself is untouched and stays in
+        # PROJECT_DEEP_DIVE's own arc below -- see question_families.py's
+        # "skill_application" family docstring for the full rationale.
+        "decision_making", "skill_application", "tradeoffs",
     ),
 }
 

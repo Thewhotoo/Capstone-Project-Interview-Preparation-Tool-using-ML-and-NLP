@@ -169,5 +169,107 @@ class TestExperienceLabelEmptyRole(unittest.TestCase):
         self.assertTrue(any("as Senior Engineer at Acme Corp" in t for t in texts))
 
 
+def _skill_ctx(tech: str, title: str):
+    """A SKILL_IN_CONTEXT-shaped PhrasingContext -- text_seed is the bare
+    technology name (candidate_profile_mapper._gazetteer_matches never
+    captures a verb/ownership signal), grounded in the project it was
+    found in, exactly what topic_pool.py's Priority 5 block builds."""
+    return PhrasingContext(
+        category=QuestionCategory.SKILL_IN_CONTEXT, text_seed=tech,
+        title=title, technologies=(), role="", company="", certification_name="",
+        source_id=title,
+    )
+
+
+_OWNERSHIP_WORDS = ("build", "built", "implement")
+
+
+class TestSkillApplicationFamily(unittest.TestCase):
+    """Phase 4 (ownership audit): SKILL_IN_CONTEXT's only evidence is a
+    bare technology name -- no per-mention ownership signal exists (see
+    session handover investigation). Neutral "used"/"worked with"
+    phrasing must replace "implementation" family's ownership-asserting
+    wording for this category only."""
+
+    def test_skill_application_registered_and_applicable_only_to_skill_in_context(self):
+        defn = get_family("skill_application")
+        self.assertEqual(defn.applicable_categories, frozenset({QuestionCategory.SKILL_IN_CONTEXT}))
+
+    def test_skill_application_never_contains_ownership_language(self):
+        ctx = _skill_ctx("FastAPI", "AI SOC Analyst")
+        defn = get_family("skill_application")
+        for variant in defn.phrasing_variants:
+            text = variant(ctx).lower()
+            for word in _OWNERSHIP_WORDS:
+                self.assertNotIn(word, text, f"{word!r} found in: {text!r}")
+
+    def test_skill_application_names_the_technology_and_project(self):
+        ctx = _skill_ctx("FastAPI", "AI SOC Analyst")
+        defn = get_family("skill_application")
+        for variant in defn.phrasing_variants:
+            text = variant(ctx)
+            self.assertIn("FastAPI", text)
+            self.assertIn("AI SOC Analyst", text)
+
+    def test_reproduces_and_fixes_the_exact_reported_fastapi_case(self):
+        """Direct regression for the reported bug: "How did you go about
+        building FastAPI in AI SOC Analyst..." must never be produced by
+        the family SKILL_IN_CONTEXT actually uses now."""
+        ctx = _skill_ctx("FastAPI", "AI SOC Analyst – Intelligent Security Log Analysis Platform")
+        defn = get_family("skill_application")
+        texts = [variant(ctx) for variant in defn.phrasing_variants]
+        for text in texts:
+            self.assertNotIn("go about building FastAPI", text)
+            self.assertNotIn("how you implemented", text.lower())
+        self.assertIn(
+            "How did you use FastAPI in AI SOC Analyst – Intelligent Security Log Analysis Platform?",
+            texts,
+        )
+
+    def test_react_linux_deberta_also_use_neutral_wording(self):
+        """Not FastAPI-specific -- every bare technology seed gets the
+        same neutral treatment."""
+        for tech, title in (
+            ("React", "AI SOC Analyst"),
+            ("Linux", "AI SOC Analyst"),
+            ("DeBERTa", "AI-Powered Adaptive Interview Preparation Platform"),
+        ):
+            ctx = _skill_ctx(tech, title)
+            defn = get_family("skill_application")
+            for variant in defn.phrasing_variants:
+                text = variant(ctx).lower()
+                for word in _OWNERSHIP_WORDS:
+                    self.assertNotIn(word, text, f"{word!r} found for {tech!r}: {text!r}")
+
+
+class TestImplementationFamilyUnchangedForProjectDeepDive(unittest.TestCase):
+    """Regression guard: "implementation" itself must remain completely
+    untouched and still available for PROJECT_DEEP_DIVE -- only
+    SKILL_IN_CONTEXT's arc entry changed, not the family."""
+
+    def test_implementation_still_applies_to_project_deep_dive_and_skill_in_context(self):
+        defn = get_family("implementation")
+        self.assertEqual(
+            defn.applicable_categories,
+            frozenset({QuestionCategory.PROJECT_DEEP_DIVE, QuestionCategory.SKILL_IN_CONTEXT}),
+        )
+
+    def test_implementation_wording_unchanged(self):
+        ctx = PhrasingContext(
+            category=QuestionCategory.PROJECT_DEEP_DIVE, text_seed="Redis caching",
+            title="Resume Discussion Platform", technologies=(), role="", company="",
+            certification_name="", source_id="Resume Discussion Platform",
+        )
+        defn = get_family("implementation")
+        texts = [variant(ctx) for variant in defn.phrasing_variants]
+        self.assertEqual(
+            texts,
+            [
+                "I noticed Resume Discussion Platform involved Redis caching. Can you walk me through how you implemented that?",
+                "How did you go about building Redis caching in Resume Discussion Platform?",
+            ],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

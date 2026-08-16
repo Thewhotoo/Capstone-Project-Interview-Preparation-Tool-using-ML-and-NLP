@@ -214,6 +214,33 @@ register_family(FamilyDefinition(
 ))
 
 register_family(FamilyDefinition(
+    name="skill_application",
+    reasoning_type=ReasoningType.APPLICATION,
+    applicable_categories=frozenset({QuestionCategory.SKILL_IN_CONTEXT}),
+    phrasing_variants=(
+        # Phase 4 (ownership audit): SKILL_IN_CONTEXT's only evidence is
+        # that a technology NAME co-occurs somewhere in a project's text
+        # (candidate_profile_mapper._gazetteer_matches -- plain substring
+        # match, no verb/ownership signal). "implementation" family's
+        # "how did you go about BUILDING {tech}" wording asserted the
+        # candidate built/implemented the technology itself -- confirmed
+        # live against the real resume as fabricated ownership (e.g. "Built
+        # an AI-assisted SOC platform using FastAPI" describes building the
+        # PLATFORM, not FastAPI). Deliberately never verb-detects near the
+        # mention instead -- proximity-based detection would misattribute
+        # "Built" to FastAPI in that exact sentence, reproducing the same
+        # bug via a different mechanism. "used"/"worked with" is the
+        # strongest claim that's always true regardless of the real
+        # (unknown) ownership level: a candidate who genuinely designed or
+        # built this technology can still truthfully answer "how did you
+        # use it" -- nothing is downgraded, only the unproven assumption is
+        # removed.
+        lambda ctx: f"How did you use {_seed_clause(ctx)} in {_project_or_generic(ctx)}?",
+        lambda ctx: f"What was your experience working with {_seed_clause(ctx)} in {_project_or_generic(ctx)}?",
+    ),
+))
+
+register_family(FamilyDefinition(
     name="tradeoffs",
     reasoning_type=ReasoningType.TRADE_OFF_ANALYSIS,
     applicable_categories=frozenset({QuestionCategory.PROJECT_DEEP_DIVE, QuestionCategory.SKILL_IN_CONTEXT}),

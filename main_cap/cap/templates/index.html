@@ -1374,6 +1374,11 @@
         .rd-timeline-metric-value { font-family: 'Roboto Mono', monospace; color: var(--text-main); }
         .rd-timeline-list { margin: 0 0 10px; padding-left: 18px; font-size: 0.85rem; color: var(--text-main); }
         .rd-suggested-answer { font-size: 0.85rem; color: var(--text-main); background: var(--lime-dim); padding: 12px 14px; border-radius: 8px; border-left: 3px solid var(--lime); line-height: 1.5; }
+        /* Phase 11: explanatory (not actionable) supporting context, so it
+           deliberately does NOT reuse .rd-suggested-answer's accent styling
+           -- plain muted text, same border-left convention as the rest of
+           the detail card, no color implying "do this". */
+        .rd-confidence-rationale { font-size: 0.8rem; color: var(--text-muted); padding: 10px 14px; border-radius: 8px; border-left: 3px solid var(--border-subtle); line-height: 1.5; margin-top: 10px; }
         .rd-expand-hint { font-size: 0.68rem; color: var(--text-dim); margin-top: 10px; text-align: center; }
 
         .rd-report-actions { display: flex; gap: 16px; margin: 8px 0 40px; }
@@ -2885,6 +2890,24 @@
                 strengths: t.evaluation ? t.evaluation.strengths : [],
                 weaknesses: t.evaluation ? t.evaluation.weaknesses : [],
                 suggested_answer: (t.evaluation && t.evaluation.improved_answer) || null,
+                // PHASE 11 FIX (do not revert without re-reading the
+                // investigation): EvaluationResult.confidence_rationale was
+                // already computed and sent by the backend on every turn
+                // (conversation_engine._result_payload) but never reached
+                // the UI -- every evaluation, low-confidence or high-
+                // confidence, rendered identically. Deliberately NOT paired
+                // with the raw `confidence` float here: the investigation
+                // found confidence and confidence_rationale can describe
+                // different aspects of the same computation (e.g. a ~44%
+                // confidence value alongside rationale wording of "very high
+                // combined confidence" -- see hybrid_evaluator.py's
+                // _compute_confidence/_confidence_tier_label), and inventing
+                // a frontend reconciliation of that relationship is out of
+                // scope for a presentation-only phase. The rationale is
+                // backend-authored prose that already contains the model
+                // confidence, heuristic agreement, agreement band, and tier
+                // wording in one coherent sentence -- render that as-is.
+                confidence_rationale: (t.evaluation && t.evaluation.confidence_rationale) || null,
             }));
 
             // Reasoning gaps: EvaluationResult.missing_reasoning describes HOW
@@ -3004,6 +3027,7 @@
                             ${strengthsListHtml ? `<div class="rd-timeline-metric-label">Strengths</div><ul class="rd-timeline-list">${strengthsListHtml}</ul>` : ""}
                             ${weaknessesListHtml ? `<div class="rd-timeline-metric-label">To improve</div><ul class="rd-timeline-list">${weaknessesListHtml}</ul>` : ""}
                             ${(item.suggested_answer && item.suggested_answer.trim()) ? `<div class="rd-timeline-metric-label" style="margin-bottom:6px;">Improved Answer</div><div class="rd-suggested-answer">${esc(item.suggested_answer)}</div>` : ""}
+                            ${(item.confidence_rationale && item.confidence_rationale.trim()) ? `<div class="rd-timeline-metric-label" style="margin-bottom:6px;">Evaluator Confidence</div><div class="rd-confidence-rationale">${esc(item.confidence_rationale)}</div>` : ""}
                         </div>
                         <div class="rd-expand-hint">Tap to expand details</div>
                     </div>

@@ -32,7 +32,7 @@ requirement — it does not touch, reorder, or reinterpret the Planner itself.
 from __future__ import annotations
 
 from conversation_memory import ConversationMemory
-from question_families import families_for_category
+from question_families import families_for_category, family_requires_short_seed
 from question_specification import QuestionCategory, QuestionSpecification
 
 # The natural per-category narrative arc (Section 6): as a source_id (one
@@ -145,13 +145,37 @@ def select_family(spec: QuestionSpecification, memory: ConversationMemory) -> st
         idx = arc.index(candidate) if candidate in arc else 0
         candidate = arc[(idx + 1) % len(arc)]
 
+    # Fix #2 (seed-substitution / garbled-question investigation): a
+    # sentence-shaped text_seed (PROJECT_DEEP_DIVE units built from a
+    # project's own interview_seeds -- see
+    # QuestionSpecification.text_seed_is_sentence) is unsafe for any family
+    # whose phrasing embeds text_seed via question_families._seed_clause
+    # (confirmed live: landing on "tradeoffs" produced "Were there other
+    # options you considered for Why did you use Agno in this project, and
+    # why didn't you go with them?"). Step forward through the SAME arc --
+    # identical discipline to the "last_family" step-forward immediately
+    # above -- until a safe family is found. _ARC[PROJECT_DEEP_DIVE] always
+    # keeps at least "architecture"/"deployment"/"scaling"/"failures"
+    # (verified: none of their phrasing variants call _seed_clause), so
+    # this always terminates within one lap of the arc; if it somehow
+    # didn't, `_seed_clause`'s own defensive guard is the final backstop.
+    if spec.text_seed_is_sentence and family_requires_short_seed(candidate):
+        start = arc.index(candidate) if candidate in arc else 0
+        for offset in range(1, len(arc) + 1):
+            next_candidate = arc[(start + offset) % len(arc)]
+            if not family_requires_short_seed(next_candidate):
+                candidate = next_candidate
+                break
+
     applicable = families_for_category(spec.category)
     if candidate not in applicable:
         # Defensive fallback — should never trigger if _ARC and the family
         # registry are kept consistent (verified by
         # test_discussion_policy.py), but a silent KeyError deep in a live
         # session would be far worse than a documented fallback here.
-        candidate = applicable[0]
+        safe_applicable = [f for f in applicable if not family_requires_short_seed(f)]
+        pool = safe_applicable if (spec.text_seed_is_sentence and safe_applicable) else applicable
+        candidate = pool[0]
     return candidate
 
 

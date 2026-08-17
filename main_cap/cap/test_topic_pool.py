@@ -44,6 +44,20 @@ class TestTopicPoolGeneration(unittest.TestCase):
             self.assertEqual(spec.source_id, "Resume Discussion Platform")
             self.assertEqual(spec.source_field, "interview_seeds")
 
+    def test_project_deep_dive_units_from_interview_seeds_are_marked_sentence_shaped(self):
+        """Fix #2 (seed-substitution investigation): seed_synthesis.py's
+        interview_seeds are always complete question sentences, never bare
+        topics -- TopicPool must mark every unit built from them
+        accordingly so discussion_policy/question_realizer can avoid
+        embedding the full sentence inside another template."""
+        deep_dives = [
+            s for s in self.pool.specifications.values()
+            if s.category == QuestionCategory.PROJECT_DEEP_DIVE
+        ]
+        self.assertTrue(deep_dives)
+        for spec in deep_dives:
+            self.assertTrue(spec.text_seed_is_sentence)
+
     def test_project_overview_unit_built_per_project(self):
         overviews = [
             s for s in self.pool.specifications.values()
@@ -118,6 +132,18 @@ class TestTopicPoolGeneration(unittest.TestCase):
         source_ids = {s.source_id for s in skills}
         self.assertIn("Resume Discussion Platform", source_ids)
         self.assertIn("Software Engineering Intern at Acme Corp", source_ids)
+
+    def test_skill_in_context_units_are_not_marked_sentence_shaped(self):
+        """Fix #2 (seed-substitution investigation): technical_topics'
+        `topic` values are bare technology/skill names (e.g. "React"), not
+        sentences -- these units must keep the safe default."""
+        skills = [
+            s for s in self.pool.specifications.values()
+            if s.category == QuestionCategory.SKILL_IN_CONTEXT
+        ]
+        self.assertTrue(skills)
+        for spec in skills:
+            self.assertFalse(spec.text_seed_is_sentence)
 
     def test_priority_boost_set_for_weakness_touching_units(self):
         boosted = [s for s in self.pool.specifications.values() if s.priority_boost]

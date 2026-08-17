@@ -59,6 +59,11 @@ class PhrasingContext:
     company: str           # experience company, or ""
     certification_name: str  # or ""
     source_id: str
+    # Fix #2: mirrors QuestionSpecification.text_seed_is_sentence — see that
+    # field's docstring. Threaded through here so _seed_clause (below) can
+    # refuse to embed a full sentence, as a defensive SECOND layer behind
+    # discussion_policy's family-selection exclusion (the primary fix).
+    text_seed_is_sentence: bool = False
 
 
 PhrasingVariant = Callable[[PhrasingContext], str]
@@ -139,7 +144,52 @@ def _tech_phrase(ctx: PhrasingContext) -> str:
 
 
 def _seed_clause(ctx: PhrasingContext) -> str:
+    """A short clause suitable for grammatical embedding inside another
+    template (e.g. "Why did you take the approach you did for {clause} in
+    ...?"). SECONDARY defensive guard (Fix #2 investigation): if
+    ctx.text_seed_is_sentence is True, text_seed is a complete
+    natural-language question (seed_synthesis.py's own output, e.g. "Why
+    did you use Agno in this project?") rather than a short clause --
+    embedding it here would produce the reproduced doubly-nested garble
+    ("Were there other options you considered for Why did you use Agno in
+    this project, and why didn't you go with them?"). The PRIMARY fix is
+    discussion_policy.select_family (and question_realizer's follow-up
+    path) never selecting one of _SEED_CLAUSE_DEPENDENT_FAMILIES for a
+    sentence-shaped seed in the first place -- this fallback exists only so
+    that a future family/call-site that forgets that exclusion fails safe
+    (generic wording) instead of leaking a garbled sentence to the user."""
+    if ctx.text_seed_is_sentence:
+        return "your approach"
     return (ctx.text_seed or "your approach").rstrip("?.").strip()
+
+
+# Fix #2 (seed-substitution / garbled-question investigation): every
+# registered family with at least one phrasing variant that calls
+# `_seed_clause` -- i.e. every family whose phrasing assumes text_seed is a
+# short clause/topic, not a complete sentence. Explicit and reviewable, the
+# same discipline `_ARC`/`_FAMILY_REGISTRY` already use, rather than trying
+# to introspect closures. Consulted by discussion_policy.select_family and
+# question_realizer's follow-up angle selection so neither ever picks one
+# of these families for a QuestionSpecification whose text_seed_is_sentence
+# is True (PROJECT_DEEP_DIVE units built from a project's own
+# interview_seeds -- see QuestionSpecification.text_seed_is_sentence).
+# skill_application/skill_context are included for accuracy (they do call
+# _seed_clause) even though SKILL_IN_CONTEXT's own text_seed is never
+# sentence-shaped today -- keeps this set an honest, complete answer to
+# "which families require a short seed", not just "which ones currently
+# matter".
+_SEED_CLAUSE_DEPENDENT_FAMILIES: frozenset[str] = frozenset({
+    "implementation", "skill_application", "skill_context",
+    "tradeoffs", "decision_making", "debugging", "optimization",
+    "testing", "reflection",
+})
+
+
+def family_requires_short_seed(name: str) -> bool:
+    """True if `name` has at least one phrasing variant that embeds
+    text_seed via `_seed_clause` -- i.e. is unsafe to select for a
+    QuestionSpecification whose text_seed_is_sentence is True."""
+    return name in _SEED_CLAUSE_DEPENDENT_FAMILIES
 
 
 def _experience_label(ctx: PhrasingContext) -> str:

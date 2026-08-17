@@ -184,6 +184,23 @@ class QuestionSpecification(BaseModel):
     id: str
     category: QuestionCategory
     text_seed: Optional[str] = None
+    # Fix #2 (seed-substitution / garbled-question investigation): an
+    # explicit, TopicPool-computed signal of text_seed's SHAPE, not its
+    # content. False (default, safe for every existing caller) means
+    # text_seed is a short clause/topic (e.g. a bare technology name from
+    # SKILL_IN_CONTEXT's technical_topics) -- suitable for grammatical
+    # embedding inside another template via question_families._seed_clause.
+    # True means text_seed is already a COMPLETE natural-language question
+    # sentence (PROJECT_DEEP_DIVE units built from a project's own
+    # interview_seeds, see seed_synthesis.py -- every one of its five
+    # templates composes a full question, never a bare topic). TopicPool is
+    # the only place that knows which source produced a given text_seed, so
+    # it is the only place this is ever set to True (topic_pool.py's
+    # Priority-1 loop, the interview_seeds source). Consumed by
+    # discussion_policy.select_family (skips families whose phrasing
+    # requires a short clause) and question_realizer's follow-up path (same
+    # protection) -- see each module's own comments for the full story.
+    text_seed_is_sentence: bool = False
     grounding: Grounding
     priority_boost: bool = False
     source_type: SourceType

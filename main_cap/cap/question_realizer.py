@@ -35,7 +35,7 @@ from typing import Optional
 import discussion_policy
 from conversation_memory import ConversationMemory
 from interview_question import InterviewQuestion
-from question_families import PhrasingContext, ReasoningType, get_family
+from question_families import PhrasingContext, ReasoningType, family_requires_short_seed, get_family
 from question_specification import QuestionCategory, QuestionSpecification
 
 
@@ -57,18 +57,20 @@ def _build_context(spec: QuestionSpecification) -> PhrasingContext:
             category=spec.category, text_seed=spec.text_seed,
             title=grounding.project.title, technologies=grounding.project.technologies,
             role="", company="", certification_name="", source_id=spec.source_id,
+            text_seed_is_sentence=spec.text_seed_is_sentence,
         )
     if grounding.experience is not None:
         return PhrasingContext(
             category=spec.category, text_seed=spec.text_seed,
             title="", technologies=(), role=grounding.experience.role,
             company=grounding.experience.company, certification_name="",
-            source_id=spec.source_id,
+            source_id=spec.source_id, text_seed_is_sentence=spec.text_seed_is_sentence,
         )
     return PhrasingContext(
         category=spec.category, text_seed=spec.text_seed,
         title="", technologies=(), role="", company="",
         certification_name=grounding.certification.name, source_id=spec.source_id,
+        text_seed_is_sentence=spec.text_seed_is_sentence,
     )
 
 
@@ -190,16 +192,44 @@ _FOLLOWUP_ANGLE_CATEGORY_EXCLUSIONS: dict[str, frozenset[QuestionCategory]] = {
 }
 
 
-def _angle_available(angle: str, category: QuestionCategory) -> bool:
-    return category not in _FOLLOWUP_ANGLE_CATEGORY_EXCLUSIONS.get(angle, frozenset())
+def _angle_available(angle: str, spec: QuestionSpecification) -> bool:
+    """An angle is available for `spec` unless excluded by category (Phase
+    5, _FOLLOWUP_ANGLE_CATEGORY_EXCLUSIONS -- evidence-appropriateness) or,
+    Fix #2 (seed-substitution investigation), the angle maps onto a family
+    that requires a short clause (question_families.family_requires_short_
+    seed) while spec.text_seed_is_sentence is True. `realize_followup`
+    confirmed live: `_FOLLOWUP_ANGLE_FAMILY`-mapped angles reach
+    `question_families._seed_clause` through the exact same `_render()`
+    fresh turns use (`realize()` and `realize_followup` share it), so a
+    sentence-shaped text_seed can reach these families via a follow-up too
+    -- the identical exclusion is required here, not just in
+    discussion_policy.select_family."""
+    if spec.category in _FOLLOWUP_ANGLE_CATEGORY_EXCLUSIONS.get(angle, frozenset()):
+        return False
+    mapped_family = _FOLLOWUP_ANGLE_FAMILY.get(angle)
+    if spec.text_seed_is_sentence and mapped_family is not None and family_requires_short_seed(mapped_family):
+        return False
+    return True
 
 
 def _followup_focus(spec: QuestionSpecification, focus_hint: Optional[str]) -> str:
     """The subject a follow-up is actually about — Phase 3's evaluator hint
     if supplied, otherwise the current specification's own seed/subject,
-    never invented (Chapter 17)."""
+    never invented (Chapter 17).
+
+    Fix #2 (seed-substitution investigation): `_FOLLOWUP_TEMPLATES`'
+    angles ("clarification", "more_detail", "alternative_approaches") embed
+    this return value the same way question_families._seed_clause embeds
+    text_seed ("Could you clarify what you mean by {focus}?") -- the
+    identical garbling risk, through a DIFFERENT function, if
+    spec.text_seed_is_sentence and no explicit focus_hint was supplied.
+    These angles have no registered-family equivalent for
+    discussion_policy/family_requires_short_seed to exclude, so the guard
+    lives here directly, mirroring _seed_clause's own fallback."""
     if focus_hint:
         return focus_hint
+    if spec.text_seed_is_sentence:
+        return "that part of your work"
     if spec.text_seed:
         return spec.text_seed.rstrip("?.").strip()
     return "that part of your work"
@@ -214,7 +244,7 @@ def select_followup_angle(spec: QuestionSpecification, memory: ConversationMemor
     _FOLLOWUP_ANGLE_CATEGORY_EXCLUSIONS) before any of that -- an
     unavailable angle is never a candidate in the first place, not
     filtered out after the fact."""
-    available = tuple(a for a in FOLLOWUP_ANGLES if _angle_available(a, spec.category))
+    available = tuple(a for a in FOLLOWUP_ANGLES if _angle_available(a, spec))
     if not available:  # pragma: no cover - defensive; template-only angles are always available
         available = FOLLOWUP_ANGLES
     idx = _stable_index(spec.id, str(followups_used_on_this_spec), modulus=len(available))
@@ -236,7 +266,7 @@ def realize_followup(
     (Chapter 17: a follow-up is a continuation, not a new topic — the
     caller keeps using the same `spec`, there is no new specification)."""
     chosen_angle = angle or select_followup_angle(spec, memory, followups_used_on_this_spec)
-    if not _angle_available(chosen_angle, spec.category):
+    if not _angle_available(chosen_angle, spec):
         # An explicitly-requested angle (a future caller, not
         # select_followup_angle's own deterministic pick) is unavailable
         # for this category -- e.g. "tradeoff_probing" on a

@@ -20,9 +20,10 @@ from question_specification import (
 
 
 def _spec(spec_id="topic_0", title="My Project", text_seed="Redis caching strategy",
-          category=QuestionCategory.PROJECT_DEEP_DIVE):
+          category=QuestionCategory.PROJECT_DEEP_DIVE, text_seed_is_sentence=False):
     return QuestionSpecification(
         id=spec_id, category=category, text_seed=text_seed,
+        text_seed_is_sentence=text_seed_is_sentence,
         grounding=Grounding(project=ProjectGrounding(title=title, technologies=("Python", "Redis"))),
         source_type=SourceType.PROJECT, source_id=title, source_field="interview_seeds", reason="test",
     )
@@ -223,6 +224,87 @@ class TestFollowupAngleCategoryAwareness(unittest.TestCase):
             for i in range(len(FOLLOWUP_ANGLES))
         ]
         self.assertIn("tradeoff_probing", seen)
+
+
+class TestFollowupSentenceShapedSeedProtection(unittest.TestCase):
+    """Fix #2 (seed-substitution / garbled-question investigation):
+    realize_followup shares question_families._seed_clause with fresh
+    turns via _render() -- confirmed live that a sentence-shaped text_seed
+    reaches _FOLLOWUP_ANGLE_FAMILY-mapped angles ("tradeoff_probing" ->
+    "tradeoffs", etc.) through this exact path, reproducing the identical
+    doubly-nested garble a fresh PROJECT_DEEP_DIVE turn would. Both the
+    family-mapped angles (excluded via _angle_available) and the
+    template-only angles (protected via _followup_focus's own fallback)
+    need coverage here."""
+
+    def setUp(self):
+        self.memory = ConversationMemory()
+        self.sentence_spec = _spec(
+            spec_id="topic_agno", title="Patient OS v2",
+            text_seed="Why did you use Agno in this project?",
+            category=QuestionCategory.PROJECT_DEEP_DIVE,
+            text_seed_is_sentence=True,
+        )
+
+    def test_auto_selection_never_picks_a_seed_clause_dependent_angle_for_a_sentence_seed(self):
+        from question_families import family_requires_short_seed
+        seen = []
+        for followups_used in range(8):
+            angle = question_realizer.select_followup_angle(self.sentence_spec, self.memory, followups_used)
+            seen.append(angle)
+        for angle in seen:
+            mapped_family = question_realizer._FOLLOWUP_ANGLE_FAMILY.get(angle)
+            if mapped_family is not None:
+                self.assertFalse(
+                    family_requires_short_seed(mapped_family),
+                    f"selected angle {angle!r} -> unsafe family {mapped_family!r} for a sentence-shaped seed",
+                )
+
+    def test_explicit_family_mapped_angle_request_is_reassigned_for_a_sentence_seed(self):
+        """Direct reproduction of the exact reported failure shape, via an
+        explicitly-requested angle (bypassing select_followup_angle),
+        mirroring test_explicit_tradeoff_probing_request_is_reassigned_
+        for_skill_in_context above but for seed SHAPE instead of category."""
+        question, _ = realize_followup(self.sentence_spec, self.memory, turn_number=2, angle="tradeoff_probing")
+        self.assertNotEqual(question.family, "tradeoff_probing")
+        self.assertNotIn("why did you use agno in this project", question.question_text.lower())
+        self.assertNotIn("were there other options you considered for why", question.question_text.lower())
+
+    def test_template_only_angle_does_not_embed_the_raw_sentence(self):
+        """_FOLLOWUP_TEMPLATES angles (clarification/more_detail/
+        alternative_approaches) use _followup_focus, a DIFFERENT function
+        than _seed_clause with the identical garbling risk -- e.g.
+        "Could you clarify what you mean by Why did you use Agno in this
+        project?" -- must not occur."""
+        question, _ = realize_followup(
+            self.sentence_spec, self.memory, turn_number=2, angle="clarification",
+        )
+        self.assertNotIn("why did you use agno in this project?", question.question_text.lower())
+
+    def test_short_clause_seed_still_reaches_family_mapped_angles(self):
+        """Regression guard: correctly-shaped (short) seeds keep their
+        existing follow-up behavior -- this is exactly
+        test_project_deep_dive_auto_selection_can_still_reach_tradeoff_
+        probing above, re-asserted here for clarity of what this fix must
+        NOT change."""
+        short_spec = _spec(
+            spec_id="topic_short", title="RD Platform", text_seed="Redis vs Memcached",
+            category=QuestionCategory.PROJECT_DEEP_DIVE, text_seed_is_sentence=False,
+        )
+        memory = ConversationMemory()
+        seen = [
+            question_realizer.select_followup_angle(short_spec, memory, i)
+            for i in range(len(FOLLOWUP_ANGLES))
+        ]
+        self.assertIn("tradeoff_probing", seen)
+
+    def test_short_clause_seed_template_only_angle_unaffected(self):
+        short_spec = _spec(
+            spec_id="topic_short2", title="RD Platform", text_seed="Redis caching",
+            category=QuestionCategory.PROJECT_DEEP_DIVE, text_seed_is_sentence=False,
+        )
+        question, _ = realize_followup(short_spec, self.memory, turn_number=2, angle="clarification")
+        self.assertIn("redis caching", question.question_text.lower())
 
 
 if __name__ == "__main__":

@@ -13,6 +13,7 @@ from question_families import (
     ReasoningType,
     all_family_names,
     families_for_category,
+    family_requires_short_seed,
     get_family,
     register_family,
 )
@@ -369,6 +370,107 @@ class TestTradeoffsFamilyUnchangedForProjectDeepDive(unittest.TestCase):
                 "Were there other options you considered for Redis caching, and why didn't you go with them?",
             ],
         )
+
+
+class TestSentenceShapedSeedDefensiveGuard(unittest.TestCase):
+    """Fix #2 (seed-substitution / garbled-question investigation).
+    _seed_clause is the SECONDARY defensive layer -- the PRIMARY fix is
+    discussion_policy/question_realizer never selecting one of these
+    families for a sentence-shaped seed in the first place (see
+    test_discussion_policy.py / test_question_realizer.py). This class
+    tests _seed_clause itself in isolation, plus a direct reproduction of
+    the exact real-resume failure at the family-rendering layer."""
+
+    def test_family_requires_short_seed_identifies_the_known_dependent_families(self):
+        for name in (
+            "implementation", "skill_application", "skill_context",
+            "tradeoffs", "decision_making", "debugging", "optimization",
+            "testing", "reflection",
+        ):
+            self.assertTrue(family_requires_short_seed(name), name)
+
+    def test_family_requires_short_seed_false_for_seed_agnostic_families(self):
+        for name in ("overview", "architecture", "deployment", "scaling", "failures"):
+            self.assertFalse(family_requires_short_seed(name), name)
+
+    def test_seed_clause_falls_back_to_generic_wording_for_a_sentence_seed(self):
+        ctx = PhrasingContext(
+            category=QuestionCategory.PROJECT_DEEP_DIVE,
+            text_seed="Why did you use Agno in this project?",
+            text_seed_is_sentence=True,
+            title="Patient OS v2", technologies=(), role="", company="",
+            certification_name="", source_id="Patient OS v2",
+        )
+        defn = get_family("tradeoffs")
+        texts = [variant(ctx) for variant in defn.phrasing_variants]
+        for text in texts:
+            self.assertNotIn("Why did you use Agno in this project", text)
+        self.assertEqual(
+            texts,
+            [
+                "What tradeoffs did you weigh around your approach in Patient OS v2?",
+                "Were there other options you considered for your approach, and why didn't you go with them?",
+            ],
+        )
+
+    def test_seed_clause_unaffected_for_a_short_clause_seed(self):
+        """Regression guard: text_seed_is_sentence=False (the default)
+        preserves the exact existing wording -- see
+        TestTradeoffsFamily.test_tradeoffs_wording_unchanged above."""
+        ctx = PhrasingContext(
+            category=QuestionCategory.PROJECT_DEEP_DIVE, text_seed="Redis caching",
+            text_seed_is_sentence=False,
+            title="Resume Discussion Platform", technologies=(), role="", company="",
+            certification_name="", source_id="Resume Discussion Platform",
+        )
+        defn = get_family("tradeoffs")
+        texts = [variant(ctx) for variant in defn.phrasing_variants]
+        self.assertEqual(
+            texts,
+            [
+                "What tradeoffs did you weigh around Redis caching in Resume Discussion Platform?",
+                "Were there other options you considered for Redis caching, and why didn't you go with them?",
+            ],
+        )
+
+    def test_reproduces_and_fixes_the_exact_real_resume_agno_failure(self):
+        """Direct reproduction of the real Shubham-Mookim-Resume.pdf
+        failure: 'Were there other options you considered for Why did you
+        use Agno in this project, and why didn't you go with them?' must
+        no longer be producible by the 'tradeoffs' family's second variant
+        when given the real, exact sentence-shaped seed."""
+        ctx = PhrasingContext(
+            category=QuestionCategory.PROJECT_DEEP_DIVE,
+            text_seed="Why did you use Agno in this project?",
+            text_seed_is_sentence=True,
+            title="Patient OS v2 — Multi-Source Health AI Copilot", technologies=(),
+            role="", company="", certification_name="",
+            source_id="Patient OS v2 — Multi-Source Health AI Copilot",
+        )
+        defn = get_family("tradeoffs")
+        text = defn.phrasing_variants[1](ctx)
+        self.assertNotEqual(
+            text,
+            "Were there other options you considered for Why did you use Agno in this project, "
+            "and why didn't you go with them?",
+        )
+        self.assertNotIn("Why did you use Agno in this project", text)
+
+    def test_multi_word_short_seeds_pass_through_unaffected(self):
+        """Legitimate multi-word technology names must render exactly as
+        before -- this is NOT a length/word-count check, it's the explicit
+        text_seed_is_sentence=False signal that matters."""
+        for seed in ("OpenAI GPT-4o", "AWS Athena"):
+            with self.subTest(seed=seed):
+                ctx = PhrasingContext(
+                    category=QuestionCategory.PROJECT_DEEP_DIVE, text_seed=seed,
+                    text_seed_is_sentence=False,
+                    title="FairEdge Data Agent", technologies=(), role="", company="",
+                    certification_name="", source_id="FairEdge Data Agent",
+                )
+                defn = get_family("tradeoffs")
+                text = defn.phrasing_variants[0](ctx)
+                self.assertIn(seed, text)
 
 
 if __name__ == "__main__":

@@ -129,12 +129,14 @@ class TopicPool:
         source_field: str,
         reason: str,
         priority_boost: bool = False,
+        text_seed_is_sentence: bool = False,
     ) -> str:
         unit_id = self._new_id()
         spec = QuestionSpecification(
             id=unit_id,
             category=category,
             text_seed=text_seed,
+            text_seed_is_sentence=text_seed_is_sentence,
             grounding=grounding,
             priority_boost=priority_boost,
             source_type=source_type,
@@ -204,6 +206,12 @@ class TopicPool:
                     source_field="interview_seeds",
                     reason=f"projects[title={title!r}].interview_seeds",
                     priority_boost=touches_weakness(title) or touches_weakness(seed),
+                    # Fix #2: every seed_synthesis.py template composes a
+                    # complete question sentence, never a bare topic (see
+                    # QuestionSpecification.text_seed_is_sentence's
+                    # docstring) -- the ONLY source of a sentence-shaped
+                    # text_seed anywhere in TopicPool.
+                    text_seed_is_sentence=True,
                 )
 
         # ── Priority 2: project overview ─────────────────────────────────

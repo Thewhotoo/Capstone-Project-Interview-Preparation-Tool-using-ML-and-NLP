@@ -21,9 +21,10 @@ from question_specification import (
 )
 
 
-def _project_spec(category, source_id="P1", spec_id="topic_0", text_seed=None):
+def _project_spec(category, source_id="P1", spec_id="topic_0", text_seed=None, text_seed_is_sentence=False):
     return QuestionSpecification(
         id=spec_id, category=category, text_seed=text_seed,
+        text_seed_is_sentence=text_seed_is_sentence,
         grounding=Grounding(project=ProjectGrounding(title=source_id)),
         source_type=SourceType.PROJECT, source_id=source_id, source_field="x", reason="test",
     )
@@ -336,6 +337,73 @@ class TestSkillInContextArcTradeoffFix(unittest.TestCase):
             memory.recent_question_families.append(family)
         self.assertEqual(len(set(seen)), 3)
         self.assertEqual(seen[0:3], seen[3:6])
+
+
+class TestSentenceShapedSeedFamilySelection(unittest.TestCase):
+    """Fix #2 (seed-substitution / garbled-question investigation):
+    select_family must never pick a family that embeds text_seed via
+    question_families._seed_clause when spec.text_seed_is_sentence is True
+    -- confirmed live to produce the doubly-nested garble ("Were there
+    other options you considered for Why did you use Agno in this project,
+    and why didn't you go with them?")."""
+
+    def setUp(self):
+        self.memory = ConversationMemory()
+
+    def test_never_selects_a_seed_clause_dependent_family_for_a_sentence_seed(self):
+        from question_families import family_requires_short_seed
+        spec = _project_spec(
+            QuestionCategory.PROJECT_DEEP_DIVE,
+            text_seed="Why did you use Agno in this project?",
+            text_seed_is_sentence=True,
+        )
+        seen = []
+        for i in range(11):  # a full lap of the 11-entry PROJECT_DEEP_DIVE arc
+            family = select_family(spec, self.memory)
+            seen.append(family)
+            self.assertFalse(
+                family_requires_short_seed(family),
+                f"selected unsafe family {family!r} for a sentence-shaped seed",
+            )
+            self.memory._source_touch_counts[spec.source_id] = i + 1
+            self.memory._source_category_touch_counts[(spec.source_id, spec.category.value)] = i + 1
+            self.memory.recent_question_families.append(family)
+        # Real variety is preserved, not collapsed to one repeated family.
+        self.assertGreater(len(set(seen)), 1)
+
+    def test_short_clause_seed_still_reaches_seed_clause_dependent_families(self):
+        """Regression guard: correctly-shaped (short) seeds must keep
+        their existing behavior -- the arc must still be able to land on
+        'tradeoffs'/'decision_making'/etc., proving the exclusion is
+        scoped to text_seed_is_sentence, not a blanket family removal."""
+        spec = _project_spec(QuestionCategory.PROJECT_DEEP_DIVE, text_seed="React", text_seed_is_sentence=False)
+        seen = []
+        for i in range(11):
+            family = select_family(spec, self.memory)
+            seen.append(family)
+            self.memory._source_touch_counts[spec.source_id] = i + 1
+            self.memory._source_category_touch_counts[(spec.source_id, spec.category.value)] = i + 1
+            self.memory.recent_question_families.append(family)
+        self.assertIn("tradeoffs", seen)
+
+    def test_multi_word_short_seeds_are_unaffected(self):
+        """Legitimate multi-word technology names ("OpenAI GPT-4o", "AWS
+        Athena") are short/topic-shaped, not sentence-shaped -- they must
+        never be excluded from any family just because they contain
+        multiple words or capital letters."""
+        from question_families import family_requires_short_seed
+        for seed in ("OpenAI GPT-4o", "AWS Athena"):
+            with self.subTest(seed=seed):
+                memory = ConversationMemory()
+                spec = _project_spec(QuestionCategory.PROJECT_DEEP_DIVE, text_seed=seed, text_seed_is_sentence=False)
+                seen = set()
+                for i in range(11):
+                    family = select_family(spec, memory)
+                    seen.add(family)
+                    memory._source_touch_counts[spec.source_id] = i + 1
+                    memory._source_category_touch_counts[(spec.source_id, spec.category.value)] = i + 1
+                    memory.recent_question_families.append(family)
+                self.assertTrue(any(family_requires_short_seed(f) for f in seen))
 
 
 if __name__ == "__main__":

@@ -2646,9 +2646,9 @@
         // length. Priority per sentence slot: strongest signal (anchored to
         // the strongest project when both exist) -> single lead growth
         // signal (a reasoning gap beats a merely-low dimension score, since
-        // it names something concrete) -> missing concepts (only if not
-        // already implied) -> trend (a genuinely separate, temporal signal).
-        function rdBuildDebrief(overallGrade, dimAverages, reasoningGaps, missingConcepts, strongestProject, weakestProject, timeline) {
+        // it names something concrete) -> trend (a genuinely separate,
+        // temporal signal).
+        function rdBuildDebrief(overallGrade, dimAverages, reasoningGaps, strongestProject, weakestProject, timeline) {
             const sentences = [];
 
             let bestDim = null, worstDim = null;
@@ -2678,11 +2678,16 @@
             }
             if (growthSentence) sentences.push(growthSentence);
 
-            if (missingConcepts.length) {
-                sentences.push(missingConcepts.length === 1
-                    ? `${missingConcepts[0]} never came up, and would have been worth mentioning.`
-                    : `A couple of things never came up at all — ${missingConcepts.slice(0, 3).join(", ")}.`);
-            }
+            // PHASE 9 FIX (do not revert without re-reading the
+            // investigation): this used to also add a "never came up"
+            // sentence naming result.concept_coverage's omitted concepts --
+            // removed for the same reason as rdBuildNextSteps above (see
+            // that function's comment): concept_coverage is registry-
+            // derived, not resume-text-grounded, and is not scoped to
+            // whether it actually explains any turn's real weakness.
+            // concept_coverage itself is untouched -- it remains valid
+            // evaluator/dashboard data; it is just no longer narrated here
+            // as a specific, personalized "this never came up" claim.
 
             if (timeline.length >= 4) {
                 const mid = Math.floor(timeline.length / 2);
@@ -2696,25 +2701,42 @@
                 }
             }
 
-            if (!growthSentence && !missingConcepts.length && sentences.length < 2) {
+            if (!growthSentence && sentences.length < 2) {
                 sentences.push("There wasn't much to push back on here — a clean, confident discussion.");
             }
 
             return sentences.join(" ");
         }
 
-        // Before Your Next Interview -- three DIFFERENT sources, each in its
+        // Before Your Next Interview -- two DIFFERENT sources, each in its
         // own style, so the list never reads as one template repeated:
         //   1. behavioral advice for the lead reasoning gap (RD_ADVICE_BY_GAP)
         //   2. a project-specific "justify the choice" line, but ONLY when a
         //      tradeoff/design_decision gap actually evidences that this
         //      project's reasoning was the thin spot -- never presumed
-        //   3. a concrete "review these concepts" line naming exactly what
-        //      concept_coverage marked omitted
-        // Falls back to the backend's own recommended_topics only if none of
-        // the three real signals above produced anything (never empty AND
+        // Falls back to the backend's own recommended_topics only if neither
+        // of the two real signals above produced anything (never empty AND
         // silent about a known gap).
-        function rdBuildNextSteps(recommendedTopics, reasoningGaps, missingConcepts, weakestProject, strongestProject) {
+        //
+        // PHASE 9 FIX (do not revert without re-reading the investigation):
+        // this used to also add "Review {missingConcepts} so they naturally
+        // become part of future discussions" -- missingConcepts came from
+        // result.concept_coverage's omitted list, which is populated purely
+        // from expected_concepts_registry.py (a per-technology textbook
+        // lookup, e.g. "fastapi" -> ASGI/dependency injection/routing), not
+        // from anything the candidate's resume text, question, or answer
+        // established (same root cause Phase 8 fixed for the Improved
+        // Answer feature -- concept_coverage has no resume-grounded
+        // counterpart to fall back to here, unlike proj.concepts server-
+        // side). Live-reproduced: a session whose real, repeated weakness
+        // was "no concrete example" / "unclear ownership" across 10/10 and
+        // 2/10 turns still told the candidate to "Review ASGI, async
+        // request handling, dependency injection" off the strength of a
+        // single unrelated skill_in_context turn. concept_coverage remains
+        // valid evaluator/dashboard data (untouched anywhere else) -- it is
+        // simply no longer eligible to be presented as personalized
+        // "go study this" coaching here.
+        function rdBuildNextSteps(recommendedTopics, reasoningGaps, weakestProject, strongestProject) {
             const steps = [];
 
             if (reasoningGaps.length && RD_ADVICE_BY_GAP[reasoningGaps[0].category]) {
@@ -2724,10 +2746,6 @@
             const hasTradeoffGap = reasoningGaps.some(g => g.category === "tradeoff" || g.category === "design_decision");
             if (hasTradeoffGap && weakestProject && weakestProject !== strongestProject) {
                 steps.push(`Be ready to justify why you chose your approach for ${weakestProject} over the alternatives.`);
-            }
-
-            if (missingConcepts.length) {
-                steps.push(`Review ${missingConcepts.slice(0, 3).join(", ")} so they naturally become part of future discussions.`);
             }
 
             if (!steps.length && recommendedTopics.length) {
@@ -2855,18 +2873,22 @@
             });
             const reasoningGaps = Object.values(gapByCategory).sort((a, b) => b.severity - a.severity);
 
-            // Missing concepts: EvaluationResult.concept_coverage describes WHAT
-            // specific technical concepts were demonstrated/superficial/omitted
-            // for that turn (expected_concepts_registry.py) -- collected across
-            // the session and woven into the Debrief/Next Steps as prose, never
-            // shown as a standalone taxonomy.
-            const missingConceptsSet = new Set();
-            evaluations.forEach(e => {
-                (e.concept_coverage || []).forEach(c => {
-                    if (c.status === "omitted") missingConceptsSet.add(c.concept);
-                });
-            });
-            const missingConcepts = Array.from(missingConceptsSet);
+            // PHASE 9 FIX (do not revert without re-reading the
+            // investigation): a "missing concepts" list used to be collected
+            // here from EvaluationResult.concept_coverage's omitted entries
+            // and woven into the Debrief/Next Steps as personalized "review
+            // this" / "this never came up" prose. Removed: concept_coverage
+            // is populated purely from expected_concepts_registry.py (a
+            // per-technology textbook lookup keyed off the project's
+            // technology names), not from the candidate's actual resume
+            // text, and is not scoped to whether it explains any turn's real
+            // weakness -- rdBuildNextSteps/rdBuildDebrief now rely solely on
+            // reasoningGaps (EvaluationResult.missing_reasoning) for their
+            // growth-signal sentence, which IS per-turn evaluator evidence
+            // of why that turn scored low. concept_coverage itself is
+            // untouched and still feeds conceptCoverageAvg/the Snapshot
+            // below exactly as before -- it is simply no longer narrated as
+            // personalized coaching prose here.
 
             const recommendedTopics = uniq(evaluations.flatMap(e => e.recommended_topics || []));
             const dimAverages = rdAllDimensionAverages(evaluations);
@@ -2889,9 +2911,9 @@
                 average_answer_quality: avgOverall,
                 overall_grade: overallGrade,
                 verdict_text: RD_VERDICT_BY_GRADE[overallGrade],
-                debrief_text: rdBuildDebrief(overallGrade, dimAverages, reasoningGaps, missingConcepts, strongestProject, weakestProject, timeline),
+                debrief_text: rdBuildDebrief(overallGrade, dimAverages, reasoningGaps, strongestProject, weakestProject, timeline),
                 snapshot: rdBuildSnapshot(avgOverall, dimAverages, conceptCoverageAvg),
-                next_steps: rdBuildNextSteps(recommendedTopics, reasoningGaps, missingConcepts, weakestProject, strongestProject),
+                next_steps: rdBuildNextSteps(recommendedTopics, reasoningGaps, weakestProject, strongestProject),
                 topics: rdBuildTopics(turnHistory),
                 total_questions: totalQuestions,
                 timeline: timeline,

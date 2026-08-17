@@ -2793,7 +2793,7 @@
         // this just renders the same real numbers editorially. A row is
         // omitted entirely (never shown as 0%) when that dimension never
         // scored this session.
-        function rdBuildSnapshot(avgOverallPct, dimAverages, conceptCoverageAvg) {
+        function rdBuildSnapshot(avgOverallPct, dimAverages, conceptCoverageAvg, conceptCoverageSampleSize, totalTurns) {
             // Every dimension actually evaluated this session appears here
             // -- not a hardcoded 5-key subset (found during a real
             // production demo: Ownership scored 25%, the session's single
@@ -2808,7 +2808,36 @@
             RD_DIM_ORDER.forEach((key) => {
                 if (dimAverages[key] !== undefined) rows.push({ label: RD_DIM_LABELS[key], value: dimAverages[key] * 100 });
             });
-            if (conceptCoverageAvg !== null) rows.push({ label: "Concept Coverage", value: conceptCoverageAvg });
+
+            // PHASE 10 FIX (do not revert without re-reading the
+            // investigation): this used to push a bare {label: "Concept
+            // Coverage", value: N} whenever conceptCoverageAvg was non-null
+            // -- with no indication of how many turns that average was
+            // actually computed from. Live-reproduced: a session where only
+            // 1 of 10 turns ever had an applicable concept pool rendered as
+            // an unqualified "Concept Coverage: 0%", indistinguishable from
+            // "the model found zero concept mastery across the whole
+            // interview." Presentation-only fix -- the underlying
+            // calculation (concept_analysis.concept_coverage_percent, the
+            // sum/count aggregate formula, the null-vs-0% distinction) is
+            // untouched; only how the already-correct number is labeled:
+            //   - no applicable turns at all (sampleSize === 0, including
+            //     the 0/0 edge case) -> an explicit "Not available" row,
+            //     never silently omitted and never a fabricated 0%.
+            //   - some but not all turns contributed -> the label names the
+            //     exact sample ("Concept Coverage (1 of 10 turns)") so a low
+            //     percentage can never be misread as session-wide.
+            //   - every turn contributed -> unchanged from before.
+            if (conceptCoverageSampleSize === 0) {
+                rows.push({ label: "Concept Coverage", value: null, note: "Not available" });
+            } else if (conceptCoverageSampleSize < totalTurns) {
+                rows.push({
+                    label: `Concept Coverage (${conceptCoverageSampleSize} of ${totalTurns} turns)`,
+                    value: conceptCoverageAvg,
+                });
+            } else {
+                rows.push({ label: "Concept Coverage", value: conceptCoverageAvg });
+            }
             return rows;
         }
 
@@ -2896,14 +2925,19 @@
             // Concept Coverage: average ONLY turns that carry a value (the
             // backend sends null, not 0, when a turn has no concept pool --
             // e.g. experience/certification turns). null (not 0) here means
-            // "never applicable this session", so the Snapshot can omit the
-            // row entirely rather than show a misleading 0%.
+            // "never applicable this session". conceptPctValues.length (how
+            // many turns actually contributed) and turnHistory.length (the
+            // session total) are both preserved and passed into
+            // rdBuildSnapshot so it can present the average honestly rather
+            // than as a bare, sample-size-blind percentage -- see that
+            // function's PHASE 10 FIX comment.
             const conceptPctValues = turnHistory
                 .map(t => t.evaluation && t.evaluation.concept_coverage_pct)
                 .filter(v => typeof v === "number");
             const conceptCoverageAvg = conceptPctValues.length
                 ? conceptPctValues.reduce((a, b) => a + b, 0) / conceptPctValues.length
                 : null;
+            const conceptCoverageSampleSize = conceptPctValues.length;
 
             const totalQuestions = endData.total_questions || turnHistory.length;
 
@@ -2912,7 +2946,7 @@
                 overall_grade: overallGrade,
                 verdict_text: RD_VERDICT_BY_GRADE[overallGrade],
                 debrief_text: rdBuildDebrief(overallGrade, dimAverages, reasoningGaps, strongestProject, weakestProject, timeline),
-                snapshot: rdBuildSnapshot(avgOverall, dimAverages, conceptCoverageAvg),
+                snapshot: rdBuildSnapshot(avgOverall, dimAverages, conceptCoverageAvg, conceptCoverageSampleSize, turnHistory.length),
                 next_steps: rdBuildNextSteps(recommendedTopics, reasoningGaps, weakestProject, strongestProject),
                 topics: rdBuildTopics(turnHistory),
                 total_questions: totalQuestions,
@@ -2930,7 +2964,7 @@
             const snapshotHtml = (data.snapshot || []).map(row => `
                 <div class="rd-snapshot-row">
                     <span class="rd-snapshot-label">${esc(row.label)}</span>
-                    <span class="rd-snapshot-value">${row.value.toFixed(0)}%</span>
+                    <span class="rd-snapshot-value">${typeof row.value === "number" ? row.value.toFixed(0) + "%" : esc(row.note || "Not available")}</span>
                 </div>
             `).join("");
 

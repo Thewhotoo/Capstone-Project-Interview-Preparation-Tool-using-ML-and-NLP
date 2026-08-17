@@ -34,6 +34,19 @@ from resume_engine.validation import Observation
 _WHITESPACE_PATTERN = re.compile(r"[ \t ]+")
 _DASH_PATTERN = re.compile(r"\s*[-–—]\s*")
 
+# Multi-resume-validation fix (bullet/glyph leakage): a small, approved,
+# non-exhaustive set of Unicode list-marker glyphs, stripped ONLY when
+# LEADING a field value (after surrounding whitespace is ignored) -- never
+# mid-string. These are the PDF's own genuine bullet/sub-bullet glyphs
+# (extraction is correct), extracted as their own span and concatenated
+# directly onto the next span's text by an earlier pipeline stage with no
+# concept of "this is list punctuation, not content" -- e.g. a project
+# titled "Patient OS v2" rendered as a bullet-list item comes through as
+# "• Patient OS v2". Deliberately NOT a broad Unicode blacklist:
+# dashes (-/en dash/em dash), accented characters, and any glyph appearing
+# mid-string are never touched by this pattern.
+_LEADING_LIST_MARKER_PATTERN = re.compile("^[•◦▪‣·]+\\s*")
+
 # Small, deliberately non-exhaustive alias map -- same maintenance
 # philosophy as every other gazetteer in this engine (a one-line,
 # reviewable diff to extend, not a design change). Canonicalizes to the
@@ -56,16 +69,40 @@ _STRING_FIELDS_BY_ENTITY_TYPE: dict[str, tuple[str, ...]] = {
 }
 
 
+def _strip_control_and_replacement_chars(value: str) -> str:
+    """Removes Unicode category `Cc` control characters (C0 + C1, e.g. the
+    `\\x80` icon-font-glyph artifact found in real resume PDFs) and the
+    replacement character U+FFFD (Unicode's own "could not decode this
+    glyph" sentinel -- never legitimate content) anywhere in the string.
+    Category-based, not an enumerated blacklist: catches every Cc control
+    character, not just the ones observed so far. Never touches ordinary
+    punctuation, dashes, or accented/non-English letters, none of which
+    are Cc or U+FFFD."""
+    return "".join(ch for ch in value if ch != "�" and unicodedata.category(ch) != "Cc")
+
+
 def clean_text(value: str) -> str:
-    """Unicode NFKC + whitespace collapse + trim. Public (not
+    """Control/replacement-char removal + Unicode NFKC + whitespace
+    collapse + leading list-marker strip + trim. Public (not
     underscore-prefixed) since the Validation Layer (Stage 7) and its
     tests reasonably want the same normalization primitive rather than a
     second copy -- both stages are Milestone 6's own new code, not a
-    frozen-module boundary the way parsers/project_parser.py is."""
+    frozen-module boundary the way parsers/project_parser.py is.
+
+    Multi-resume-validation fix (bullet/glyph leakage): PDF extraction
+    faithfully -- and unavoidably -- surfaces broken icon/bullet-font
+    glyphs verbatim (see `_strip_control_and_replacement_chars` and
+    `_LEADING_LIST_MARKER_PATTERN`). This is the single, central place
+    every entity field (experience, projects, education, contact, skills,
+    certifications) already passes through, so cleaning here benefits
+    every downstream consumer (question generation, evaluation, improved
+    answers, coaching, the report) with no other call site changed."""
     if not value:
         return value
-    normalized = unicodedata.normalize("NFKC", value)
-    normalized = _WHITESPACE_PATTERN.sub(" ", normalized)
+    stripped = _strip_control_and_replacement_chars(value)
+    normalized = unicodedata.normalize("NFKC", stripped)
+    normalized = _WHITESPACE_PATTERN.sub(" ", normalized).strip()
+    normalized = _LEADING_LIST_MARKER_PATTERN.sub("", normalized)
     return normalized.strip()
 
 

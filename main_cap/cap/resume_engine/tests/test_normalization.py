@@ -1,6 +1,6 @@
 from resume_engine.confidence import Confidence
 from resume_engine.interfaces import ParserResult
-from resume_engine.normalization import DefaultNormalizer
+from resume_engine.normalization import DefaultNormalizer, clean_text
 
 
 def _result(*entities, scores=None) -> ParserResult:
@@ -121,3 +121,67 @@ def test_normalizer_is_a_noop_pass_through_for_unrecognized_entity_types():
     parser_results = {"contact": _result(contact)}
     DefaultNormalizer().normalize(parser_results)
     assert parser_results["contact"].entities[0]["extra"] == 123
+
+
+# ── clean_text: bullet/glyph leakage fix (multi-resume validation) ─────────
+# Real cases reproduced from Shubham-Mookim-Resume.pdf and
+# ops_saikarthik_resume-1.pdf's raw pymupdf spans, plus the negative cases
+# that prove this is NOT a broad Unicode blacklist -- dashes, accents, and
+# mid-string bullets must all survive untouched.
+
+def test_clean_text_strips_leading_bullet():
+    assert clean_text("• ForGood.ai") == "ForGood.ai"
+
+
+def test_clean_text_strips_leading_sub_bullet():
+    assert clean_text("◦ Owned 8+ production services") == "Owned 8+ production services"
+
+
+def test_clean_text_strips_embedded_control_character():
+    # The real \x80 icon-font-glyph artifact found in Shubham-Mookim-Resume.pdf.
+    assert clean_text("[ \x80 ]") == "[ ]"
+
+
+def test_clean_text_strips_standalone_replacement_character():
+    # The real � bullet-glyph artifact found in ops_saikarthik_resume-1.pdf.
+    assert clean_text("�") == ""
+
+
+def test_clean_text_strips_embedded_replacement_character():
+    assert clean_text("Da�ta Analysis") == "Data Analysis"
+
+
+def test_clean_text_preserves_en_dash_and_em_dash():
+    assert clean_text("January 2025 – Present") == "January 2025 – Present"
+    assert clean_text("a 140x speedup — see benchmark") == "a 140x speedup — see benchmark"
+
+
+def test_clean_text_preserves_accented_characters():
+    assert clean_text("naïve") == "naïve"
+    assert clean_text("café") == "café"
+    assert clean_text("São Paulo") == "São Paulo"
+
+
+def test_clean_text_does_not_strip_mid_string_bullet():
+    assert clean_text("mid • string") == "mid • string"
+
+
+def test_clean_text_combined_real_world_case():
+    # The exact FairEdge Data Agent project title, leading bullet stripped,
+    # em dash preserved, in one string.
+    assert (
+        clean_text("• FairEdge Data Agent — Enterprise NL-to-SQL Agentic Pipeline")
+        == "FairEdge Data Agent — Enterprise NL-to-SQL Agentic Pipeline"
+    )
+
+
+def test_normalizer_strips_leading_bullet_from_real_project_title_field():
+    # End-to-end through DefaultNormalizer, not just the clean_text unit,
+    # confirming the fix reaches the actual entity field pipeline.
+    project = {
+        "title": "• Patient OS v2 — Multi-Source Health AI Copilot",
+        "summary": "", "technologies": [], "concepts": [], "interview_seeds": [],
+    }
+    parser_results = {"projects": _result(project)}
+    DefaultNormalizer().normalize(parser_results)
+    assert parser_results["projects"].entities[0]["title"] == "Patient OS v2 — Multi-Source Health AI Copilot"

@@ -1,0 +1,13 @@
+{
+  "subject": "ooad",
+  "pdf": "ooad.pdf",
+  "pdf_hash": "492bb12af976ba4188f51b0dfd3a6fc5d9f1f6fa1f3fd1fbdb26796d8e811052",
+  "pages": 1038,
+  "chunks": 1038,
+  "total_headings": 1858,
+  "total_concepts": 867,
+  "embedding_model": "all-MiniLM-L6-v2",
+  "chunking_strategy": "semantic_overlap_500_100",
+  "embedding_type": "normalized_cosine",
+  "created_at": "2026-08-01T11:48:06.561887"
+}

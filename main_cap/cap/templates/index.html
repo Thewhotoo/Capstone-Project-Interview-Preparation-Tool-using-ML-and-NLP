@@ -47,6 +47,76 @@
         @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
 
+        #interview-monitor-panel {
+            display: block;
+            width: min(220px, 32vw);
+            position: fixed;
+            top: 84px;
+            right: 16px;
+            margin: 0;
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 10px 10px 8px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+            z-index: 40;
+        }
+        .monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.62rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #888;
+            margin-bottom: 8px;
+            padding: 0 2px;
+        }
+        .monitor-video-wrap {
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: #000;
+            height: 140px;
+        }
+        #gaze-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transform: scaleX(-1);
+            background: #000;
+        }
+        .camera-help-text {
+            font-size: 0.6rem;
+            color: #888;
+            line-height: 1.4;
+            margin-top: 8px;
+            text-align: center;
+        }
+        .gaze-warning {
+            display: none;
+            margin-top: 8px;
+            padding: 8px 10px;
+            background: rgba(239, 68, 68, 0.18);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            animation: gazeWarnPulse 1.4s ease-in-out infinite;
+        }
+        .gaze-warning.visible {
+            display: block;
+        }
+        @keyframes gazeWarnPulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+            50% { opacity: 0.85; box-shadow: 0 0 8px 2px rgba(239,68,68,0.35); }
+        }
+
         body { 
             font-family: 'Inter', sans-serif; 
             margin: 0; 
@@ -547,8 +617,21 @@
         </div>
     </div>
 
+    <div id="interview-monitor-panel" aria-live="polite">
+        <div class="monitor-header">
+            <span>Attention</span>
+            <span id="camera-status-text">Camera idle</span>
+        </div>
+        <div class="monitor-video-wrap">
+            <video id="gaze-video" autoplay playsinline muted></video>
+        </div>
+        <div id="gaze-warning" class="gaze-warning">Please look at the screen.</div>
+        <div class="camera-help-text">Camera access is used for approximate attention monitoring only.</div>
+    </div>
+
     <div id="chat-container">
         <div class="chat-header" id="chat-header-title">SYSTEM ACTIVE</div>
+
         <div id="messages"></div>
         <div class="input-area" id="input-area">
             <input type="text" id="user-input" placeholder="Enter response..." autocomplete="off">
@@ -577,6 +660,17 @@
         let selectedTopic = "All";
         let parsedResumeData = null;  // Stores parsed resume for dashboard
 
+        let webcamStream = null;
+        let _cameraInitializing = false;
+        let gazeMonitorActive = false;
+        let gazeWarningVisible = false;
+        let gazeLandmarker = null;
+        let gazeDetectionRafId = null;
+        let gazeAwayStartTime = 0;
+        let gazeLastFaceDetectedAt = 0;
+        let gazeLastGoodTimestamp = 0;
+        let gazeLastEyeCenter = null;
+
         const landingContainer = document.getElementById("landing-container");
         const chatContainer = document.getElementById("chat-container");
         const dashboardContainer = document.getElementById("dashboard-container");
@@ -587,6 +681,10 @@
         const sendBtn = document.getElementById("send-btn");
         const micBtn = document.getElementById("mic-btn");
         const chatHeader = document.getElementById("chat-header-title");
+        const gazeVideo = document.getElementById("gaze-video");
+        const gazeWarning = document.getElementById("gaze-warning");
+        const interviewMonitorPanel = document.getElementById("interview-monitor-panel");
+        const cameraStatusText = document.getElementById("camera-status-text");
 
         // ─── TOAST NOTIFICATION HELPER ────────────────────────────────
         function showToast(message, type = "info", duration = 3500) {
@@ -929,6 +1027,322 @@
             }
         }
 
+        function showGazeWarning(msg) {
+            if (gazeWarning) gazeWarning.textContent = msg || "👀 Please look at the screen";
+            if (!gazeWarningVisible) {
+                gazeWarningVisible = true;
+                gazeWarning.classList.add("visible");
+            }
+        }
+
+        function hideGazeWarning() {
+            if (gazeWarningVisible) {
+                gazeWarningVisible = false;
+                gazeWarning.classList.remove("visible");
+            }
+        }
+
+        function resetGazeTrackingState() {
+            gazeAwayStartTime = 0;
+            gazeLastFaceDetectedAt = 0;
+            gazeLastGoodTimestamp = 0;
+            gazeLastEyeCenter = null;
+            hideGazeWarning();
+        }
+
+        // MediaPipe CDN version known to work (0.10.14 is correctly served by jsDelivr)
+        const _MP_VERSION = "0.10.14";
+        const _MP_CDN = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${_MP_VERSION}/vision_bundle.js`;
+        const _MP_WASM = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${_MP_VERSION}/wasm`;
+
+        async function ensureGazeLandmarkerReady() {
+            if (gazeLandmarker) return;
+
+            if (!window.FaceLandmarker || !window.FilesetResolver) {
+                // Load the MediaPipe script only once
+                if (!window.__mediapipeScriptAppended) {
+                    window.__mediapipeScriptAppended = true;
+                    await new Promise((resolve, reject) => {
+                        const script = document.createElement("script");
+                        script.src = _MP_CDN;
+                        script.async = true;
+                        script.onload = () => resolve();
+                        script.onerror = (e) => reject(new Error("MediaPipe script failed to load: " + _MP_CDN));
+                        document.head.appendChild(script);
+                    });
+                }
+
+                // Wait up to 10 seconds for FaceLandmarker to be available
+                await new Promise((resolve, reject) => {
+                    const deadline = Date.now() + 10000;
+                    const check = () => {
+                        if (window.FaceLandmarker && window.FilesetResolver) {
+                            resolve();
+                        } else if (Date.now() > deadline) {
+                            reject(new Error("MediaPipe FaceLandmarker not available after 10s"));
+                        } else {
+                            setTimeout(check, 100);
+                        }
+                    };
+                    check();
+                });
+            }
+
+            const filesetResolver = await FilesetResolver.forVisionTasks(_MP_WASM);
+
+            gazeLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
+                baseOptions: {
+                    modelAssetPath: "/static/models/face_landmarker.task",
+                    delegate: "GPU"
+                },
+                runningMode: "VIDEO",
+                numFaces: 1,
+                minFaceDetectionConfidence: 0.5,
+                minFacePresenceConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+        }
+
+        async function initializeGazeMonitoring() {
+            // Only start once; reuse the same stream for the whole session
+            if (webcamStream || _cameraInitializing) return;
+            _cameraInitializing = true;
+
+            // Always show the panel immediately
+            interviewMonitorPanel.style.display = "block";
+            cameraStatusText.textContent = "Starting camera...";
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                cameraStatusText.textContent = "No camera API";
+                _cameraInitializing = false;
+                gazeVideo.style.display = "none";
+                gazeVideo.insertAdjacentHTML("afterend", '<div style="color:#f87171;font-size:0.75rem;padding:8px;text-align:center;">Camera API not available.<br>Use Chrome or Edge.</div>');
+                return;
+            }
+
+            // ── STEP 1: getUserMedia FIRST ─────────────────────────────────
+            try {
+                webcamStream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: false
+                });
+            } catch (err) {
+                console.error("getUserMedia failed:", err.name, err.message);
+                cameraStatusText.textContent = "Camera blocked";
+                _cameraInitializing = false;
+                // Keep panel visible — show error + retry instructions inside
+                gazeVideo.style.background = "#1a0a0a";
+                document.querySelector(".monitor-video-wrap").innerHTML = `
+                    <div style="color:#f87171;font-size:0.72rem;padding:12px 8px;text-align:center;line-height:1.6;">
+                        <div style="font-size:1.2rem;margin-bottom:6px;">🚫</div>
+                        <strong>Camera blocked</strong><br>
+                        Click the 🔒 icon in the address bar → Allow camera → Refresh page
+                    </div>
+                `;
+                return;
+            }
+
+            // ── STEP 2: Assign stream to video element and play ────────────
+            gazeVideo.srcObject = webcamStream;
+            gazeVideo.autoplay = true;
+            gazeVideo.playsInline = true;
+            gazeVideo.muted = true;
+
+            try {
+                await gazeVideo.play();
+            } catch (playErr) {
+                console.error("video.play() failed:", playErr);
+            }
+
+            // ── STEP 3: Wait for actual video frames to arrive ─────────────
+            await new Promise((resolve) => {
+                if (gazeVideo.videoWidth > 0) { resolve(); return; }
+                const onMeta = () => { gazeVideo.removeEventListener("loadeddata", onMeta); resolve(); };
+                gazeVideo.addEventListener("loadeddata", onMeta);
+                setTimeout(resolve, 3000); // fallback after 3 s
+            });
+
+            console.log("Camera stream active. videoWidth=", gazeVideo.videoWidth, "videoHeight=", gazeVideo.videoHeight);
+            cameraStatusText.textContent = "Camera active";
+            gazeMonitorActive = true;
+            _cameraInitializing = false;
+            resetGazeTrackingState();
+
+            // Start the per-frame detection loop (will skip until landmarker is ready)
+            startGazeDetectionLoop();
+
+            // ── STEP 4: Init MediaPipe in the background (non-blocking) ────
+            ensureGazeLandmarkerReady().then(() => {
+                if (gazeMonitorActive) {
+                    cameraStatusText.textContent = "Monitoring";
+                    console.log("MediaPipe FaceLandmarker ready.");
+                }
+            }).catch((mpErr) => {
+                console.warn("MediaPipe failed to load:", mpErr);
+                cameraStatusText.textContent = "Camera active";
+            });
+        }
+
+        function stopGazeMonitoring() {
+            gazeMonitorActive = false;
+            resetGazeTrackingState();
+
+            if (gazeDetectionRafId) {
+                cancelAnimationFrame(gazeDetectionRafId);
+                gazeDetectionRafId = null;
+            }
+
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+                webcamStream = null;
+            }
+
+            if (gazeLandmarker && typeof gazeLandmarker.close === "function") {
+                gazeLandmarker.close();
+            }
+            gazeLandmarker = null;
+
+            if (gazeVideo) {
+                gazeVideo.srcObject = null;
+            }
+
+            // Only fully hide panel when assessment ends
+            if (interviewMonitorPanel) {
+                interviewMonitorPanel.style.display = "none";
+            }
+
+            if (cameraStatusText) {
+                cameraStatusText.textContent = "Camera idle";
+            }
+        }
+
+        function getAveragePoint(points) {
+            if (!points || points.length === 0) return null;
+            const total = points.reduce((acc, point) => ({ x: acc.x + point.x, y: acc.y + point.y }), { x: 0, y: 0 });
+            return {
+                x: total.x / points.length,
+                y: total.y / points.length
+            };
+        }
+
+        function getEyeCenter(landmarks, leftIndexes, rightIndexes) {
+            const left = getAveragePoint(leftIndexes.map(index => landmarks[index]));
+            const right = getAveragePoint(rightIndexes.map(index => landmarks[index]));
+            if (!left || !right) return null;
+            return {
+                x: (left.x + right.x) / 2,
+                y: (left.y + right.y) / 2
+            };
+        }
+
+        function computeEyeOpenness(landmarks) {
+            const leftTop = landmarks[159];
+            const leftBottom = landmarks[145];
+            const rightTop = landmarks[386];
+            const rightBottom = landmarks[374];
+            const leftOpen = Math.abs(leftTop.y - leftBottom.y);
+            const rightOpen = Math.abs(rightTop.y - rightBottom.y);
+            return Math.min(leftOpen, rightOpen);
+        }
+
+        // ── GAZE TIMING CONSTANTS ──────────────────────────────────────────
+        // Grace period before warning fires (ms). Long enough to cover thinking glances.
+        const GAZE_AWAY_GRACE_MS   = 3000;  // eyes turned sideways/up: warn after 3 s
+        const GAZE_NOFACE_GRACE_MS = 4000;  // face not visible at all: warn after 4 s
+        const GAZE_RETURN_DEBOUNCE = 500;   // must stay on-screen for 0.5 s before clearing warning
+        const GAZE_XSHIFT_THRESH   = 0.22;  // horizontal eye shift threshold (0–1 normalized)
+        const GAZE_YSHIFT_THRESH   = 0.20;  // vertical eye shift threshold
+
+        // Extra state for return-debounce
+        let gazeReturnTime = 0;
+
+        function startGazeDetectionLoop() {
+            if (!gazeMonitorActive || !gazeVideo) return;
+
+            const processFrame = () => {
+                if (!gazeMonitorActive) return;
+
+                // Skip face detection until MediaPipe is loaded; webcam preview still works
+                if (gazeLandmarker && gazeVideo.readyState >= 2) {
+                    const now = performance.now();
+                    const result = gazeLandmarker.detectForVideo(gazeVideo, now);
+                    const faces = result.faceLandmarks || [];
+
+                    if (faces.length > 0) {
+                        // ── Face is visible ────────────────────────────────
+                        gazeLastFaceDetectedAt = now;
+                        const landmarks = faces[0];
+
+                        // Compute eye midpoint
+                        const leftEyeCenter  = getEyeCenter(landmarks, [33, 133, 159, 145, 153, 144], [33, 133, 159, 145, 153, 144]);
+                        const rightEyeCenter = getEyeCenter(landmarks, [362, 263, 387, 373, 390, 374], [362, 263, 387, 373, 390, 374]);
+                        const eyeMid = leftEyeCenter && rightEyeCenter ? {
+                            x: (leftEyeCenter.x + rightEyeCenter.x) / 2,
+                            y: (leftEyeCenter.y + rightEyeCenter.y) / 2
+                        } : null;
+
+                        // Blink suppression — ignore single-frame eye-closed events
+                        const eyeOpen       = computeEyeOpenness(landmarks);
+                        const blinkSuppressed = eyeOpen < 0.012;
+
+                        if (eyeMid && !blinkSuppressed) {
+                            // How far the eye midpoint is from the video center (range -1..1)
+                            const xDelta   = (eyeMid.x - 0.5) * 2;
+                            const yDelta   = (eyeMid.y - 0.5) * 2;
+                            const lookingAway = Math.abs(xDelta) > GAZE_XSHIFT_THRESH ||
+                                               Math.abs(yDelta) > GAZE_YSHIFT_THRESH;
+
+                            if (lookingAway) {
+                                // Start away-timer on first frame of looking away
+                                if (gazeAwayStartTime === 0) gazeAwayStartTime = now;
+                                gazeReturnTime = 0; // not returning yet
+
+                                if (now - gazeAwayStartTime >= GAZE_AWAY_GRACE_MS) {
+                                    showGazeWarning("👀 Please focus on the screen");
+                                }
+                            } else {
+                                // Person is looking at screen
+                                gazeAwayStartTime = 0;
+
+                                // Debounce: only clear the warning after they've held
+                                // eye contact for GAZE_RETURN_DEBOUNCE ms (avoids flicker)
+                                if (gazeWarningVisible) {
+                                    if (gazeReturnTime === 0) gazeReturnTime = now;
+                                    if (now - gazeReturnTime >= GAZE_RETURN_DEBOUNCE) {
+                                        hideGazeWarning();
+                                        gazeReturnTime = 0;
+                                    }
+                                } else {
+                                    gazeReturnTime = 0;
+                                }
+                            }
+
+                            gazeLastEyeCenter = eyeMid;
+                        }
+                        // else: blink — do nothing, keep current state
+
+                    } else {
+                        // ── No face detected ──────────────────────────────
+                        // Give a longer grace before warning — person may have looked
+                        // down at notes or is thinking with head turned
+                        const noFaceDuration = now - gazeLastFaceDetectedAt;
+
+                        if (gazeLastFaceDetectedAt > 0 && noFaceDuration >= GAZE_NOFACE_GRACE_MS) {
+                            // Set away-timer the first time we cross the grace threshold
+                            if (gazeAwayStartTime === 0) gazeAwayStartTime = now;
+                            showGazeWarning("👀 Please look at the screen");
+                        }
+                        // While within grace period — keep warning as-is (don't flicker)
+                        gazeReturnTime = 0;
+                    }
+                }
+
+                gazeDetectionRafId = requestAnimationFrame(processFrame);
+            };
+
+            gazeDetectionRafId = requestAnimationFrame(processFrame);
+        }
+
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // RESUME UPLOAD & CLASSIFICATION
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -938,6 +1352,8 @@
         let resumeSkills = [];  // Store skills from resume for quiz customization
         
         async function testQuizDirectly() {
+            initializeGazeMonitoring(); // fire-and-forget; don't block quiz flow
+
             // Hide resume section
             document.getElementById("resume-upload-section").style.display = "none";
             document.getElementById("quiz-section").style.display = "block";
@@ -963,6 +1379,8 @@
                 showToast("Please select a resume file first.", "error");
                 return;
             }
+
+            initializeGazeMonitoring(); // fire-and-forget; don't block the upload
 
             // Show loading state
             const startBtns = document.querySelectorAll("#resume-upload-section .start-btn");
@@ -1129,11 +1547,13 @@
                 landingContainer.style.display = "none";
                 chatContainer.style.display = "flex";
                 chatContainer.style.opacity = "1";
+                // Camera already initialized on page load; no second call needed
                 loadQuestion();
             }, 500);
         }
 
         function resetInterview() {
+            stopGazeMonitoring();
             askedIds = [];
             interviewHistory = [];
             currentDifficulty = "medium";
@@ -1217,6 +1637,7 @@
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
         function triggerDashboard() {
+            stopGazeMonitoring();
             chatContainer.style.opacity = "0";
 
             setTimeout(() => {
@@ -1438,6 +1859,11 @@
 
         inputField.addEventListener("keypress", function(event) {
             if (event.key === "Enter") handleSubmission();
+        });
+
+        // Start the webcam as soon as the page loads — before any interview stage
+        window.addEventListener("load", function() {
+            initializeGazeMonitoring();
         });
     </script>
 </body>

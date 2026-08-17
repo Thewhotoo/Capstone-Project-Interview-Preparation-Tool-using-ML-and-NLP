@@ -9,27 +9,16 @@ import os
 import sys
 import logging
 
-# Load .env file (GEMINI_API_KEY etc.)
+# Load .env file (if it exists)
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ── Startup validation: GEMINI_API_KEY ──────────────────────────────────────
-_gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
-if not _gemini_key:
-    logger.error(
-        "╔══════════════════════════════════════════════════════════════╗\n"
-        "║  GEMINI_API_KEY is NOT set!                                ║\n"
-        "║  Resume upload and Gemini features will not work.          ║\n"
-        "║  Set GEMINI_API_KEY in main_cap/cap/.env                   ║\n"
-        "╚══════════════════════════════════════════════════════════════╝"
-    )
-else:
-    logger.info("GEMINI_API_KEY loaded (%s...)", _gemini_key[:8])
+logger.info("Starting with local resume parsing/classification (no external API required).")
 
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__, template_folder="templates", static_folder="static")
 
 # Base paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -356,18 +345,117 @@ def _hardcoded_quiz(domain):
     return all_questions.get(domain, all_questions["Software Engineer"])
 
 # ── In-memory Candidate Profile store ────────────────────────────────────────
-# Keyed by session: stores the full Gemini-generated profile so downstream
+# Keyed by session: stores the locally-generated profile so downstream
 # modules (quiz, interview) never need to re-parse the resume.
 _candidate_profiles = {}   # session_id -> Candidate Profile dict
+
+
+def _map_local_level_to_profile_level(level: str) -> str:
+    """Map local classifier levels (Junior/Mid/Senior) to profile levels."""
+    mapping = {
+        "Junior": "Beginner",
+        "Mid": "Intermediate",
+        "Senior": "Advanced",
+    }
+    return mapping.get(level, "Intermediate")
+
+
+def _build_local_candidate_profile(resume_text: str, parsed_resume: dict) -> dict:
+    """
+    Deterministic profile built from local parser/classifier outputs.
+    """
+    from src.features import extract_features
+
+    predicted_domain = "Software Engineering"
+    confidence = 0.5
+
+    features = extract_features(resume_text)
+
+    experience_info = features.get("total_experience", {}) or {}
+    profile_level = _map_local_level_to_profile_level(experience_info.get("level", "Unknown"))
+
+    skills = features.get("skills", []) or []
+
+    # Deterministic local domain heuristic from extracted skills/text.
+    text_lower = (resume_text or "").lower()
+    skills_lower = [str(s).lower() for s in skills]
+    domain_hints = {
+        "Software Engineering": ["python", "java", "javascript", "react", "node", "flask", "django", "api"],
+        "Data Science": ["machine learning", "tensorflow", "pytorch", "pandas", "numpy", "scikit", "data science"],
+        "Cybersecurity": ["cybersecurity", "siem", "soc", "penetration", "vulnerability", "security"],
+        "Product Management": ["product management", "roadmap", "stakeholder", "go-to-market"],
+        "Mechanical Engineering": ["cad", "solidworks", "ansys", "mechanical", "thermodynamics"],
+    }
+
+    domain_scores = {domain: 0 for domain in domain_hints}
+    for domain, hints in domain_hints.items():
+        for hint in hints:
+            in_skills = any(hint in s for s in skills_lower)
+            in_text = hint in text_lower
+            if in_skills:
+                domain_scores[domain] += 2
+            elif in_text:
+                domain_scores[domain] += 1
+
+    best_domain = max(domain_scores, key=domain_scores.get)
+    best_score = domain_scores.get(best_domain, 0)
+    if best_score > 0:
+        predicted_domain = best_domain
+        confidence = min(0.95, 0.5 + (best_score * 0.05))
+
+    experience_entries = []
+    for job in features.get("job_experiences", []) or []:
+        experience_entries.append({
+            "company": str(job.get("company", "") or ""),
+            "role": str(job.get("title", "") or ""),
+            "duration": str(job.get("date_range", "") or ""),
+            "summary": str(job.get("primary_focus", "") or ""),
+        })
+
+    education_entries = []
+    for edu in features.get("education", []) or []:
+        grad = edu.get("graduation_year")
+        education_entries.append({
+            "degree": str(edu.get("degree", "") or ""),
+            "major": str(edu.get("major", "") or ""),
+            "institution": str(edu.get("institution", "") or ""),
+            "graduation_year": str(grad if grad is not None else ""),
+        })
+
+    summary_text = " ".join((resume_text or "").split())
+
+    return {
+        "candidate_name": parsed_resume.get("name") or "",
+        "contact_details": {
+            "email": parsed_resume.get("email") or "",
+            "phone": parsed_resume.get("phone") or "",
+            "linkedin": "",
+            "location": "",
+        },
+        "skills": skills,
+        "education": education_entries,
+        "experience": experience_entries,
+        "projects": [],
+        "certifications": [],
+        "predicted_domain": predicted_domain,
+        "experience_level": profile_level,
+        "confidence": max(0.0, min(1.0, confidence)),
+        "interview_blueprint": {
+            "resume_verification_topics": [],
+            "technical_topics": skills[:8],
+            "starting_difficulty": "intermediate",
+            "estimated_strengths": skills[:3],
+            "estimated_weaknesses": [],
+        },
+        "resume_summary": summary_text[:500],
+    }
 
 
 @app.route("/api/classify-resume", methods=["POST"])
 def classify_resume():
     """
-    Parse an uploaded resume with a single Gemini 2.5 Flash call.
-    The generated Candidate Profile is stored in memory for the lifetime of the
-    session so that dashboard, quiz, and interview modules consume it directly
-    without re-parsing.
+    Parse an uploaded resume and build a Candidate Profile using local
+    parsing/classification. No external API key required.
 
     Returns the profile in the exact format the frontend already expects.
     """
@@ -405,13 +493,16 @@ def classify_resume():
             if not text or len(text.strip()) < 50:
                 return jsonify({"error": "Could not extract enough text from resume"}), 400
 
-            # 2. Generate Candidate Profile with a single Gemini call
-            from candidate_profile_generator import (
-                generate_candidate_profile,
-                profile_to_frontend_format,
-            )
+            # 2. Build Candidate Profile using local parser/classifier
+            from candidate_profile_generator import profile_to_frontend_format
+            from src.parser import extract_name, extract_email, extract_phone
 
-            profile = generate_candidate_profile(text)
+            parsed_resume = {
+                "name": extract_name(text),
+                "email": extract_email(text),
+                "phone": extract_phone(text),
+            }
+            profile = _build_local_candidate_profile(text, parsed_resume)
 
             # 3. Store in memory (keyed by a generated session ID)
             session_id = f"profile_{uuid.uuid4().hex[:12]}"
@@ -435,11 +526,6 @@ def classify_resume():
                     os.remove(tmp_path)
             except Exception as e:
                 logger.warning(f"Failed to cleanup temp file: {e}")
-
-    except RuntimeError as e:
-        # Gemini-specific errors (rate limit, timeout, malformed JSON)
-        logger.error("Gemini profile generation failed: %s", e)
-        return jsonify({"error": str(e)}), 502
 
     except Exception as e:
         logger.error(f"Resume classification error: {e}", exc_info=True)
@@ -1050,33 +1136,6 @@ def adaptive_evaluate():
 # RUN
 # ═══════════════════════════════════════════════════════════════════════════
 
-def _verify_gemini_connectivity():
-    """Send a minimal request to Gemini to verify the API key and connectivity."""
-    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
-    if not api_key:
-        logger.warning("Skipping Gemini connectivity check — no API key")
-        return False
-    try:
-        from google import genai
-        from google.genai import types
-        client = genai.Client(api_key=api_key)
-        resp = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents="Reply with the word OK",
-            config=types.GenerateContentConfig(
-                max_output_tokens=8,
-                temperature=0.0,
-            ),
-        )
-        text = (resp.text or "").strip()
-        logger.info("Gemini connectivity OK — response: %s", text)
-        return True
-    except Exception as e:
-        logger.warning("Gemini connectivity check failed: %s", e)
-        return False
-
-
 if __name__ == "__main__":
-    _verify_gemini_connectivity()
     logger.info("Open your browser: http://localhost:5000")
     app.run(debug=False, port=5000, threaded=True, use_reloader=False)

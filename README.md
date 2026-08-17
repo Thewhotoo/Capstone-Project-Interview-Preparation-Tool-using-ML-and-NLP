@@ -11,6 +11,7 @@ This is a complete **AI-powered Subject-Based Interview Preparation Tool** that 
 3. **RoBERTa Model** - Classifies questions (intent, difficulty, topics) & adapts to user performance
 4. **Flask API** - Unified endpoint serving all components
 5. **Answer Evaluator** - Grades answers using SBERT + NLI + ML models
+6. **Webcam & Attention Monitor** - Real-time camera feed integrated into the interview UI (automated eye tracking & look-away warning triggers are **yet to be implemented**) ([details](WORKFLOW_INTEGRATION_GUIDE.md#webcam--attention-monitoring-system))
 
 ## 👥 Team Workflow
 

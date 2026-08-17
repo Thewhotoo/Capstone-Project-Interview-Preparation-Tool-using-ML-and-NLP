@@ -31,4 +31,16 @@ JOB_TITLES: tuple[str, ...] = (
     "Junior Engineer", "Junior Developer",
     "Consultant", "Technical Consultant",
     "Founder", "Co-Founder", "CTO", "VP of Engineering",
+    # Fix #3 (role/company inversion investigation): the gazetteer above is
+    # entirely software/tech-track titles -- a candidate whose actual role
+    # is a non-tech business/operations title (e.g. "Operations Executive")
+    # can never gazetteer-match, forcing _disambiguate_role_company's
+    # documented "first segment = role" positional fallback, which guesses
+    # wrong for any resume template that puts company before role.
+    # Specific, multi-word titles only (same convention every entry above
+    # already follows) -- never a bare generic noun like "Executive" or
+    # "Manager" alone, which would risk matching unrelated text on other
+    # resumes. Deliberately small and growable, same philosophy as every
+    # other gazetteer in this engine (technology_gazetteer.py, etc.).
+    "Operations Executive", "Marketing Executive", "Account Executive",
 )

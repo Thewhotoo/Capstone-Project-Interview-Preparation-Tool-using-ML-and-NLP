@@ -222,3 +222,112 @@ def test_existing_role_company_examples_still_split_correctly(
         result = ExperienceParser().parse({"experience": section}, doc)
         assert result.entities[0]["role"] == expected_role, header
         assert result.entities[0]["company"] == expected_company, header
+
+
+# ── Fix #3 (role/company inversion investigation) ───────────────────────────
+# job_title_gazetteer.py's JOB_TITLES was entirely software/tech-track
+# titles -- a resume whose actual role is a non-tech business/operations
+# title (e.g. "Operations Executive") could never gazetteer-match, forcing
+# the documented "first segment = role" positional fallback, which guesses
+# wrong for any resume template that puts company before role (confirmed
+# live on ops_saikarthik_resume-1.pdf: "CRYSTAL HUES LIMITED – OPERATIONS
+# EXECUTIVE" produced role="CRYSTAL HUES LIMITED", company="OPERATIONS
+# EXECUTIVE" -- inverted from the obvious correct reading).
+
+def test_operations_executive_recognized_as_role_company_first_order(
+    make_section, make_text_span, make_document_model,
+):
+    """Direct reproduction of the real ops_saikarthik_resume-1.pdf header
+    shape (company, then role, separated by an en dash) -- the newly added
+    gazetteer entry must win the disambiguation regardless of position."""
+    header = "Crystal Hues Limited – Operations Executive"
+    section, spans = _single_header_entry(make_section, make_text_span, header)
+    doc = make_document_model(spans=spans, body_font_size=10.0)
+    result = ExperienceParser().parse({"experience": section}, doc)
+    assert result.entities[0]["role"] == "Operations Executive"
+    assert result.entities[0]["company"] == "Crystal Hues Limited"
+
+
+def test_operations_executive_recognized_as_role_role_first_order(
+    make_section, make_text_span, make_document_model,
+):
+    """Same title, opposite (role-first) template order -- disambiguation
+    must be position-independent, driven by the gazetteer match alone."""
+    header = "Operations Executive, Crystal Hues Limited"
+    section, spans = _single_header_entry(make_section, make_text_span, header)
+    doc = make_document_model(spans=spans, body_font_size=10.0)
+    result = ExperienceParser().parse({"experience": section}, doc)
+    assert result.entities[0]["role"] == "Operations Executive"
+    assert result.entities[0]["company"] == "Crystal Hues Limited"
+
+
+def test_newly_added_titles_recognized_as_role(
+    make_section, make_text_span, make_document_model,
+):
+    """2-3 of the other newly added titles, each in company-first order (the
+    harder direction, since it can't fall back on "first segment = role"
+    being coincidentally correct)."""
+    for header, expected_role, expected_company in (
+        ("Bright Marketing Co – Marketing Executive", "Marketing Executive", "Bright Marketing Co"),
+        ("Northwind Traders – Account Executive", "Account Executive", "Northwind Traders"),
+        ("Fenwick Advisory – Business Analyst", "Business Analyst", "Fenwick Advisory"),
+    ):
+        section, spans = _single_header_entry(make_section, make_text_span, header)
+        doc = make_document_model(spans=spans, body_font_size=10.0)
+        result = ExperienceParser().parse({"experience": section}, doc)
+        assert result.entities[0]["role"] == expected_role, header
+        assert result.entities[0]["company"] == expected_company, header
+
+
+def test_positional_fallback_still_works_when_neither_side_is_a_recognized_title(
+    make_section, make_text_span, make_document_model,
+):
+    """Regression guard: the pre-existing "first segment = role" fallback
+    must still fire, unchanged, when NEITHER half is gazetteer-recognized
+    -- the new entries only narrow the cases that hit the fallback, they
+    don't remove it."""
+    header = "Riverside Bakery, Head Pastry Chef"
+    section, spans = _single_header_entry(make_section, make_text_span, header)
+    doc = make_document_model(spans=spans, body_font_size=10.0)
+    result = ExperienceParser().parse({"experience": section}, doc)
+    assert result.entities[0]["role"] == "Riverside Bakery"
+    assert result.entities[0]["company"] == "Head Pastry Chef"
+
+
+def test_no_regression_for_existing_technology_titles(
+    make_section, make_text_span, make_document_model,
+):
+    """The new business/operations entries must not change disambiguation
+    for any pre-existing software/tech title, in either template order."""
+    for header, expected_role, expected_company in (
+        ("Acme Corp – Senior Software Engineer", "Senior Software Engineer", "Acme Corp"),
+        ("Data Scientist, Beta Analytics", "Data Scientist", "Beta Analytics"),
+        ("Solutions Architect - Globex", "Solutions Architect", "Globex"),
+    ):
+        section, spans = _single_header_entry(make_section, make_text_span, header)
+        doc = make_document_model(spans=spans, body_font_size=10.0)
+        result = ExperienceParser().parse({"experience": section}, doc)
+        assert result.entities[0]["role"] == expected_role, header
+        assert result.entities[0]["company"] == expected_company, header
+
+
+def test_contamination_from_a_different_section_still_leaks_into_company_field(
+    make_section, make_text_span, make_document_model,
+):
+    """Documents the KNOWN, INTENTIONALLY UNFIXED remaining limitation:
+    Fix #3 only fixes WHICH field is labeled role vs. company via a
+    confident gazetteer match -- it does not, and cannot, remove text that
+    a separate bug (ColumnAwareLayoutReconstructor's ambiguous-layout
+    cross-column span bleeding, deliberately out of scope here) already
+    merged into the header line before this parser ever sees it. Direct
+    reproduction of the real ops_saikarthik_resume-1.pdf contaminated
+    header shape. This test must keep failing this way until the layout
+    bug is separately fixed -- it is not a bug in THIS fix."""
+    header = "Data Analysis Crystal Hues Limited – Operations Executive"
+    section, spans = _single_header_entry(make_section, make_text_span, header)
+    doc = make_document_model(spans=spans, body_font_size=10.0)
+    result = ExperienceParser().parse({"experience": section}, doc)
+    assert result.entities[0]["role"] == "Operations Executive"
+    # Honest documentation of the remaining contamination, not a false claim
+    # that this resume's exact reproduction is fully resolved.
+    assert result.entities[0]["company"] == "Data Analysis Crystal Hues Limited"

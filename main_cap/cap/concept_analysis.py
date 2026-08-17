@@ -40,7 +40,6 @@ import re
 from typing import Optional
 
 from evaluation_result import ConceptObservationStatus, EvaluationResult
-from expected_concepts_registry import expected_concepts_for
 from interview_question import InterviewQuestion
 
 # Generic connective/scaffolding words that never make a concept distinctive.
@@ -104,20 +103,36 @@ def concept_expressed(concept: str, answer_tokens: set[str], pool_counts: dict[s
 
 
 def concept_pool(question: InterviewQuestion, result: EvaluationResult) -> list[str]:
-    """The set of concepts this turn is judged against: project grounding
-    concepts + registry-derived expected concepts + any concepts the evaluator
-    marked omitted/superficial. Empty for experience/certification turns (no
-    project grounding). Deduplicated, order-preserving. Nothing invented."""
+    """The set of concepts the Improved Answer feature may draw on: ONLY
+    `proj.concepts` -- the concepts KeyBERT + `concept_gazetteer.py` actually
+    matched against THIS candidate's own project bullet text
+    (`resume_engine/parsers/project_parser.py::_extract_concepts`). Empty for
+    experience/certification turns (no project grounding), and empty for any
+    project whose bullet text didn't yield a gazetteer match (never padded
+    with anything else to compensate).
+
+    PHASE 8 FIX (do not revert without re-reading the investigation): this
+    function used to also merge in `expected_concepts_for(technologies)`
+    (the hand-curated per-technology textbook registry, e.g. "fastapi" ->
+    ASGI/dependency injection/routing/modularity) and
+    `result.concept_coverage`'s omitted/superficial entries. Both of those
+    are grounded in a TECHNOLOGY NAME the project happens to use, not in
+    anything the candidate's resume text, question, or answer actually
+    establishes -- `result.concept_coverage` itself is populated from that
+    same registry (`evaluation_engine._lookup_expected_concepts`), so it is
+    not independent evidence either. Live-reproduced: a candidate who
+    truthfully wrote "I used FastAPI to build the backend REST APIs" was
+    told by the Improved Answer feature to add "I'd also work in ASGI,
+    dependency injection and routing" -- concepts absent from the resume,
+    the question, and the answer. Those two sources remain valid EVALUATOR
+    signals (dashboard Concept Coverage, `missing_reasoning`) and are
+    untouched anywhere outside this function -- they are simply no longer
+    eligible to be ghost-written into the candidate's own rewritten answer.
+    Deduplicated, order-preserving. Nothing invented."""
     proj = question.specification.grounding.project
-    pool: list[str] = []
-    if proj is not None:
-        pool.extend(proj.concepts)
-        pool.extend(expected_concepts_for((*proj.technologies, *proj.concepts, proj.title)))
-    pool.extend(
-        obs.concept for obs in result.concept_coverage
-        if obs.status is not ConceptObservationStatus.DEMONSTRATED
-    )
-    return _dedup_list(tuple(pool))
+    if proj is None:
+        return []
+    return _dedup_list(tuple(proj.concepts))
 
 
 def _pool_counts(pool: list[str]) -> dict[str, int]:

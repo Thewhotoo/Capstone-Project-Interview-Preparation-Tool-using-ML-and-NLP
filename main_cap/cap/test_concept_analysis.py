@@ -29,7 +29,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from concept_analysis import concept_coverage_percent, missing_concepts
+from concept_analysis import concept_coverage_percent, concept_pool, missing_concepts
 from evaluation_result import (
     ConceptObservation,
     ConceptObservationStatus,
@@ -104,6 +104,34 @@ class TestConceptPoolAndMissingConcepts(unittest.TestCase):
         ans = "I designed the layout and made sure everything ran securely across the sites."
         missing = missing_concepts(q, _result(), ans, limit=99)
         self.assertEqual(missing, ["Data Transmission"])
+
+    def test_pool_excludes_registry_derived_concepts(self):
+        # PHASE 8 FIX: concept_pool() must draw ONLY from proj.concepts.
+        # "fastapi" has registry entries (ASGI, dependency injection,
+        # routing, modularity, async request handling) but proj.concepts is
+        # empty here -- the pool must be empty, not padded from the registry.
+        q = _project_question(title="Some Project", technologies=("FastAPI",), concepts=())
+        self.assertEqual(concept_pool(q, _result()), [])
+
+    def test_pool_excludes_evaluator_concept_coverage(self):
+        # A concept present only in result.concept_coverage (evaluator's own
+        # omitted/superficial observations, itself registry-derived, not
+        # resume-text-derived) must not appear in the improved-answer pool.
+        q = _project_question(concepts=())
+        result = _result(concept_coverage=(
+            _obs("query planning", ConceptObservationStatus.OMITTED),
+            _obs("indexing strategy", ConceptObservationStatus.SUPERFICIAL, "mentioned in passing"),
+        ))
+        self.assertEqual(concept_pool(q, result), [])
+
+    def test_pool_still_includes_grounded_project_concepts(self):
+        # proj.concepts (KeyBERT/gazetteer-matched against the candidate's
+        # own project text) remains the one legitimate source.
+        q = _project_question()  # concepts: Network Design, Network Security, Data Transmission
+        self.assertEqual(
+            concept_pool(q, _result()),
+            ["Network Design", "Network Security", "Data Transmission"],
+        )
 
 
 class TestCoveragePercent(unittest.TestCase):

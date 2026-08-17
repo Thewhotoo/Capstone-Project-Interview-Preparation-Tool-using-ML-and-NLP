@@ -133,12 +133,54 @@ class TestInsertsMissingConcepts(unittest.TestCase):
         # PostgreSQL appears once (candidate's), not injected again by the addition
         self.assertEqual(out.lower().count("postgresql"), _ANSWER.lower().count("postgresql"))
 
-    def test_uses_evaluator_omitted_concepts(self):
+    def test_does_not_use_evaluator_omitted_concepts(self):
+        # PHASE 8 FIX: a concept that exists ONLY in result.concept_coverage
+        # (the evaluator's own omitted/superficial list -- itself sourced
+        # from the expected-concepts registry, not from the candidate's
+        # resume text) must NOT be ghost-written into the improved answer.
+        # It remains a legitimate evaluator/dashboard signal; it is simply
+        # no longer eligible for injection here.
         q = _project_question(concepts=())  # no grounding concepts
         r = _result(concept_coverage=(_concept("query planning", ConceptObservationStatus.OMITTED),),
                     missing_reasoning=())
+        # With no proj.concepts and no missing_reasoning, there is nothing
+        # left to add -> hidden entirely (never a bare echo of the answer).
         out = build_improved_answer(q, r, _ANSWER)
-        self.assertIn("query planning", out)
+        self.assertIsNone(out)
+
+    def test_does_not_use_evaluator_superficial_concepts(self):
+        q = _project_question(concepts=())
+        r = _result(concept_coverage=(_concept("query planning", ConceptObservationStatus.SUPERFICIAL),),
+                    missing_reasoning=())
+        out = build_improved_answer(q, r, _ANSWER)
+        self.assertIsNone(out)
+
+    def test_registry_only_concepts_not_injected(self):
+        # PHASE 8 FIX regression case (the exact live-reproduced failure):
+        # the project's technology (FastAPI) has entries in the
+        # expected-concepts registry (ASGI / dependency injection / routing
+        # / modularity / async request handling), but proj.concepts is
+        # empty -- nothing in the resume's own project text was actually
+        # matched. None of the registry's technology-associated concepts
+        # may be injected; only genuine proj.concepts are eligible.
+        from expected_concepts_registry import expected_concepts_for
+        registry_concepts = expected_concepts_for(("FastAPI",))
+        self.assertIn("ASGI", registry_concepts)  # sanity: registry entry exists
+        self.assertIn("dependency injection", registry_concepts)
+
+        q = _project_question(title="AI SOC Analyst", technologies=("FastAPI",), concepts=())
+        r = _result(concept_coverage=(), missing_reasoning=())
+        out = build_improved_answer(q, r, _ANSWER)
+        # Nothing to add (no proj.concepts, no missing_reasoning) -> hidden.
+        self.assertIsNone(out)
+
+        # Even with a weak-area signal present (so the feature does fire),
+        # none of the registry's FastAPI concepts may appear.
+        r2 = _result(concept_coverage=(), missing_reasoning=(_missing("example"),))
+        out2 = build_improved_answer(q, r2, _ANSWER)
+        self.assertIsNotNone(out2)
+        for concept in registry_concepts:
+            self.assertNotIn(concept, out2)
 
 
 # ── elaborates weak reasoning ────────────────────────────────────────────────

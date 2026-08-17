@@ -14,12 +14,25 @@ specific missing concepts the evaluator/grounding identified and (b) prompt
 the weak reasoning to elaborate.
 
 STRICT DIVISION (approved): DeBERTa is for EVALUATION ONLY. Its outputs
-(grade, `concept_coverage`, `missing_reasoning`) are used purely as EDITING
-SIGNALS — which concepts to insert, which areas to elaborate, whether to show
-anything at all — never as a text generator. Nothing invented: every concept
-named comes from the resume/project grounding, the expected-concepts registry,
-or the evaluator's own concept list. No implementation specifics are
-fabricated.
+(grade, `missing_reasoning`) are used purely as EDITING SIGNALS — which weak
+areas to prompt elaboration on, whether to show anything at all — never as a
+text generator. No implementation specifics are fabricated.
+
+PHASE 8 FIX (do not revert without re-reading the investigation): concepts
+INSERTED into the rewritten answer come from exactly one source —
+`concept_analysis.concept_pool()`'s `proj.concepts`, the concepts actually
+matched (KeyBERT + `concept_gazetteer.py`) against THIS candidate's own
+project bullet text. The expected-concepts registry (generic per-technology
+textbook concepts, e.g. "fastapi" -> ASGI/dependency injection/routing) and
+the evaluator's own `concept_coverage` omitted/superficial list (itself
+sourced from that same registry, not from resume text) are deliberately
+EXCLUDED from this pool — live-reproduced: a candidate who truthfully wrote
+"I used FastAPI to build the backend REST APIs" was told to add "I'd also
+work in ASGI, dependency injection and routing," none of which the resume,
+question, or answer ever established. Those two sources remain legitimate
+EVALUATOR signals (dashboard Concept Coverage, `missing_reasoning`
+severity) — untouched anywhere else in the codebase — they are simply no
+longer eligible to be ghost-written into the candidate's own answer.
 
 DETERMINISTIC-ONLY LIMITATION (documented, not a bug): without an LLM we can't
 truly paraphrase or interleave concepts inside the candidate's existing

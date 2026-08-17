@@ -53,7 +53,7 @@ from interview_question import InterviewQuestion
 from planner import ConversationState, Planner
 from question_specification import UnitStatus
 from concept_analysis import concept_coverage_percent
-from strong_answer import build_improved_answer
+from strong_answer import build_improved_answer, coaching_note
 from topic_pool import ProfileLike
 
 _conversations: dict[str, dict] = {}
@@ -192,14 +192,25 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
         next_spec = None
     else:
         next_spec = planner.plan_next(ConversationState(last_category=session["last_category"]))
-    # Improved Answer is derived here, at the one site where the
-    # EvaluationResult, the InterviewQuestion (its grounding) AND the raw
-    # candidate `answer` are all in scope — the candidate answer is the input
-    # that makes this an *improvement* of their own response rather than a
-    # fresh one. `_result_payload` stays a pure field-selector and the ledger
-    # (results only) is untouched. See strong_answer.py.
+    # Improved Answer / Coaching Note are derived here, at the one site
+    # where the EvaluationResult, the InterviewQuestion (its grounding) AND
+    # the raw candidate `answer` are all in scope. `_result_payload` stays a
+    # pure field-selector and the ledger (results only) is untouched. See
+    # strong_answer.py.
+    #
+    # UI-honesty fix (post-demo forensic investigation): `improved_answer`
+    # (the candidate's own answer + one appended coaching sentence,
+    # concatenated) is kept for any existing consumer, but the report now
+    # additionally receives `coaching_note` -- that same appended sentence
+    # on its own -- computed from the identical shared logic
+    # (strong_answer._compute), so it can never disagree with what
+    # `improved_answer` would have embedded. This lets the report show
+    # "Your Answer" (the candidate's real, unmodified `answer`, already
+    # available on this payload) and "Coaching Note" as two honest, separate
+    # pieces instead of one blob under a label implying a rewritten answer.
     turn_evaluation = _result_payload(result)
     turn_evaluation["improved_answer"] = build_improved_answer(current_question, result, answer)
+    turn_evaluation["coaching_note"] = coaching_note(current_question, result, answer)
     # Concept Coverage % for the dashboard, derived directly from
     # result.concept_coverage's own per-concept statuses (never a separate
     # re-scan of the answer text -- see concept_analysis.py's module

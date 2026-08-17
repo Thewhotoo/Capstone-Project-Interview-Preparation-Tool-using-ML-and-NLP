@@ -58,9 +58,12 @@ assert.ok(
     "the raw confidence float must NOT be threaded into the timeline as a standalone field",
 );
 
-// Existing fields must be untouched by this change.
+// Existing fields must be untouched by this change. "suggested_answer" was
+// superseded by "coaching_note" in the UI-honesty fix (post-demo forensic
+// investigation, see templates/index.html's own comment on the timeline
+// construction) -- checked here as "coaching_note", not the old name.
 ["score:", "grade:", "correctness:", "technical_depth:", "completeness:",
- "communication:", "strengths:", "weaknesses:", "suggested_answer:"].forEach((field) => {
+ "communication:", "strengths:", "weaknesses:", "coaching_note:"].forEach((field) => {
     assert.ok(timelineEntrySrc.includes(field), `existing timeline field missing: ${field}`);
 });
 
@@ -88,10 +91,12 @@ assert.ok(
 );
 
 // Existing render pieces (score, grade, metric grid, strengths, weaknesses,
-// improved answer) must be untouched.
+// coaching note) must be untouched. "item.suggested_answer"/"Improved
+// Answer" was superseded by "item.coaching_note"/"Your Answer" + "Coaching
+// Note" in the UI-honesty fix -- checked here as "item.coaching_note".
 ["item.score", "item.grade", 'rdMetricBoxHtml("Correctness"', 'rdMetricBoxHtml("Technical Depth"',
  'rdMetricBoxHtml("Completeness"', 'rdMetricBoxHtml("Communication"', "strengthsListHtml", "weaknessesListHtml",
- "item.suggested_answer"].forEach((needle) => {
+ "item.coaching_note"].forEach((needle) => {
     assert.ok(renderBlockSrc.includes(needle), `existing render piece missing: ${needle}`);
 });
 

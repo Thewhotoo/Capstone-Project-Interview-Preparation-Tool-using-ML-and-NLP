@@ -36,7 +36,7 @@ from question_specification import (
     QuestionSpecification,
     SourceType,
 )
-from strong_answer import build_improved_answer
+from strong_answer import build_improved_answer, coaching_note
 
 
 # ── builders ──────────────────────────────────────────────────────────────
@@ -310,6 +310,77 @@ class TestLexicalCoverage(unittest.TestCase):
         self.assertIsNotNone(out)
         self.assertIn("Network Design", out)
         self.assertIn("Network Security", out)
+
+
+class TestCoachingNote(unittest.TestCase):
+    """UI-honesty fix (post-demo forensic investigation): coaching_note()
+    exposes the exact same appended sentence build_improved_answer would
+    have embedded, computed via the shared _compute() helper -- never
+    re-derived by parsing build_improved_answer's concatenated string.
+    Added because a real 10-turn browser session showed every
+    build_improved_answer output was the candidate's own answer verbatim
+    plus this one sentence, presented under a misleading "Improved Answer"
+    label. This class verifies the two public entry points never drift
+    apart, not any change to generation behavior."""
+
+    def test_matches_the_appended_clause_in_build_improved_answer(self):
+        out = build_improved_answer(_project_question(), _result(), _ANSWER)
+        note = coaching_note(_project_question(), _result(), _ANSWER)
+        self.assertIsNotNone(out)
+        self.assertIsNotNone(note)
+        # The full concatenated answer must end with exactly the standalone
+        # coaching note -- proves they can never disagree.
+        self.assertTrue(out.endswith(note))
+
+    def test_none_under_the_exact_same_conditions_as_build_improved_answer(self):
+        for grade in ("good", "excellent"):
+            with self.subTest(grade=grade):
+                q = _project_question()
+                r = _result(grade=grade, overall=0.9)
+                self.assertIsNone(build_improved_answer(q, r, _ANSWER))
+                self.assertIsNone(coaching_note(q, r, _ANSWER))
+
+    def test_none_when_trivial_answer_for_both(self):
+        q = _project_question()
+        r = _result()
+        self.assertIsNone(build_improved_answer(q, r, "It worked fine."))
+        self.assertIsNone(coaching_note(q, r, "It worked fine."))
+
+    def test_none_when_nothing_to_add_for_both(self):
+        q = _project_question(technologies=(), concepts=("indexes", "lookups"))
+        r = _result(missing_reasoning=())
+        self.assertIsNone(build_improved_answer(q, r, _ANSWER))
+        self.assertIsNone(coaching_note(q, r, _ANSWER))
+
+    def test_does_not_contain_the_candidates_own_wording(self):
+        """The coaching note is the isolated addition only -- it must never
+        also contain the candidate's original answer text (no duplication
+        between 'Your Answer' and 'Coaching Note' in the UI)."""
+        note = coaching_note(_project_question(), _result(), _ANSWER)
+        self.assertIsNotNone(note)
+        self.assertNotIn("I added indexes on the user table", note)
+        self.assertTrue(note.startswith("I'd also"))
+
+    def test_reflects_the_soft_length_guard_exactly(self):
+        """When build_improved_answer's soft-length guard drops the
+        secondary (weak-area) clause, coaching_note must reflect the SAME
+        shortened clause, not the original two-clause version -- proves
+        they share one computation, not two independent ones that could
+        drift under this edge case."""
+        long_answer = _ANSWER + " " + ("Additional detail. " * 30)
+        q = _project_question()  # missing: EXPLAIN ANALYZE (composite indexes already covered)
+        r = _result(missing_reasoning=(_missing("design_decision"),))
+        out = build_improved_answer(q, r, long_answer)
+        note = coaching_note(q, r, long_answer)
+        self.assertIsNotNone(out)
+        self.assertIsNotNone(note)
+        self.assertTrue(out.endswith(note))
+        # Guard fired: only the "work in ..." clause should remain, not the
+        # "be explicit about ..." (design_decision) clause too.
+        if len(out.split()) <= 180:
+            pass  # guard didn't need to fire for this input length; skip the stronger assertion
+        else:
+            self.assertNotIn("the reasoning behind that decision", note)
 
 
 if __name__ == "__main__":

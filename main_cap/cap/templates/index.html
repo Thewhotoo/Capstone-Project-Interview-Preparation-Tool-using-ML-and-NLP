@@ -2624,14 +2624,24 @@
             communication: "Practice structuring your answers so the key point comes first.",
         };
 
-        // Improved Answer is generated server-side, deterministically, in
-        // strong_answer.py (build_improved_answer) and delivered per turn as
-        // evaluation.improved_answer -- null when hidden (already-strong
-        // answer, or nothing concrete to add). It is a stronger rewrite of the
-        // candidate's OWN answer: their response with repetition removed plus
-        // grounded first-person additions for the missing concepts / weak
-        // reasoning the evaluator flagged. DeBERTa is evaluation-only; the UI
-        // just renders the string.
+        // UI-honesty fix (post-demo forensic investigation): the report used
+        // to present strong_answer.py's output as one "Improved Answer" blob
+        // -- but that blob is, and was always designed to be, the
+        // candidate's OWN answer verbatim plus exactly one deterministic
+        // coaching sentence (never a genuine rewrite -- no LLM, by design,
+        // see strong_answer.py's own docstring). Live-reproduced: every
+        // real turn in a 10-turn browser session retained 100% of the
+        // candidate's wording. The label implied more than the mechanism
+        // delivers, so the card now shows the two pieces honestly and
+        // separately -- "Your Answer" (the candidate's real, unmodified
+        // answer, already on the turn) and "Coaching Note"
+        // (evaluation.coaching_note, computed server-side by
+        // strong_answer.coaching_note from the exact same signals as
+        // before -- missing_reasoning / grounded missing concepts -- just
+        // exposed on its own instead of pre-concatenated). Both are null
+        // together under the same hide conditions strong_answer.py has
+        // always used (already-strong answer, or nothing concrete to add).
+        // DeBERTa remains evaluation-only; no generation logic changed.
         // Same 5-band taxonomy the backend's own evaluator uses per turn
         // (heuristic_evaluator.py._grade thresholds) -- applied here to the
         // session average so the report's overall verdict uses the exact
@@ -2889,7 +2899,20 @@
                 // in the report was rendering empty. Use the strings as-is.
                 strengths: t.evaluation ? t.evaluation.strengths : [],
                 weaknesses: t.evaluation ? t.evaluation.weaknesses : [],
-                suggested_answer: (t.evaluation && t.evaluation.improved_answer) || null,
+                // UI-honesty fix (post-demo forensic investigation):
+                // `improved_answer` (candidate's own answer + one appended
+                // coaching sentence, concatenated) was rendered under an
+                // "Improved Answer" label that implied a rewritten answer --
+                // confirmed live that every real turn retained 100% of the
+                // candidate's own wording and only ever added one fixed
+                // sentence. The card now shows the candidate's real answer
+                // (`item.answer`, already present above) under "Your Answer"
+                // and this `coaching_note` (the same appended sentence,
+                // exposed on its own by strong_answer.coaching_note --
+                // never re-derived by parsing improved_answer) under
+                // "Coaching Note", as two honest, separate pieces. No
+                // regeneration, no LLM -- purely presentation.
+                coaching_note: (t.evaluation && t.evaluation.coaching_note) || null,
                 // PHASE 11 FIX (do not revert without re-reading the
                 // investigation): EvaluationResult.confidence_rationale was
                 // already computed and sent by the backend on every turn
@@ -3026,7 +3049,12 @@
                             </div>
                             ${strengthsListHtml ? `<div class="rd-timeline-metric-label">Strengths</div><ul class="rd-timeline-list">${strengthsListHtml}</ul>` : ""}
                             ${weaknessesListHtml ? `<div class="rd-timeline-metric-label">To improve</div><ul class="rd-timeline-list">${weaknessesListHtml}</ul>` : ""}
-                            ${(item.suggested_answer && item.suggested_answer.trim()) ? `<div class="rd-timeline-metric-label" style="margin-bottom:6px;">Improved Answer</div><div class="rd-suggested-answer">${esc(item.suggested_answer)}</div>` : ""}
+                            ${(item.coaching_note && item.coaching_note.trim()) ? `
+                                <div class="rd-timeline-metric-label" style="margin-bottom:6px;">Your Answer</div>
+                                <div class="rd-timeline-a" style="margin-bottom:14px;">${esc(answerText)}</div>
+                                <div class="rd-timeline-metric-label" style="margin-bottom:6px;">Coaching Note</div>
+                                <div class="rd-suggested-answer">${esc(item.coaching_note)}</div>
+                            ` : ""}
                             ${(item.confidence_rationale && item.confidence_rationale.trim()) ? `<div class="rd-timeline-metric-label" style="margin-bottom:6px;">Evaluator Confidence</div><div class="rd-confidence-rationale">${esc(item.confidence_rationale)}</div>` : ""}
                         </div>
                         <div class="rd-expand-hint">Tap to expand details</div>

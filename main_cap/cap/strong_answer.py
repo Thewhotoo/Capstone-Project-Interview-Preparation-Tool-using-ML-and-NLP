@@ -135,15 +135,20 @@ def _weak_areas(result: EvaluationResult) -> list[str]:
     return clauses
 
 
-# ── public entry point ──────────────────────────────────────────────────────
+# ── shared computation (single source of truth for both public entry points) ─
 
-def build_improved_answer(
+def _compute(
     question: InterviewQuestion, result: EvaluationResult, answer_text: str,
-) -> Optional[str]:
-    """
-    Return a stronger version of the candidate's OWN answer, or None when it
-    should be hidden. Deterministic; DeBERTa outputs are editing signals only.
-    """
+) -> Optional[tuple[str, str]]:
+    """Returns (base, addition) or None when there's nothing to show — the
+    exact same hide-gate, dedup, and soft-length-guard logic
+    `build_improved_answer` has always used, factored out so its own
+    concatenated-string contract (and the ~20 existing tests asserting on
+    it) stays byte-for-byte unchanged, while `coaching_note` (below) can
+    expose the SAME `addition` this function settles on -- including after
+    the soft-length guard drops the secondary clause -- without
+    re-deriving it via fragile string-splitting on the concatenated
+    result."""
     answer_text = (answer_text or "").strip()
 
     # Hide when the candidate already answered well, when there is no real
@@ -180,6 +185,47 @@ def build_improved_answer(
     # over budget, drop the (secondary) weak-area clause first.
     if len(improved.split()) > _TARGET_MAX_WORDS and missing and weak:
         addition = f"I'd also work in {_join(missing)}."
-        improved = f"{base} {addition}".strip()
 
-    return improved
+    return base, addition
+
+
+# ── public entry points ─────────────────────────────────────────────────────
+
+def build_improved_answer(
+    question: InterviewQuestion, result: EvaluationResult, answer_text: str,
+) -> Optional[str]:
+    """
+    Return a stronger version of the candidate's OWN answer, or None when it
+    should be hidden. Deterministic; DeBERTa outputs are editing signals only.
+
+    UI-honesty fix (post-demo forensic investigation): this concatenated
+    string is still produced, unchanged, for any existing consumer -- but
+    it is no longer what the report UI presents under a label implying a
+    rewritten answer (confirmed live: every real turn in a 10-turn browser
+    session retained 100% of the candidate's own wording and only ever
+    appended one fixed coaching sentence). `coaching_note` (below) exposes
+    that same appended sentence on its own, so the report can show "Your
+    Answer" (the candidate's actual, unmodified answer_text) and "Coaching
+    Note" (this function's `addition`) as two honest, separate pieces
+    instead of one blob."""
+    computed = _compute(question, result, answer_text)
+    if computed is None:
+        return None
+    base, addition = computed
+    return f"{base} {addition}".strip()
+
+
+def coaching_note(
+    question: InterviewQuestion, result: EvaluationResult, answer_text: str,
+) -> Optional[str]:
+    """The deterministic coaching addition alone (e.g. "I'd also be
+    explicit about a concrete example."), or None under the exact same
+    hide conditions as `build_improved_answer` -- same gating, same
+    clauses, same soft-length-guard behavior, computed via the shared
+    `_compute` helper so this can never drift from what
+    `build_improved_answer` would have embedded."""
+    computed = _compute(question, result, answer_text)
+    if computed is None:
+        return None
+    _base, addition = computed
+    return addition

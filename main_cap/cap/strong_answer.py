@@ -51,7 +51,7 @@ import re
 from typing import Optional
 
 from concept_analysis import missing_concepts
-from evaluation_result import EvaluationResult
+from evaluation_result import EvaluationResult, MissingReasoningItem
 from interview_question import InterviewQuestion
 
 _MAX_MISSING_CONCEPTS = 3
@@ -61,19 +61,56 @@ _TARGET_MAX_WORDS = 180      # soft ceiling; we never delete the candidate's own
 
 # missing_reasoning category (DeBERTa) -> a short first-person clause naming
 # what to elaborate. NOT a template engine: a flat editing-signal lookup.
+# Grounded ONLY in "this dimension scored weak" -- never a candidate-specific
+# fact -- which is what makes these safe to state unconditionally. Sharpened
+# (Coaching Note content-quality investigation, item 1) to match the actual
+# desired direction per dimension instead of a vague restatement of the
+# category name; still says nothing about WHAT the candidate did or didn't
+# build, only what the answer should additionally make explicit.
+#
+# NOTE: "example" is deliberately NOT in this table. Unlike every other
+# category here, an "example" missing_reasoning item names specific project
+# technologies/concepts (`missing_terms`, heuristic_evaluator.py) computed
+# against the WHOLE project's grounding, not scoped to the current
+# question -- live-reproduced (investigation, mayurans_resume.pdf real
+# session): an architecture question with zero technology-name relevance
+# and a React-specific question both surfaced the identical unfiltered
+# "React, FastAPI" pair. A static clause here would risk telling the
+# candidate to "give an example using X" on a question that never asked
+# about X. See `_weak_areas` below for the question-relevance filter that
+# replaces it -- and note there is deliberately no generic fallback string:
+# when no missing term survives that filter, the example clause is dropped
+# entirely rather than reverting to a vague, unscoped sentence.
 _WEAK_AREA_CLAUSES: dict[str, str] = {
-    "tradeoff": "why I chose this approach over the alternatives",
-    "architecture": "how the pieces fit together",
-    "example": "a concrete example",
-    "testing": "how I verified it worked",
-    "debugging": "how I worked through the hard cases",
+    "tradeoff": "the alternatives I considered and why I chose this approach over them",
+    "architecture": "the specific components involved, their responsibilities, and how they interact",
+    "testing": "the concrete test cases or edge cases I used to verify it worked",
+    "debugging": "the specific hard cases I ran into and how I worked through them",
     "metrics": "the results that showed it worked",
     "edge_case": "the edge cases I handled",
-    "scalability": "how it would hold up as it scales",
+    "scalability": "how this would hold up as usage or data grows, and what would need to change",
     "design_decision": "the reasoning behind that decision",
-    "ownership": "which parts I personally owned",
+    "ownership": "which parts of this I personally implemented or decided, versus what the team or project did overall",
     "communication": "the explanation more clearly and in order",
 }
+
+# Fixed suffix heuristic_evaluator._missing_reasoning uses when building an
+# EXAMPLE item's `evidence` field (f"{terms} not found in the answer") --
+# parsed back out below to recover the specific terms without re-deriving
+# them from scratch or fragile splitting on `explanation`'s prose. If that
+# template ever changes, `_example_terms` degrades to "no terms available"
+# (clause suppressed), never a crash or a wrong parse.
+_EXAMPLE_EVIDENCE_SUFFIX = " not found in the answer"
+
+
+def _example_terms(item: MissingReasoningItem) -> list[str]:
+    """The specific project technologies/concepts named in an EXAMPLE
+    missing_reasoning item, recovered from its `evidence` field. Returns []
+    if the evidence doesn't match the expected shape."""
+    if not item.evidence.endswith(_EXAMPLE_EVIDENCE_SUFFIX):
+        return []
+    joined = item.evidence[: -len(_EXAMPLE_EVIDENCE_SUFFIX)]
+    return [t.strip() for t in joined.split(",") if t.strip()]
 
 
 # ── text helpers ────────────────────────────────────────────────────────────
@@ -122,17 +159,45 @@ def _join(items: list[str]) -> str:
 # so the Improved Answer and the dashboard's Concept Coverage use one detector.
 
 def _weak_areas(result: EvaluationResult) -> list[str]:
-    """Top missing_reasoning categories (by severity) mapped to first-person
-    elaboration clauses."""
+    """Top NON-example missing_reasoning categories (by severity) mapped to
+    first-person elaboration clauses. "example" is handled separately by
+    `_example_sentence` below -- it needs the current question's own text
+    to filter for relevance, and (per the Coaching Note wording fix) it
+    reads as its own direct, actionable sentence rather than a fragment
+    folded into "I'd also be explicit about ..."."""
     ordered = sorted(result.missing_reasoning, key=lambda m: -m.severity)
     clauses: list[str] = []
     for m in ordered:
+        if m.category == "example":
+            continue
         clause = _WEAK_AREA_CLAUSES.get(m.category)
         if clause and clause not in clauses:
             clauses.append(clause)
         if len(clauses) >= _MAX_WEAK_AREAS:
             break
     return clauses
+
+
+def _example_sentence(result: EvaluationResult, question_text: str) -> Optional[str]:
+    """A direct, actionable instruction naming the missing project
+    technologies/concepts that are also actually relevant to the CURRENT
+    question (i.e. literally present in `question_text`) -- see
+    `_WEAK_AREA_CLAUSES`'s docstring for why unfiltered project-wide terms
+    are unsafe to name. Returns None (never a generic fallback sentence)
+    when there is no EXAMPLE item, or when none of its terms survive the
+    relevance filter. Deliberately its OWN sentence, not folded into the
+    "I'd also be explicit about ..." clause list: an instruction like "give
+    a concrete example" reads as actionable advice, not as one more thing
+    to "be explicit about" alongside dimension-level clauses."""
+    q_lower = question_text.lower()
+    for m in sorted(result.missing_reasoning, key=lambda m: -m.severity):
+        if m.category != "example":
+            continue
+        terms = [t for t in _example_terms(m) if t.lower() in q_lower]
+        if not terms:
+            return None
+        return f"Give a concrete example of how you used {_join(terms)} in this project."
+    return None
 
 
 # ── shared computation (single source of truth for both public entry points) ─
@@ -160,7 +225,8 @@ def _compute(
 
     missing = missing_concepts(question, result, answer_text.lower(), _MAX_MISSING_CONCEPTS)
     weak = _weak_areas(result)
-    if not missing and not weak:
+    example_sentence = _example_sentence(result, question.question_text)
+    if not missing and not weak and not example_sentence:
         return None
 
     # Base = the candidate's own answer, with repetition removed, wording and
@@ -169,22 +235,34 @@ def _compute(
     if base and base[-1] not in ".!?":
         base += "."
 
-    # Grounded first-person additions.
-    clauses: list[str] = []
-    if missing:
-        clauses.append(f"work in {_join(missing)}")
-    if weak:
-        clauses.append(f"be explicit about {_join(weak)}")
-    # Join the (at most two) clauses with a comma so the sentence doesn't read
-    # as a run-on chain of "and"s (each clause may already contain an "and").
-    addition = f"I'd also {', and '.join(clauses)}."
+    def _build_addition(include_weak: bool) -> str:
+        # Grounded first-person additions. "example" is a separate,
+        # standalone actionable sentence (see `_example_sentence`), never
+        # folded into the "I'd also be explicit about ..." clause list --
+        # keeping the two apart is what avoids an awkward, repetitive
+        # combined sentence when both an example and a dimension weakness
+        # fire on the same turn (e.g. an ownership clause plus a "give a
+        # concrete example of React" instruction read as two clean,
+        # distinct sentences, not one run-on).
+        clauses: list[str] = []
+        if missing:
+            clauses.append(f"work in {_join(missing)}")
+        if include_weak and weak:
+            clauses.append(f"be explicit about {_join(weak)}")
+        parts = [f"I'd also {', and '.join(clauses)}."] if clauses else []
+        if example_sentence:
+            parts.append(example_sentence)
+        return " ".join(parts)
 
+    addition = _build_addition(include_weak=True)
     improved = f"{base} {addition}".strip()
 
     # Soft length guard: never delete the candidate's content; if we're well
-    # over budget, drop the (secondary) weak-area clause first.
+    # over budget, drop the (secondary) weak-area clause first -- the
+    # example sentence (when present) is kept, since it's a direct,
+    # actionable instruction rather than a droppable elaboration clause.
     if len(improved.split()) > _TARGET_MAX_WORDS and missing and weak:
-        addition = f"I'd also work in {_join(missing)}."
+        addition = _build_addition(include_weak=False)
 
     return base, addition
 

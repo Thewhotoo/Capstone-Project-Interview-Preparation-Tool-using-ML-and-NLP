@@ -88,6 +88,18 @@ def _missing(cat, sev=0.7):
     return MissingReasoningItem(category=cat, explanation="x", expected_because="y", evidence="z", severity=sev)
 
 
+def _missing_example(terms, sev=0.5):
+    """An EXAMPLE missing_reasoning item shaped exactly like the real one
+    heuristic_evaluator._missing_reasoning produces -- `evidence` in the
+    literal f"{terms} not found in the answer" form `_example_terms`
+    (strong_answer.py) parses back out."""
+    joined = ", ".join(terms)
+    return MissingReasoningItem(
+        category="example", explanation=f"specific mention of {joined}",
+        expected_because="y", evidence=f"{joined} not found in the answer", severity=sev,
+    )
+
+
 def _result(grade="adequate", overall=0.5, concept_coverage=(), missing_reasoning=(_missing("design_decision"),)):
     return EvaluationResult(
         result_id="e", request_id="r", evaluation_timestamp="2026-01-01T00:00:00+00:00",
@@ -175,8 +187,11 @@ class TestInsertsMissingConcepts(unittest.TestCase):
         self.assertIsNone(out)
 
         # Even with a weak-area signal present (so the feature does fire),
-        # none of the registry's FastAPI concepts may appear.
-        r2 = _result(concept_coverage=(), missing_reasoning=(_missing("example"),))
+        # none of the registry's FastAPI concepts may appear. Uses
+        # "design_decision", not "example", so this stays a pure
+        # registry-injection check independent of the "example" category's
+        # own question-relevance filter (covered separately below).
+        r2 = _result(concept_coverage=(), missing_reasoning=(_missing("design_decision"),))
         out2 = build_improved_answer(q, r2, _ANSWER)
         self.assertIsNotNone(out2)
         for concept in registry_concepts:
@@ -245,7 +260,7 @@ class TestNoInvention(unittest.TestCase):
                "As a backend engineer I built APIs and fixed bugs.")
         out = build_improved_answer(_experience_question(), _result(missing_reasoning=(_missing("ownership"),)), ans)
         self.assertIsNotNone(out)
-        self.assertIn("which parts I personally owned", out)
+        self.assertIn("which parts of this I personally implemented or decided", out)
         # repetition removed
         self.assertEqual(out.count("As a backend engineer I built APIs and fixed bugs"), 1)
 
@@ -381,6 +396,131 @@ class TestCoachingNote(unittest.TestCase):
             pass  # guard didn't need to fire for this input length; skip the stronger assertion
         else:
             self.assertNotIn("the reasoning behind that decision", note)
+
+
+class TestExampleCategoryQuestionRelevance(unittest.TestCase):
+    """Coaching Note content-quality fix, item 1: an "example"
+    missing_reasoning item names project technologies computed against the
+    WHOLE project's grounding, not scoped to the current question --
+    live-reproduced (investigation, real mayurans_resume.pdf session) as a
+    turn where an architecture question with zero technology relevance and
+    a React-specific question both surfaced the identical unfiltered
+    "React, FastAPI" pair. These tests pin the fix: only a term that
+    literally appears in the CURRENT question's own text may be named, and
+    when none do, the example-specific clause is dropped entirely -- never
+    replaced with a generic fallback sentence."""
+
+    def test_term_named_when_it_appears_in_the_question(self):
+        q = _project_question(concepts=()).model_copy(
+            update={"question_text": "How did you use FastAPI in this project?"})
+        r = _result(missing_reasoning=(_missing_example(("FastAPI",)),))
+        note = coaching_note(q, r, _ANSWER)
+        # Direct, actionable instruction -- not a fragment tacked onto
+        # "I'd also be explicit about ..." (wording-refinement fix).
+        self.assertEqual(note, "Give a concrete example of how you used FastAPI in this project.")
+
+    def test_clause_suppressed_when_no_term_appears_in_the_question(self):
+        # Turn-2-shaped regression case: an architecture question that never
+        # names any project technology. No fallback generic sentence either
+        # -- and no other signal here (concepts=() -> missing=[]), so the
+        # whole coaching note must be None, not a vague "give an example."
+        q = _project_question(concepts=()).model_copy(
+            update={"question_text": "Walk me through how the pieces of this project fit together."})
+        r = _result(missing_reasoning=(_missing_example(("React", "FastAPI")),))
+        note = coaching_note(q, r, _ANSWER)
+        self.assertIsNone(note)
+
+    def test_only_the_question_relevant_term_is_named(self):
+        # Turn-5-shaped case: the question is specifically about React;
+        # FastAPI is also a missing project technology but this question
+        # never asked about it, so only React may be named.
+        q = _project_question(concepts=()).model_copy(
+            update={"question_text": "Why did you take the approach you did for React in this project?"})
+        r = _result(missing_reasoning=(_missing_example(("React", "FastAPI")),))
+        note = coaching_note(q, r, _ANSWER)
+        self.assertEqual(note, "Give a concrete example of how you used React in this project.")
+
+    def test_example_and_weak_area_together_are_two_clean_sentences(self):
+        # Both an "example" signal (React, relevant to this question) and a
+        # dimension weakness (ownership) fire on the same turn. The result
+        # must be two distinct, non-repetitive sentences -- the dimension
+        # clause via "I'd also be explicit about ...", the example via its
+        # own standalone actionable instruction -- not one run-on sentence
+        # and not the same idea stated twice.
+        q = _project_question(concepts=()).model_copy(
+            update={"question_text": "Why did you take the approach you did for React in this project?"})
+        r = _result(missing_reasoning=(_missing_example(("React",)), _missing("ownership", sev=0.9)))
+        note = coaching_note(q, r, _ANSWER)
+        self.assertEqual(
+            note,
+            "I'd also be explicit about which parts of this I personally implemented or decided, "
+            "versus what the team or project did overall. "
+            "Give a concrete example of how you used React in this project.",
+        )
+        # Exactly two sentences -- no repeated clause, no run-on "and" chain
+        # tying the two unrelated ideas together.
+        self.assertEqual(note.count("Give a concrete example"), 1)
+
+    def test_experience_turn_unaffected(self):
+        # No-project turns never produce an "example" item in production
+        # (heuristic_evaluator._grounding_terms returns () without a
+        # project) -- confirm the relevance filter doesn't break the
+        # ordinary no-project path when a non-example category is present.
+        ans = "As a backend engineer I built APIs and fixed bugs on this team."
+        q = _experience_question()
+        r = _result(missing_reasoning=(_missing("ownership"),))
+        note = coaching_note(q, r, ans)
+        self.assertIsNotNone(note)
+        self.assertIn("which parts of this I personally implemented or decided", note)
+
+
+class TestSharpenedWeakAreaWording(unittest.TestCase):
+    """The 6 already-supported categories' clauses, sharpened to match the
+    desired coaching direction while remaining grounded ONLY in "this
+    dimension scored weak" -- never a candidate-specific fact."""
+
+    def test_ownership_wording(self):
+        note = coaching_note(_project_question(concepts=()),
+                              _result(missing_reasoning=(_missing("ownership"),)), _ANSWER)
+        self.assertIn("which parts of this I personally implemented or decided, versus what the team or "
+                       "project did overall", note)
+
+    def test_architecture_wording(self):
+        note = coaching_note(_project_question(concepts=()),
+                              _result(missing_reasoning=(_missing("architecture"),)), _ANSWER)
+        self.assertIn("the specific components involved, their responsibilities, and how they interact", note)
+
+    def test_tradeoff_wording(self):
+        note = coaching_note(_project_question(concepts=()),
+                              _result(missing_reasoning=(_missing("tradeoff"),)), _ANSWER)
+        self.assertIn("the alternatives I considered and why I chose this approach over them", note)
+
+    def test_testing_wording(self):
+        note = coaching_note(_project_question(concepts=()),
+                              _result(missing_reasoning=(_missing("testing"),)), _ANSWER)
+        self.assertIn("the concrete test cases or edge cases I used to verify it worked", note)
+
+    def test_debugging_wording(self):
+        note = coaching_note(_project_question(concepts=()),
+                              _result(missing_reasoning=(_missing("debugging"),)), _ANSWER)
+        self.assertIn("the specific hard cases I ran into and how I worked through them", note)
+
+    def test_scalability_wording(self):
+        note = coaching_note(_project_question(concepts=()),
+                              _result(missing_reasoning=(_missing("scalability"),)), _ANSWER)
+        self.assertIn("how this would hold up as usage or data grows, and what would need to change", note)
+
+    def test_no_fabricated_technology_in_any_sharpened_note(self):
+        # None of the 6 sharpened, dimension-level clauses may name any
+        # specific technology/concept -- they must stay fact-free.
+        bogus = ("Kubernetes", "MongoDB", "GraphQL", "Redis", "React", "FastAPI", "DeBERTa")
+        for cat in ("ownership", "architecture", "tradeoff", "testing", "debugging", "scalability"):
+            with self.subTest(category=cat):
+                note = coaching_note(_project_question(concepts=()),
+                                      _result(missing_reasoning=(_missing(cat),)), _ANSWER)
+                self.assertIsNotNone(note)
+                for tech in bogus:
+                    self.assertNotIn(tech, note)
 
 
 if __name__ == "__main__":

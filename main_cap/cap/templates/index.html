@@ -1373,7 +1373,14 @@
         .rd-timeline-metric-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
         .rd-timeline-metric-value { font-family: 'Roboto Mono', monospace; color: var(--text-main); }
         .rd-timeline-list { margin: 0 0 10px; padding-left: 18px; font-size: 0.85rem; color: var(--text-main); }
-        .rd-suggested-answer { font-size: 0.85rem; color: var(--text-main); background: var(--lime-dim); padding: 12px 14px; border-radius: 8px; border-left: 3px solid var(--lime); line-height: 1.5; }
+        /* UI-spacing fix (Coaching Note / Your Answer breathing room):
+           padding, line-height and radius nudged up so this reads as a
+           supporting-feedback callout, not a second cramped answer box --
+           see rd-timeline-metric-label's inline margin-bottom (Coaching
+           Note's own label, below) and .rd-timeline-a's inline
+           margin-bottom (Your Answer block, below) for the two other
+           spacing values this pairs with. Content/color/logic unchanged. */
+        .rd-suggested-answer { font-size: 0.85rem; color: var(--text-main); background: var(--lime-dim); padding: 16px 18px; border-radius: 10px; border-left: 3px solid var(--lime); line-height: 1.6; }
         /* Phase 11: explanatory (not actionable) supporting context, so it
            deliberately does NOT reuse .rd-suggested-answer's accent styling
            -- plain muted text, same border-left convention as the rest of
@@ -1632,6 +1639,17 @@
         // them here and zips them with each turn's real evaluation to build
         // the report client-side (see rdBuildReportFromV2).
         let rdTurnHistory = [];
+        // Re-entrancy guard against a double-click/double-tap on "Enter
+        // Resume Discussion" -- the button has no built-in disable-on-click,
+        // so without this a fast double click fires rdStartSession() twice,
+        // creating two real backend conversations (one silently orphaned)
+        // and racing two typeLine() animations onto the same question
+        // element. Reset in rdStartSession's own finally block (success OR
+        // failure), so a failed startup never permanently locks out a
+        // legitimate retry. Same script-scoped-state convention already
+        // used throughout this file (rdSessionId, rdTurnHistory, etc.) --
+        // there is no module system here to scope it more tightly.
+        let rdSessionStarting = false;
 
         const landingContainer = document.getElementById("landing-container");
         const chatContainer = document.getElementById("chat-container");
@@ -2105,6 +2123,12 @@
         }
 
         function startDomainDiscussionFromDashboard() {
+            // Re-entrancy guard (see rdSessionStarting's own declaration):
+            // a click while startup is already in flight is a no-op, not a
+            // second session.
+            if (rdSessionStarting) return;
+            rdSessionStarting = true;
+
             candidateDashboard.style.display = "none";
             landingContainer.style.display = "none";
             rdHistoryList.innerHTML = "";
@@ -2362,6 +2386,11 @@
             } catch (err) {
                 console.error("Discussion start error:", err);
                 rdShowStageError("Failed to start the discussion. Please try again.");
+            } finally {
+                // Reset on every exit path (success, the data.error early
+                // return, and the catch block) -- a failed startup must
+                // never permanently lock out a legitimate retry.
+                rdSessionStarting = false;
             }
         }
 
@@ -3051,8 +3080,8 @@
                             ${weaknessesListHtml ? `<div class="rd-timeline-metric-label">To improve</div><ul class="rd-timeline-list">${weaknessesListHtml}</ul>` : ""}
                             ${(item.coaching_note && item.coaching_note.trim()) ? `
                                 <div class="rd-timeline-metric-label" style="margin-bottom:6px;">Your Answer</div>
-                                <div class="rd-timeline-a" style="margin-bottom:14px;">${esc(answerText)}</div>
-                                <div class="rd-timeline-metric-label" style="margin-bottom:6px;">Coaching Note</div>
+                                <div class="rd-timeline-a" style="margin-bottom:20px;">${esc(answerText)}</div>
+                                <div class="rd-timeline-metric-label" style="margin-bottom:8px;">Coaching Note</div>
                                 <div class="rd-suggested-answer">${esc(item.coaching_note)}</div>
                             ` : ""}
                             ${(item.confidence_rationale && item.confidence_rationale.trim()) ? `<div class="rd-timeline-metric-label" style="margin-bottom:6px;">Evaluator Confidence</div><div class="rd-confidence-rationale">${esc(item.confidence_rationale)}</div>` : ""}
@@ -3071,7 +3100,6 @@
                 </div>
 
                 <div id="rd-report-body">
-                    <div class="rd-section-title">The Debrief</div>
                     <p class="rd-debrief-text">${esc((data.debrief_text && data.debrief_text.trim()) || "This was a steady discussion without one section clearly pulling ahead of the rest.")}</p>
 
                     ${snapshotHtml ? `<div class="rd-section-title">Performance Snapshot</div><div class="rd-snapshot-list">${snapshotHtml}</div>` : ""}
@@ -3314,12 +3342,27 @@
 
         // ─── AI-writing status text: natural pace, punctuation pauses,
         // caret lingers then fades. Plays once per line, never loops. ───
+        // Self-cancelling per element: if typeLine() is called again on the
+        // SAME element before a prior call has finished ticking, the prior
+        // call's tick chain must stop appending rather than race the new
+        // one onto the same el.textContent (the two chains interleaving
+        // character-by-character is exactly what produced permanently
+        // garbled question text -- e.g. a double-clicked "Enter Resume
+        // Discussion" firing two typeLine() calls on #rd-question-text).
+        // The token lives ON THE ELEMENT (el.__typeToken), not in a module-
+        // level/global registry -- each element tracks its own latest
+        // invocation, nothing shared across elements or call sites. A
+        // superseded call's Promise deliberately never resolves: that's
+        // what halts its ENTIRE calling async chain (e.g. the rest of
+        // rdStartSession) at the `await`, not just this one animation.
         function typeLine(el, text) {
+            const token = (el.__typeToken = (el.__typeToken || 0) + 1);
             return new Promise(resolve => {
                 el.textContent = "";
                 el.classList.add("type-caret");
                 let i = 0;
                 function tick() {
+                    if (el.__typeToken !== token) return; // superseded -- stop silently
                     if (i < text.length) {
                         const ch = text[i];
                         el.textContent += ch;
@@ -3329,6 +3372,7 @@
                         setTimeout(tick, delay);
                     } else {
                         setTimeout(() => {
+                            if (el.__typeToken !== token) return;
                             el.classList.remove("type-caret");
                             resolve();
                         }, 550);

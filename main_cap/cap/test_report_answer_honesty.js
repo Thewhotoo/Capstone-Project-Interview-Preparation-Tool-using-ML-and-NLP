@@ -117,7 +117,7 @@ function renderYourAnswerBlock(item, answerText) {
     // Mirrors the exact ternary added to templates/index.html.
     const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     return (item.coaching_note && item.coaching_note.trim())
-        ? `\n                                <div class="rd-timeline-metric-label" style="margin-bottom:6px;">Your Answer</div>\n                                <div class="rd-timeline-a" style="margin-bottom:14px;">${esc(answerText)}</div>\n                                <div class="rd-timeline-metric-label" style="margin-bottom:6px;">Coaching Note</div>\n                                <div class="rd-suggested-answer">${esc(item.coaching_note)}</div>\n                            `
+        ? `\n                                <div class="rd-timeline-metric-label" style="margin-bottom:6px;">Your Answer</div>\n                                <div class="rd-timeline-a" style="margin-bottom:20px;">${esc(answerText)}</div>\n                                <div class="rd-timeline-metric-label" style="margin-bottom:8px;">Coaching Note</div>\n                                <div class="rd-suggested-answer">${esc(item.coaching_note)}</div>\n                            `
         : "";
 }
 

@@ -116,6 +116,73 @@
             0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239,68,68,0); }
             50% { opacity: 0.85; box-shadow: 0 0 8px 2px rgba(239,68,68,0.35); }
         }
+        /* ── Face presence — proctoring-style badge ── */
+        #face-status {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 7px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: background 0.35s, border-color 0.35s, color 0.35s;
+            border: 1px solid transparent;
+        }
+        #face-status::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: background 0.35s, box-shadow 0.35s;
+        }
+        #face-status.fs-detected {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.35);
+            color: #6ee7b7;
+        }
+        #face-status.fs-detected::before {
+            background: #10b981;
+            box-shadow: 0 0 6px #10b981;
+            animation: dotPulse 1.8s ease-in-out infinite;
+        }
+        #face-status.fs-notdetected {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.35);
+            color: #fca5a5;
+        }
+        #face-status.fs-notdetected::before {
+            background: #ef4444;
+            box-shadow: 0 0 6px #ef4444;
+            animation: dotPulse 0.85s ease-in-out infinite;
+        }
+        #face-status.fs-loading {
+            background: rgba(255,255,255,0.03);
+            border-color: rgba(255,255,255,0.08);
+            color: #444;
+        }
+        #face-status.fs-loading::before {
+            background: #333;
+        }
+        @keyframes dotPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.45; transform: scale(0.75); }
+        }
+        /* Camera border glow based on detection state */
+        .monitor-video-wrap {
+            transition: box-shadow 0.4s ease, border-color 0.4s ease !important;
+        }
+        .monitor-video-wrap.cam-ok {
+            border-color: rgba(16, 185, 129, 0.5) !important;
+            box-shadow: 0 0 14px rgba(16, 185, 129, 0.22);
+        }
+        .monitor-video-wrap.cam-warn {
+            border-color: rgba(239, 68, 68, 0.5) !important;
+            box-shadow: 0 0 14px rgba(239, 68, 68, 0.22);
+        }
 
         body { 
             font-family: 'Inter', sans-serif; 
@@ -625,6 +692,8 @@
         <div class="monitor-video-wrap">
             <video id="gaze-video" autoplay playsinline muted></video>
         </div>
+        <!-- Face presence debug indicator -->
+        <div id="face-status" class="fs-loading">Loading model…</div>
         <div id="gaze-warning" class="gaze-warning">Please look at the screen.</div>
         <div class="camera-help-text">Camera access is used for approximate attention monitoring only.</div>
     </div>
@@ -683,8 +752,26 @@
         const chatHeader = document.getElementById("chat-header-title");
         const gazeVideo = document.getElementById("gaze-video");
         const gazeWarning = document.getElementById("gaze-warning");
+        const faceStatusEl = document.getElementById("face-status");
         const interviewMonitorPanel = document.getElementById("interview-monitor-panel");
         const cameraStatusText = document.getElementById("camera-status-text");
+
+        // ── Face-presence proctoring badge ────────────────────────────
+        const _camWrap = document.querySelector(".monitor-video-wrap");
+        function setFaceStatus(state) {
+            if (!faceStatusEl) return;
+            faceStatusEl.className = "fs-" + state;
+            if (state === "detected") {
+                faceStatusEl.textContent = "Face Detected";
+                if (_camWrap) { _camWrap.classList.add("cam-ok"); _camWrap.classList.remove("cam-warn"); }
+            } else if (state === "notdetected") {
+                faceStatusEl.textContent = "No Face Detected";
+                if (_camWrap) { _camWrap.classList.add("cam-warn"); _camWrap.classList.remove("cam-ok"); }
+            } else {
+                faceStatusEl.textContent = "Loading...";
+                if (_camWrap) { _camWrap.classList.remove("cam-ok", "cam-warn"); }
+            }
+        }
 
         // ─── TOAST NOTIFICATION HELPER ────────────────────────────────
         function showToast(message, type = "info", duration = 3500) {
@@ -1050,57 +1137,78 @@
             hideGazeWarning();
         }
 
-        // MediaPipe CDN version known to work (0.10.14 is correctly served by jsDelivr)
+        // ── MediaPipe Face Landmarker loader ──────────────────────────────
+        // Uses dynamic ESM import — the only reliable way to get FaceLandmarker
+        // and FilesetResolver in a non-module page without window pollution issues.
         const _MP_VERSION = "0.10.14";
-        const _MP_CDN = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${_MP_VERSION}/vision_bundle.js`;
-        const _MP_WASM = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${_MP_VERSION}/wasm`;
+        const _MP_ESM     = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${_MP_VERSION}/vision_bundle.mjs`;
+        const _MP_WASM    = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${_MP_VERSION}/wasm`;
 
         async function ensureGazeLandmarkerReady() {
             if (gazeLandmarker) return;
 
-            if (!window.FaceLandmarker || !window.FilesetResolver) {
-                // Load the MediaPipe script only once
-                if (!window.__mediapipeScriptAppended) {
-                    window.__mediapipeScriptAppended = true;
-                    await new Promise((resolve, reject) => {
-                        const script = document.createElement("script");
-                        script.src = _MP_CDN;
-                        script.async = true;
-                        script.onload = () => resolve();
-                        script.onerror = (e) => reject(new Error("MediaPipe script failed to load: " + _MP_CDN));
-                        document.head.appendChild(script);
-                    });
-                }
+            console.log("[FaceLandmarker] Initializing...");
 
-                // Wait up to 10 seconds for FaceLandmarker to be available
-                await new Promise((resolve, reject) => {
-                    const deadline = Date.now() + 10000;
-                    const check = () => {
-                        if (window.FaceLandmarker && window.FilesetResolver) {
-                            resolve();
-                        } else if (Date.now() > deadline) {
-                            reject(new Error("MediaPipe FaceLandmarker not available after 10s"));
-                        } else {
-                            setTimeout(check, 100);
-                        }
-                    };
-                    check();
-                });
+            // Dynamic ESM import — gives us named exports directly, no window pollution
+            let FaceLandmarker, FilesetResolver;
+            try {
+                const mp = await import(_MP_ESM);
+                FaceLandmarker   = mp.FaceLandmarker;
+                FilesetResolver  = mp.FilesetResolver;
+                if (!FaceLandmarker || !FilesetResolver) {
+                    throw new Error("FaceLandmarker or FilesetResolver not found in module exports. Keys: " + Object.keys(mp).join(", "));
+                }
+                console.log("[FaceLandmarker] MediaPipe module imported OK.");
+            } catch (importErr) {
+                console.error("[FaceLandmarker] ESM import failed:", importErr);
+                throw importErr;
             }
 
-            const filesetResolver = await FilesetResolver.forVisionTasks(_MP_WASM);
+            // Resolve the WASM fileset
+            let filesetResolver;
+            try {
+                filesetResolver = await FilesetResolver.forVisionTasks(_MP_WASM);
+                console.log("[FaceLandmarker] Fileset resolver ready.");
+            } catch (wasmErr) {
+                console.error("[FaceLandmarker] WASM fileset resolver failed:", wasmErr);
+                throw wasmErr;
+            }
 
-            gazeLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
-                baseOptions: {
-                    modelAssetPath: "/static/models/face_landmarker.task",
-                    delegate: "GPU"
-                },
-                runningMode: "VIDEO",
-                numFaces: 1,
-                minFaceDetectionConfidence: 0.5,
-                minFacePresenceConfidence: 0.5,
-                minTrackingConfidence: 0.5
-            });
+            // Load the model
+            try {
+                gazeLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
+                    baseOptions: {
+                        modelAssetPath: "/static/models/face_landmarker.task",
+                        delegate: "GPU"
+                    },
+                    runningMode: "VIDEO",
+                    numFaces: 1,
+                    minFaceDetectionConfidence: 0.5,
+                    minFacePresenceConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+                console.log("[FaceLandmarker] Model loaded successfully.");
+            } catch (modelErr) {
+                // GPU delegate may fail in some browsers — fall back to CPU
+                console.warn("[FaceLandmarker] GPU delegate failed, retrying with CPU:", modelErr);
+                try {
+                    gazeLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
+                        baseOptions: {
+                            modelAssetPath: "/static/models/face_landmarker.task",
+                            delegate: "CPU"
+                        },
+                        runningMode: "VIDEO",
+                        numFaces: 1,
+                        minFaceDetectionConfidence: 0.5,
+                        minFacePresenceConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    });
+                    console.log("[FaceLandmarker] Model loaded successfully (CPU fallback).");
+                } catch (cpuErr) {
+                    console.error("[FaceLandmarker] Model load failed on CPU too:", cpuErr);
+                    throw cpuErr;
+                }
+            }
         }
 
         async function initializeGazeMonitoring() {
@@ -1175,11 +1283,13 @@
             ensureGazeLandmarkerReady().then(() => {
                 if (gazeMonitorActive) {
                     cameraStatusText.textContent = "Monitoring";
+                    setFaceStatus("notdetected"); // model ready; start showing presence
                     console.log("MediaPipe FaceLandmarker ready.");
                 }
             }).catch((mpErr) => {
                 console.warn("MediaPipe failed to load:", mpErr);
                 cameraStatusText.textContent = "Camera active";
+                setFaceStatus("loading"); // keep 'loading' if MP failed
             });
         }
 
@@ -1258,82 +1368,47 @@
 
         function startGazeDetectionLoop() {
             if (!gazeMonitorActive || !gazeVideo) return;
+            console.log("[FaceLandmarker] Detection loop started. Waiting for model...");
+
+            let _lastLoggedState = null;
+            let _noFaceStartTime  = 0;          // when face first disappeared
+            const NO_FACE_DEBOUNCE = 800;        // ms before declaring "no face"
 
             const processFrame = () => {
                 if (!gazeMonitorActive) return;
 
-                // Skip face detection until MediaPipe is loaded; webcam preview still works
-                if (gazeLandmarker && gazeVideo.readyState >= 2) {
-                    const now = performance.now();
-                    const result = gazeLandmarker.detectForVideo(gazeVideo, now);
-                    const faces = result.faceLandmarks || [];
+                if (gazeLandmarker && gazeVideo.readyState >= 2 && gazeVideo.videoWidth > 0) {
+                    let result;
+                    try {
+                        result = gazeLandmarker.detectForVideo(gazeVideo, performance.now());
+                    } catch (detErr) {
+                        console.error("[FaceLandmarker] detectForVideo error:", detErr);
+                        gazeDetectionRafId = requestAnimationFrame(processFrame);
+                        return;
+                    }
+
+                    const faces = (result && result.faceLandmarks) ? result.faceLandmarks : [];
+                    const now   = performance.now();
 
                     if (faces.length > 0) {
-                        // ── Face is visible ────────────────────────────────
-                        gazeLastFaceDetectedAt = now;
-                        const landmarks = faces[0];
-
-                        // Compute eye midpoint
-                        const leftEyeCenter  = getEyeCenter(landmarks, [33, 133, 159, 145, 153, 144], [33, 133, 159, 145, 153, 144]);
-                        const rightEyeCenter = getEyeCenter(landmarks, [362, 263, 387, 373, 390, 374], [362, 263, 387, 373, 390, 374]);
-                        const eyeMid = leftEyeCenter && rightEyeCenter ? {
-                            x: (leftEyeCenter.x + rightEyeCenter.x) / 2,
-                            y: (leftEyeCenter.y + rightEyeCenter.y) / 2
-                        } : null;
-
-                        // Blink suppression — ignore single-frame eye-closed events
-                        const eyeOpen       = computeEyeOpenness(landmarks);
-                        const blinkSuppressed = eyeOpen < 0.012;
-
-                        if (eyeMid && !blinkSuppressed) {
-                            // How far the eye midpoint is from the video center (range -1..1)
-                            const xDelta   = (eyeMid.x - 0.5) * 2;
-                            const yDelta   = (eyeMid.y - 0.5) * 2;
-                            const lookingAway = Math.abs(xDelta) > GAZE_XSHIFT_THRESH ||
-                                               Math.abs(yDelta) > GAZE_YSHIFT_THRESH;
-
-                            if (lookingAway) {
-                                // Start away-timer on first frame of looking away
-                                if (gazeAwayStartTime === 0) gazeAwayStartTime = now;
-                                gazeReturnTime = 0; // not returning yet
-
-                                if (now - gazeAwayStartTime >= GAZE_AWAY_GRACE_MS) {
-                                    showGazeWarning("👀 Please focus on the screen");
-                                }
-                            } else {
-                                // Person is looking at screen
-                                gazeAwayStartTime = 0;
-
-                                // Debounce: only clear the warning after they've held
-                                // eye contact for GAZE_RETURN_DEBOUNCE ms (avoids flicker)
-                                if (gazeWarningVisible) {
-                                    if (gazeReturnTime === 0) gazeReturnTime = now;
-                                    if (now - gazeReturnTime >= GAZE_RETURN_DEBOUNCE) {
-                                        hideGazeWarning();
-                                        gazeReturnTime = 0;
-                                    }
-                                } else {
-                                    gazeReturnTime = 0;
-                                }
-                            }
-
-                            gazeLastEyeCenter = eyeMid;
+                        // Face present — reset no-face timer, update immediately
+                        _noFaceStartTime = 0;
+                        if (_lastLoggedState !== "detected") {
+                            console.log("[FaceLandmarker] FACE DETECTED — landmarks:", faces[0].length);
+                            _lastLoggedState = "detected";
                         }
-                        // else: blink — do nothing, keep current state
-
+                        setFaceStatus("detected");
                     } else {
-                        // ── No face detected ──────────────────────────────
-                        // Give a longer grace before warning — person may have looked
-                        // down at notes or is thinking with head turned
-                        const noFaceDuration = now - gazeLastFaceDetectedAt;
-
-                        if (gazeLastFaceDetectedAt > 0 && noFaceDuration >= GAZE_NOFACE_GRACE_MS) {
-                            // Set away-timer the first time we cross the grace threshold
-                            if (gazeAwayStartTime === 0) gazeAwayStartTime = now;
-                            showGazeWarning("👀 Please look at the screen");
+                        // Debounce: only flip to "no face" after 800 ms of sustained absence
+                        if (_noFaceStartTime === 0) _noFaceStartTime = now;
+                        if (now - _noFaceStartTime >= NO_FACE_DEBOUNCE) {
+                            if (_lastLoggedState !== "noface") {
+                                console.log("[FaceLandmarker] NO FACE");
+                                _lastLoggedState = "noface";
+                            }
+                            setFaceStatus("notdetected");
                         }
-                        // While within grace period — keep warning as-is (don't flicker)
-                        gazeReturnTime = 0;
+                        // Within debounce window — keep current badge, no flicker
                     }
                 }
 

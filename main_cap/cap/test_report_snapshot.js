@@ -1,5 +1,12 @@
-// Phase 10 regression test — Concept Coverage presentation
-// (`rdBuildSnapshot` / the Snapshot render loop in templates/index.html).
+// Concept Coverage removal (product decision, post-Phase-10) — the
+// Performance Snapshot (`rdBuildSnapshot` in templates/index.html) no
+// longer renders a Concept Coverage row at all. The honest, sample-size-
+// qualified presentation from Phase 10 ("Concept Coverage (1 of 10 turns):
+// 0%") was still judged not useful enough to a candidate to keep
+// surfacing -- this is a presentation-only removal; concept_analysis.py,
+// EvaluationResult.concept_coverage, and concept_coverage_percent are all
+// untouched and the backend still computes/sends concept_coverage_pct
+// every turn, it simply isn't read into the Snapshot anymore.
 //
 // Same convention as test_report_coaching.js: no test framework/build step
 // exists for this repo's frontend, so this extracts the EXACT function
@@ -53,8 +60,9 @@ assert.strictEqual(typeof rdBuildSnapshot, "function", "rdBuildSnapshot not extr
 
 // ── render-loop source guard ────────────────────────────────────────────
 // Directly inspects the real snapshotHtml render line in templates/index.html
-// (not a reimplementation) to confirm it branches on typeof row.value before
-// calling .toFixed() and falls back to row.note for non-numeric rows.
+// (not a reimplementation) to confirm it still branches on typeof row.value
+// before calling .toFixed() and falls back to row.note for non-numeric rows
+// -- generic defensive coding, independent of Concept Coverage specifically.
 const renderLine = src.slice(
     src.indexOf('<span class="rd-snapshot-value">'),
     src.indexOf("</span>", src.indexOf('<span class="rd-snapshot-value">')),
@@ -75,60 +83,46 @@ function test(name, fn) {
     console.log(`ok - ${name}`);
 }
 
-// ── rdBuildSnapshot: Concept Coverage cases ─────────────────────────────────
+// ── rdBuildSnapshot: Concept Coverage is absent ─────────────────────────────
 
-test("Case A: null average + 0 applicable turns + 9 total -> Not available, never (0 of 0 turns)", () => {
-    const rows = rdBuildSnapshot(50, {}, null, 0, 9);
-    const row = rows.find(r => r.label.startsWith("Concept Coverage"));
-    assert.ok(row, "expected a Concept Coverage row");
-    assert.strictEqual(row.label, "Concept Coverage");
-    assert.strictEqual(row.value, null);
-    assert.strictEqual(row.note, "Not available");
-});
-
-test("Case A edge case: 0 applicable + 0 total -> Not available, never (0 of 0 turns)", () => {
-    const rows = rdBuildSnapshot(50, {}, null, 0, 0);
-    const row = rows.find(r => r.label.startsWith("Concept Coverage"));
-    assert.strictEqual(row.label, "Concept Coverage");
-    assert.ok(!row.label.includes("of 0 turns"), "must never render (0 of 0 turns)");
-    assert.strictEqual(row.value, null);
-});
-
-test("Case B: 0% + 1 applicable turn + 10 total -> 'Concept Coverage (1 of 10 turns)', value 0", () => {
-    const rows = rdBuildSnapshot(50, {}, 0.0, 1, 10);
-    const row = rows.find(r => r.label.startsWith("Concept Coverage"));
-    assert.strictEqual(row.label, "Concept Coverage (1 of 10 turns)");
-    assert.strictEqual(row.value, 0.0);
-});
-
-test("Case C: 80% + 9 applicable turns + 9 total -> unchanged 'Concept Coverage: 80%'", () => {
-    const rows = rdBuildSnapshot(50, {}, 80.0, 9, 9);
-    const row = rows.find(r => r.label.startsWith("Concept Coverage"));
-    assert.strictEqual(row.label, "Concept Coverage");
-    assert.strictEqual(row.value, 80.0);
-});
-
-test("Overall/dimension rows remain unchanged by any Concept Coverage case", () => {
-    const dimAverages = { technical_accuracy: 0.6, ownership: 0.25 };
-    const a = rdBuildSnapshot(72, dimAverages, null, 0, 9);
-    const b = rdBuildSnapshot(72, dimAverages, 0.0, 1, 10);
-    const c = rdBuildSnapshot(72, dimAverages, 80.0, 9, 9);
-    [a, b, c].forEach((rows) => {
-        assert.strictEqual(rows[0].label, "Overall");
-        assert.strictEqual(rows[0].value, 72);
-        const accRow = rows.find(r => r.label === "Technical Accuracy");
-        const ownRow = rows.find(r => r.label === "Ownership");
-        assert.strictEqual(accRow.value, 60);
-        assert.strictEqual(ownRow.value, 25);
+test("Concept Coverage never appears in the Snapshot, regardless of dimension data", () => {
+    const cases = [
+        {},
+        { technical_accuracy: 0.6, ownership: 0.25 },
+        { technical_accuracy: 1.0, technical_depth: 1.0, communication: 1.0, completeness: 1.0, resume_grounding: 1.0 },
+    ];
+    cases.forEach((dimAverages) => {
+        const rows = rdBuildSnapshot(72, dimAverages);
+        const conceptRow = rows.find(r => r.label.startsWith("Concept Coverage"));
+        assert.strictEqual(conceptRow, undefined, "no row's label may start with 'Concept Coverage'");
     });
 });
 
-test("null-valued row renders safely without calling toFixed (render-loop guard present)", () => {
-    // Exercised directly: the render loop's ternary must never reach
-    // row.value.toFixed(0) when row.value is null.
-    const row = { label: "Concept Coverage", value: null, note: "Not available" };
-    const rendered = typeof row.value === "number" ? row.value.toFixed(0) + "%" : (row.note || "Not available");
-    assert.strictEqual(rendered, "Not available");
+test("rdBuildSnapshot only takes (avgOverallPct, dimAverages) -- no concept-coverage parameters", () => {
+    const src2 = extractBlock(src, "function rdBuildSnapshot(");
+    const signature = src2.slice(0, src2.indexOf(")") + 1);
+    assert.strictEqual(signature, "function rdBuildSnapshot(avgOverallPct, dimAverages)");
+});
+
+test("Overall row is always first and correct", () => {
+    const rows = rdBuildSnapshot(72, { technical_accuracy: 0.6, ownership: 0.25 });
+    assert.strictEqual(rows[0].label, "Overall");
+    assert.strictEqual(rows[0].value, 72);
+});
+
+test("every dimension actually scored this session appears -- not a hardcoded subset", () => {
+    const dimAverages = { technical_accuracy: 0.6, ownership: 0.25 };
+    const rows = rdBuildSnapshot(72, dimAverages);
+    const accRow = rows.find(r => r.label === "Technical Accuracy");
+    const ownRow = rows.find(r => r.label === "Ownership");
+    assert.strictEqual(accRow.value, 60);
+    assert.strictEqual(ownRow.value, 25);
+});
+
+test("a dimension never scored this session is omitted entirely, never shown as 0%", () => {
+    const rows = rdBuildSnapshot(72, { technical_accuracy: 0.6 });
+    const testingRow = rows.find(r => r.label === "Testing");
+    assert.strictEqual(testingRow, undefined);
 });
 
 console.log(`\n${passed} passed`);

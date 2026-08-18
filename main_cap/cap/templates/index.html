@@ -2837,7 +2837,7 @@
         // this just renders the same real numbers editorially. A row is
         // omitted entirely (never shown as 0%) when that dimension never
         // scored this session.
-        function rdBuildSnapshot(avgOverallPct, dimAverages, conceptCoverageAvg, conceptCoverageSampleSize, totalTurns) {
+        function rdBuildSnapshot(avgOverallPct, dimAverages) {
             // Every dimension actually evaluated this session appears here
             // -- not a hardcoded 5-key subset (found during a real
             // production demo: Ownership scored 25%, the session's single
@@ -2853,35 +2853,20 @@
                 if (dimAverages[key] !== undefined) rows.push({ label: RD_DIM_LABELS[key], value: dimAverages[key] * 100 });
             });
 
-            // PHASE 10 FIX (do not revert without re-reading the
-            // investigation): this used to push a bare {label: "Concept
-            // Coverage", value: N} whenever conceptCoverageAvg was non-null
-            // -- with no indication of how many turns that average was
-            // actually computed from. Live-reproduced: a session where only
-            // 1 of 10 turns ever had an applicable concept pool rendered as
-            // an unqualified "Concept Coverage: 0%", indistinguishable from
-            // "the model found zero concept mastery across the whole
-            // interview." Presentation-only fix -- the underlying
-            // calculation (concept_analysis.concept_coverage_percent, the
-            // sum/count aggregate formula, the null-vs-0% distinction) is
-            // untouched; only how the already-correct number is labeled:
-            //   - no applicable turns at all (sampleSize === 0, including
-            //     the 0/0 edge case) -> an explicit "Not available" row,
-            //     never silently omitted and never a fabricated 0%.
-            //   - some but not all turns contributed -> the label names the
-            //     exact sample ("Concept Coverage (1 of 10 turns)") so a low
-            //     percentage can never be misread as session-wide.
-            //   - every turn contributed -> unchanged from before.
-            if (conceptCoverageSampleSize === 0) {
-                rows.push({ label: "Concept Coverage", value: null, note: "Not available" });
-            } else if (conceptCoverageSampleSize < totalTurns) {
-                rows.push({
-                    label: `Concept Coverage (${conceptCoverageSampleSize} of ${totalTurns} turns)`,
-                    value: conceptCoverageAvg,
-                });
-            } else {
-                rows.push({ label: "Concept Coverage", value: conceptCoverageAvg });
-            }
+            // PRODUCT DECISION (post-Phase-10, do not reopen without a new
+            // explicit product requirement): Concept Coverage is
+            // intentionally NOT rendered in this Snapshot. The Phase 10 fix
+            // made the row's honesty problem (a sample-size-blind
+            // percentage) visible rather than hidden -- e.g.
+            // "Concept Coverage (1 of 10 turns): 0%" -- but even the honest
+            // version was judged not useful enough to a candidate to keep
+            // surfacing. This is a presentation-only removal: the
+            // underlying signal (concept_analysis.py, EvaluationResult.
+            // concept_coverage, concept_coverage_percent) is completely
+            // untouched and still computed/sent by the backend every turn;
+            // it simply isn't read into this row anymore. See git history
+            // for the removed conceptCoverageAvg/conceptCoverageSampleSize
+            // calculation this function used to take as parameters.
             return rows;
         }
 
@@ -2990,29 +2975,13 @@
             // reasoningGaps (EvaluationResult.missing_reasoning) for their
             // growth-signal sentence, which IS per-turn evaluator evidence
             // of why that turn scored low. concept_coverage itself is
-            // untouched and still feeds conceptCoverageAvg/the Snapshot
-            // below exactly as before -- it is simply no longer narrated as
-            // personalized coaching prose here.
+            // untouched on the backend, but is no longer read into the
+            // report at all here -- see rdBuildSnapshot's own PRODUCT
+            // DECISION comment for the (separate, later) removal of its
+            // Snapshot row.
 
             const recommendedTopics = uniq(evaluations.flatMap(e => e.recommended_topics || []));
             const dimAverages = rdAllDimensionAverages(evaluations);
-
-            // Concept Coverage: average ONLY turns that carry a value (the
-            // backend sends null, not 0, when a turn has no concept pool --
-            // e.g. experience/certification turns). null (not 0) here means
-            // "never applicable this session". conceptPctValues.length (how
-            // many turns actually contributed) and turnHistory.length (the
-            // session total) are both preserved and passed into
-            // rdBuildSnapshot so it can present the average honestly rather
-            // than as a bare, sample-size-blind percentage -- see that
-            // function's PHASE 10 FIX comment.
-            const conceptPctValues = turnHistory
-                .map(t => t.evaluation && t.evaluation.concept_coverage_pct)
-                .filter(v => typeof v === "number");
-            const conceptCoverageAvg = conceptPctValues.length
-                ? conceptPctValues.reduce((a, b) => a + b, 0) / conceptPctValues.length
-                : null;
-            const conceptCoverageSampleSize = conceptPctValues.length;
 
             const totalQuestions = endData.total_questions || turnHistory.length;
 
@@ -3021,7 +2990,7 @@
                 overall_grade: overallGrade,
                 verdict_text: RD_VERDICT_BY_GRADE[overallGrade],
                 debrief_text: rdBuildDebrief(overallGrade, dimAverages, reasoningGaps, strongestProject, weakestProject, timeline),
-                snapshot: rdBuildSnapshot(avgOverall, dimAverages, conceptCoverageAvg, conceptCoverageSampleSize, turnHistory.length),
+                snapshot: rdBuildSnapshot(avgOverall, dimAverages),
                 next_steps: rdBuildNextSteps(recommendedTopics, reasoningGaps, weakestProject, strongestProject),
                 topics: rdBuildTopics(turnHistory),
                 total_questions: totalQuestions,

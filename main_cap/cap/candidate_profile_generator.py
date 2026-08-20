@@ -2,10 +2,10 @@
 Gemini-powered Candidate Profile Generator.
 
 Uses Pydantic models + google-genai native structured output to parse resumes
-into a CandidateProfile in a single Gemini 2.5 Flash call.
+into a CandidateProfile in a single Gemini 3.6 Flash call.
 
 Architecture:
-    Resume (PDF) -> PyMuPDF extracts text -> Gemini 2.5 Flash
+    Resume (PDF) -> PyMuPDF extracts text -> Gemini 3.6 Flash
         -> Structured CandidateProfile (Pydantic) -> JSON -> Dashboard / Quiz / Interview
 
 Every module after profile generation consumes the generated Candidate Profile
@@ -343,7 +343,7 @@ _MAX_CHARS = 30_000
 
 def generate_candidate_profile(resume_text: str) -> dict:
     """
-    Call Gemini 2.5 Flash once with native structured output to produce a
+    Call Gemini 3.6 Flash once with native structured output to produce a
     CandidateProfile matching the Pydantic schema.
 
     Args:
@@ -377,10 +377,10 @@ def generate_candidate_profile(resume_text: str) -> dict:
     )
 
     # ── First Gemini call with native structured output ───────────────
-    logger.info("Calling Gemini 2.5 Flash (structured output)")
+    logger.info("Calling Gemini 3.6 Flash (structured output)")
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.6-flash",  # <-- updated
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.1,
@@ -415,7 +415,7 @@ def generate_candidate_profile(resume_text: str) -> dict:
         retry_prompt = _RETRY_PROMPT.format(resume_text=truncated)
         try:
             retry_response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-3.6-flash",  # <-- updated
                 contents=retry_prompt,
                 config=types.GenerateContentConfig(
                     temperature=0.2,

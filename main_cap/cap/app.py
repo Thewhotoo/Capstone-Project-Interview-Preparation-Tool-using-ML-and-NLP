@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import os
 import sys
 import logging
+from datetime import datetime
 
 # Load .env file (GEMINI_API_KEY etc.)
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
@@ -26,10 +27,17 @@ if not _gemini_key:
         "║  Set GEMINI_API_KEY in main_cap/cap/.env                   ║\n"
         "╚══════════════════════════════════════════════════════════════╝"
     )
-else:
-    logger.info("GEMINI_API_KEY loaded (%s...)", _gemini_key[:8])
+
 
 app = Flask(__name__, template_folder="templates")
+
+# ── DISABLE CACHING FOR DEVELOPMENT ──────────────────────────────────
+@app.after_request
+def add_no_cache_headers(response):
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 # Base paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -811,6 +819,13 @@ def evaluate():
         logger.error(f"Error: {e}")
         return jsonify({"error": str(e)}), 400
 
+@app.route('/log_violation', methods=['POST'])
+def log_violation():
+    data = request.json
+    with open('violations.log', 'a') as f:
+        f.write(f"{datetime.now()}: {data}\n")
+    return '', 204
+
 @app.route("/roberta/classify", methods=["POST"])
 def roberta_classify():
     """
@@ -1061,7 +1076,7 @@ def _verify_gemini_connectivity():
         from google.genai import types
         client = genai.Client(api_key=api_key)
         resp = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.6-flash",  # <-- updated to gemini-3.6-flash
             contents="Reply with the word OK",
             config=types.GenerateContentConfig(
                 max_output_tokens=8,
@@ -1077,6 +1092,9 @@ def _verify_gemini_connectivity():
 
 
 if __name__ == "__main__":
-    _verify_gemini_connectivity()
+
+    # Connectivity check removed – no extra Gemini call at startup
+
     logger.info("Open your browser: http://localhost:5000")
+
     app.run(debug=False, port=5000, threaded=True, use_reloader=False)

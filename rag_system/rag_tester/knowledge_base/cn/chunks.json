@@ -1,0 +1,2685 @@
+[
+  {
+    "id": 0,
+    "page": 1,
+    "text": "and the Internet Department of Computer Science and Engineering",
+    "embedding_text": "Heading: Computer Networks, Team Networks | Concepts: COMPUTER NETWORKS, Computer Networks, Team Networks | and the Internet Department of Computer Science and Engineering",
+    "headings": [
+      "Computer Networks",
+      "Team Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Computer Networks",
+      "Team Networks"
+    ]
+  },
+  {
+    "id": 1,
+    "page": 2,
+    "text": "Computer Networking: A Top-Down Jim Kurose, Keith Ross",
+    "embedding_text": "Heading: Text Book, Computer Networks, Computer Networking, Jim Kurose, Keith Ross, Pearson, 2017 | Concepts: COMPUTER NETWORKS, Computer Networking: A Top-Down, Jim Kurose, Keith Ross | Computer Networking: A Top-Down Jim Kurose, Keith Ross",
+    "headings": [
+      "Text Book",
+      "Computer Networks",
+      "Computer Networking",
+      "Jim Kurose, Keith Ross",
+      "Pearson, 2017"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Computer Networking: A Top-Down",
+      "Jim Kurose, Keith Ross"
+    ]
+  },
+  {
+    "id": 2,
+    "page": 3,
+    "text": "Computer Networks and the Internet Department of Computer Science and Engineering",
+    "embedding_text": "Heading: Computer Networks, Team Networks | Concepts: COMPUTER NETWORKS, Team Networks | Computer Networks and the Internet Department of Computer Science and Engineering",
+    "headings": [
+      "Computer Networks",
+      "Team Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Team Networks"
+    ]
+  },
+  {
+    "id": 3,
+    "page": 4,
+    "text": "1.1 Introduction to Computer Networks 1.2 What is the Internet? A nuts-and-bolts and Services description, Protocol 1.3 Network edge End systems, Access networks, Physical media 1.4 Network core Packet switching, Circuit switching, Network structure 1.5 Delay, Loss & Throughput in networks 1.6 Protocol layers, Service models OSI model and TCP/IP protocol suite Unit – 1 Computer Networks and the Internet",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS, A nuts-and-bolts and Services description, Protocol, OSI model and TCP/IP protocol suite | 1.1 Introduction to Computer Networks 1.2 What is the Internet? A nuts-and-bolts and Services description, Protocol 1.3 Network edge End systems, Access networks, Physical media 1.4 Network core Packet switching, Circuit switching, Network structure 1.5 Delay, Loss & Throughput in networks 1.6 Protocol layers, Service models OSI model and TCP/IP protocol suite Unit – 1 Computer Networks and the Internet",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "A nuts-and-bolts and Services description, Protocol",
+      "OSI model and TCP/IP protocol suite"
+    ]
+  },
+  {
+    "id": 4,
+    "page": 5,
+    "text": "Introduction to Computer Networks Two or more devices connected together. Communicate with each other, share data or",
+    "embedding_text": "Heading: Introduction to Computer Networks, Computer Networks | Concepts: Introduction to Computer Networks, COMPUTER NETWORKS | Introduction to Computer Networks Two or more devices connected together. Communicate with each other, share data or",
+    "headings": [
+      "Introduction to Computer Networks",
+      "Computer Networks"
+    ],
+    "concepts": [
+      "Introduction to Computer Networks",
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 5,
+    "page": 6,
+    "text": "What is the Internet? A massive network of networks. A computer network that interconnects billions of computing devices throughout the world. Traditional devices – PCs, Workstations, Servers – web pages, emails, etc. Internet “things” – laptops, PDAs, TVs, gaming consoles, home security systems, home appliances, watches, cars, traffic control systems, etc.,",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | What is the Internet? A massive network of networks. A computer network that interconnects billions of computing devices throughout the world. Traditional devices – PCs, Workstations, Servers – web pages, emails, etc. Internet “things” – laptops, PDAs, TVs, gaming consoles, home security systems, home appliances, watches, cars, traffic control systems, etc.,",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 6,
+    "page": 7,
+    "text": "national or global ISP The Internet: A “Nuts and Bolts” View Packet switches: forward packets (chunks of data) ▪fiber, copper, radio, satellite ▪transmission rate: bandwidth Billions of connected ▪hosts = end systems ▪running network apps at ▪collection of devices, routers, links: managed by an organization",
+    "embedding_text": "Heading: The Internet, Computer Networks, Packet switches, Communication links, Billions of connected, Internet’s “edge” | Concepts: COMPUTER NETWORKS, Packet switches: forward, Communication links, Billions of connected, Internet’s “edge” | national or global ISP The Internet: A “Nuts and Bolts” View Packet switches: forward packets (chunks of data) ▪fiber, copper, radio, satellite ▪transmission rate: bandwidth Billions of connected ▪hosts = end systems ▪running network apps at ▪collection of devices, routers, links: managed by an organization",
+    "headings": [
+      "The Internet",
+      "Computer Networks",
+      "Packet switches",
+      "Communication links",
+      "Billions of connected",
+      "Internet’s “edge”"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Packet switches: forward",
+      "Communication links",
+      "Billions of connected",
+      "Internet’s “edge”"
+    ]
+  },
+  {
+    "id": 7,
+    "page": 8,
+    "text": "“Fun” Inter-connected Devices IP picture frame Web-enabled toaster + control cable TV There will be 41 Billion IoT devices by",
+    "embedding_text": "Heading: Computer Networks, IP picture frame, Web-enabled toaster +, Internet phones, Slingbox: remote, Tweet-a-watt:, Security Camera, Billion IoT devices by | Concepts: COMPUTER NETWORKS, IP picture frame, Web-enabled toaster +, Internet phones, Slingbox: remote, Security Camera, Amazon Echo, AR devices | “Fun” Inter-connected Devices IP picture frame Web-enabled toaster + control cable TV There will be 41 Billion IoT devices by",
+    "headings": [
+      "Computer Networks",
+      "IP picture frame",
+      "Web-enabled toaster +",
+      "Internet phones",
+      "Slingbox: remote",
+      "Tweet-a-watt:",
+      "Security Camera",
+      "Billion IoT devices by"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "IP picture frame",
+      "Web-enabled toaster +",
+      "Internet phones",
+      "Slingbox: remote",
+      "Security Camera",
+      "Amazon Echo",
+      "AR devices"
+    ]
+  },
+  {
+    "id": 8,
+    "page": 9,
+    "text": "The Internet: A “Nuts and Bolts” View Internet: “network of networks” national or global ISP RFC: Request for Comments IETF: Internet Engineering Task Force ▪Protocols are everywhere control sending, receiving of messages e.g., HTTP (Web), streaming video, Skype, TCP, IP, WiFi, 4G/5G, Ethernet",
+    "embedding_text": "Heading: The Internet, Computer Networks, Http, Ip, Tcp, Streaming | Concepts: COMPUTER NETWORKS, Internet: “network of networks”, Interconnected ISPs, RFC: Request for Comments, IETF: Internet Engineering Task Force | The Internet: A “Nuts and Bolts” View Internet: “network of networks” national or global ISP RFC: Request for Comments IETF: Internet Engineering Task Force ▪Protocols are everywhere control sending, receiving of messages e.g., HTTP (Web), streaming video, Skype, TCP, IP, WiFi, 4G/5G, Ethernet",
+    "headings": [
+      "The Internet",
+      "Computer Networks",
+      "Http",
+      "Ip",
+      "Tcp",
+      "Streaming"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Internet: “network of networks”",
+      "Interconnected ISPs",
+      "RFC: Request for Comments",
+      "IETF: Internet Engineering Task Force"
+    ]
+  },
+  {
+    "id": 9,
+    "page": 10,
+    "text": "The Internet: A “Service” View Infrastructure that provides services to Web, streaming video, multimedia teleconferencing, email, games, e- commerce, social media, inter-connected national or global ISP ▪provides programming interface to “hooks” allowing sending/receiving  apps to “connect” to, use  Internet transport provides service options, analogous to",
+    "embedding_text": "Heading: Computer Networks, The Internet, Http, Streaming | Concepts: COMPUTER NETWORKS | The Internet: A “Service” View Infrastructure that provides services to Web, streaming video, multimedia teleconferencing, email, games, e- commerce, social media, inter-connected national or global ISP ▪provides programming interface to “hooks” allowing sending/receiving  apps to “connect” to, use  Internet transport provides service options, analogous to",
+    "headings": [
+      "Computer Networks",
+      "The Internet",
+      "Http",
+      "Streaming"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 10,
+    "page": 11,
+    "text": "What is a Protocol? ▪“what’s the time?” ▪“I have a question” … specific messages sent … specific actions taken when message received, or other ▪computers (devices) rather than humans ▪all communication activity in Internet governed by protocols Protocols define the format, order of messages sent and received among network entities, and actions taken on msg transmission, receipt.",
+    "embedding_text": "Heading: Computer Networks, Human protocols:, Network protocols: | Concepts: COMPUTER NETWORKS | What is a Protocol? ▪“what’s the time?” ▪“I have a question” … specific messages sent … specific actions taken when message received, or other ▪computers (devices) rather than humans ▪all communication activity in Internet governed by protocols Protocols define the format, order of messages sent and received among network entities, and actions taken on msg transmission, receipt.",
+    "headings": [
+      "Computer Networks",
+      "Human protocols:",
+      "Network protocols:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 11,
+    "page": 12,
+    "text": "What’s a Protocol? A human protocol and a computer network protocol: Q: other human protocols?",
+    "embedding_text": "Heading: Computer Networks, TCP connection, Get | Concepts: COMPUTER NETWORKS, TCP connection | What’s a Protocol? A human protocol and a computer network protocol: Q: other human protocols?",
+    "headings": [
+      "Computer Networks",
+      "TCP connection",
+      "Get"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "TCP connection"
+    ]
+  },
+  {
+    "id": 12,
+    "page": 13,
+    "text": "Network Edge: A closer look at network structure national or global ISP Hosts: clients & servers Servers in data centers",
+    "embedding_text": "Heading: Network Edge, Computer Networks, Network edge: | Concepts: COMPUTER NETWORKS, Hosts: clients & servers, Servers in data centers | Network Edge: A closer look at network structure national or global ISP Hosts: clients & servers Servers in data centers",
+    "headings": [
+      "Network Edge",
+      "Computer Networks",
+      "Network edge:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Hosts: clients & servers",
+      "Servers in data centers"
+    ]
+  },
+  {
+    "id": 13,
+    "page": 14,
+    "text": "national or global ISP Hosts: clients & servers Servers in data centers Access networks, physical media: wired, wireless communication links Network Edge: A closer look at network structure",
+    "embedding_text": "Heading: Computer Networks, Network edge:, Network Edge | Concepts: COMPUTER NETWORKS, Hosts: clients & servers, Servers in data centers | national or global ISP Hosts: clients & servers Servers in data centers Access networks, physical media: wired, wireless communication links Network Edge: A closer look at network structure",
+    "headings": [
+      "Computer Networks",
+      "Network edge:",
+      "Network Edge"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Hosts: clients & servers",
+      "Servers in data centers"
+    ]
+  },
+  {
+    "id": 14,
+    "page": 15,
+    "text": "Network Edge: A closer look at network structure Hosts: clients and servers Servers in data centers Access networks, physical wired, wireless communication network of networks national or global ISP",
+    "embedding_text": "Heading: Computer Networks, Network Edge, Network edge:, Network core: | Concepts: COMPUTER NETWORKS, Hosts: clients and servers, Servers in data centers, Access networks, physical | Network Edge: A closer look at network structure Hosts: clients and servers Servers in data centers Access networks, physical wired, wireless communication network of networks national or global ISP",
+    "headings": [
+      "Computer Networks",
+      "Network Edge",
+      "Network edge:",
+      "Network core:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Hosts: clients and servers",
+      "Servers in data centers",
+      "Access networks, physical"
+    ]
+  },
+  {
+    "id": 15,
+    "page": 16,
+    "text": "Network Edge: Access networks and Physical media national or global ISP Q: How to connect end systems to edge router? Residential access networks Institutional access networks (school, Mobile access networks (WiFi, 4G/5G) What to look for: ▪Transmission rate  (bits per second) of access network? ▪Shared or dedicated access among",
+    "embedding_text": "Heading: Computer Networks, Network Edge, What to look for: | Concepts: COMPUTER NETWORKS, Residential access networks | Network Edge: Access networks and Physical media national or global ISP Q: How to connect end systems to edge router? Residential access networks Institutional access networks (school, Mobile access networks (WiFi, 4G/5G) What to look for: ▪Transmission rate  (bits per second) of access network? ▪Shared or dedicated access among",
+    "headings": [
+      "Computer Networks",
+      "Network Edge",
+      "What to look for:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Residential access networks"
+    ]
+  },
+  {
+    "id": 16,
+    "page": 17,
+    "text": "Network Edge: Access Networks - Digital Subscriber Line (DSL) voice, data transmitted at different frequencies over dedicated line to central office ▪use existing telephone line to central office DSLAM data over DSL phone line goes to Internet voice over DSL phone line goes to telephone net ▪A high-speed downstream channel, in the 50 kHz to 1 MHz band ▪A medium-speed upstream channel, in the 4 kHz to 50 kHz band ▪An ordinary two-way telephone channel, in the 0 to 4 kHz band 24-52 Mbps – downstream 3.5-16 Mbps – upstream",
+    "embedding_text": "Heading: Computer Networks, Network Edge, Isp, Dslam, Dsl, DSL access | Concepts: COMPUTER NETWORKS, DSL access, Asymmetric access | Network Edge: Access Networks - Digital Subscriber Line (DSL) voice, data transmitted at different frequencies over dedicated line to central office ▪use existing telephone line to central office DSLAM data over DSL phone line goes to Internet voice over DSL phone line goes to telephone net ▪A high-speed downstream channel, in the 50 kHz to 1 MHz band ▪A medium-speed upstream channel, in the 4 kHz to 50 kHz band ▪An ordinary two-way telephone channel, in the 0 to 4 kHz band 24-52 Mbps – downstream 3.5-16 Mbps – upstream",
+    "headings": [
+      "Computer Networks",
+      "Network Edge",
+      "Isp",
+      "Dslam",
+      "Dsl",
+      "DSL access"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "DSL access",
+      "Asymmetric access"
+    ]
+  },
+  {
+    "id": 17,
+    "page": 18,
+    "text": "Network Edge: Access Networks: Cable-based  access Frequency division multiplexing (FDM): different channels transmitted in different frequency bands",
+    "embedding_text": "Heading: Computer Networks, Network Edge, Frequency division multiplexing (FDM) | Concepts: COMPUTER NETWORKS | Network Edge: Access Networks: Cable-based  access Frequency division multiplexing (FDM): different channels transmitted in different frequency bands",
+    "headings": [
+      "Computer Networks",
+      "Network Edge",
+      "Frequency division multiplexing (FDM)"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 18,
+    "page": 19,
+    "text": "Network Edge: Access Networks: Cable-based  access data, TV transmitted at different frequencies over shared cable ▪HFC: hybrid fiber coax up to 40 Mbps – 1.2 Gbs downstream transmission rate, 30-100 Mbps upstream transmission rate ▪Network of cable, fiber attaches homes to ISP router homes share access network to cable headend",
+    "embedding_text": "Heading: Computer Networks, Network Edge, Cmts, Isp | Concepts: COMPUTER NETWORKS | Network Edge: Access Networks: Cable-based  access data, TV transmitted at different frequencies over shared cable ▪HFC: hybrid fiber coax up to 40 Mbps – 1.2 Gbs downstream transmission rate, 30-100 Mbps upstream transmission rate ▪Network of cable, fiber attaches homes to ISP router homes share access network to cable headend",
+    "headings": [
+      "Computer Networks",
+      "Network Edge",
+      "Cmts",
+      "Isp"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 19,
+    "page": 20,
+    "text": "Network Edge: Access Networks – Home access to/from headend or cable or DSL modem router, firewall, NAT wired Ethernet (1 Gbps) WiFi wireless access point (54, 450 Mbps) in single box",
+    "embedding_text": "Heading: Computer Networks, Network Edge, WiFi wireless access | Concepts: COMPUTER NETWORKS, WiFi wireless access | Network Edge: Access Networks – Home access to/from headend or cable or DSL modem router, firewall, NAT wired Ethernet (1 Gbps) WiFi wireless access point (54, 450 Mbps) in single box",
+    "headings": [
+      "Computer Networks",
+      "Network Edge",
+      "WiFi wireless access"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "WiFi wireless access"
+    ]
+  },
+  {
+    "id": 20,
+    "page": 21,
+    "text": "Network Edge: Access Networks – Enterprise networks ▪companies, universities, etc. ▪mix of wired, wireless link technologies, connecting a mix of switches and routers (we’ll cover differences shortly) ▪Ethernet: wired access at 100Mbps, 1Gbps, 10Gbps ▪WiFi: wireless access points at 11, 54, 450 Mbps",
+    "embedding_text": "Heading: Computer Networks, Network Edge, Enterprise link, ISP (Internet) | Concepts: COMPUTER NETWORKS, Enterprise link | Network Edge: Access Networks – Enterprise networks ▪companies, universities, etc. ▪mix of wired, wireless link technologies, connecting a mix of switches and routers (we’ll cover differences shortly) ▪Ethernet: wired access at 100Mbps, 1Gbps, 10Gbps ▪WiFi: wireless access points at 11, 54, 450 Mbps",
+    "headings": [
+      "Computer Networks",
+      "Network Edge",
+      "Enterprise link",
+      "ISP (Internet)"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Enterprise link"
+    ]
+  },
+  {
+    "id": 21,
+    "page": 22,
+    "text": "Network Edge: Wireless Access Networks Shared wireless access network connects end system to router ▪via base station aka “access point” Wireless local area networks (WLANs) ▪typically within or around building (~100 ▪802.11b/g/n (WiFi): 11, 54, 450 Mbps Wide-area cellular access networks ▪provided by mobile, cellular network operator (10’s km) ▪4G/5G cellular networks (6G coming)",
+    "embedding_text": "Heading: Computer Networks, Network Edge, Wide-area cellular access networks | Concepts: COMPUTER NETWORKS, Wide-area cellular access networks | Network Edge: Wireless Access Networks Shared wireless access network connects end system to router ▪via base station aka “access point” Wireless local area networks (WLANs) ▪typically within or around building (~100 ▪802.11b/g/n (WiFi): 11, 54, 450 Mbps Wide-area cellular access networks ▪provided by mobile, cellular network operator (10’s km) ▪4G/5G cellular networks (6G coming)",
+    "headings": [
+      "Computer Networks",
+      "Network Edge",
+      "Wide-area cellular access networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Wide-area cellular access networks"
+    ]
+  },
+  {
+    "id": 22,
+    "page": 23,
+    "text": "Network Edge: Physical media ▪bit: propagates between ▪physical link: what lies between transmitter & receiver signals propagate in solid media: copper, fiber, coax signals propagate freely, e.g., Twisted pair (TP) ▪two insulated copper wires (STP & UTP) Category 5: 100 Mbps, 1 Gbps Category 6: 10Gbps Ethernet",
+    "embedding_text": "Heading: Computer Networks, Network Edge, Twisted pair (TP) | Concepts: COMPUTER NETWORKS, Network Edge: Physical media | Network Edge: Physical media ▪bit: propagates between ▪physical link: what lies between transmitter & receiver signals propagate in solid media: copper, fiber, coax signals propagate freely, e.g., Twisted pair (TP) ▪two insulated copper wires (STP & UTP) Category 5: 100 Mbps, 1 Gbps Category 6: 10Gbps Ethernet",
+    "headings": [
+      "Computer Networks",
+      "Network Edge",
+      "Twisted pair (TP)"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Network Edge: Physical media"
+    ]
+  },
+  {
+    "id": 23,
+    "page": 24,
+    "text": "Network Edge: Physical media ▪two concentric copper ▪concentric rather than parallel multiple frequency channels on 100’s Mbps per channel Fiber optic cable: ▪glass fiber carrying light pulses, each pulse a bit transmission (10’s-100’s Gbps) ▪low error rate: repeaters spaced far apart immune to electromagnetic",
+    "embedding_text": "Heading: Computer Networks, Network Edge, Coaxial cable:, Fiber optic cable: | Concepts: COMPUTER NETWORKS, Network Edge: Physical media | Network Edge: Physical media ▪two concentric copper ▪concentric rather than parallel multiple frequency channels on 100’s Mbps per channel Fiber optic cable: ▪glass fiber carrying light pulses, each pulse a bit transmission (10’s-100’s Gbps) ▪low error rate: repeaters spaced far apart immune to electromagnetic",
+    "headings": [
+      "Computer Networks",
+      "Network Edge",
+      "Coaxial cable:",
+      "Fiber optic cable:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Network Edge: Physical media"
+    ]
+  },
+  {
+    "id": 24,
+    "page": 25,
+    "text": "Network Edge: Physical media ▪signal carried in ▪no physical “wire” ▪broadcast and “half-duplex” (sender to receiver) obstruction by objects Radio link types: up to 45 Mbps channels ▪Wireless LAN (WiFi) Up to 100’s Mbps ▪wide-area (e.g., cellular) 4G cellular: ~ 10’s Mbps up to 45 Mbps per channel 280 msec end-end delay geosynchronous vs. low-",
+    "embedding_text": "Heading: Computer Networks, Network Edge, Wireless radio, Radio link types: | Concepts: COMPUTER NETWORKS, Network Edge: Physical media, Wireless radio | Network Edge: Physical media ▪signal carried in ▪no physical “wire” ▪broadcast and “half-duplex” (sender to receiver) obstruction by objects Radio link types: up to 45 Mbps channels ▪Wireless LAN (WiFi) Up to 100’s Mbps ▪wide-area (e.g., cellular) 4G cellular: ~ 10’s Mbps up to 45 Mbps per channel 280 msec end-end delay geosynchronous vs. low-",
+    "headings": [
+      "Computer Networks",
+      "Network Edge",
+      "Wireless radio",
+      "Radio link types:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Network Edge: Physical media",
+      "Wireless radio"
+    ]
+  },
+  {
+    "id": 25,
+    "page": 26,
+    "text": "mesh of interconnected routers packet-switching: hosts break application-layer messages into forward packets from one router to the next, across links on path from source to destination each packet transmitted at full link national or global",
+    "embedding_text": "Heading: Computer Networks, Network Core, Isp | Concepts: COMPUTER NETWORKS, Network Core | mesh of interconnected routers packet-switching: hosts break application-layer messages into forward packets from one router to the next, across links on path from source to destination each packet transmitted at full link national or global",
+    "headings": [
+      "Computer Networks",
+      "Network Core",
+      "Isp"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Network Core"
+    ]
+  },
+  {
+    "id": 26,
+    "page": 27,
+    "text": "Hosts: Send packets of data Host sending function: ▪takes application message ▪breaks into smaller chunks, known as packets, of length L ▪transmits packet into access network at transmission rate R link transmission rate, aka link capacity, aka link R: link transmission rate L bits each time needed to packet into link",
+    "embedding_text": "Heading: Computer Networks, Host sending function:, R: link transmission rate, L bits each, R (bits/sec) | Concepts: COMPUTER NETWORKS, R: link transmission rate | Hosts: Send packets of data Host sending function: ▪takes application message ▪breaks into smaller chunks, known as packets, of length L ▪transmits packet into access network at transmission rate R link transmission rate, aka link capacity, aka link R: link transmission rate L bits each time needed to packet into link",
+    "headings": [
+      "Computer Networks",
+      "Host sending function:",
+      "R: link transmission rate",
+      "L bits each",
+      "R (bits/sec)"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "R: link transmission rate"
+    ]
+  },
+  {
+    "id": 27,
+    "page": 28,
+    "text": "Network Core: Packet Switching: store-and-forward Transmission delay: takes L/R seconds to transmit (push out) L-bit packet into link at Store and forward: entire packet must arrive at router before it can be transmitted on next link End-end delay: 2L/R (above), assuming zero propagation delay (more on delay One-hop numerical example: ▪L = 10 Kbits ▪R = 100 Mbps ▪one-hop transmission delay = 0.1 msec",
+    "embedding_text": "Heading: Computer Networks, Network Core, One-hop numerical example: | Concepts: COMPUTER NETWORKS, Store and forward: entire packet must | Network Core: Packet Switching: store-and-forward Transmission delay: takes L/R seconds to transmit (push out) L-bit packet into link at Store and forward: entire packet must arrive at router before it can be transmitted on next link End-end delay: 2L/R (above), assuming zero propagation delay (more on delay One-hop numerical example: ▪L = 10 Kbits ▪R = 100 Mbps ▪one-hop transmission delay = 0.1 msec",
+    "headings": [
+      "Computer Networks",
+      "Network Core",
+      "One-hop numerical example:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Store and forward: entire packet must"
+    ]
+  },
+  {
+    "id": 28,
+    "page": 29,
+    "text": "Network Core: Packet Switching: queuing delay, loss Packet queuing and loss: if arrival rate (in bps) to link exceeds transmission rate (bps) of link for a period of time: packets will queue, waiting to be transmitted on output link packets can be dropped (lost) if memory (buffer) in router fills up R = 100 Mb/s R = 1.5 Mb/s queue of packets waiting for output link",
+    "embedding_text": "Heading: Computer Networks, Network Core, Packet queuing and loss, R = 100 Mb/s, R = 1.5 Mb/s | Concepts: COMPUTER NETWORKS | Network Core: Packet Switching: queuing delay, loss Packet queuing and loss: if arrival rate (in bps) to link exceeds transmission rate (bps) of link for a period of time: packets will queue, waiting to be transmitted on output link packets can be dropped (lost) if memory (buffer) in router fills up R = 100 Mb/s R = 1.5 Mb/s queue of packets waiting for output link",
+    "headings": [
+      "Computer Networks",
+      "Network Core",
+      "Packet queuing and loss",
+      "R = 100 Mb/s",
+      "R = 1.5 Mb/s"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 29,
+    "page": 30,
+    "text": "Network Core: Two Key Network Core Functions local action: move input link to router output link destination address in arriving header value output link taken by packets local forwarding table local forwarding table",
+    "embedding_text": "Heading: Computer Networks, Network Core, Forwarding: | Concepts: COMPUTER NETWORKS | Network Core: Two Key Network Core Functions local action: move input link to router output link destination address in arriving header value output link taken by packets local forwarding table local forwarding table",
+    "headings": [
+      "Computer Networks",
+      "Network Core",
+      "Forwarding:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 30,
+    "page": 31,
+    "text": "Network Core: Circuit Switching end-end resources allocated to, reserved for “call” between source and destination (eg: telephone) in diagram, each link has four circuits. call gets 2nd circuit in top link and 1st circuit in right link. dedicated resources: no sharing circuit segment idle if not used by call commonly used in traditional telephone",
+    "embedding_text": "Heading: Computer Networks, Network Core | Concepts: COMPUTER NETWORKS, Network Core: Circuit Switching | Network Core: Circuit Switching end-end resources allocated to, reserved for “call” between source and destination (eg: telephone) in diagram, each link has four circuits. call gets 2nd circuit in top link and 1st circuit in right link. dedicated resources: no sharing circuit segment idle if not used by call commonly used in traditional telephone",
+    "headings": [
+      "Computer Networks",
+      "Network Core"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Network Core: Circuit Switching"
+    ]
+  },
+  {
+    "id": 31,
+    "page": 32,
+    "text": "Multiplexing in Circuit Switched Networks: FDM & TDM Frequency Division Multiplexing optical, electromagnetic frequencies divided into (narrow) frequency each call allocated its own band, can transmit at max rate of that narrow Time Division Multiplexing ▪time divided into frames -> slots ▪each call allocated periodic slot(s), can transmit at maximum rate of (wider) frequency band, but only during its time slot(s)",
+    "embedding_text": "Heading: Computer Networks, Multiplexing in Circuit Switched Networks, Frequency Division Multiplexing, Time Division Multiplexing | Concepts: COMPUTER NETWORKS, Frequency Division Multiplexing, Time Division Multiplexing | Multiplexing in Circuit Switched Networks: FDM & TDM Frequency Division Multiplexing optical, electromagnetic frequencies divided into (narrow) frequency each call allocated its own band, can transmit at max rate of that narrow Time Division Multiplexing ▪time divided into frames -> slots ▪each call allocated periodic slot(s), can transmit at maximum rate of (wider) frequency band, but only during its time slot(s)",
+    "headings": [
+      "Computer Networks",
+      "Multiplexing in Circuit Switched Networks",
+      "Frequency Division Multiplexing",
+      "Time Division Multiplexing"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Frequency Division Multiplexing",
+      "Time Division Multiplexing"
+    ]
+  },
+  {
+    "id": 32,
+    "page": 33,
+    "text": "Network Core: Packet Switching vs Circuit Switching ▪1 Gb/s link 100 Mb/s when “active” active 10% of time packet switching allows more users to use network! 1 Gbps link Check out the online interactive exercises for more examples: http://gaia.cs.umass.edu/kurose_ross/interactive ▪circuit-switching: 10 users ▪packet switching: with 35 users, ▪probability > 10 active users at same time is less than .0004 * ▪10 or few active users, probability 0.9996 Q: how did we get value 0.0004? Q: what happens if > 35 users ?",
+    "embedding_text": "Heading: Computer Networks, Network Core | Concepts: COMPUTER NETWORKS | Network Core: Packet Switching vs Circuit Switching ▪1 Gb/s link 100 Mb/s when “active” active 10% of time packet switching allows more users to use network! 1 Gbps link Check out the online interactive exercises for more examples: http://gaia.cs.umass.edu/kurose_ross/interactive ▪circuit-switching: 10 users ▪packet switching: with 35 users, ▪probability > 10 active users at same time is less than .0004 * ▪10 or few active users, probability 0.9996 Q: how did we get value 0.0004? Q: what happens if > 35 users ?",
+    "headings": [
+      "Computer Networks",
+      "Network Core"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 33,
+    "page": 34,
+    "text": "Network Core: Packet Switching vs Circuit Switching ▪great for “bursty” data – sometimes has data to send, but at other times simpler, no call setup ▪excessive congestion possible: packet delay and loss due to buffer overflow protocols needed for reliable data transfer, congestion control ▪Q: How to provide circuit-like behavior? bandwidth guarantees traditionally used for audio/video applications Is packet switching a “slam dunk winner”? Q: human analogies of reserved resources (circuit switching) versus on-demand allocation (packet switching)?",
+    "embedding_text": "Heading: Computer Networks, Network Core | Concepts: COMPUTER NETWORKS | Network Core: Packet Switching vs Circuit Switching ▪great for “bursty” data – sometimes has data to send, but at other times simpler, no call setup ▪excessive congestion possible: packet delay and loss due to buffer overflow protocols needed for reliable data transfer, congestion control ▪Q: How to provide circuit-like behavior? bandwidth guarantees traditionally used for audio/video applications Is packet switching a “slam dunk winner”? Q: human analogies of reserved resources (circuit switching) versus on-demand allocation (packet switching)?",
+    "headings": [
+      "Computer Networks",
+      "Network Core"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 34,
+    "page": 35,
+    "text": "Packet Switching vs Circuit Switching – Numerical Example ▪How long does it take to send a file of 640,000 bits (1 byte = 8 bits) from host A to host B over a circuit-switched network? All links are 1.536 Mbps Each link uses TDM with 24 slots/sec 500 msec to establish end-to-end circuit Let’s work it out!",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Packet Switching vs Circuit Switching – Numerical Example ▪How long does it take to send a file of 640,000 bits (1 byte = 8 bits) from host A to host B over a circuit-switched network? All links are 1.536 Mbps Each link uses TDM with 24 slots/sec 500 msec to establish end-to-end circuit Let’s work it out!",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 35,
+    "page": 36,
+    "text": "Packet Switching vs Circuit Switching – Numerical Example ▪How long does it take to send a file of 640,000 bits (1 byte = 8 bits) from host A to host B over a circuit-switched network? All links are 1.536 Mbps Each link uses TDM with 24 slots/sec 500 msec to establish end-to-end circuit Let’s work it out! ▪Each circuit has a transmission rate of (1.536 Mbps)/24 = 64 kbps ▪It takes (640,000 bits)/(64 kbps) = 10 seconds to transmit the file ▪To this 10 seconds we add the circuit establishment time, giving 10.5 seconds to send the file",
+    "embedding_text": "Heading: Computer Networks, Solution: | Concepts: COMPUTER NETWORKS | Packet Switching vs Circuit Switching – Numerical Example ▪How long does it take to send a file of 640,000 bits (1 byte = 8 bits) from host A to host B over a circuit-switched network? All links are 1.536 Mbps Each link uses TDM with 24 slots/sec 500 msec to establish end-to-end circuit Let’s work it out! ▪Each circuit has a transmission rate of (1.536 Mbps)/24 = 64 kbps ▪It takes (640,000 bits)/(64 kbps) = 10 seconds to transmit the file ▪To this 10 seconds we add the circuit establishment time, giving 10.5 seconds to send the file",
+    "headings": [
+      "Computer Networks",
+      "Solution:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 36,
+    "page": 37,
+    "text": "Network Core: Packet Switching vs Circuit Switching Designed for data Out of order, assembled at Forward, Store & Fwd Bandwidth is saved Transmission of data – Designed for voice Message received in same FDM & TDM Bandwidth is wasted Transmission of data – Call setup delay",
+    "embedding_text": "Heading: Computer Networks, Network Core, Source, routers | Concepts: COMPUTER NETWORKS, Designed for data, Out of order, assembled at, Forward, Store & Fwd, Network layer, Bandwidth is saved, Transmission of data –, Source, routers, Transmission delay, Connection oriented | Network Core: Packet Switching vs Circuit Switching Designed for data Out of order, assembled at Forward, Store & Fwd Bandwidth is saved Transmission of data – Designed for voice Message received in same FDM & TDM Bandwidth is wasted Transmission of data – Call setup delay",
+    "headings": [
+      "Computer Networks",
+      "Network Core",
+      "Source, routers"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Designed for data",
+      "Out of order, assembled at",
+      "Forward, Store & Fwd",
+      "Network layer",
+      "Bandwidth is saved",
+      "Transmission of data –",
+      "Source, routers",
+      "Transmission delay",
+      "Connection oriented"
+    ]
+  },
+  {
+    "id": 37,
+    "page": 38,
+    "text": "Internet Structure: a “network of networks” ❖End systems connect to Internet via access ISPs (Internet Service ▪Residential, company and university ISPs ❖Access ISPs in turn must be interconnected. ❖So that any two hosts can send packets to each other ❖Resulting network of networks is very complex ❖Evolution was driven by economics and national policies ❖Let’s take a stepwise approach to describe current Internet",
+    "embedding_text": "Heading: Computer Networks, Internet Structure, Providers) | Concepts: COMPUTER NETWORKS | Internet Structure: a “network of networks” ❖End systems connect to Internet via access ISPs (Internet Service ▪Residential, company and university ISPs ❖Access ISPs in turn must be interconnected. ❖So that any two hosts can send packets to each other ❖Resulting network of networks is very complex ❖Evolution was driven by economics and national policies ❖Let’s take a stepwise approach to describe current Internet",
+    "headings": [
+      "Computer Networks",
+      "Internet Structure",
+      "Providers)"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 38,
+    "page": 39,
+    "text": "Internet Structure: a “network of networks” Question: given millions of access ISPs, how to connect them together?",
+    "embedding_text": "Heading: Computer Networks, Internet Structure | Concepts: COMPUTER NETWORKS | Internet Structure: a “network of networks” Question: given millions of access ISPs, how to connect them together?",
+    "headings": [
+      "Computer Networks",
+      "Internet Structure"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 39,
+    "page": 40,
+    "text": "Internet Structure: a “network of networks” Question: given millions of access ISPs, how to connect them together? connecting each access ISP to each other directly doesn’t scale:",
+    "embedding_text": "Heading: Computer Networks, Internet Structure | Concepts: COMPUTER NETWORKS | Internet Structure: a “network of networks” Question: given millions of access ISPs, how to connect them together? connecting each access ISP to each other directly doesn’t scale:",
+    "headings": [
+      "Computer Networks",
+      "Internet Structure"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 40,
+    "page": 41,
+    "text": "Internet Structure: a “network of networks” Option: connect each access ISP to one global transit ISP? Customer and provider ISPs have economic agreement.",
+    "embedding_text": "Heading: Computer Networks, Internet Structure, Isp, Structure 1 | Concepts: COMPUTER NETWORKS, Structure 1 | Internet Structure: a “network of networks” Option: connect each access ISP to one global transit ISP? Customer and provider ISPs have economic agreement.",
+    "headings": [
+      "Computer Networks",
+      "Internet Structure",
+      "Isp",
+      "Structure 1"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Structure 1"
+    ]
+  },
+  {
+    "id": 41,
+    "page": 42,
+    "text": "Internet Structure: a “network of networks” But if one global ISP is viable business, there will be competitors ….",
+    "embedding_text": "Heading: Computer Networks, Internet Structure, Isp A, Isp C, Isp B, Structure 2 | Concepts: COMPUTER NETWORKS, Structure 2 | Internet Structure: a “network of networks” But if one global ISP is viable business, there will be competitors ….",
+    "headings": [
+      "Computer Networks",
+      "Internet Structure",
+      "Isp A",
+      "Isp C",
+      "Isp B",
+      "Structure 2"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Structure 2"
+    ]
+  },
+  {
+    "id": 42,
+    "page": 43,
+    "text": "Internet Structure: a “network of networks” But if one global ISP is viable business, there will be competitors …. who will want to be connected Internet exchange point",
+    "embedding_text": "Heading: Computer Networks, Internet Structure, Isp A, Isp C, Isp B, Ixp, Internet exchange point, Structure 3 | Concepts: COMPUTER NETWORKS, Internet exchange point, Structure 3 | Internet Structure: a “network of networks” But if one global ISP is viable business, there will be competitors …. who will want to be connected Internet exchange point",
+    "headings": [
+      "Computer Networks",
+      "Internet Structure",
+      "Isp A",
+      "Isp C",
+      "Isp B",
+      "Ixp",
+      "Internet exchange point",
+      "Structure 3"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Internet exchange point",
+      "Structure 3"
+    ]
+  },
+  {
+    "id": 43,
+    "page": 44,
+    "text": "Internet Structure: a “network of networks” … and regional networks may arise to connect access nets to ISPs",
+    "embedding_text": "Heading: Computer Networks, Internet Structure, Isp A, Isp C, Isp B, Ixp, Structure 4 | Concepts: COMPUTER NETWORKS, Structure 4 | Internet Structure: a “network of networks” … and regional networks may arise to connect access nets to ISPs",
+    "headings": [
+      "Computer Networks",
+      "Internet Structure",
+      "Isp A",
+      "Isp C",
+      "Isp B",
+      "Ixp",
+      "Structure 4"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Structure 4"
+    ]
+  },
+  {
+    "id": 44,
+    "page": 45,
+    "text": "Internet Structure: a “network of networks” … and content provider networks  (e.g., Google, Microsoft,  Akamai) may run their own network, to bring services, content close to end Content provider network",
+    "embedding_text": "Heading: Computer Networks, Internet Structure, Isp A, Isp C, Isp B, Ixp, Content provider network, Structure 5 | Concepts: COMPUTER NETWORKS, Content provider network, Structure 5 | Internet Structure: a “network of networks” … and content provider networks  (e.g., Google, Microsoft,  Akamai) may run their own network, to bring services, content close to end Content provider network",
+    "headings": [
+      "Computer Networks",
+      "Internet Structure",
+      "Isp A",
+      "Isp C",
+      "Isp B",
+      "Ixp",
+      "Content provider network",
+      "Structure 5"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Content provider network",
+      "Structure 5"
+    ]
+  },
+  {
+    "id": 45,
+    "page": 46,
+    "text": "Internet Structure: a “network of networks” At “center”: small # of well-connected large networks ▪“tier-1” commercial ISPs (e.g., Level 3, Sprint, AT&T, NTT), national & ▪content provider networks (e.g., Google, Facebook): private network that connects its data centers to Internet, often bypassing tier-1, regional",
+    "embedding_text": "Heading: Computer Networks, Internet Structure, Isp, Ixp, At “center” | Concepts: COMPUTER NETWORKS | Internet Structure: a “network of networks” At “center”: small # of well-connected large networks ▪“tier-1” commercial ISPs (e.g., Level 3, Sprint, AT&T, NTT), national & ▪content provider networks (e.g., Google, Facebook): private network that connects its data centers to Internet, often bypassing tier-1, regional",
+    "headings": [
+      "Computer Networks",
+      "Internet Structure",
+      "Isp",
+      "Ixp",
+      "At “center”"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 46,
+    "page": 47,
+    "text": "Network Core: Tier 1 ISP Network Map: Sprint 2019 links to/from Sprint customer networks links to peering to/from other Sprint PoPS",
+    "embedding_text": "Heading: Computer Networks, Network Core, POP: point-of-presence | Concepts: COMPUTER NETWORKS, POP: point-of-presence | Network Core: Tier 1 ISP Network Map: Sprint 2019 links to/from Sprint customer networks links to peering to/from other Sprint PoPS",
+    "headings": [
+      "Computer Networks",
+      "Network Core",
+      "POP: point-of-presence"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "POP: point-of-presence"
+    ]
+  },
+  {
+    "id": 47,
+    "page": 48,
+    "text": "Performance: Delay, Loss & Throughput How do packet loss and delay occurs? packets queue in router buffers ▪packets queue, wait for turn ▪arrival rate to link (temporarily) exceeds output link capacity: packet loss packet being transmitted (transmission delay) packets in buffers (queueing delay) free (available) buffers: arriving packets dropped (loss) if no free buffers",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Performance: Delay, Loss & Throughput How do packet loss and delay occurs? packets queue in router buffers ▪packets queue, wait for turn ▪arrival rate to link (temporarily) exceeds output link capacity: packet loss packet being transmitted (transmission delay) packets in buffers (queueing delay) free (available) buffers: arriving packets dropped (loss) if no free buffers",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 48,
+    "page": 49,
+    "text": "Performance: Packet Delay – 4 Sources dproc: nodal processing ▪check bit errors ▪determine output link ▪typically < msec dqueue: queueing delay ▪time waiting at output link for transmission ▪depends on congestion level of router ▪microseconds to milliseconds dnodal = dproc + dqueue + dtrans +  dprop",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Performance: Packet Delay – 4 Sources dproc: nodal processing ▪check bit errors ▪determine output link ▪typically < msec dqueue: queueing delay ▪time waiting at output link for transmission ▪depends on congestion level of router ▪microseconds to milliseconds dnodal = dproc + dqueue + dtrans +  dprop",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 49,
+    "page": 50,
+    "text": "Performance: Packet Delay – 4 Sources dnodal = dproc + dqueue + dtrans +  dprop dtrans: transmission delay: ▪L: packet length (bits) ▪R: link transmission rate (bps) ▪dtrans = L/R dprop: propagation delay: ▪d: length of physical link ▪s: propagation speed (~2x108 m/sec) ▪dprop = d/s dtrans and dprop Check out the online interactive exercises:",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Performance: Packet Delay – 4 Sources dnodal = dproc + dqueue + dtrans +  dprop dtrans: transmission delay: ▪L: packet length (bits) ▪R: link transmission rate (bps) ▪dtrans = L/R dprop: propagation delay: ▪d: length of physical link ▪s: propagation speed (~2x108 m/sec) ▪dprop = d/s dtrans and dprop Check out the online interactive exercises:",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 50,
+    "page": 51,
+    "text": "Transmission Delay vs Propagation Delay Time required for the router to push out the packet. Time it takes a bit to propagate from one router to the next. A function of the packet’s length and the transmission rate of the link. A function of the distance between the two routers. dtrans = L/R dprop = d/s Nothing to do with the the two routers. Nothing to do with the packet’s length or the transmission rate of the link.",
+    "embedding_text": "Heading: Computer Networks, Transmission Delay, Propagation Delay | Concepts: COMPUTER NETWORKS, Transmission Delay, Propagation Delay | Transmission Delay vs Propagation Delay Time required for the router to push out the packet. Time it takes a bit to propagate from one router to the next. A function of the packet’s length and the transmission rate of the link. A function of the distance between the two routers. dtrans = L/R dprop = d/s Nothing to do with the the two routers. Nothing to do with the packet’s length or the transmission rate of the link.",
+    "headings": [
+      "Computer Networks",
+      "Transmission Delay",
+      "Propagation Delay"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Transmission Delay",
+      "Propagation Delay"
+    ]
+  },
+  {
+    "id": 51,
+    "page": 52,
+    "text": "Performance: Delay – Caravan Analogy ▪cars “propagate” at  100 km/hr ▪toll booth takes 12 sec to service car (bit transmission time) ▪car ~ bit; caravan ~ packet ▪Q: How long until caravan is lined up before 2nd toll booth? ▪time to “push” entire caravan through toll booth onto highway = 12*10 = 120 sec ▪time for last car to propagate from 1st to 2nd toll both: 100km/(100km/hr) = 1 hr ▪A: 62 minutes",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Performance: Delay – Caravan Analogy ▪cars “propagate” at  100 km/hr ▪toll booth takes 12 sec to service car (bit transmission time) ▪car ~ bit; caravan ~ packet ▪Q: How long until caravan is lined up before 2nd toll booth? ▪time to “push” entire caravan through toll booth onto highway = 12*10 = 120 sec ▪time for last car to propagate from 1st to 2nd toll both: 100km/(100km/hr) = 1 hr ▪A: 62 minutes",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 52,
+    "page": 53,
+    "text": "Performance: Delay – Caravan Analogy (more) ▪suppose cars now “propagate” at 1000 km/hr ▪and suppose toll booth now takes one min to service a car ▪Q: Will cars arrive to 2nd booth before all cars serviced at first A: Yes! after 7 min, first car arrives at second booth; three cars still at first booth",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Performance: Delay – Caravan Analogy (more) ▪suppose cars now “propagate” at 1000 km/hr ▪and suppose toll booth now takes one min to service a car ▪Q: Will cars arrive to 2nd booth before all cars serviced at first A: Yes! after 7 min, first car arrives at second booth; three cars still at first booth",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 53,
+    "page": 54,
+    "text": "Performance: Packet Queueing Delay revisited Unlike other delays (dproc, dtrans, dprop), dqueue is interesting. Can vary from packet to packet. Characterize dqueue -> average, variance, probability that it exceeds some specified value. When is the queuing delay large and when is it insignificant? Rate at which traffic arrives at the queue, Transmission rate of the link, Nature of the arriving traffic – periodically or in bursts",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Performance: Packet Queueing Delay revisited Unlike other delays (dproc, dtrans, dprop), dqueue is interesting. Can vary from packet to packet. Characterize dqueue -> average, variance, probability that it exceeds some specified value. When is the queuing delay large and when is it insignificant? Rate at which traffic arrives at the queue, Transmission rate of the link, Nature of the arriving traffic – periodically or in bursts",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 54,
+    "page": 55,
+    "text": "Performance: Packet Queueing Delay revisited ▪R: link bandwidth (bps) ▪L: packet length (bits) ▪a: average packet arrival rate (pps) ▪La: avg. rate at which bits arrive at ▪La/R > 1: more “work” arriving  is more than can be serviced - average ▪La/R <= 1: nature of arriving traffic ▪La/R ~ 0: avg. queueing delay small La/R ~ 0 La/R -> 1 traffic intensity = La/R average  queueing delay Design your system so that the traffic intensity is no greater than 1. La/R > 1: Average rate at which bits arrive at the queue exceeds the rate at which the bits can be transmitted from the queue.",
+    "embedding_text": "Heading: Computer Networks, La/R -> 1, Design your system so, La/R > 1 | Concepts: COMPUTER NETWORKS, Design your system so | Performance: Packet Queueing Delay revisited ▪R: link bandwidth (bps) ▪L: packet length (bits) ▪a: average packet arrival rate (pps) ▪La: avg. rate at which bits arrive at ▪La/R > 1: more “work” arriving  is more than can be serviced - average ▪La/R <= 1: nature of arriving traffic ▪La/R ~ 0: avg. queueing delay small La/R ~ 0 La/R -> 1 traffic intensity = La/R average  queueing delay Design your system so that the traffic intensity is no greater than 1. La/R > 1: Average rate at which bits arrive at the queue exceeds the rate at which the bits can be transmitted from the queue.",
+    "headings": [
+      "Computer Networks",
+      "La/R -> 1",
+      "Design your system so",
+      "La/R > 1"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Design your system so"
+    ]
+  },
+  {
+    "id": 55,
+    "page": 56,
+    "text": "“Real” Internet Delays and Routes ▪what do “real” Internet delay & loss look like? ▪traceroute program: provides delay measurement from source to router along end-end Internet path towards destination. For all i: sends three packets that will reach router i on path towards destination (with time-to-live field value of i) router i will return packets to sender sender measures time interval between transmission and",
+    "embedding_text": "Heading: Computer Networks, For all i: | Concepts: COMPUTER NETWORKS | “Real” Internet Delays and Routes ▪what do “real” Internet delay & loss look like? ▪traceroute program: provides delay measurement from source to router along end-end Internet path towards destination. For all i: sends three packets that will reach router i on path towards destination (with time-to-live field value of i) router i will return packets to sender sender measures time interval between transmission and",
+    "headings": [
+      "Computer Networks",
+      "For all i:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 56,
+    "page": 57,
+    "text": "“Real” Internet Delays and Routes 1  cs-gw (128.119.240.254)  1 ms  1 ms  2 ms 2  border1-rt-fa5-1-0.gw.umass.edu (128.119.3.145)  1 ms  1 ms  2 ms 3  cht-vbns.gw.umass.edu (128.119.3.130)  6 ms 5 ms 5 ms 4  jn1-at1-0-0-19.wor.vbns.net (204.147.132.129)  16 ms 11 ms 13 ms 5  jn1-so7-0-0-0.wae.vbns.net (204.147.136.136)  21 ms 18 ms 18 ms 6  abilene-vbns.abilene.ucaid.edu (198.32.11.9)  22 ms  18 ms  22 ms 7  nycm-wash.abilene.ucaid.edu (198.32.8.46)  22 ms  22 ms  22 ms 8  62.40.103.253 (62.40.103.253)  104 ms 109 ms 106 ms 9  de2-1.de1.de.geant.net (62.40.96.129)  109 ms 102 ms 104 ms 10  de.fr1.fr.geant.net (62.40.96.50)  113 ms 121 ms 114 ms 11  renater-gw.fr1.fr.geant.net (62.40.103.54)  112 ms  114 ms  112 ms 12  nio-n2.cssi.renater.fr (193.51.206.13)  111 ms  114 ms  116 ms 13  nice.cssi.renater.fr (195.220.98.102)  123 ms  125 ms  124 ms 14  r3t2-nice.cssi.renater.fr (195.220.98.110)  126 ms  126 ms  124 ms 15  eurecom-valbonne.r3t2.ft.net (193.48.50.54)  135 ms  128 ms  133 ms 16  194.214.211.25 (194.214.211.25)  126 ms  128 ms  126 ms 17  * * * 18  * * * 19  fantasia.eurecom.fr (193.55.113.142)  132 ms  128 ms  136 ms traceroute: gaia.cs.umass.edu to www.eurecom.fr 3 delay measurements from gaia.cs.umass.edu to cs-gw.cs.umass.edu means no response (probe lost, router not replying) Do some traceroutes from exotic countries at www.traceroute.org looks like delays 3 delay measurements",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | “Real” Internet Delays and Routes 1  cs-gw (128.119.240.254)  1 ms  1 ms  2 ms 2  border1-rt-fa5-1-0.gw.umass.edu (128.119.3.145)  1 ms  1 ms  2 ms 3  cht-vbns.gw.umass.edu (128.119.3.130)  6 ms 5 ms 5 ms 4  jn1-at1-0-0-19.wor.vbns.net (204.147.132.129)  16 ms 11 ms 13 ms 5  jn1-so7-0-0-0.wae.vbns.net (204.147.136.136)  21 ms 18 ms 18 ms 6  abilene-vbns.abilene.ucaid.edu (198.32.11.9)  22 ms  18 ms  22 ms 7  nycm-wash.abilene.ucaid.edu (198.32.8.46)  22 ms  22 ms  22 ms 8  62.40.103.253 (62.40.103.253)  104 ms 109 ms 106 ms 9  de2-1.de1.de.geant.net (62.40.96.129)  109 ms 102 ms 104 ms 10  de.fr1.fr.geant.net (62.40.96.50)  113 ms 121 ms 114 ms 11  renater-gw.fr1.fr.geant.net (62.40.103.54)  112 ms  114 ms  112 ms 12  nio-n2.cssi.renater.fr (193.51.206.13)  111 ms  114 ms  116 ms 13  nice.cssi.renater.fr (195.220.98.102)  123 ms  125 ms  124 ms 14  r3t2-nice.cssi.renater.fr (195.220.98.110)  126 ms  126 ms  124 ms 15  eurecom-valbonne.r3t2.ft.net (193.48.50.54)  135 ms  128 ms  133 ms 16  194.214.211.25 (194.214.211.25)  126 ms  128 ms  126 ms 17  * * * 18  * * * 19  fantasia.eurecom.fr (193.55.113.142)  132 ms  128 ms  136 ms traceroute: gaia.cs.umass.edu to www.eurecom.fr 3 delay measurements from gaia.cs.umass.edu to cs-gw.cs.umass.edu means no response (probe lost, router not replying) Do some traceroutes from exotic countries at www.traceroute.org looks like delays 3 delay measurements",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 57,
+    "page": 58,
+    "text": "How Traceroute works? Refer RFC 1393, Traceroute Using an IP Option Don’t Trust Traceroute (Completely)",
+    "embedding_text": "Heading: Computer Networks, Don’t Trust Traceroute (Completely) | Concepts: COMPUTER NETWORKS | How Traceroute works? Refer RFC 1393, Traceroute Using an IP Option Don’t Trust Traceroute (Completely)",
+    "headings": [
+      "Computer Networks",
+      "Don’t Trust Traceroute (Completely)"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 58,
+    "page": 59,
+    "text": "Performance: Packet loss ▪queue (aka buffer) preceding link in buffer has finite capacity packet being transmitted Check out the Java applet for an interactive animation on queuing and loss packet arriving to full buffer is lost ▪packet arriving to full queue dropped (aka lost) ▪lost packet may be retransmitted by previous node, by source end system, or not at all",
+    "embedding_text": "Heading: Computer Networks, Performance: Packet loss | Concepts: COMPUTER NETWORKS, Performance: Packet loss | Performance: Packet loss ▪queue (aka buffer) preceding link in buffer has finite capacity packet being transmitted Check out the Java applet for an interactive animation on queuing and loss packet arriving to full buffer is lost ▪packet arriving to full queue dropped (aka lost) ▪lost packet may be retransmitted by previous node, by source end system, or not at all",
+    "headings": [
+      "Computer Networks",
+      "Performance: Packet loss"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Performance: Packet loss"
+    ]
+  },
+  {
+    "id": 59,
+    "page": 60,
+    "text": "▪throughput: rate (bits/time unit) at which bits are being sent from sender to receiver instantaneous: rate at given point in time average: rate over longer period of time file of F bits to send to client server sends bits (fluid) into pipe pipe that can carry fluid at rate pipe that can carry fluid at rate",
+    "embedding_text": "Heading: Computer Networks, Performance: Throughput, Rsbits/sec, Rcbits/sec | Concepts: COMPUTER NETWORKS, Performance: Throughput | ▪throughput: rate (bits/time unit) at which bits are being sent from sender to receiver instantaneous: rate at given point in time average: rate over longer period of time file of F bits to send to client server sends bits (fluid) into pipe pipe that can carry fluid at rate pipe that can carry fluid at rate",
+    "headings": [
+      "Computer Networks",
+      "Performance: Throughput",
+      "Rsbits/sec",
+      "Rcbits/sec"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Performance: Throughput"
+    ]
+  },
+  {
+    "id": 60,
+    "page": 61,
+    "text": "Performance: Throughput (more) Rs < Rc What is average end-end throughput? Rs > Rc What is average end-end throughput? link on end-end path that constrains end-end throughput. Throughput = min{Rs, Rc}",
+    "embedding_text": "Heading: Computer Networks, Performance: Throughput (more), Rsbits/sec, Rcbits/sec, Throughput = min{Rs, Rc} | Concepts: COMPUTER NETWORKS, Throughput = min{Rs, Rc} | Performance: Throughput (more) Rs < Rc What is average end-end throughput? Rs > Rc What is average end-end throughput? link on end-end path that constrains end-end throughput. Throughput = min{Rs, Rc}",
+    "headings": [
+      "Computer Networks",
+      "Performance: Throughput (more)",
+      "Rsbits/sec",
+      "Rcbits/sec",
+      "Throughput = min{Rs, Rc}"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Throughput = min{Rs, Rc}"
+    ]
+  },
+  {
+    "id": 61,
+    "page": 62,
+    "text": "Throughput – Numerical Example ▪Suppose you are downloading an MP3 file of F = 32 million bits. ▪The server has a transmission rate of Rs = 2 Mbps and you have an access link of Rc = 1 Mbps. ▪What is the time needed to transfer the file? Let’s work it out!",
+    "embedding_text": "Heading: Computer Networks, Throughput – Numerical Example, Solution: | Concepts: COMPUTER NETWORKS | Throughput – Numerical Example ▪Suppose you are downloading an MP3 file of F = 32 million bits. ▪The server has a transmission rate of Rs = 2 Mbps and you have an access link of Rc = 1 Mbps. ▪What is the time needed to transfer the file? Let’s work it out!",
+    "headings": [
+      "Computer Networks",
+      "Throughput – Numerical Example",
+      "Solution:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 62,
+    "page": 63,
+    "text": "Performance: Throughput – Network Scenario 10 connections (fairly) share backbone bottleneck link R bits/sec ▪in practice: Rc or Rs is often Check out the online interactive exercises for more examples: ▪Suppose Rs = 2 Mbps, Rc = 1 Mbps, R = 5 Mbps ▪10 clients from 10 servers = End-to-end throughput for each download is now reduced to 500 kbps.",
+    "embedding_text": "Heading: Computer Networks, End-to-end throughput for | Concepts: COMPUTER NETWORKS, Check out the online interactive | Performance: Throughput – Network Scenario 10 connections (fairly) share backbone bottleneck link R bits/sec ▪in practice: Rc or Rs is often Check out the online interactive exercises for more examples: ▪Suppose Rs = 2 Mbps, Rc = 1 Mbps, R = 5 Mbps ▪10 clients from 10 servers = End-to-end throughput for each download is now reduced to 500 kbps.",
+    "headings": [
+      "Computer Networks",
+      "End-to-end throughput for"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Check out the online interactive"
+    ]
+  },
+  {
+    "id": 63,
+    "page": 64,
+    "text": "Computer Networks and the Internet Department of Computer Science and Engineering",
+    "embedding_text": "Heading: Protocol Layers, Team Networks | Concepts: Protocol Layers, Team Networks | Computer Networks and the Internet Department of Computer Science and Engineering",
+    "headings": [
+      "Protocol Layers",
+      "Team Networks"
+    ],
+    "concepts": [
+      "Protocol Layers",
+      "Team Networks"
+    ]
+  },
+  {
+    "id": 64,
+    "page": 65,
+    "text": "“Protocol Layers” and reference models Networks are complex, with many “pieces”: ▪links of various media is there any hope of organizing structure of …. or at least our discussion",
+    "embedding_text": "Heading: Computer Networks, Networks are complex,, Question: | Concepts: COMPUTER NETWORKS | “Protocol Layers” and reference models Networks are complex, with many “pieces”: ▪links of various media is there any hope of organizing structure of …. or at least our discussion",
+    "headings": [
+      "Computer Networks",
+      "Networks are complex,",
+      "Question:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 65,
+    "page": 66,
+    "text": "Example: Organization of Air Travel airline travel: a series of steps, involving many services",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Example: Organization of Air Travel airline travel: a series of steps, involving many services",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 66,
+    "page": 67,
+    "text": "Layering of Airline functionality layers: each layer implements a service ▪via its own internal-layer actions ▪relying on services provided by layer Q: describe in words the service provided in each layer above",
+    "embedding_text": "Heading: Computer Networks, Layering of Airline functionality, Q: describe in words | Concepts: COMPUTER NETWORKS, Layering of Airline functionality, Q: describe in words | Layering of Airline functionality layers: each layer implements a service ▪via its own internal-layer actions ▪relying on services provided by layer Q: describe in words the service provided in each layer above",
+    "headings": [
+      "Computer Networks",
+      "Layering of Airline functionality",
+      "Q: describe in words"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Layering of Airline functionality",
+      "Q: describe in words"
+    ]
+  },
+  {
+    "id": 67,
+    "page": 68,
+    "text": "dealing with complex systems: explicit structure allows identification, relationship of complex layered reference model for discussion modularization eases maintenance, updating of system change in layer's service implementation: transparent to rest of system e.g., change in gate procedure doesn’t affect rest of system layering considered harmful? layering in other complex systems?",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | dealing with complex systems: explicit structure allows identification, relationship of complex layered reference model for discussion modularization eases maintenance, updating of system change in layer's service implementation: transparent to rest of system e.g., change in gate procedure doesn’t affect rest of system layering considered harmful? layering in other complex systems?",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 68,
+    "page": 69,
+    "text": "Internet Protocol Stack ▪application: supporting network applications (access to network resources) IMAP, SMTP, HTTP ▪transport: process-process data transfer (segmentation & reassembly, sockets, connection, flow and error control) ▪network: routing of datagrams from source to destination (addressing, routing) IP, routing protocols ▪link: data transfer between neighboring  network elements (framing, addressing, flow & error control) Ethernet, 802.11 (WiFi), PPP ▪physical: bits “on the wire”",
+    "embedding_text": "Heading: Computer Networks, Internet Protocol Stack | Concepts: COMPUTER NETWORKS, Internet Protocol Stack, IP, routing protocols | Internet Protocol Stack ▪application: supporting network applications (access to network resources) IMAP, SMTP, HTTP ▪transport: process-process data transfer (segmentation & reassembly, sockets, connection, flow and error control) ▪network: routing of datagrams from source to destination (addressing, routing) IP, routing protocols ▪link: data transfer between neighboring  network elements (framing, addressing, flow & error control) Ethernet, 802.11 (WiFi), PPP ▪physical: bits “on the wire”",
+    "headings": [
+      "Computer Networks",
+      "Internet Protocol Stack"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Internet Protocol Stack",
+      "IP, routing protocols"
+    ]
+  },
+  {
+    "id": 69,
+    "page": 70,
+    "text": "OSI reference model presentation: allow applications to interpret meaning of data, (e.g., encryption, compression, machine-specific conventions) session: synchronization, checkpointing, recovery of data exchange Internet stack “missing” these layers! these services, if needed, must be implemented in application Open Systems Interconnection (OSI) model – introduced in late 1970s by ISO.",
+    "embedding_text": "Heading: Computer Networks, OSI reference model | Concepts: COMPUTER NETWORKS, Internet stack “missing” these layers! | OSI reference model presentation: allow applications to interpret meaning of data, (e.g., encryption, compression, machine-specific conventions) session: synchronization, checkpointing, recovery of data exchange Internet stack “missing” these layers! these services, if needed, must be implemented in application Open Systems Interconnection (OSI) model – introduced in late 1970s by ISO.",
+    "headings": [
+      "Computer Networks",
+      "OSI reference model"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Internet stack “missing” these layers!"
+    ]
+  },
+  {
+    "id": 70,
+    "page": 71,
+    "text": "OSI reference model (more)",
+    "embedding_text": "Heading: Computer Networks, OSI reference model (more), User support | Concepts: COMPUTER NETWORKS, User support | OSI reference model (more)",
+    "headings": [
+      "Computer Networks",
+      "OSI reference model (more)",
+      "User support"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "User support"
+    ]
+  },
+  {
+    "id": 71,
+    "page": 72,
+    "text": "TCP/IP vs OSI reference model",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | TCP/IP vs OSI reference model",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 72,
+    "page": 73,
+    "text": "Layers in the TCP/IP Protocol Suite (more) A private internet",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS, A private internet | Layers in the TCP/IP Protocol Suite (more) A private internet",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "A private internet"
+    ]
+  },
+  {
+    "id": 73,
+    "page": 74,
+    "text": "Layers in the TCP/IP Protocol Suite (more) the physical layer Unit of Communication",
+    "embedding_text": "Heading: Computer Networks, Communication at, Unit of Communication | Concepts: COMPUTER NETWORKS, Communication at, Unit of Communication | Layers in the TCP/IP Protocol Suite (more) the physical layer Unit of Communication",
+    "headings": [
+      "Computer Networks",
+      "Communication at",
+      "Unit of Communication"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Communication at",
+      "Unit of Communication"
+    ]
+  },
+  {
+    "id": 74,
+    "page": 75,
+    "text": "Layers in the TCP/IP Protocol Suite (more) Communication at the data link layer Unit of Communication –",
+    "embedding_text": "Heading: Computer Networks, Communication at the, Unit of Communication – | Concepts: COMPUTER NETWORKS, Unit of Communication – | Layers in the TCP/IP Protocol Suite (more) Communication at the data link layer Unit of Communication –",
+    "headings": [
+      "Computer Networks",
+      "Communication at the",
+      "Unit of Communication –"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Unit of Communication –"
+    ]
+  },
+  {
+    "id": 75,
+    "page": 76,
+    "text": "Layers in the TCP/IP Protocol Suite (more) Communication at the Unit of Communication –",
+    "embedding_text": "Heading: Computer Networks, Communication at the, Unit of Communication – | Concepts: COMPUTER NETWORKS, Unit of Communication – | Layers in the TCP/IP Protocol Suite (more) Communication at the Unit of Communication –",
+    "headings": [
+      "Computer Networks",
+      "Communication at the",
+      "Unit of Communication –"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Unit of Communication –"
+    ]
+  },
+  {
+    "id": 76,
+    "page": 77,
+    "text": "Layers in the TCP/IP Protocol Suite (more) Communication at the Unit of Communication",
+    "embedding_text": "Heading: Computer Networks, Communication at the, Unit of Communication | Concepts: COMPUTER NETWORKS, Unit of Communication | Layers in the TCP/IP Protocol Suite (more) Communication at the Unit of Communication",
+    "headings": [
+      "Computer Networks",
+      "Communication at the",
+      "Unit of Communication"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Unit of Communication"
+    ]
+  },
+  {
+    "id": 77,
+    "page": 78,
+    "text": "Layers in the TCP/IP Protocol Suite (more) Communication at the Unit of Communication",
+    "embedding_text": "Heading: Computer Networks, Communication at the, Unit of Communication | Concepts: COMPUTER NETWORKS, Unit of Communication | Layers in the TCP/IP Protocol Suite (more) Communication at the Unit of Communication",
+    "headings": [
+      "Computer Networks",
+      "Communication at the",
+      "Unit of Communication"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Unit of Communication"
+    ]
+  },
+  {
+    "id": 78,
+    "page": 79,
+    "text": "OSI vs TCP/IP Protocol Suite",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | OSI vs TCP/IP Protocol Suite",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 79,
+    "page": 80,
+    "text": "Encapsulation – Data Communication in Protocol Stack",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Encapsulation – Data Communication in Protocol Stack",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 80,
+    "page": 81,
+    "text": "Encapsulation & Decapsulation",
+    "embedding_text": "Heading: Computer Networks, Encapsulation & Decapsulation | Concepts: COMPUTER NETWORKS, Encapsulation & Decapsulation | Encapsulation & Decapsulation",
+    "headings": [
+      "Computer Networks",
+      "Encapsulation & Decapsulation"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Encapsulation & Decapsulation"
+    ]
+  },
+  {
+    "id": 81,
+    "page": 82,
+    "text": "Introduction to Network Devices",
+    "embedding_text": "Heading: Computer Networks, Introduction to Network Devices | Concepts: COMPUTER NETWORKS, Introduction to Network Devices | Introduction to Network Devices",
+    "headings": [
+      "Computer Networks",
+      "Introduction to Network Devices"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Introduction to Network Devices"
+    ]
+  },
+  {
+    "id": 82,
+    "page": 83,
+    "text": "Introduction to Network Devices : Repeater ●Regenerate the signal over the same network before the signal becomes too weak or corrupted to extend the length to which the signal can be transmitted over the same network ●Works at the Physical Layer Working of a Repeater:- 1. Signal Reception: Captures incoming data signal (electrical voltages or electromagnetic waves). 2. Signal Amplification: Strengthens weakened signals due to attenuation and interference. 3. Signal Regeneration: Reconstructs the signal to ensure data integrity and network compliance. 4. Signal Transmission: Sends the amplified and regenerated signal to its target, minimizing further",
+    "embedding_text": "Heading: Computer Networks, Introduction to Network Devices, Working of a Repeater | Concepts: COMPUTER NETWORKS, Working of a Repeater:- | Introduction to Network Devices : Repeater ●Regenerate the signal over the same network before the signal becomes too weak or corrupted to extend the length to which the signal can be transmitted over the same network ●Works at the Physical Layer Working of a Repeater:- 1. Signal Reception: Captures incoming data signal (electrical voltages or electromagnetic waves). 2. Signal Amplification: Strengthens weakened signals due to attenuation and interference. 3. Signal Regeneration: Reconstructs the signal to ensure data integrity and network compliance. 4. Signal Transmission: Sends the amplified and regenerated signal to its target, minimizing further",
+    "headings": [
+      "Computer Networks",
+      "Introduction to Network Devices",
+      "Working of a Repeater"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Working of a Repeater:-"
+    ]
+  },
+  {
+    "id": 83,
+    "page": 84,
+    "text": "Introduction to Network Devices : Hub ●Basic networking device that is used to connect multiple devices together on a local network. ●It shares bandwidth among all connected devices and broadcasts data sent by one device to all others, giving each device equal access to the network ●Operates at Physical Layer Features of a Hub:- 1. Always Broadcast: Hubs broadcast data to all connected devices, regardless of the 2. Half-duplex Communication: Only one device can transmit at once. 3. Cannot Store MAC Addresses: Hubs lack intelligence and cannot store MAC addresses or maintain tables. 4. No Data Filtering: Hubs transmit all data to all connected devices without filtering.",
+    "embedding_text": "Heading: Computer Networks, Introduction to Network Devices, Features of a Hub | Concepts: COMPUTER NETWORKS, Features of a Hub:- | Introduction to Network Devices : Hub ●Basic networking device that is used to connect multiple devices together on a local network. ●It shares bandwidth among all connected devices and broadcasts data sent by one device to all others, giving each device equal access to the network ●Operates at Physical Layer Features of a Hub:- 1. Always Broadcast: Hubs broadcast data to all connected devices, regardless of the 2. Half-duplex Communication: Only one device can transmit at once. 3. Cannot Store MAC Addresses: Hubs lack intelligence and cannot store MAC addresses or maintain tables. 4. No Data Filtering: Hubs transmit all data to all connected devices without filtering.",
+    "headings": [
+      "Computer Networks",
+      "Introduction to Network Devices",
+      "Features of a Hub"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Features of a Hub:-"
+    ]
+  },
+  {
+    "id": 84,
+    "page": 85,
+    "text": "Introduction to Network Devices : Modem ●Device that connects a computer to the internet by converting digital signals to analog and vice versa for data transmission. ●Operates at the Physical Layer Modem Data Transmission Process:- 1. Modulation: The modem converts digital data from the computer into an analog signal 2. Transmission: The modulated signal is sent over the communication line to the 3. Demodulation: The receiving modem converts the analog signal back into digital data. 4. Decoding: The digital data is then sent to the computer for use.",
+    "embedding_text": "Heading: Computer Networks, Introduction to Network Devices, Modem Data Transmission Process | Concepts: COMPUTER NETWORKS, Modem Data Transmission Process:- | Introduction to Network Devices : Modem ●Device that connects a computer to the internet by converting digital signals to analog and vice versa for data transmission. ●Operates at the Physical Layer Modem Data Transmission Process:- 1. Modulation: The modem converts digital data from the computer into an analog signal 2. Transmission: The modulated signal is sent over the communication line to the 3. Demodulation: The receiving modem converts the analog signal back into digital data. 4. Decoding: The digital data is then sent to the computer for use.",
+    "headings": [
+      "Computer Networks",
+      "Introduction to Network Devices",
+      "Modem Data Transmission Process"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Modem Data Transmission Process:-"
+    ]
+  },
+  {
+    "id": 85,
+    "page": 86,
+    "text": "Introduction to Network Devices : Bridge ●A 2-port device that joins two or more network segments and routes data between them according to MAC addresses ●Operates at the Data Link Layer 1. Segmentation: Divides a large network into smaller segments to reduce congestion and improve performance. 2. Filtering: Uses MAC addresses to selectively forward packets, enhancing security and bandwidth 3. Learning: Tracks MAC addresses and port mappings to optimize packet forwarding. 4. Forwarding: Directs packets between segments, reducing unnecessary traffic and ensuring proper",
+    "embedding_text": "Heading: Computer Networks, Introduction to Network Devices, Functions :- | Concepts: COMPUTER NETWORKS, Functions :- | Introduction to Network Devices : Bridge ●A 2-port device that joins two or more network segments and routes data between them according to MAC addresses ●Operates at the Data Link Layer 1. Segmentation: Divides a large network into smaller segments to reduce congestion and improve performance. 2. Filtering: Uses MAC addresses to selectively forward packets, enhancing security and bandwidth 3. Learning: Tracks MAC addresses and port mappings to optimize packet forwarding. 4. Forwarding: Directs packets between segments, reducing unnecessary traffic and ensuring proper",
+    "headings": [
+      "Computer Networks",
+      "Introduction to Network Devices",
+      "Functions :-"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Functions :-"
+    ]
+  },
+  {
+    "id": 86,
+    "page": 87,
+    "text": "Introduction to Network Devices : Switch ●An intelligent network device, functioning as a multiport bridge, uses MAC addresses to forward data packets to the appropriate destination ports. ●Operates at Data Link Layer Features of a Switch:- 1. Employs packet switching to receive and route data from source to destination. 2. Can perform some error checking before forwarding data to the destined port. 3. Can operate in full-duplex mode, enabling simultaneous data transmission & reception in network 4. Store MAC addresses of connected devices, routing communication only to the intended destination, reducing collisions and eliminating",
+    "embedding_text": "Heading: Computer Networks, Introduction to Network Devices, Features of a Switch | Concepts: COMPUTER NETWORKS, Features of a Switch:- | Introduction to Network Devices : Switch ●An intelligent network device, functioning as a multiport bridge, uses MAC addresses to forward data packets to the appropriate destination ports. ●Operates at Data Link Layer Features of a Switch:- 1. Employs packet switching to receive and route data from source to destination. 2. Can perform some error checking before forwarding data to the destined port. 3. Can operate in full-duplex mode, enabling simultaneous data transmission & reception in network 4. Store MAC addresses of connected devices, routing communication only to the intended destination, reducing collisions and eliminating",
+    "headings": [
+      "Computer Networks",
+      "Introduction to Network Devices",
+      "Features of a Switch"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Features of a Switch:-"
+    ]
+  },
+  {
+    "id": 87,
+    "page": 88,
+    "text": "Introduction to Network Devices : NIC ●It is a physical card or chip, which contains MAC addresses, helps to identify the device on the ●Used at the Data Link Layer NIC - Network Interface Card Functions of a NIC:- 1. Connectivity: Links the device to the network (wired or wireless). 2. Data Transmission: Sends and receives data between devices. 3. Data Conversion: Converts data for transmission and reception. 4. Error Handling: Detects and corrects transmission errors. 5. Traffic Management: Prioritizes or limits data to avoid congestion. 6. Security: Provides encryption and authentication for protection.",
+    "embedding_text": "Heading: Computer Networks, Introduction to Network Devices, Functions of a NIC | Concepts: COMPUTER NETWORKS, Functions of a NIC:- | Introduction to Network Devices : NIC ●It is a physical card or chip, which contains MAC addresses, helps to identify the device on the ●Used at the Data Link Layer NIC - Network Interface Card Functions of a NIC:- 1. Connectivity: Links the device to the network (wired or wireless). 2. Data Transmission: Sends and receives data between devices. 3. Data Conversion: Converts data for transmission and reception. 4. Error Handling: Detects and corrects transmission errors. 5. Traffic Management: Prioritizes or limits data to avoid congestion. 6. Security: Provides encryption and authentication for protection.",
+    "headings": [
+      "Computer Networks",
+      "Introduction to Network Devices",
+      "Functions of a NIC"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Functions of a NIC:-"
+    ]
+  },
+  {
+    "id": 88,
+    "page": 89,
+    "text": "Introduction to Network Devices : Router ●Device that routes/forwards data packets based on their IP addresses and have a dynamically updating routing table based on which they make decisions on routing the incoming packets. ●Operates at the Network Layer Functions of a Router:- 1. Forwarding: Receives packets, checks headers, performs basic functions, and forwards packets to the appropriate output port. 1. Routing: Determines the best path for a packet to reach its destination using a routing table built with algorithms.",
+    "embedding_text": "Heading: Computer Networks, Introduction to Network Devices, Functions of a Router | Concepts: COMPUTER NETWORKS, Functions of a Router:- | Introduction to Network Devices : Router ●Device that routes/forwards data packets based on their IP addresses and have a dynamically updating routing table based on which they make decisions on routing the incoming packets. ●Operates at the Network Layer Functions of a Router:- 1. Forwarding: Receives packets, checks headers, performs basic functions, and forwards packets to the appropriate output port. 1. Routing: Determines the best path for a packet to reach its destination using a routing table built with algorithms.",
+    "headings": [
+      "Computer Networks",
+      "Introduction to Network Devices",
+      "Functions of a Router"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Functions of a Router:-"
+    ]
+  },
+  {
+    "id": 89,
+    "page": 90,
+    "text": "Introduction to Network Devices : Router Functions of a Router:- 3. Network Address Translation (NAT): Translates between private and public IP addresses, enabling devices on a private network to access the internet.",
+    "embedding_text": "Heading: Computer Networks, Introduction to Network Devices, Functions of a Router | Concepts: COMPUTER NETWORKS, Functions of a Router:- | Introduction to Network Devices : Router Functions of a Router:- 3. Network Address Translation (NAT): Translates between private and public IP addresses, enabling devices on a private network to access the internet.",
+    "headings": [
+      "Computer Networks",
+      "Introduction to Network Devices",
+      "Functions of a Router"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Functions of a Router:-"
+    ]
+  },
+  {
+    "id": 90,
+    "page": 91,
+    "text": "Introduction to Network Devices : Gateway ●Network connectivity device that connects two different configuration networks ●The gateway acts as a portal between two applications via protocol communications, allowing them to share data on the same or other systems. Hence, a gateway is also a protocol converter that can operate at any OSI model layer. Types of Gateway:- 1. Unidirectional Gateway: Data flows in one direction, with changes replicated from source to destination only. 2. Bidirectional Gateway: Data flows in both directions, used for",
+    "embedding_text": "Heading: Computer Networks, Introduction to Network Devices, Types of Gateway | Concepts: COMPUTER NETWORKS, Types of Gateway:- | Introduction to Network Devices : Gateway ●Network connectivity device that connects two different configuration networks ●The gateway acts as a portal between two applications via protocol communications, allowing them to share data on the same or other systems. Hence, a gateway is also a protocol converter that can operate at any OSI model layer. Types of Gateway:- 1. Unidirectional Gateway: Data flows in one direction, with changes replicated from source to destination only. 2. Bidirectional Gateway: Data flows in both directions, used for",
+    "headings": [
+      "Computer Networks",
+      "Introduction to Network Devices",
+      "Types of Gateway"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Types of Gateway:-"
+    ]
+  },
+  {
+    "id": 91,
+    "page": 92,
+    "text": "Introduction to Network Devices : Firewall ●Network security device that monitors incoming and outgoing network traffic and decides whether to allow or block specific traffic based on a defined set of ●It can used in the transport layer or the application layer",
+    "embedding_text": "Heading: Computer Networks, Introduction to Network Devices | Concepts: COMPUTER NETWORKS | Introduction to Network Devices : Firewall ●Network security device that monitors incoming and outgoing network traffic and decides whether to allow or block specific traffic based on a defined set of ●It can used in the transport layer or the application layer",
+    "headings": [
+      "Computer Networks",
+      "Introduction to Network Devices"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 92,
+    "page": 93,
+    "text": "Introduction to Network Devices Broadcasts data to all devices Forwards data to the specific destination device based on MAC address Operates at Physical Layer Operates at Data Link Layer Sends data to all connected devices Sends data only to the intended device Single collision domain Multiple collision domains (one per port) Shared bandwidth among all devices Dedicated bandwidth for each device Basic, no intelligence More intelligent, stores MAC addresses and makes forwarding decisions No filtering, all data is broadcasted Filters data based on MAC addresses Suitable for small networks Suitable for larger, more complex networks Lower performance due to collisions Higher performance with reduced collisions",
+    "embedding_text": "Heading: Computer Networks, Introduction to Network Devices, Operates at Physical Layer, Data Handling, Collision, Single collision domain, Bandwidth, Intelligence, Basic, no intelligence, Data Filtering | Concepts: COMPUTER NETWORKS, Introduction to Network Devices, Operates at Physical Layer, Data Handling, Single collision domain, Basic, no intelligence, Data Filtering, Suitable for small networks | Introduction to Network Devices Broadcasts data to all devices Forwards data to the specific destination device based on MAC address Operates at Physical Layer Operates at Data Link Layer Sends data to all connected devices Sends data only to the intended device Single collision domain Multiple collision domains (one per port) Shared bandwidth among all devices Dedicated bandwidth for each device Basic, no intelligence More intelligent, stores MAC addresses and makes forwarding decisions No filtering, all data is broadcasted Filters data based on MAC addresses Suitable for small networks Suitable for larger, more complex networks Lower performance due to collisions Higher performance with reduced collisions",
+    "headings": [
+      "Computer Networks",
+      "Introduction to Network Devices",
+      "Operates at Physical Layer",
+      "Data Handling",
+      "Collision",
+      "Single collision domain",
+      "Bandwidth",
+      "Intelligence",
+      "Basic, no intelligence",
+      "Data Filtering"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Introduction to Network Devices",
+      "Operates at Physical Layer",
+      "Data Handling",
+      "Single collision domain",
+      "Basic, no intelligence",
+      "Data Filtering",
+      "Suitable for small networks"
+    ]
+  },
+  {
+    "id": 93,
+    "page": 94,
+    "text": "Introduction to Network Devices A network device that connects multiple devices within the same network. A network device that connects multiple networks and routes data between them. Uses MAC addresses to forward data within Uses IP addresses to route data between Operates at Data Link Layer Operates at Network Layer Typically operates within a single broadcast Breaks up broadcast domains and creates Used in LANs to expand network capacity. Used to connect LANs to the internet or other High-speed data transfer within the Typically slower due to complex routing",
+    "embedding_text": "Heading: Computer Networks, Introduction to Network Devices, Definition, Transmission, Operates at Network Layer, Broadcast | Concepts: COMPUTER NETWORKS, Introduction to Network Devices, Operates at Network Layer | Introduction to Network Devices A network device that connects multiple devices within the same network. A network device that connects multiple networks and routes data between them. Uses MAC addresses to forward data within Uses IP addresses to route data between Operates at Data Link Layer Operates at Network Layer Typically operates within a single broadcast Breaks up broadcast domains and creates Used in LANs to expand network capacity. Used to connect LANs to the internet or other High-speed data transfer within the Typically slower due to complex routing",
+    "headings": [
+      "Computer Networks",
+      "Introduction to Network Devices",
+      "Definition",
+      "Transmission",
+      "Operates at Network Layer",
+      "Broadcast"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Introduction to Network Devices",
+      "Operates at Network Layer"
+    ]
+  },
+  {
+    "id": 94,
+    "page": 95,
+    "text": "Computer Networks and the Internet Department of Computer Science and Engineering",
+    "embedding_text": "Heading: Interactive Exercises, Team Networks | Concepts: Interactive Exercises, Team Networks | Computer Networks and the Internet Department of Computer Science and Engineering",
+    "headings": [
+      "Interactive Exercises",
+      "Team Networks"
+    ],
+    "concepts": [
+      "Interactive Exercises",
+      "Team Networks"
+    ]
+  },
+  {
+    "id": 95,
+    "page": 96,
+    "text": "Interactive Exercise – 1 Computing end-end delay (transmission and Consider the figure below, with three links, each with the specified transmission rate and link Find the end-to-end delay (including the transmission delays and propagation delays on each of the three links, but ignoring queueing delays and processing delays) from when the left host begins transmitting the first bit of a packet to the time when the last bit of that packet is received at the server at the right. The speed of light propagation delay on each link is Note that the transmission rates are in Mbps and the link distances are in Km. Assume a packet length of 8000 bits. Give your answer in milliseconds.",
+    "embedding_text": "Heading: Computer Networks, Interactive Exercise – 1 | Concepts: COMPUTER NETWORKS, Interactive Exercise – 1 | Interactive Exercise – 1 Computing end-end delay (transmission and Consider the figure below, with three links, each with the specified transmission rate and link Find the end-to-end delay (including the transmission delays and propagation delays on each of the three links, but ignoring queueing delays and processing delays) from when the left host begins transmitting the first bit of a packet to the time when the last bit of that packet is received at the server at the right. The speed of light propagation delay on each link is Note that the transmission rates are in Mbps and the link distances are in Km. Assume a packet length of 8000 bits. Give your answer in milliseconds.",
+    "headings": [
+      "Computer Networks",
+      "Interactive Exercise – 1"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Interactive Exercise – 1"
+    ]
+  },
+  {
+    "id": 96,
+    "page": 97,
+    "text": "Interactive Exercise – 2 (Solution) Link 1 transmission delay = L/R = 8000 bits / 100 Mbps =  80 microsec Link 1 propagation delay = d/s = 3 Km / 3*10**8 m/sec = 10 microsec Link 1 total delay = 80+10 = 90 microsec Link 2 transmission delay = L/R = 8000 bits / 1000 Mbps = 8 microsec Link 2 propagation delay = d/s = 500 Km / 3*10**8 m/sec = 1670 microsec. Link 2 total delay = 8 + 1670 = 1678 microsec Link 3 transmission delay = L/R = 8000 bits / 10 Mbps =  800 microsec Link 3 propagation delay = d/s = 3 Km / 3*10**8 m/sec =  10 microsec Link 3 total delay = 800 + 10 = 810 microsec Total end-to-end delay is the sum of these six delays: 90 + 1678 + 810 =  2.578 ms",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Interactive Exercise – 2 (Solution) Link 1 transmission delay = L/R = 8000 bits / 100 Mbps =  80 microsec Link 1 propagation delay = d/s = 3 Km / 3*10**8 m/sec = 10 microsec Link 1 total delay = 80+10 = 90 microsec Link 2 transmission delay = L/R = 8000 bits / 1000 Mbps = 8 microsec Link 2 propagation delay = d/s = 500 Km / 3*10**8 m/sec = 1670 microsec. Link 2 total delay = 8 + 1670 = 1678 microsec Link 3 transmission delay = L/R = 8000 bits / 10 Mbps =  800 microsec Link 3 propagation delay = d/s = 3 Km / 3*10**8 m/sec =  10 microsec Link 3 total delay = 800 + 10 = 810 microsec Total end-to-end delay is the sum of these six delays: 90 + 1678 + 810 =  2.578 ms",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 97,
+    "page": 98,
+    "text": "Interactive Exercise – 2 Computing Queuing Delay Consider the queuing delay in a router buffer. a constant transmission rate of R = 1800000 bps, a constant packet-length L = 7300 bits, and a is the average rate of packets/second. Traffic intensity I = La/R, and Queuing delay is calculated as: IL/(R(1 - I)) for I < 1.",
+    "embedding_text": "Heading: Computer Networks, Interactive Exercise – 2, Computing Queuing Delay, R = 1800000 bps, | Concepts: COMPUTER NETWORKS, Interactive Exercise – 2, Computing Queuing Delay | Interactive Exercise – 2 Computing Queuing Delay Consider the queuing delay in a router buffer. a constant transmission rate of R = 1800000 bps, a constant packet-length L = 7300 bits, and a is the average rate of packets/second. Traffic intensity I = La/R, and Queuing delay is calculated as: IL/(R(1 - I)) for I < 1.",
+    "headings": [
+      "Computer Networks",
+      "Interactive Exercise – 2",
+      "Computing Queuing Delay",
+      "R = 1800000 bps,"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Interactive Exercise – 2",
+      "Computing Queuing Delay"
+    ]
+  },
+  {
+    "id": 98,
+    "page": 99,
+    "text": "Interactive Exercise – 2 (Questions) 1. In practice, does the queuing delay tend to vary a lot? Answer with Yes or No 2. Assuming that a = 30, what is the queuing delay? 3. Assuming that a = 76, what is the queuing delay? 4. Assuming the router's buffer is infinite, the queuing delay is 0.8647 ms, and 1762 packets arrive. How many packets will be in the buffer 1 second later? 5. If the buffer has a maximum size of 956 packets, how many of the packets would be dropped upon arrival from the previous question?",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Interactive Exercise – 2 (Questions) 1. In practice, does the queuing delay tend to vary a lot? Answer with Yes or No 2. Assuming that a = 30, what is the queuing delay? 3. Assuming that a = 76, what is the queuing delay? 4. Assuming the router's buffer is infinite, the queuing delay is 0.8647 ms, and 1762 packets arrive. How many packets will be in the buffer 1 second later? 5. If the buffer has a maximum size of 956 packets, how many of the packets would be dropped upon arrival from the previous question?",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 99,
+    "page": 100,
+    "text": "Interactive Exercise – 2 (Solutions) 1. Yes, in practice, queuing delay can vary significantly. We use the above formulas as a way to give a rough estimate, but in a real-life scenario it is much more complicated. 2. Queuing Delay = IL/(R(1 - I)) * 1000 = 0.1217*7300/(1800000*(1-0.1217)) * 1000 = 0.561 ms. 3. Queuing Delay = IL/(R(1 - I)) * 1000 = 0.3082*7300/(1800000*(1-0.3082)) * 1000 = 1.806 ms. 4. Packets left in buffer = a - floor(1000/delay) = 1762 - floor(1000/0.8647) = 606 packets. 5. Packets dropped = packets - buffer size = 1762 - 956 = 806 dropped packets.",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Interactive Exercise – 2 (Solutions) 1. Yes, in practice, queuing delay can vary significantly. We use the above formulas as a way to give a rough estimate, but in a real-life scenario it is much more complicated. 2. Queuing Delay = IL/(R(1 - I)) * 1000 = 0.1217*7300/(1800000*(1-0.1217)) * 1000 = 0.561 ms. 3. Queuing Delay = IL/(R(1 - I)) * 1000 = 0.3082*7300/(1800000*(1-0.3082)) * 1000 = 1.806 ms. 4. Packets left in buffer = a - floor(1000/delay) = 1762 - floor(1000/0.8647) = 606 packets. 5. Packets dropped = packets - buffer size = 1762 - 956 = 806 dropped packets.",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 100,
+    "page": 101,
+    "text": "Interactive Exercise – 3 Quantitative Comparison of Packet Switching and Consider the two scenarios below: ⮚A circuit-switching scenario in which Ncs users, each requiring a bandwidth of 10 Mbps, must share a link of capacity 150 Mbps. ⮚A packet-switching scenario with Nps users sharing a 150 Mbps link, where each user again requires 10 Mbps when transmitting, but only needs to transmit 30 percent of the Round your answer to two decimals after leading zeros",
+    "embedding_text": "Heading: Computer Networks, Interactive Exercise – 3, Circuit Switching | Concepts: COMPUTER NETWORKS, Interactive Exercise – 3, Circuit Switching | Interactive Exercise – 3 Quantitative Comparison of Packet Switching and Consider the two scenarios below: ⮚A circuit-switching scenario in which Ncs users, each requiring a bandwidth of 10 Mbps, must share a link of capacity 150 Mbps. ⮚A packet-switching scenario with Nps users sharing a 150 Mbps link, where each user again requires 10 Mbps when transmitting, but only needs to transmit 30 percent of the Round your answer to two decimals after leading zeros",
+    "headings": [
+      "Computer Networks",
+      "Interactive Exercise – 3",
+      "Circuit Switching"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Interactive Exercise – 3",
+      "Circuit Switching"
+    ]
+  },
+  {
+    "id": 101,
+    "page": 102,
+    "text": "Interactive Exercise – 3 (Questions) Answer the following questions: 1. When circuit switching is used, what is the maximum number of circuit-switched users that can be supported? Explain your answer. 2. For rest of the questions, suppose packet switching is used. Suppose there are 29 packet-switching users (i.e., Nps = 29). Can this many users be supported under circuit-",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Interactive Exercise – 3 (Questions) Answer the following questions: 1. When circuit switching is used, what is the maximum number of circuit-switched users that can be supported? Explain your answer. 2. For rest of the questions, suppose packet switching is used. Suppose there are 29 packet-switching users (i.e., Nps = 29). Can this many users be supported under circuit-",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 102,
+    "page": 103,
+    "text": "Interactive Exercise – 3 (more)",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Interactive Exercise – 3 (more)",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 103,
+    "page": 104,
+    "text": "Interactive Exercise – 4 Quantitative Comparison of Packet Switching and Consider the two scenarios below: ⮚A circuit-switching scenario in which Ncs users, each requiring a bandwidth of 25 Mbps, must share a link of capacity 200 Mbps. ⮚A packet-switching scenario with Nps users sharing a 200 Mbps link, where each user again requires 25 Mbps when transmitting, but only needs to transmit 20 percent of the time.",
+    "embedding_text": "Heading: Computer Networks, Interactive Exercise – 4, Circuit Switching | Concepts: COMPUTER NETWORKS, Interactive Exercise – 4, Circuit Switching | Interactive Exercise – 4 Quantitative Comparison of Packet Switching and Consider the two scenarios below: ⮚A circuit-switching scenario in which Ncs users, each requiring a bandwidth of 25 Mbps, must share a link of capacity 200 Mbps. ⮚A packet-switching scenario with Nps users sharing a 200 Mbps link, where each user again requires 25 Mbps when transmitting, but only needs to transmit 20 percent of the time.",
+    "headings": [
+      "Computer Networks",
+      "Interactive Exercise – 4",
+      "Circuit Switching"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Interactive Exercise – 4",
+      "Circuit Switching"
+    ]
+  },
+  {
+    "id": 104,
+    "page": 105,
+    "text": "Interactive Exercise – 4 (Questions) Answer the following questions: 1. When circuit switching is used, what is the maximum number of users that can 2. Suppose packet switching is used. If there are 15 packet-switching users, can this many users be supported under circuit-switching? Yes or No.",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Interactive Exercise – 4 (Questions) Answer the following questions: 1. When circuit switching is used, what is the maximum number of users that can 2. Suppose packet switching is used. If there are 15 packet-switching users, can this many users be supported under circuit-switching? Yes or No.",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 105,
+    "page": 106,
+    "text": "Interactive Exercise – 5 END TO END THROUGHPUT AND Consider the scenario shown below, with four different servers connected to four different clients over four three-hop paths. The four pairs share a common middle hop with a transmission capacity of R = The four links from the servers to the shared link have a transmission capacity of RS = 50 Mbps. Each of the four links from the shared middle link to a client has a transmission capacity of RC = 90 Mbps.",
+    "embedding_text": "Heading: Computer Networks, Interactive Exercise – 5, End To End Throughput And, Bottleneck Links | Concepts: COMPUTER NETWORKS, Interactive Exercise – 5, BOTTLENECK LINKS | Interactive Exercise – 5 END TO END THROUGHPUT AND Consider the scenario shown below, with four different servers connected to four different clients over four three-hop paths. The four pairs share a common middle hop with a transmission capacity of R = The four links from the servers to the shared link have a transmission capacity of RS = 50 Mbps. Each of the four links from the shared middle link to a client has a transmission capacity of RC = 90 Mbps.",
+    "headings": [
+      "Computer Networks",
+      "Interactive Exercise – 5",
+      "End To End Throughput And",
+      "Bottleneck Links"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Interactive Exercise – 5",
+      "BOTTLENECK LINKS"
+    ]
+  },
+  {
+    "id": 106,
+    "page": 107,
+    "text": "Interactive Exercise – 5 (Questions) Answer the following questions: 1. What is the maximum achievable end-end throughput (in Mbps) for each of four client-to-server pairs, assuming that the middle link is fairly shared (divides its transmission rate equally)? 2. Which link is the bottleneck link? Format as Rc, Rs, or R 3. Assuming that the servers are sending at the maximum rate possible, what are the link utilizations for the server links (RS)? Answer as a decimal 4. Assuming that the servers are sending at the maximum rate possible, what are the link utilizations for the client links (RC)? Answer as a decimal 5. Assuming that the servers are sending at the maximum rate possible, what is the link utilizations for the shared link (R)? Answer as a decimal",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Interactive Exercise – 5 (Questions) Answer the following questions: 1. What is the maximum achievable end-end throughput (in Mbps) for each of four client-to-server pairs, assuming that the middle link is fairly shared (divides its transmission rate equally)? 2. Which link is the bottleneck link? Format as Rc, Rs, or R 3. Assuming that the servers are sending at the maximum rate possible, what are the link utilizations for the server links (RS)? Answer as a decimal 4. Assuming that the servers are sending at the maximum rate possible, what are the link utilizations for the client links (RC)? Answer as a decimal 5. Assuming that the servers are sending at the maximum rate possible, what is the link utilizations for the shared link (R)? Answer as a decimal",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 107,
+    "page": 108,
+    "text": "Interactive Exercise – 5 (Answers) 1. The maximum achievable end-end throughput is the capacity of the link with the minimum capacity, which is 50 Mbps 2. The bottleneck link is the link with the smallest capacity between RS, RC, and R/4. The bottleneck link is Rs. 3. The server's utilization = Rbottleneck / RS = 50 / 50 = 1 4. The client's utilization = Rbottleneck / RC = 50 / 90 = 0.56 5. The shared link's utilization = Rbottleneck / (R / 4) = 50 / (300 / 4) = 0.67",
+    "embedding_text": "Heading: Computer Networks, Solutions: | Concepts: COMPUTER NETWORKS | Interactive Exercise – 5 (Answers) 1. The maximum achievable end-end throughput is the capacity of the link with the minimum capacity, which is 50 Mbps 2. The bottleneck link is the link with the smallest capacity between RS, RC, and R/4. The bottleneck link is Rs. 3. The server's utilization = Rbottleneck / RS = 50 / 50 = 1 4. The client's utilization = Rbottleneck / RC = 50 / 90 = 0.56 5. The shared link's utilization = Rbottleneck / (R / 4) = 50 / (300 / 4) = 0.67",
+    "headings": [
+      "Computer Networks",
+      "Solutions:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 108,
+    "page": 109,
+    "text": "Packet Switching vs Circuit Switching – Numerical Example Consider the circuit-switched network shown in the figure below, with circuit switches A, B, C, and D. Suppose there are 14 circuits between A and B, 16 circuits between B and C, 20 circuits between C and D, and 17 circuits between D and A",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Packet Switching vs Circuit Switching – Numerical Example Consider the circuit-switched network shown in the figure below, with circuit switches A, B, C, and D. Suppose there are 14 circuits between A and B, 16 circuits between B and C, 20 circuits between C and D, and 17 circuits between D and A",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 109,
+    "page": 110,
+    "text": "Packet Switching vs Circuit Switching – Numerical Example 1. What is the maximum number of connections that can be ongoing in the network at any one time? 2. Suppose that these maximum number of connections are all ongoing. What happens when another call connection request arrives to the network, will it be accepted? Answer Yes or No 3. Suppose that every connection requires 2 consecutive hops, and calls are connected clockwise. For example, a connection can go from A to C, from B to D, from C to A, and from D to B. With these constraints, what is the is the maximum number of connections that can be ongoing in the network at any one time? 4. Suppose that 12 connections are needed from A to C, and 15 connections are needed from B to D. Can we route these calls through the four links to accommodate all 27 connections? Answer Yes or No",
+    "embedding_text": "Heading: Computer Networks, Question List | Concepts: COMPUTER NETWORKS, Question List | Packet Switching vs Circuit Switching – Numerical Example 1. What is the maximum number of connections that can be ongoing in the network at any one time? 2. Suppose that these maximum number of connections are all ongoing. What happens when another call connection request arrives to the network, will it be accepted? Answer Yes or No 3. Suppose that every connection requires 2 consecutive hops, and calls are connected clockwise. For example, a connection can go from A to C, from B to D, from C to A, and from D to B. With these constraints, what is the is the maximum number of connections that can be ongoing in the network at any one time? 4. Suppose that 12 connections are needed from A to C, and 15 connections are needed from B to D. Can we route these calls through the four links to accommodate all 27 connections? Answer Yes or No",
+    "headings": [
+      "Computer Networks",
+      "Question List"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Question List"
+    ]
+  },
+  {
+    "id": 110,
+    "page": 111,
+    "text": "Packet Switching vs Circuit Switching – Numerical Example 1. The maximum number of connections that can be ongoing at any one time is the sum of all circuits, which happens when 14 connections go from A to B, 16 connections go from B to C, 20 connections go from C to D, and 17 connections go from D to A. This sum is 67. 2. No, it will be blocked because there are no free circuits. 3. There can be a maximum of 33 connections. Consider routes A->C and C->A, sum the bottleneck links, consider any leftover capacity that would allow for B->D and D->B connections, and compare that value to the equivalent of B->D and D->B. 4. Using our answer from question 4, the sum of our needed connections is 27, and we have 33 available connections, so it is possible.",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Packet Switching vs Circuit Switching – Numerical Example 1. The maximum number of connections that can be ongoing at any one time is the sum of all circuits, which happens when 14 connections go from A to B, 16 connections go from B to C, 20 connections go from C to D, and 17 connections go from D to A. This sum is 67. 2. No, it will be blocked because there are no free circuits. 3. There can be a maximum of 33 connections. Consider routes A->C and C->A, sum the bottleneck links, consider any leftover capacity that would allow for B->D and D->B connections, and compare that value to the equivalent of B->D and D->B. 4. Using our answer from question 4, the sum of our needed connections is 27, and we have 33 available connections, so it is possible.",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 111,
+    "page": 112,
+    "text": "Consider the figure below, adapted from Figure 1.17 in the text, which draws the analogy between store-and-forward link transmission and propagation of bits in packet along a link, and cars in a caravan being serviced at a toll booth and then driving along a road to the next tollbooth. Car - Caravan Analogy Suppose the caravan has 10 cars, and that the tollbooth services (that is, transmits) a car at a rate of one car per 2 seconds. Once receiving serving a car proceeds to the next tool both, which is 500 kilometers away at a rate of 10 kilometers per second. Also assume that whenever the first car of the caravan arrives at a tollbooth, it must wait at the entrance to the tollbooth until all of the other cars in its caravan have arrived, and lined up behind it before being serviced at the toll booth. (That is, the entire caravan must be stored at the tollbooth before the first car in the caravan can pay its toll and begin driving towards the next",
+    "embedding_text": "Heading: Computer Networks, Car - Caravan Analogy | Concepts: COMPUTER NETWORKS, Car - Caravan Analogy | Consider the figure below, adapted from Figure 1.17 in the text, which draws the analogy between store-and-forward link transmission and propagation of bits in packet along a link, and cars in a caravan being serviced at a toll booth and then driving along a road to the next tollbooth. Car - Caravan Analogy Suppose the caravan has 10 cars, and that the tollbooth services (that is, transmits) a car at a rate of one car per 2 seconds. Once receiving serving a car proceeds to the next tool both, which is 500 kilometers away at a rate of 10 kilometers per second. Also assume that whenever the first car of the caravan arrives at a tollbooth, it must wait at the entrance to the tollbooth until all of the other cars in its caravan have arrived, and lined up behind it before being serviced at the toll booth. (That is, the entire caravan must be stored at the tollbooth before the first car in the caravan can pay its toll and begin driving towards the next",
+    "headings": [
+      "Computer Networks",
+      "Car - Caravan Analogy"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Car - Caravan Analogy"
+    ]
+  },
+  {
+    "id": 112,
+    "page": 113,
+    "text": "Car - Caravan Analogy 1. Once a car enters service at the tollbooth, how long does it take until it leaves service? 2. How long does it take for the entire caravan to receive service at the tollbooth (that is the time from when the first car enters service until the last car leaves the tollbooth)? 3. Once the first car leaves the tollbooth, how long does it take until it arrives at the next tollbooth? 4. Once the last car leaves the tollbooth, how long does it take until it arrives at the next tollbooth? 5. Once the first car leaves the tollbooth, how long does it take until it enters service at the next tollbooth? 6. Are there ever two cars in service at the same time, one at the first toll booth and one at the second toll booth? Answer Yes or No 7. Are there ever zero cars in service at the same time, i.e., the caravan of cars has finished at the first toll both but not yet arrived at the second tollbooth? Answer Yes or No",
+    "embedding_text": "Heading: Computer Networks, Car - Caravan Analogy, Question List | Concepts: COMPUTER NETWORKS, Car - Caravan Analogy, Question List, Answer Yes or No | Car - Caravan Analogy 1. Once a car enters service at the tollbooth, how long does it take until it leaves service? 2. How long does it take for the entire caravan to receive service at the tollbooth (that is the time from when the first car enters service until the last car leaves the tollbooth)? 3. Once the first car leaves the tollbooth, how long does it take until it arrives at the next tollbooth? 4. Once the last car leaves the tollbooth, how long does it take until it arrives at the next tollbooth? 5. Once the first car leaves the tollbooth, how long does it take until it enters service at the next tollbooth? 6. Are there ever two cars in service at the same time, one at the first toll booth and one at the second toll booth? Answer Yes or No 7. Are there ever zero cars in service at the same time, i.e., the caravan of cars has finished at the first toll both but not yet arrived at the second tollbooth? Answer Yes or No",
+    "headings": [
+      "Computer Networks",
+      "Car - Caravan Analogy",
+      "Question List"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Car - Caravan Analogy",
+      "Question List",
+      "Answer Yes or No"
+    ]
+  },
+  {
+    "id": 113,
+    "page": 114,
+    "text": "Car - Caravan Analogy 1. Service time is 2 seconds 2. It takes 20 seconds to service every car, (10 cars * 2 seconds per car) 3. It takes 50 seconds to travel to the next toll booth (500 km / 10 km/s) 4. Just like in the previous question, it takes 50 seconds, regardless of the car 5. It takes 68 seconds until the first car gets serviced at the next toll booth (10-1 cars * 2 seconds per car + 500 km / 10 km/s) 6. No, because cars can't get service at the next tollbooth until all cars have arrived 7. Yes, one notable example is when the last car in the caravan is serviced but is still travelling to the next toll booth; all other cars have to wait until it arrives, thus no cars are being serviced",
+    "embedding_text": "Heading: Computer Networks, Car - Caravan Analogy | Concepts: COMPUTER NETWORKS, Car - Caravan Analogy | Car - Caravan Analogy 1. Service time is 2 seconds 2. It takes 20 seconds to service every car, (10 cars * 2 seconds per car) 3. It takes 50 seconds to travel to the next toll booth (500 km / 10 km/s) 4. Just like in the previous question, it takes 50 seconds, regardless of the car 5. It takes 68 seconds until the first car gets serviced at the next toll booth (10-1 cars * 2 seconds per car + 500 km / 10 km/s) 6. No, because cars can't get service at the next tollbooth until all cars have arrived 7. Yes, one notable example is when the last car in the caravan is serviced but is still travelling to the next toll booth; all other cars have to wait until it arrives, thus no cars are being serviced",
+    "headings": [
+      "Computer Networks",
+      "Car - Caravan Analogy"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Car - Caravan Analogy"
+    ]
+  },
+  {
+    "id": 114,
+    "page": 115,
+    "text": "Computing the one-hop transmission delay Consider the figure below, in which a single router is transmitting packets, each of length L bits, over a single link with transmission rate R Mbps to another router at the other end of the link. Suppose that the packet length is L= 8000 bits, and that the link transmission rate along the link to router on the right is R = 1 Mbps. Round your answer to two decimals after leading zeros",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Computing the one-hop transmission delay Consider the figure below, in which a single router is transmitting packets, each of length L bits, over a single link with transmission rate R Mbps to another router at the other end of the link. Suppose that the packet length is L= 8000 bits, and that the link transmission rate along the link to router on the right is R = 1 Mbps. Round your answer to two decimals after leading zeros",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 115,
+    "page": 116,
+    "text": "Computing the one-hop transmission delay 1. What is the transmission delay? 2. What is the maximum number of packets per second that can be transmitted by 1. The transmission delay = L/R = 8000 bits / 1000000 bps = 0.008 seconds 1. The number of packets that can be transmitted in a second into the link = R / L = 1000000 bps / 8000 bits = 125 packets",
+    "embedding_text": "Heading: Computer Networks, Question List | Concepts: COMPUTER NETWORKS, Question List | Computing the one-hop transmission delay 1. What is the transmission delay? 2. What is the maximum number of packets per second that can be transmitted by 1. The transmission delay = L/R = 8000 bits / 1000000 bps = 0.008 seconds 1. The number of packets that can be transmitted in a second into the link = R / L = 1000000 bps / 8000 bits = 125 packets",
+    "headings": [
+      "Computer Networks",
+      "Question List"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Question List"
+    ]
+  },
+  {
+    "id": 116,
+    "page": 117,
+    "text": "Consider the queuing delay in a router buffer, where the packet experiences a delay as it waits to be transmitted onto the link. The length of the queuing delay of a specific packet will depend on the number of earlier-arriving packets that are queued and waiting for transmission onto the link. If the queue is empty and no other packet is currently being transmitted, then our packet’s queuing delay will be zero. On the other hand, if the traffic is heavy and many other packets are also waiting to be transmitted, the queuing delay will be long. Assume a constant transmission rate of R = 1900000 bps, a constant packet-length L = 4700 bits, and a is the average rate of packets/second. Traffic intensity I = La/R, and the queuing delay is calculated as IL/(R(1 - I)) for I < 1.",
+    "embedding_text": "Heading: Computer Networks, Queuing Delay | Concepts: COMPUTER NETWORKS, Queuing Delay | Consider the queuing delay in a router buffer, where the packet experiences a delay as it waits to be transmitted onto the link. The length of the queuing delay of a specific packet will depend on the number of earlier-arriving packets that are queued and waiting for transmission onto the link. If the queue is empty and no other packet is currently being transmitted, then our packet’s queuing delay will be zero. On the other hand, if the traffic is heavy and many other packets are also waiting to be transmitted, the queuing delay will be long. Assume a constant transmission rate of R = 1900000 bps, a constant packet-length L = 4700 bits, and a is the average rate of packets/second. Traffic intensity I = La/R, and the queuing delay is calculated as IL/(R(1 - I)) for I < 1.",
+    "headings": [
+      "Computer Networks",
+      "Queuing Delay"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Queuing Delay"
+    ]
+  },
+  {
+    "id": 117,
+    "page": 118,
+    "text": "1. In practice, does the queuing delay tend to vary a lot? Answer with Yes or No 2. Assuming that a = 35, what is the queuing delay? Give your answer in milliseconds (ms) 3. Assuming that a = 77, what is the queuing delay? Give your answer in milliseconds (ms) 4. Assuming the router's buffer is infinite, the queuing delay is 0.3815 ms, and 613 packets arrive. How many packets will be in the buffer 1 second later? 5. If the buffer has a maximum size of 627 packets, how many of the 613 packets would be dropped upon arrival from the previous question?",
+    "embedding_text": "Heading: Computer Networks, Queuing Delay, Question List | Concepts: COMPUTER NETWORKS, Queuing Delay, Question List | 1. In practice, does the queuing delay tend to vary a lot? Answer with Yes or No 2. Assuming that a = 35, what is the queuing delay? Give your answer in milliseconds (ms) 3. Assuming that a = 77, what is the queuing delay? Give your answer in milliseconds (ms) 4. Assuming the router's buffer is infinite, the queuing delay is 0.3815 ms, and 613 packets arrive. How many packets will be in the buffer 1 second later? 5. If the buffer has a maximum size of 627 packets, how many of the 613 packets would be dropped upon arrival from the previous question?",
+    "headings": [
+      "Computer Networks",
+      "Queuing Delay",
+      "Question List"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Queuing Delay",
+      "Question List"
+    ]
+  },
+  {
+    "id": 118,
+    "page": 119,
+    "text": "1. Yes, in practice, queuing delay can vary significantly. We use the above formulas as a way to give a rough estimate, but in a real-life scenario it is much more complicated. I = La/R = 4700*35/1900000 = 0.865 2. Queuing Delay = IL/(R(1 - I)) * 1000 = 0.0865*4700/(1900000*(1-0.0865)) * 1000 = 0.23 ms. I = La/R = 4700*77/1900000 = 0.19 3. Queuing Delay = IL/(R(1 - I)) * 1000 = 0.19*4700/(1900000*(1-0.19)) * 1000 = 0.58 ms. 4. Packets left in buffer = a - floor(1000/delay) = 613 - floor(1000/0.3815) = 0 packets. 5. Packets dropped = packets - buffer size = 613 - 627 hence 0 dropped packets.",
+    "embedding_text": "Heading: Computer Networks, Queuing Delay | Concepts: COMPUTER NETWORKS, Queuing Delay | 1. Yes, in practice, queuing delay can vary significantly. We use the above formulas as a way to give a rough estimate, but in a real-life scenario it is much more complicated. I = La/R = 4700*35/1900000 = 0.865 2. Queuing Delay = IL/(R(1 - I)) * 1000 = 0.0865*4700/(1900000*(1-0.0865)) * 1000 = 0.23 ms. I = La/R = 4700*77/1900000 = 0.19 3. Queuing Delay = IL/(R(1 - I)) * 1000 = 0.19*4700/(1900000*(1-0.19)) * 1000 = 0.58 ms. 4. Packets left in buffer = a - floor(1000/delay) = 613 - floor(1000/0.3815) = 0 packets. 5. Packets dropped = packets - buffer size = 613 - 627 hence 0 dropped packets.",
+    "headings": [
+      "Computer Networks",
+      "Queuing Delay"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Queuing Delay"
+    ]
+  },
+  {
+    "id": 119,
+    "page": 120,
+    "text": "Computing end-end delay (transmission and propagation delay) Consider the figure below, with three links, each with the specified transmission rate and link length. Assume the length of a packet is 12000 bits. The speed of light propagation delay on each link is 3x10^8 m/sec Round your answer to two decimals after leading zeros",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Computing end-end delay (transmission and propagation delay) Consider the figure below, with three links, each with the specified transmission rate and link length. Assume the length of a packet is 12000 bits. The speed of light propagation delay on each link is 3x10^8 m/sec Round your answer to two decimals after leading zeros",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 120,
+    "page": 121,
+    "text": "Computing end-end delay (transmission and propagation delay) 1. What is the transmission delay of link 1? 2. What is the propogation delay of link 1? 3. What is the total delay of link 1? 4. What is the transmission delay of link 2? 5. What is the propogation delay of link 2? 6. What is the total delay of link 2? 7. What is the transmission delay of link 3? 8. What is the propogation delay of link 3? 9. What is the total delay of link 3? 10. What is the total delay?",
+    "embedding_text": "Heading: Computer Networks, Question List | Concepts: COMPUTER NETWORKS, Question List | Computing end-end delay (transmission and propagation delay) 1. What is the transmission delay of link 1? 2. What is the propogation delay of link 1? 3. What is the total delay of link 1? 4. What is the transmission delay of link 2? 5. What is the propogation delay of link 2? 6. What is the total delay of link 2? 7. What is the transmission delay of link 3? 8. What is the propogation delay of link 3? 9. What is the total delay of link 3? 10. What is the total delay?",
+    "headings": [
+      "Computer Networks",
+      "Question List"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Question List"
+    ]
+  },
+  {
+    "id": 121,
+    "page": 122,
+    "text": "Computing end-end delay (transmission and propagation delay) 1. Link 1 transmission delay = L/R = 12000 bits / 100 Mbps = 0.00012 seconds 2. Link 1 propagation delay = d/s = ()3 Km) * 1000 / 3*10^8 m/sec = 1.00E-5 seconds 3. Link 1 total delay = d_t + d_p = 0.00012 seconds + 1.00E-5 seconds = 0.00013 seconds 4. Link 2 transmission delay = L/R = 12000 bits / 1 Mbps = 0.012 seconds 5. Link 2 propagation delay = d/s = ()5000 Km) * 1000 / 3*10^8 m/sec = 0.017 seconds 6. Link 2 total delay = d_t + d_p = 0.012 seconds + 0.017 seconds = 0.029 seconds 7. Link 3 transmission delay = L/R = 12000 bits / 10 Mbps = 0.0012 seconds 8. Link 3 propagation delay = d/s = ()1 Km) * 1000 / 3*10^8 m/sec = 3.33E-6 seconds 9. Link 3 total delay = d_t + d_p = 0.0012 seconds + 3.33E-6 seconds = 0.0012 seconds 10. The total delay = d_L1 + d_L2 + d_L3 = 0.00013 seconds + 0.029 seconds + 0.0012 seconds = 0.03 seconds",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Computing end-end delay (transmission and propagation delay) 1. Link 1 transmission delay = L/R = 12000 bits / 100 Mbps = 0.00012 seconds 2. Link 1 propagation delay = d/s = ()3 Km) * 1000 / 3*10^8 m/sec = 1.00E-5 seconds 3. Link 1 total delay = d_t + d_p = 0.00012 seconds + 1.00E-5 seconds = 0.00013 seconds 4. Link 2 transmission delay = L/R = 12000 bits / 1 Mbps = 0.012 seconds 5. Link 2 propagation delay = d/s = ()5000 Km) * 1000 / 3*10^8 m/sec = 0.017 seconds 6. Link 2 total delay = d_t + d_p = 0.012 seconds + 0.017 seconds = 0.029 seconds 7. Link 3 transmission delay = L/R = 12000 bits / 10 Mbps = 0.0012 seconds 8. Link 3 propagation delay = d/s = ()1 Km) * 1000 / 3*10^8 m/sec = 3.33E-6 seconds 9. Link 3 total delay = d_t + d_p = 0.0012 seconds + 3.33E-6 seconds = 0.0012 seconds 10. The total delay = d_L1 + d_L2 + d_L3 = 0.00013 seconds + 0.029 seconds + 0.0012 seconds = 0.03 seconds",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 122,
+    "page": 123,
+    "text": "End to End Throughput and Bottleneck Links Consider the scenario shown below, with four different servers connected to four different clients over four three-hop paths. The four pairs share a common middle hop with a transmission capacity of R = 300 Mbps. The four links from the servers to the shared link have a transmission capacity of RS = 50 Mbps. Each of the four links from the shared middle link to a client has a transmission capacity of RC = 60 Mbps.",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | End to End Throughput and Bottleneck Links Consider the scenario shown below, with four different servers connected to four different clients over four three-hop paths. The four pairs share a common middle hop with a transmission capacity of R = 300 Mbps. The four links from the servers to the shared link have a transmission capacity of RS = 50 Mbps. Each of the four links from the shared middle link to a client has a transmission capacity of RC = 60 Mbps.",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 123,
+    "page": 124,
+    "text": "End to End Throughput and Bottleneck Links 1. What is the maximum achievable end-end throughput (in Mbps) for each of four client-to-server pairs, assuming that the middle link is fairly shared (divides its transmission rate equally)? 2. Which link is the bottleneck link? Format as Rc, Rs, or R 3. Assuming that the servers are sending at the maximum rate possible, what are the link utilizations for the server links (RS)? Answer as a decimal 4. Assuming that the servers are sending at the maximum rate possible, what are the link utilizations for the client links (RC)? Answer as a decimal 5. Assuming that the servers are sending at the maximum rate possible, what is the link utilizations for the shared link (R)? Answer as a decimal",
+    "embedding_text": "Heading: Computer Networks, Question List | Concepts: COMPUTER NETWORKS, Question List | End to End Throughput and Bottleneck Links 1. What is the maximum achievable end-end throughput (in Mbps) for each of four client-to-server pairs, assuming that the middle link is fairly shared (divides its transmission rate equally)? 2. Which link is the bottleneck link? Format as Rc, Rs, or R 3. Assuming that the servers are sending at the maximum rate possible, what are the link utilizations for the server links (RS)? Answer as a decimal 4. Assuming that the servers are sending at the maximum rate possible, what are the link utilizations for the client links (RC)? Answer as a decimal 5. Assuming that the servers are sending at the maximum rate possible, what is the link utilizations for the shared link (R)? Answer as a decimal",
+    "headings": [
+      "Computer Networks",
+      "Question List"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Question List"
+    ]
+  },
+  {
+    "id": 124,
+    "page": 125,
+    "text": "End to End Throughput and Bottleneck Links 1. The maximum achievable end-end throughput is the capacity of the link with the minimum capacity, which is 50 2. The bottleneck link is the link with the smallest capacity between RS, RC, and R/4. The bottleneck link is Rs. 3. The server's utilization = Rbottleneck / RS = 50 / 50 = 1 4. The client's utilization = Rbottleneck / RC = 50 / 60 = 0.83 5. The shared link's utilization = Rbottleneck / (R / 4) = 50 / (300 / 4) = 0.67",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | End to End Throughput and Bottleneck Links 1. The maximum achievable end-end throughput is the capacity of the link with the minimum capacity, which is 50 2. The bottleneck link is the link with the smallest capacity between RS, RC, and R/4. The bottleneck link is Rs. 3. The server's utilization = Rbottleneck / RS = 50 / 50 = 1 4. The client's utilization = Rbottleneck / RC = 50 / 60 = 0.83 5. The shared link's utilization = Rbottleneck / (R / 4) = 50 / (300 / 4) = 0.67",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 125,
+    "page": 126,
+    "text": "copy of all",
+    "embedding_text": "Heading: Computer Networks, Wireshark, Transport (TCP/UDP), Network (IP), Link (Ethernet), Os, Ethernet frames | Concepts: COMPUTER NETWORKS, Ethernet frames | copy of all",
+    "headings": [
+      "Computer Networks",
+      "Wireshark",
+      "Transport (TCP/UDP)",
+      "Network (IP)",
+      "Link (Ethernet)",
+      "Os",
+      "Ethernet frames"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Ethernet frames"
+    ]
+  },
+  {
+    "id": 126,
+    "page": 127,
+    "text": "Department of Computer Science and Engineering",
+    "embedding_text": "Heading: Thank You, Team Networks | Concepts: Team Networks | Department of Computer Science and Engineering",
+    "headings": [
+      "Thank You",
+      "Team Networks"
+    ],
+    "concepts": [
+      "Team Networks"
+    ]
+  },
+  {
+    "id": 127,
+    "page": 128,
+    "text": "Department of Computer Science and Engineering",
+    "embedding_text": "Heading: Computer Networks, Team Networks | Concepts: COMPUTER NETWORKS, TEAM NETWORKS | Department of Computer Science and Engineering",
+    "headings": [
+      "Computer Networks",
+      "Team Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "TEAM NETWORKS"
+    ]
+  },
+  {
+    "id": 128,
+    "page": 129,
+    "text": "Department of Computer Science and Engineering",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS, Application Layer | Department of Computer Science and Engineering",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Application Layer"
+    ]
+  },
+  {
+    "id": 129,
+    "page": 130,
+    "text": "2.1 Principles of Network Applications 2.2 Web, HTTP and HTTPS Unit – 1 Application Layer",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | 2.1 Principles of Network Applications 2.2 Web, HTTP and HTTPS Unit – 1 Application Layer",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 130,
+    "page": 131,
+    "text": "Application Layer: Overview ▪Conceptual and implementation aspects of application-layer ▪Learn about protocols by",
+    "embedding_text": "Heading: Application Layer, Computer Networks, Our goals:, Http | Concepts: Application Layer: Overview, COMPUTER NETWORKS | Application Layer: Overview ▪Conceptual and implementation aspects of application-layer ▪Learn about protocols by",
+    "headings": [
+      "Application Layer",
+      "Computer Networks",
+      "Our goals:",
+      "Http"
+    ],
+    "concepts": [
+      "Application Layer: Overview",
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 131,
+    "page": 132,
+    "text": "Some Network Apps ▪multi-user network games ▪streaming stored video (YouTube, Hulu, Netflix) ▪P2P file sharing ▪voice over IP ▪real-time video conferencing (e.g., Skype, Hangouts)",
+    "embedding_text": "Heading: Some Network Apps, Computer Networks | Concepts: Some Network Apps, COMPUTER NETWORKS | Some Network Apps ▪multi-user network games ▪streaming stored video (YouTube, Hulu, Netflix) ▪P2P file sharing ▪voice over IP ▪real-time video conferencing (e.g., Skype, Hangouts)",
+    "headings": [
+      "Some Network Apps",
+      "Computer Networks"
+    ],
+    "concepts": [
+      "Some Network Apps",
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 132,
+    "page": 133,
+    "text": "Creating a Network App national or global ISP write programs that: ▪run on (different) end systems ▪communicate over network ▪e.g., web server software communicates with browser no need to write software for ▪network-core devices do not run ▪applications on end systems  allows for rapid app development,",
+    "embedding_text": "Heading: Creating a Network App, Computer Networks | Concepts: Creating a Network App, COMPUTER NETWORKS | Creating a Network App national or global ISP write programs that: ▪run on (different) end systems ▪communicate over network ▪e.g., web server software communicates with browser no need to write software for ▪network-core devices do not run ▪applications on end systems  allows for rapid app development,",
+    "headings": [
+      "Creating a Network App",
+      "Computer Networks"
+    ],
+    "concepts": [
+      "Creating a Network App",
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 133,
+    "page": 134,
+    "text": "national or global ISP ▪permanent IP address ▪often in data centers, for scaling ▪contact, communicate with server ▪may be intermittently connected ▪may have dynamic IP addresses ▪do not communicate directly with ▪examples: HTTP, IMAP, FTP",
+    "embedding_text": "Heading: Client-Server Paradigm, Computer Networks | Concepts: Client-Server Paradigm, COMPUTER NETWORKS | national or global ISP ▪permanent IP address ▪often in data centers, for scaling ▪contact, communicate with server ▪may be intermittently connected ▪may have dynamic IP addresses ▪do not communicate directly with ▪examples: HTTP, IMAP, FTP",
+    "headings": [
+      "Client-Server Paradigm",
+      "Computer Networks"
+    ],
+    "concepts": [
+      "Client-Server Paradigm",
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 134,
+    "page": 135,
+    "text": "national or global ISP ▪no always-on server ▪arbitrary end systems directly ▪peers request service from other peers, provide service in return to self scalability – new peers bring new service capacity, as well as new ▪peers are intermittently connected and change IP ▪example: P2P file sharing",
+    "embedding_text": "Heading: Peer-to-Peer Architecture, Computer Networks | Concepts: Peer-to-Peer Architecture, COMPUTER NETWORKS | national or global ISP ▪no always-on server ▪arbitrary end systems directly ▪peers request service from other peers, provide service in return to self scalability – new peers bring new service capacity, as well as new ▪peers are intermittently connected and change IP ▪example: P2P file sharing",
+    "headings": [
+      "Peer-to-Peer Architecture",
+      "Computer Networks"
+    ],
+    "concepts": [
+      "Peer-to-Peer Architecture",
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 135,
+    "page": 136,
+    "text": "process: program running within a host ▪within same host, two communication (defined by ▪processes in different hosts communicate by exchanging client process: process that server process: process that waits to be contacted ▪note: applications with P2P architectures have client processes & server",
+    "embedding_text": "Heading: Computer Networks, Processes Communicating | Concepts: COMPUTER NETWORKS, Processes Communicating | process: program running within a host ▪within same host, two communication (defined by ▪processes in different hosts communicate by exchanging client process: process that server process: process that waits to be contacted ▪note: applications with P2P architectures have client processes & server",
+    "headings": [
+      "Computer Networks",
+      "Processes Communicating"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Processes Communicating"
+    ]
+  },
+  {
+    "id": 136,
+    "page": 137,
+    "text": "▪process sends/receives messages to/from its socket ▪socket analogous to door sending process shoves message out door sending process relies on transport infrastructure on other side of door to deliver message to socket at receiving two sockets involved: one on each side",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | ▪process sends/receives messages to/from its socket ▪socket analogous to door sending process shoves message out door sending process relies on transport infrastructure on other side of door to deliver message to socket at receiving two sockets involved: one on each side",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 137,
+    "page": 138,
+    "text": "▪to receive messages, process must have identifier ▪host device has unique 32-bit ▪Q: does IP address of host on which process runs suffice for identifying the process? ▪identifier includes both IP address and port numbers associated with process on ▪example port numbers: HTTP server: 80 mail server: 25 ▪to send HTTP message to gaia.cs.umass.edu web server: IP address: 128.119.245.12 port number: 80 ▪A: no, many processes can be running on",
+    "embedding_text": "Heading: Computer Networks, IP address | Concepts: COMPUTER NETWORKS, Addressing Processes, IP address | ▪to receive messages, process must have identifier ▪host device has unique 32-bit ▪Q: does IP address of host on which process runs suffice for identifying the process? ▪identifier includes both IP address and port numbers associated with process on ▪example port numbers: HTTP server: 80 mail server: 25 ▪to send HTTP message to gaia.cs.umass.edu web server: IP address: 128.119.245.12 port number: 80 ▪A: no, many processes can be running on",
+    "headings": [
+      "Computer Networks",
+      "IP address"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Addressing Processes",
+      "IP address"
+    ]
+  },
+  {
+    "id": 138,
+    "page": 139,
+    "text": "An Application-layer Protocol defines: ▪types of messages exchanged, e.g., request, response what fields in messages & how fields are delineated meaning of information in ▪rules for when and how processes send & respond to ▪defined in RFCs, everyone has access to protocol ▪allows for interoperability ▪e.g., HTTP, SMTP",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | An Application-layer Protocol defines: ▪types of messages exchanged, e.g., request, response what fields in messages & how fields are delineated meaning of information in ▪rules for when and how processes send & respond to ▪defined in RFCs, everyone has access to protocol ▪allows for interoperability ▪e.g., HTTP, SMTP",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 139,
+    "page": 140,
+    "text": "What transport service does an App needs? ▪some apps (e.g., file transfer, web transactions) require 100% reliable data ▪other apps (e.g., audio) can tolerate some loss ▪some apps (e.g., Internet games) require low delay to be “effective” ▪some apps (e.g., minimum amount of throughput to be ▪other apps (“elastic apps”) make use of",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | What transport service does an App needs? ▪some apps (e.g., file transfer, web transactions) require 100% reliable data ▪other apps (e.g., audio) can tolerate some loss ▪some apps (e.g., Internet games) require low delay to be “effective” ▪some apps (e.g., minimum amount of throughput to be ▪other apps (“elastic apps”) make use of",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 140,
+    "page": 141,
+    "text": "Transport service requirements: common apps same as above yes, 10’s msec yes, few secs yes, 10’s msec yes and no",
+    "embedding_text": "Heading: Computer Networks, Transport service requirements, Web documents | Concepts: COMPUTER NETWORKS, Web documents | Transport service requirements: common apps same as above yes, 10’s msec yes, few secs yes, 10’s msec yes and no",
+    "headings": [
+      "Computer Networks",
+      "Transport service requirements",
+      "Web documents"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Web documents"
+    ]
+  },
+  {
+    "id": 141,
+    "page": 142,
+    "text": "Internet Transport Protocol Services ▪reliable transport between sending and receiving process ▪flow control: sender won’t ▪congestion control: throttle sender when network overloaded ▪does not provide: timing, minimum throughput guarantee, required between client and ▪unreliable data transfer between sending and ▪does not provide: reliability, flow control, congestion control, timing, security, or connection",
+    "embedding_text": "Heading: Computer Networks, Internet Transport Protocol Services, TCP service:, UDP service: | Concepts: COMPUTER NETWORKS, Internet Transport Protocol Services | Internet Transport Protocol Services ▪reliable transport between sending and receiving process ▪flow control: sender won’t ▪congestion control: throttle sender when network overloaded ▪does not provide: timing, minimum throughput guarantee, required between client and ▪unreliable data transfer between sending and ▪does not provide: reliability, flow control, congestion control, timing, security, or connection",
+    "headings": [
+      "Computer Networks",
+      "Internet Transport Protocol Services",
+      "TCP service:",
+      "UDP service:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Internet Transport Protocol Services"
+    ]
+  },
+  {
+    "id": 142,
+    "page": 143,
+    "text": "Internet Transport Protocol Services FTP [RFC 959] SMTP [RFC 5321] HTTP 1.1 [RFC 7320] SIP [RFC 3261], RTP [RFC 3550], or proprietary (Skype) WOW, FPS (proprietary) TCP or UDP UDP or TCP",
+    "embedding_text": "Heading: Computer Networks, Internet Transport Protocol Services, Web documents, Internet telephony, FTP [RFC 959], SMTP [RFC 5321], HTTP 1.1 [RFC 7320], Dash, WOW, FPS (proprietary), Tcp | Concepts: COMPUTER NETWORKS, Internet Transport Protocol Services, Web documents, Internet telephony | Internet Transport Protocol Services FTP [RFC 959] SMTP [RFC 5321] HTTP 1.1 [RFC 7320] SIP [RFC 3261], RTP [RFC 3550], or proprietary (Skype) WOW, FPS (proprietary) TCP or UDP UDP or TCP",
+    "headings": [
+      "Computer Networks",
+      "Internet Transport Protocol Services",
+      "Web documents",
+      "Internet telephony",
+      "FTP [RFC 959]",
+      "SMTP [RFC 5321]",
+      "HTTP 1.1 [RFC 7320]",
+      "Dash",
+      "WOW, FPS (proprietary)",
+      "Tcp"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Internet Transport Protocol Services",
+      "Web documents",
+      "Internet telephony"
+    ]
+  },
+  {
+    "id": 143,
+    "page": 144,
+    "text": "2.1 Principles of Network Applications 2.2 Web, HTTP and HTTPS Unit – 1 Application Layer",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | 2.1 Principles of Network Applications 2.2 Web, HTTP and HTTPS Unit – 1 Application Layer",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 144,
+    "page": 145,
+    "text": "Web, HTTP and HTTPS First, a quick review… ▪web page consists of objects, each of which can be stored on different Web servers ▪object can be HTML file, JPEG image, Java applet, audio file,… ▪web page consists of base HTML-file which includes several referenced objects, each addressable by a URL, e.g., ▪If a Web page contains HTML text and 5 JPEG images, then the Web page has 6 objects: the base HTML file plus the 5 images.",
+    "embedding_text": "Heading: Computer Networks, Web, HTTP and HTTPS, First, a quick review… | Concepts: COMPUTER NETWORKS, First, a quick review… | Web, HTTP and HTTPS First, a quick review… ▪web page consists of objects, each of which can be stored on different Web servers ▪object can be HTML file, JPEG image, Java applet, audio file,… ▪web page consists of base HTML-file which includes several referenced objects, each addressable by a URL, e.g., ▪If a Web page contains HTML text and 5 JPEG images, then the Web page has 6 objects: the base HTML file plus the 5 images.",
+    "headings": [
+      "Computer Networks",
+      "Web, HTTP and HTTPS",
+      "First, a quick review…"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "First, a quick review…"
+    ]
+  },
+  {
+    "id": 145,
+    "page": 146,
+    "text": "HTTP: hypertext transfer protocol ▪Web’s application layer protocol client: browser that requests, receives, (using HTTP protocol) and “displays” Web objects server: Web server sends (using HTTP protocol) objects in response Defined in RFC 1945; RFC 2616",
+    "embedding_text": "Heading: Computer Networks, HTTP Overview, HTTP: hypertext transfer protocol, PC running, Firefox browser, Safari browser | Concepts: COMPUTER NETWORKS, PC running, Firefox browser, Apache/IIS Web, Safari browser | HTTP: hypertext transfer protocol ▪Web’s application layer protocol client: browser that requests, receives, (using HTTP protocol) and “displays” Web objects server: Web server sends (using HTTP protocol) objects in response Defined in RFC 1945; RFC 2616",
+    "headings": [
+      "Computer Networks",
+      "HTTP Overview",
+      "HTTP: hypertext transfer protocol",
+      "PC running",
+      "Firefox browser",
+      "Safari browser"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "PC running",
+      "Firefox browser",
+      "Apache/IIS Web",
+      "Safari browser"
+    ]
+  },
+  {
+    "id": 146,
+    "page": 147,
+    "text": "HTTP Overview (more) HTTP uses TCP: ▪client initiates TCP connection (creates socket) to server,  port 80 ▪server accepts TCP connection ▪HTTP messages (application-layer protocol messages) exchanged between browser (HTTP client) and Web server (HTTP server) ▪TCP connection closed HTTP is “stateless” ▪server maintains no information about past protocols that maintain “state” are complex! past history (state) must be if server/client crashes, their views of “state” may be inconsistent, must be reconciled",
+    "embedding_text": "Heading: Computer Networks, HTTP Overview (more), HTTP uses TCP:, HTTP is “stateless” | Concepts: COMPUTER NETWORKS | HTTP Overview (more) HTTP uses TCP: ▪client initiates TCP connection (creates socket) to server,  port 80 ▪server accepts TCP connection ▪HTTP messages (application-layer protocol messages) exchanged between browser (HTTP client) and Web server (HTTP server) ▪TCP connection closed HTTP is “stateless” ▪server maintains no information about past protocols that maintain “state” are complex! past history (state) must be if server/client crashes, their views of “state” may be inconsistent, must be reconciled",
+    "headings": [
+      "Computer Networks",
+      "HTTP Overview (more)",
+      "HTTP uses TCP:",
+      "HTTP is “stateless”"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 147,
+    "page": 148,
+    "text": "HTTP Connections: two types TCP connection opened at most one object sent over TCP connection closed downloading multiple objects required multiple connections ▪TCP connection opened to a ▪multiple objects can be sent over single TCP connection between client, and that ▪TCP connection closed",
+    "embedding_text": "Heading: Computer Networks, HTTP Connections, Non-persistent HTTP, TCP connection opened, TCP connection, TCP connection closed, Persistent HTTP | Concepts: COMPUTER NETWORKS, TCP connection opened, TCP connection, TCP connection closed | HTTP Connections: two types TCP connection opened at most one object sent over TCP connection closed downloading multiple objects required multiple connections ▪TCP connection opened to a ▪multiple objects can be sent over single TCP connection between client, and that ▪TCP connection closed",
+    "headings": [
+      "Computer Networks",
+      "HTTP Connections",
+      "Non-persistent HTTP",
+      "TCP connection opened",
+      "TCP connection",
+      "TCP connection closed",
+      "Persistent HTTP"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "TCP connection opened",
+      "TCP connection",
+      "TCP connection closed"
+    ]
+  },
+  {
+    "id": 148,
+    "page": 149,
+    "text": "Non-persistent HTTP: example User enters URL: 1a. HTTP client initiates TCP connection to HTTP server www.someSchool.edu on port 2. HTTP client sends HTTP request message (containing URL) into TCP connection socket. Message indicates that client 1b. HTTP server at host www.someSchool.edu waiting for TCP connection at port 80  “accepts” connection, notifying client 3. HTTP server receives request message, forms response requested object, and sends message into its socket (base HTML file containing text, references to 10 jpeg images)",
+    "embedding_text": "Heading: Computer Networks, Non-persistent HTTP, User enters URL:, Message indicates that client | Concepts: COMPUTER NETWORKS, Message indicates that client | Non-persistent HTTP: example User enters URL: 1a. HTTP client initiates TCP connection to HTTP server www.someSchool.edu on port 2. HTTP client sends HTTP request message (containing URL) into TCP connection socket. Message indicates that client 1b. HTTP server at host www.someSchool.edu waiting for TCP connection at port 80  “accepts” connection, notifying client 3. HTTP server receives request message, forms response requested object, and sends message into its socket (base HTML file containing text, references to 10 jpeg images)",
+    "headings": [
+      "Computer Networks",
+      "Non-persistent HTTP",
+      "User enters URL:",
+      "Message indicates that client"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Message indicates that client"
+    ]
+  },
+  {
+    "id": 149,
+    "page": 150,
+    "text": "Non-persistent HTTP: example (more) User enters URL: (containing text, references to 10 jpeg images) 5. HTTP client receives response message containing html file, displays html.  Parsing html file, finds 10 referenced jpeg  objects 6. Steps 1-5 repeated for each of 10 jpeg objects 4. HTTP server closes TCP",
+    "embedding_text": "Heading: Computer Networks, Non-persistent HTTP, User enters URL: | Concepts: COMPUTER NETWORKS | Non-persistent HTTP: example (more) User enters URL: (containing text, references to 10 jpeg images) 5. HTTP client receives response message containing html file, displays html.  Parsing html file, finds 10 referenced jpeg  objects 6. Steps 1-5 repeated for each of 10 jpeg objects 4. HTTP server closes TCP",
+    "headings": [
+      "Computer Networks",
+      "Non-persistent HTTP",
+      "User enters URL:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 150,
+    "page": 151,
+    "text": "Non-persistent HTTP: response time RTT (definition): time for a small packet to travel from client to server and back HTTP response time (per object): ▪one RTT to initiate TCP connection ▪one RTT for HTTP request and first few bytes of HTTP response to return ▪obect/file transmission time Non-persistent HTTP response time =  2RTT+ file transmission  time",
+    "embedding_text": "Heading: Computer Networks, Non-persistent HTTP, RTT (definition), Rtt | Concepts: COMPUTER NETWORKS | Non-persistent HTTP: response time RTT (definition): time for a small packet to travel from client to server and back HTTP response time (per object): ▪one RTT to initiate TCP connection ▪one RTT for HTTP request and first few bytes of HTTP response to return ▪obect/file transmission time Non-persistent HTTP response time =  2RTT+ file transmission  time",
+    "headings": [
+      "Computer Networks",
+      "Non-persistent HTTP",
+      "RTT (definition)",
+      "Rtt"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 151,
+    "page": 152,
+    "text": "Persistent HTTP (HTTP 1.1) ▪requires 2 RTTs per ▪OS overhead for each TCP connection (TCP buffer and variables) ▪browsers often open multiple parallel TCP connections to fetch referenced objects in Persistent  HTTP (HTTP1.1): ▪server leaves connection open after sending ▪subsequent HTTP messages client/server sent over ▪client sends requests as soon as it encounters a ▪as little as one RTT for all the referenced objects (cutting response time in",
+    "embedding_text": "Heading: Computer Networks, Persistent HTTP (HTTP 1.1), Non-persistent HTTP, TCP connection (TCP, Persistent  HTTP (HTTP1.1): | Concepts: COMPUTER NETWORKS | Persistent HTTP (HTTP 1.1) ▪requires 2 RTTs per ▪OS overhead for each TCP connection (TCP buffer and variables) ▪browsers often open multiple parallel TCP connections to fetch referenced objects in Persistent  HTTP (HTTP1.1): ▪server leaves connection open after sending ▪subsequent HTTP messages client/server sent over ▪client sends requests as soon as it encounters a ▪as little as one RTT for all the referenced objects (cutting response time in",
+    "headings": [
+      "Computer Networks",
+      "Persistent HTTP (HTTP 1.1)",
+      "Non-persistent HTTP",
+      "TCP connection (TCP",
+      "Persistent  HTTP (HTTP1.1):"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 152,
+    "page": 153,
+    "text": "Connection Management in HTTP/1.x",
+    "embedding_text": "Heading: Computer Networks, Connection Management in HTTP/1.x | Concepts: COMPUTER NETWORKS | Connection Management in HTTP/1.x",
+    "headings": [
+      "Computer Networks",
+      "Connection Management in HTTP/1.x"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 153,
+    "page": 154,
+    "text": "2.1 Principles of Network Applications 2.2 Web, HTTP and HTTPS Unit – 1 Application Layer",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | 2.1 Principles of Network Applications 2.2 Web, HTTP and HTTPS Unit – 1 Application Layer",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 154,
+    "page": 155,
+    "text": "HTTP Request Message ▪two types of HTTP messages: request, response ▪HTTP request message: ASCII (human-readable format) request line (GET, carriage return, line feed at start of line indicates end of header lines GET /index.html HTTP/1.1\\r\\n carriage return character Check out the online interactive exercises for more",
+    "embedding_text": "Heading: Computer Networks, HTTP Request Message, HEAD commands), GET /index.html HTTP/1.1\\r\\n, Host: www-net.cs.umass.edu\\r\\n, User-Agent: Firefox/3.6.10\\r\\n, Keep-Alive: 115\\r\\n, Connection: keep-alive\\r\\n | Concepts: COMPUTER NETWORKS, Host: www-net.cs.umass.edu\\r\\n, Accept: text/html,application/xhtml+xml\\r\\n, Accept-Language: en-us,en;q=0.5\\r\\n, Accept-Encoding: gzip,deflate\\r\\n, Connection: keep-alive\\r\\n | HTTP Request Message ▪two types of HTTP messages: request, response ▪HTTP request message: ASCII (human-readable format) request line (GET, carriage return, line feed at start of line indicates end of header lines GET /index.html HTTP/1.1\\r\\n carriage return character Check out the online interactive exercises for more",
+    "headings": [
+      "Computer Networks",
+      "HTTP Request Message",
+      "HEAD commands)",
+      "GET /index.html HTTP/1.1\\r\\n",
+      "Host: www-net.cs.umass.edu\\r\\n",
+      "User-Agent: Firefox/3.6.10\\r\\n",
+      "Keep-Alive: 115\\r\\n",
+      "Connection: keep-alive\\r\\n"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Host: www-net.cs.umass.edu\\r\\n",
+      "Accept: text/html,application/xhtml+xml\\r\\n",
+      "Accept-Language: en-us,en;q=0.5\\r\\n",
+      "Accept-Encoding: gzip,deflate\\r\\n",
+      "Connection: keep-alive\\r\\n"
+    ]
+  },
+  {
+    "id": 155,
+    "page": 156,
+    "text": "HTTP Request Message: General Format header field name header field name HTTP specifications [RFC 1945; RFC 2616; RFC 7540]",
+    "embedding_text": "Heading: Computer Networks, HTTP Request Message, Url | Concepts: COMPUTER NETWORKS | HTTP Request Message: General Format header field name header field name HTTP specifications [RFC 1945; RFC 2616; RFC 7540]",
+    "headings": [
+      "Computer Networks",
+      "HTTP Request Message",
+      "Url"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 156,
+    "page": 157,
+    "text": "HTTP Request Message – Wireshark Capture",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | HTTP Request Message – Wireshark Capture",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 157,
+    "page": 158,
+    "text": "Other HTTP Request Messages ▪web page often includes form input ▪user input sent from client to server in entity body of HTTP POST request GET method (for sending data to server): ▪include user data in URL field of HTTP GET request message (following a ‘?’): ▪requests headers (only) that would be returned if specified URL were requested with an HTTP GET method. ▪uploads new file (object) to server ▪completely replaces file that exists at specified URL with content in entity body of POST HTTP request message",
+    "embedding_text": "Heading: Computer Networks, Other HTTP Request Messages, POST method:, HEAD method:, PUT method: | Concepts: COMPUTER NETWORKS | Other HTTP Request Messages ▪web page often includes form input ▪user input sent from client to server in entity body of HTTP POST request GET method (for sending data to server): ▪include user data in URL field of HTTP GET request message (following a ‘?’): ▪requests headers (only) that would be returned if specified URL were requested with an HTTP GET method. ▪uploads new file (object) to server ▪completely replaces file that exists at specified URL with content in entity body of POST HTTP request message",
+    "headings": [
+      "Computer Networks",
+      "Other HTTP Request Messages",
+      "POST method:",
+      "HEAD method:",
+      "PUT method:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 158,
+    "page": 159,
+    "text": "HTTP Response Message status line (protocol status code status phrase) data, e.g.,  requested HTTP/1.1 200 OK\\r\\n Date: Sun, 26 Sep 2010 20:09:20 GMT\\r\\n Server: Apache/2.0.52 (CentOS)\\r\\n Last-Modified: Tue, 30 Oct 2007 17:00:02 Keep-Alive: timeout=10, max=100\\r\\n Content-Type: text/html; charset=ISO-8859- data data data data data ... Check out the online interactive exercises for more examples: http://gaia.cs.umass.edu/kurose_ross/interactive/",
+    "embedding_text": "Heading: Computer Networks, HTTP Response Message, HTML file, HTTP/1.1 200 OK\\r\\n, Server: Apache/2.0.52 (CentOS)\\r\\n, ETag: \"17dc6-a5c-bf716880\"\\r\\n, Content-Length: 2652\\r\\n, Keep-Alive: timeout=10, max=100\\r\\n, Connection: Keep-Alive\\r\\n, Content-Type: text/html; charset=ISO-8859- | Concepts: COMPUTER NETWORKS, Accept-Ranges: bytes\\r\\n, Connection: Keep-Alive\\r\\n | HTTP Response Message status line (protocol status code status phrase) data, e.g.,  requested HTTP/1.1 200 OK\\r\\n Date: Sun, 26 Sep 2010 20:09:20 GMT\\r\\n Server: Apache/2.0.52 (CentOS)\\r\\n Last-Modified: Tue, 30 Oct 2007 17:00:02 Keep-Alive: timeout=10, max=100\\r\\n Content-Type: text/html; charset=ISO-8859- data data data data data ... Check out the online interactive exercises for more examples: http://gaia.cs.umass.edu/kurose_ross/interactive/",
+    "headings": [
+      "Computer Networks",
+      "HTTP Response Message",
+      "HTML file",
+      "HTTP/1.1 200 OK\\r\\n",
+      "Server: Apache/2.0.52 (CentOS)\\r\\n",
+      "ETag: \"17dc6-a5c-bf716880\"\\r\\n",
+      "Content-Length: 2652\\r\\n",
+      "Keep-Alive: timeout=10, max=100\\r\\n",
+      "Connection: Keep-Alive\\r\\n",
+      "Content-Type: text/html; charset=ISO-8859-"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Accept-Ranges: bytes\\r\\n",
+      "Connection: Keep-Alive\\r\\n"
+    ]
+  },
+  {
+    "id": 159,
+    "page": 160,
+    "text": "HTTP Response Message – Wireshark Capture",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | HTTP Response Message – Wireshark Capture",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 160,
+    "page": 161,
+    "text": "HTTP Response Status Codes request succeeded, requested object later in this message 301 Moved Permanently requested object moved, new location specified later in this message (in 400 Bad Request request msg not understood by server 404 Not Found requested document not found on this server 505 HTTP Version Not Supported ▪status code appears in 1st line in server-to-client response message. ▪some sample codes:",
+    "embedding_text": "Heading: Computer Networks, HTTP Response Status Codes, Location: field) | Concepts: COMPUTER NETWORKS | HTTP Response Status Codes request succeeded, requested object later in this message 301 Moved Permanently requested object moved, new location specified later in this message (in 400 Bad Request request msg not understood by server 404 Not Found requested document not found on this server 505 HTTP Version Not Supported ▪status code appears in 1st line in server-to-client response message. ▪some sample codes:",
+    "headings": [
+      "Computer Networks",
+      "HTTP Response Status Codes",
+      "Location: field)"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 161,
+    "page": 162,
+    "text": "HTTP vs HTTPS ▪HTTPS is HTTP with encryption – All communications between browser and server are encrypted (bi-directional). ▪‘S’ refers ‘Secure’ or HTTP over Secure Socket Layer. ▪Uses TLS (SSL) to encrypt normal HTTP requests and responses. ▪Attackers can't read the data crossing the wire and you know you are talking to the server you think you are talking too.",
+    "embedding_text": "Heading: Computer Networks, HTTP vs HTTPS | Concepts: COMPUTER NETWORKS | HTTP vs HTTPS ▪HTTPS is HTTP with encryption – All communications between browser and server are encrypted (bi-directional). ▪‘S’ refers ‘Secure’ or HTTP over Secure Socket Layer. ▪Uses TLS (SSL) to encrypt normal HTTP requests and responses. ▪Attackers can't read the data crossing the wire and you know you are talking to the server you think you are talking too.",
+    "headings": [
+      "Computer Networks",
+      "HTTP vs HTTPS"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 162,
+    "page": 163,
+    "text": "HTTP vs HTTPS (more) ▪HTTP + TLS -> Encrypted ▪Uses port no. 443 for data ▪HTTPS is based on public/private-key The public key is used for encryption The secret private key is required for ▪SSL certificate is a web server’s digital certificate issued by a third party CA. Create an encrypted connection and ▪Is my certificate SSL or TLS? Any message encrypted with Bob’s public key can be only decrypted with Bob’s private key.",
+    "embedding_text": "Heading: Computer Networks, HTTP vs HTTPS (more) | Concepts: COMPUTER NETWORKS, Create an encrypted connection and | HTTP vs HTTPS (more) ▪HTTP + TLS -> Encrypted ▪Uses port no. 443 for data ▪HTTPS is based on public/private-key The public key is used for encryption The secret private key is required for ▪SSL certificate is a web server’s digital certificate issued by a third party CA. Create an encrypted connection and ▪Is my certificate SSL or TLS? Any message encrypted with Bob’s public key can be only decrypted with Bob’s private key.",
+    "headings": [
+      "Computer Networks",
+      "HTTP vs HTTPS (more)"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Create an encrypted connection and"
+    ]
+  },
+  {
+    "id": 163,
+    "page": 164,
+    "text": "How does SSL works? ▪Step 1: Browser requests secure pages (HTTPS) from a server. ▪Step 2: Server sends its public key with its SSL certificate (digitally signed by a third party – CA). ▪Step 3: On receipt of certificate, browser verifies issuer’s digital signature. (green ▪Step 4: Browser creates a symmetric key (shared key), keeps one and gives a copy to server. Encrypts it using server’s public key. ▪Step 5: On receipt of encrypted secret key, decrypts it using its private key and gets browser’s secret key. ▪Asymmetric and Symmetric key algorithms work together. ▪Asymmetric key algorithm – verify identity of the owner & its public key -> Establish trust. ▪Once connection is established, Symmetric key algorithm is used to encrypt and decrypt the traffic.",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | How does SSL works? ▪Step 1: Browser requests secure pages (HTTPS) from a server. ▪Step 2: Server sends its public key with its SSL certificate (digitally signed by a third party – CA). ▪Step 3: On receipt of certificate, browser verifies issuer’s digital signature. (green ▪Step 4: Browser creates a symmetric key (shared key), keeps one and gives a copy to server. Encrypts it using server’s public key. ▪Step 5: On receipt of encrypted secret key, decrypts it using its private key and gets browser’s secret key. ▪Asymmetric and Symmetric key algorithms work together. ▪Asymmetric key algorithm – verify identity of the owner & its public key -> Establish trust. ▪Once connection is established, Symmetric key algorithm is used to encrypt and decrypt the traffic.",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 164,
+    "page": 165,
+    "text": "How does SSL works?",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | How does SSL works?",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 165,
+    "page": 166,
+    "text": "Benefits of HTTPS over HTTP using SSL Certificates ▪Stronger Google ranking. ▪Updated browser labels. ▪Increased customer confidence / safer experience. ▪Build customer trust and improve conversions.",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Benefits of HTTPS over HTTP using SSL Certificates ▪Stronger Google ranking. ▪Updated browser labels. ▪Increased customer confidence / safer experience. ▪Build customer trust and improve conversions.",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 166,
+    "page": 167,
+    "text": "Benefits of HTTPS over HTTP using SSL Certificates",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | Benefits of HTTPS over HTTP using SSL Certificates",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 167,
+    "page": 168,
+    "text": "▪Piece of data from a specific website ▪Stored on a user’s computer ▪Allows sites to keep track of users ▪Eg: language selection",
+    "embedding_text": "Heading: Computer Networks | Concepts: COMPUTER NETWORKS | ▪Piece of data from a specific website ▪Stored on a user’s computer ▪Allows sites to keep track of users ▪Eg: language selection",
+    "headings": [
+      "Computer Networks"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 168,
+    "page": 169,
+    "text": "Maintaining user/server state: cookies Recall:  HTTP GET/response interaction is stateless ▪no notion of multi-step exchanges of HTTP messages to complete a no need for client/server to track “state” of multi-step exchange all HTTP requests are independent of no need for client/server to “recover” from a partially-completed-but-never- a stateful protocol: client makes two changes to X, or none at all Q: what happens if network connection or client crashes at t’ ?",
+    "embedding_text": "Heading: Computer Networks, Maintaining user/server state, Recall:  HTTP GET/response, Web “transaction” | Concepts: COMPUTER NETWORKS, Maintaining user/server state: cookies, Web “transaction” | Maintaining user/server state: cookies Recall:  HTTP GET/response interaction is stateless ▪no notion of multi-step exchanges of HTTP messages to complete a no need for client/server to track “state” of multi-step exchange all HTTP requests are independent of no need for client/server to “recover” from a partially-completed-but-never- a stateful protocol: client makes two changes to X, or none at all Q: what happens if network connection or client crashes at t’ ?",
+    "headings": [
+      "Computer Networks",
+      "Maintaining user/server state",
+      "Recall:  HTTP GET/response",
+      "Web “transaction”"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Maintaining user/server state: cookies",
+      "Web “transaction”"
+    ]
+  },
+  {
+    "id": 169,
+    "page": 170,
+    "text": "Maintaining user/server state: cookies (more) Web sites and client browser use cookies to maintain some state 1) cookie header line of HTTP response message 2) cookie header line in next HTTP request message 3) cookie file kept on user’s host, managed by user’s 4) back-end database at ▪Susan uses browser on laptop, visits specific e-commerce site for first time ▪when initial HTTP requests arrives at site, site creates: unique ID (aka “cookie”) entry in backend database subsequent HTTP requests from Susan to this site will contain cookie ID value, allowing site to “identify”",
+    "embedding_text": "Heading: Computer Networks, Maintaining user/server state, Web sites and client, HTTP response message, HTTP request message | Concepts: COMPUTER NETWORKS, Web sites and client | Maintaining user/server state: cookies (more) Web sites and client browser use cookies to maintain some state 1) cookie header line of HTTP response message 2) cookie header line in next HTTP request message 3) cookie file kept on user’s host, managed by user’s 4) back-end database at ▪Susan uses browser on laptop, visits specific e-commerce site for first time ▪when initial HTTP requests arrives at site, site creates: unique ID (aka “cookie”) entry in backend database subsequent HTTP requests from Susan to this site will contain cookie ID value, allowing site to “identify”",
+    "headings": [
+      "Computer Networks",
+      "Maintaining user/server state",
+      "Web sites and client",
+      "HTTP response message",
+      "HTTP request message"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Web sites and client"
+    ]
+  },
+  {
+    "id": 170,
+    "page": 171,
+    "text": "Maintaining user/server state: cookies (more) usual HTTP response msg usual HTTP response msg one week later: usual HTTP request msg usual HTTP request msg 1678 for user usual HTTP response usual HTTP request msg",
+    "embedding_text": "Heading: Computer Networks, Maintaining user/server state | Concepts: COMPUTER NETWORKS, Amazon server | Maintaining user/server state: cookies (more) usual HTTP response msg usual HTTP response msg one week later: usual HTTP request msg usual HTTP request msg 1678 for user usual HTTP response usual HTTP request msg",
+    "headings": [
+      "Computer Networks",
+      "Maintaining user/server state"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Amazon server"
+    ]
+  },
+  {
+    "id": 171,
+    "page": 172,
+    "text": "HTTP Cookies: Comments What cookies can be used for: ▪track user’s browsing history ▪remembering login details ▪track visitor count ▪save coupon codes for you cookies and privacy: ▪cookies permit sites to learn a lot about you on ▪third party persistent cookies (tracking cookies) allow common identity (cookie value) to be tracked across multiple Challenge: How to keep state: ▪protocol endpoints: maintain state at sender/receiver over multiple ▪cookies: HTTP messages carry state",
+    "embedding_text": "Heading: Computer Networks, HTTP Cookies | Concepts: COMPUTER NETWORKS | HTTP Cookies: Comments What cookies can be used for: ▪track user’s browsing history ▪remembering login details ▪track visitor count ▪save coupon codes for you cookies and privacy: ▪cookies permit sites to learn a lot about you on ▪third party persistent cookies (tracking cookies) allow common identity (cookie value) to be tracked across multiple Challenge: How to keep state: ▪protocol endpoints: maintain state at sender/receiver over multiple ▪cookies: HTTP messages carry state",
+    "headings": [
+      "Computer Networks",
+      "HTTP Cookies"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 172,
+    "page": 173,
+    "text": "Web Caches (Proxy Servers) ▪user configures browser to point to a Web cache ▪browser sends all HTTP requests to cache if object in cache: cache returns object to else cache requests object from origin server, caches received object, then returns object to client Goal: satisfy client request without involving origin server",
+    "embedding_text": "Heading: Computer Networks, Web Caches (Proxy Servers) | Concepts: COMPUTER NETWORKS | Web Caches (Proxy Servers) ▪user configures browser to point to a Web cache ▪browser sends all HTTP requests to cache if object in cache: cache returns object to else cache requests object from origin server, caches received object, then returns object to client Goal: satisfy client request without involving origin server",
+    "headings": [
+      "Computer Networks",
+      "Web Caches (Proxy Servers)"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 173,
+    "page": 174,
+    "text": "Web Caches (Proxy Servers) ▪Web cache acts as both client and server server for original requesting client to origin server ▪typically cache is installed by ISP (university, company, Why Web caching? ▪reduce response time for client cache is closer to client ▪reduce traffic on an institution’s access link (saves bandwidth) ▪internet is dense with caches enables “poor” content providers to more effectively deliver content ▪privacy – surf the internet",
+    "embedding_text": "Heading: Computer Networks, Web Caches (Proxy Servers), ISP (university, company, | Concepts: COMPUTER NETWORKS | Web Caches (Proxy Servers) ▪Web cache acts as both client and server server for original requesting client to origin server ▪typically cache is installed by ISP (university, company, Why Web caching? ▪reduce response time for client cache is closer to client ▪reduce traffic on an institution’s access link (saves bandwidth) ▪internet is dense with caches enables “poor” content providers to more effectively deliver content ▪privacy – surf the internet",
+    "headings": [
+      "Computer Networks",
+      "Web Caches (Proxy Servers)",
+      "ISP (university, company,"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 174,
+    "page": 175,
+    "text": "1 Gbps LAN access link rate: 1.54 Mbps RTT from institutional router to server: Web object size: 100K bits Average request rate from browsers to origin servers: 15/sec average data rate to browsers: LAN utilization: .0015 access link utilization = .97 end-end delay  =  Internet delay + access link delay + LAN delay =  2 sec + minutes + usecs delays at high (15 req/sec) * (100 Kbits/req)/(1 Gbps) = 0.0015 (15 req/sec) * (100 Kbits/req)/(1.54 Mbps) = 0.974",
+    "embedding_text": "Heading: Computer Networks, Caching example, Scenario:, Web object size, Performance:, LAN utilization | Concepts: COMPUTER NETWORKS | 1 Gbps LAN access link rate: 1.54 Mbps RTT from institutional router to server: Web object size: 100K bits Average request rate from browsers to origin servers: 15/sec average data rate to browsers: LAN utilization: .0015 access link utilization = .97 end-end delay  =  Internet delay + access link delay + LAN delay =  2 sec + minutes + usecs delays at high (15 req/sec) * (100 Kbits/req)/(1 Gbps) = 0.0015 (15 req/sec) * (100 Kbits/req)/(1.54 Mbps) = 0.974",
+    "headings": [
+      "Computer Networks",
+      "Caching example",
+      "Scenario:",
+      "Web object size",
+      "Performance:",
+      "LAN utilization"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 175,
+    "page": 176,
+    "text": "Caching example: buy a faster access link 1 Gbps LAN ▪LAN utilization: .0015 ▪access link utilization = .97 ▪end-end delay  =  Internet delay + access link delay + LAN delay =  2 sec + minutes + usecs ▪access link rate: 1.54 Mbps ▪RTT from institutional router to server: 2 sec ▪Web object size: 100K bits ▪Avg request rate from browsers to origin ▪avg data rate to browsers: 1.50 Mbps Cost: faster access link (expensive!)",
+    "embedding_text": "Heading: Computer Networks, Caching example, Performance:, Scenario: | Concepts: COMPUTER NETWORKS | Caching example: buy a faster access link 1 Gbps LAN ▪LAN utilization: .0015 ▪access link utilization = .97 ▪end-end delay  =  Internet delay + access link delay + LAN delay =  2 sec + minutes + usecs ▪access link rate: 1.54 Mbps ▪RTT from institutional router to server: 2 sec ▪Web object size: 100K bits ▪Avg request rate from browsers to origin ▪avg data rate to browsers: 1.50 Mbps Cost: faster access link (expensive!)",
+    "headings": [
+      "Computer Networks",
+      "Caching example",
+      "Performance:",
+      "Scenario:"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 176,
+    "page": 177,
+    "text": "Caching example: install a web cache ▪LAN utilization: .? ▪access link utilization = ? ▪average end-end delay  = ? 1 Gbps LAN ▪access link rate: 1.54 Mbps ▪RTT from institutional router to server: 2 sec ▪Web object size: 100K bits ▪Avg request rate from browsers to origin servers: 15/sec ▪avg data rate to browsers: 1.50 How to compute link Cost: web cache (cheap!) local web cache",
+    "embedding_text": "Heading: Computer Networks, Caching example, Performance:, Scenario:, How to compute link, Cost: web cache (cheap!) | Concepts: COMPUTER NETWORKS, How to compute link | Caching example: install a web cache ▪LAN utilization: .? ▪access link utilization = ? ▪average end-end delay  = ? 1 Gbps LAN ▪access link rate: 1.54 Mbps ▪RTT from institutional router to server: 2 sec ▪Web object size: 100K bits ▪Avg request rate from browsers to origin servers: 15/sec ▪avg data rate to browsers: 1.50 How to compute link Cost: web cache (cheap!) local web cache",
+    "headings": [
+      "Computer Networks",
+      "Caching example",
+      "Performance:",
+      "Scenario:",
+      "How to compute link",
+      "Cost: web cache (cheap!)"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "How to compute link"
+    ]
+  },
+  {
+    "id": 177,
+    "page": 178,
+    "text": "Caching example: install a web cache 1 Gbps LAN local web cache Calculating access link utilization, end- end delay with cache: ▪suppose cache hit rate is 0.4:  40% requests satisfied at cache, 60% requests satisfied at ▪access link: 60% of requests use access link ▪data rate to browsers over access link = 0.6 * 1.50 Mbps  =  .9 Mbps ▪utilization = 0.9/1.54 = .58 ▪average end-end delay = 0.6 * (delay from origin servers) + 0.4 * (delay when satisfied at cache) = 0.6 (2.01) + 0.4 (~msecs) = ~ 1.2 secs lower average end-end delay than with 154 Mbps link (and cheaper too!)",
+    "embedding_text": "Heading: Computer Networks, Caching example | Concepts: COMPUTER NETWORKS | Caching example: install a web cache 1 Gbps LAN local web cache Calculating access link utilization, end- end delay with cache: ▪suppose cache hit rate is 0.4:  40% requests satisfied at cache, 60% requests satisfied at ▪access link: 60% of requests use access link ▪data rate to browsers over access link = 0.6 * 1.50 Mbps  =  .9 Mbps ▪utilization = 0.9/1.54 = .58 ▪average end-end delay = 0.6 * (delay from origin servers) + 0.4 * (delay when satisfied at cache) = 0.6 (2.01) + 0.4 (~msecs) = ~ 1.2 secs lower average end-end delay than with 154 Mbps link (and cheaper too!)",
+    "headings": [
+      "Computer Networks",
+      "Caching example"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 178,
+    "page": 179,
+    "text": "Goal: don’t send object if cache has up-to-date cached version no object transmission delay lower link utilization ▪cache: specify date of cached copy in HTTP request ▪server: response contains no object if cached copy is up-to- HTTP/1.0 304 Not Modified HTTP request msg 304 Not Modified HTTP request msg HTTP/1.0 200 OK",
+    "embedding_text": "Heading: Computer Networks, Conditional Get, If-modified-since: <date>, HTTP/1.0 304 Not Modified, HTTP request msg, HTTP response, HTTP/1.0 200 OK | Concepts: COMPUTER NETWORKS, Conditional Get, If-modified-since: <date> | Goal: don’t send object if cache has up-to-date cached version no object transmission delay lower link utilization ▪cache: specify date of cached copy in HTTP request ▪server: response contains no object if cached copy is up-to- HTTP/1.0 304 Not Modified HTTP request msg 304 Not Modified HTTP request msg HTTP/1.0 200 OK",
+    "headings": [
+      "Computer Networks",
+      "Conditional Get",
+      "If-modified-since: <date>",
+      "HTTP/1.0 304 Not Modified",
+      "HTTP request msg",
+      "HTTP response",
+      "HTTP/1.0 200 OK"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS",
+      "Conditional Get",
+      "If-modified-since: <date>"
+    ]
+  },
+  {
+    "id": 179,
+    "page": 180,
+    "text": "Conditional Get (more)",
+    "embedding_text": "Heading: Computer Networks, Conditional Get (more) | Concepts: COMPUTER NETWORKS | Conditional Get (more)",
+    "headings": [
+      "Computer Networks",
+      "Conditional Get (more)"
+    ],
+    "concepts": [
+      "COMPUTER NETWORKS"
+    ]
+  },
+  {
+    "id": 180,
+    "page": 181,
+    "text": "Department of Computer Science and Engineering",
+    "embedding_text": "Heading: Thank You, Team Networks | Concepts: TEAM NETWORKS | Department of Computer Science and Engineering",
+    "headings": [
+      "Thank You",
+      "Team Networks"
+    ],
+    "concepts": [
+      "TEAM NETWORKS"
+    ]
+  }
+]

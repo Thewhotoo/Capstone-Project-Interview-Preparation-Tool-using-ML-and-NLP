@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Interview System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             /* Pure black and ultra-dark grays for that sleek look */
@@ -28,6 +31,7 @@
             flex-direction: column;
             gap: 10px;
         }
+
         .toast {
             padding: 14px 20px;
             border-radius: 10px;
@@ -36,16 +40,50 @@
             color: #fff;
             background: var(--bg-elevated);
             border: 1px solid var(--border-subtle);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             animation: toastIn 0.3s ease forwards;
             max-width: 360px;
         }
-        .toast.toast-success { border-left: 3px solid #10b981; }
-        .toast.toast-error { border-left: 3px solid #ef4444; }
-        .toast.toast-info { border-left: 3px solid #3b82f6; }
-        .toast.toast-out { animation: toastOut 0.3s ease forwards; }
-        @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
+
+        .toast.toast-success {
+            border-left: 3px solid #10b981;
+        }
+
+        .toast.toast-error {
+            border-left: 3px solid #ef4444;
+        }
+
+        .toast.toast-info {
+            border-left: 3px solid #3b82f6;
+        }
+
+        .toast.toast-out {
+            animation: toastOut 0.3s ease forwards;
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes toastOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+        }
 
         #interview-monitor-panel {
             display: block;
@@ -55,12 +93,13 @@
             right: 16px;
             margin: 0;
             background: rgba(10, 10, 10, 0.9);
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 12px;
             padding: 10px 10px 8px;
-            box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
             z-index: 40;
         }
+
         .monitor-header {
             display: flex;
             justify-content: space-between;
@@ -73,14 +112,16 @@
             margin-bottom: 8px;
             padding: 0 2px;
         }
+
         .monitor-video-wrap {
             position: relative;
             overflow: hidden;
             border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             background: #000;
             height: 140px;
         }
+
         #gaze-video {
             width: 100%;
             height: 100%;
@@ -89,6 +130,7 @@
             transform: scaleX(-1);
             background: #000;
         }
+
         .camera-help-text {
             font-size: 0.6rem;
             color: #888;
@@ -96,6 +138,7 @@
             margin-top: 8px;
             text-align: center;
         }
+
         .gaze-warning {
             display: none;
             margin-top: 8px;
@@ -109,84 +152,189 @@
             font-weight: 600;
             animation: gazeWarnPulse 1.4s ease-in-out infinite;
         }
+
         .gaze-warning.visible {
             display: block;
         }
+
         @keyframes gazeWarnPulse {
-            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239,68,68,0); }
-            50% { opacity: 0.85; box-shadow: 0 0 8px 2px rgba(239,68,68,0.35); }
+
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+
+            50% {
+                opacity: 0.85;
+                box-shadow: 0 0 8px 2px rgba(239, 68, 68, 0.35);
+            }
         }
-        /* ── Face presence — proctoring-style badge ── */
-        #face-status {
+
+        /* ── Unified attention-monitoring status (Phase 1) ──────────────
+           One status line (dot + label) + one subtle metrics row
+           (gaze + head) underneath. No duplicated face messages,
+           no independent debug badges. Layout height stays fixed
+           across states so the panel never resizes/jumps. */
+        #attention-status {
+            margin-top: 8px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: rgba(255, 255, 255, 0.03);
+            transition: background 0.4s ease, border-color 0.4s ease;
+        }
+
+        .attn-main {
             display: flex;
             align-items: center;
             gap: 7px;
-            margin-top: 7px;
-            padding: 6px 10px;
-            border-radius: 8px;
             font-size: 0.68rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            transition: background 0.35s, border-color 0.35s, color 0.35s;
-            border: 1px solid transparent;
+            transition: color 0.35s ease;
         }
-        #face-status::before {
-            content: '';
+
+        .attn-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
             flex-shrink: 0;
-            transition: background 0.35s, box-shadow 0.35s;
+            background: #333;
+            transition: background 0.35s ease, box-shadow 0.35s ease;
         }
-        #face-status.fs-detected {
-            background: rgba(16, 185, 129, 0.12);
-            border-color: rgba(16, 185, 129, 0.35);
-            color: #6ee7b7;
+
+        .attn-metrics {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 0.64rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            color: #999;
+            text-transform: none;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: opacity 0.35s ease, max-height 0.35s ease, margin-top 0.35s ease, padding-top 0.35s ease;
         }
-        #face-status.fs-detected::before {
-            background: #10b981;
-            box-shadow: 0 0 6px #10b981;
-            animation: dotPulse 1.8s ease-in-out infinite;
+
+        .attn-metrics.visible {
+            opacity: 1;
+            max-height: 40px;
         }
-        #face-status.fs-notdetected {
-            background: rgba(239, 68, 68, 0.12);
-            border-color: rgba(239, 68, 68, 0.35);
+
+        .attn-metrics span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .attn-metrics .metric-label {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* State: loading model */
+        #attention-status.attn-loading {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        #attention-status.attn-loading .attn-main {
+            color: #666;
+        }
+
+        #attention-status.attn-loading .attn-dot {
+            background: #444;
+        }
+
+        /* State: monitoring normally (face detected, all good) */
+        #attention-status.attn-ok {
+            background: rgba(59, 130, 246, 0.10);
+            border-color: rgba(59, 130, 246, 0.30);
+        }
+
+        #attention-status.attn-ok .attn-main {
+            color: #93c5fd;
+        }
+
+        #attention-status.attn-ok .attn-dot {
+            background: #3b82f6;
+            box-shadow: 0 0 6px #3b82f6;
+            animation: dotPulse 2.2s ease-in-out infinite;
+        }
+
+        /* State: mild attention issue (e.g. head/gaze drifted, prepared for later) */
+        #attention-status.attn-caution {
+            background: rgba(245, 158, 11, 0.10);
+            border-color: rgba(245, 158, 11, 0.30);
+        }
+
+        #attention-status.attn-caution .attn-main {
+            color: #fcd34d;
+        }
+
+        #attention-status.attn-caution .attn-dot {
+            background: #f59e0b;
+            box-shadow: 0 0 6px #f59e0b;
+            animation: dotPulse 1.2s ease-in-out infinite;
+        }
+
+        /* State: face not detected / serious warning */
+        #attention-status.attn-warn {
+            background: rgba(239, 68, 68, 0.10);
+            border-color: rgba(239, 68, 68, 0.30);
+        }
+
+        #attention-status.attn-warn .attn-main {
             color: #fca5a5;
         }
-        #face-status.fs-notdetected::before {
+
+        #attention-status.attn-warn .attn-dot {
             background: #ef4444;
             box-shadow: 0 0 6px #ef4444;
-            animation: dotPulse 0.85s ease-in-out infinite;
+            animation: dotPulse 0.9s ease-in-out infinite;
         }
-        #face-status.fs-loading {
-            background: rgba(255,255,255,0.03);
-            border-color: rgba(255,255,255,0.08);
-            color: #444;
-        }
-        #face-status.fs-loading::before {
-            background: #333;
-        }
+
         @keyframes dotPulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50%       { opacity: 0.45; transform: scale(0.75); }
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.45;
+                transform: scale(0.75);
+            }
         }
+
         /* Camera border glow based on detection state */
         .monitor-video-wrap {
             transition: box-shadow 0.4s ease, border-color 0.4s ease !important;
         }
+
         .monitor-video-wrap.cam-ok {
             border-color: rgba(16, 185, 129, 0.5) !important;
             box-shadow: 0 0 14px rgba(16, 185, 129, 0.22);
         }
+
         .monitor-video-wrap.cam-warn {
             border-color: rgba(239, 68, 68, 0.5) !important;
             box-shadow: 0 0 14px rgba(239, 68, 68, 0.22);
         }
 
-        body { 
-            font-family: 'Inter', sans-serif; 
-            margin: 0; 
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
             height: 100vh;
             color: var(--text-main);
             background-color: var(--bg-base);
@@ -201,62 +349,84 @@
         #landing-container {
             width: 100%;
             max-width: 500px;
-            margin: auto; /* Centers it perfectly */
+            margin: auto;
+            /* Centers it perfectly */
             text-align: center;
             transition: opacity 0.5s ease, transform 0.5s ease;
             padding: 40px;
         }
 
-        .landing-title { 
-            font-size: 3rem; 
-            font-weight: 700; 
-            margin-bottom: 8px; 
+        .landing-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
             letter-spacing: -1px;
             color: #ffffff;
         }
-        
-        .landing-sub { color: var(--text-muted); margin-bottom: 40px; font-size: 1.1rem; font-weight: 300; }
 
-        .form-group { text-align: left; margin-bottom: 24px; }
-        .form-group label { 
-            display: block; 
-            font-size: 0.75rem; 
-            color: #666; 
-            margin-bottom: 12px; 
-            text-transform: uppercase; 
-            letter-spacing: 2px; 
-            font-weight: 600; 
+        .landing-sub {
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+            font-weight: 300;
         }
-        
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
         select {
-            width: 100%; 
-            padding: 16px 20px; 
-            border-radius: 12px; 
-            background: var(--bg-elevated); 
-            border: 1px solid var(--border-subtle); 
-            color: white; 
-            font-size: 1rem; 
-            outline: none; 
+            width: 100%;
+            padding: 16px 20px;
+            border-radius: 12px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            color: white;
+            font-size: 1rem;
+            outline: none;
             transition: all 0.3s ease;
             appearance: none;
         }
-        select:focus { border-color: #555; }
-        option { background: var(--bg-elevated); color: white; }
+
+        select:focus {
+            border-color: #555;
+        }
+
+        option {
+            background: var(--bg-elevated);
+            color: white;
+        }
 
         .start-btn {
-            width: 100%; 
-            padding: 18px; 
-            margin-top: 20px; 
-            background: white; 
-            color: black; 
-            border: none; 
-            border-radius: 12px; 
-            font-size: 1.1rem; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+            width: 100%;
+            padding: 18px;
+            margin-top: 20px;
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .start-btn:hover { transform: scale(1.02); background: #f0f0f0; box-shadow: 0 0 30px rgba(255,255,255,0.1); }
+
+        .start-btn:hover {
+            transform: scale(1.02);
+            background: #f0f0f0;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+        }
 
         /* --- CANDIDATE ASSESSMENT DASHBOARD --- */
         #candidate-dashboard {
@@ -267,8 +437,22 @@
             background: var(--bg-base);
             animation: dashFadeIn 0.6s ease forwards;
         }
-        #candidate-dashboard::-webkit-scrollbar { display: none; }
-        @keyframes dashFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #candidate-dashboard::-webkit-scrollbar {
+            display: none;
+        }
+
+        @keyframes dashFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         .dash-wrapper {
             max-width: 1100px;
@@ -283,6 +467,7 @@
             letter-spacing: -0.5px;
             margin-bottom: 4px;
         }
+
         .dash-subtitle {
             font-size: 0.95rem;
             color: var(--text-muted);
@@ -296,12 +481,14 @@
             gap: 20px;
             margin-bottom: 28px;
         }
+
         .dash-card {
             background: var(--bg-elevated);
             border: 1px solid var(--border-subtle);
             border-radius: 14px;
             padding: 24px;
         }
+
         .dash-card-label {
             font-size: 0.7rem;
             text-transform: uppercase;
@@ -310,12 +497,14 @@
             margin-bottom: 8px;
             font-weight: 600;
         }
+
         .dash-card-value {
             font-size: 1.5rem;
             font-weight: 700;
             color: #fff;
             font-family: 'Roboto Mono', monospace;
         }
+
         .dash-card-value.small {
             font-size: 1rem;
             font-weight: 500;
@@ -323,7 +512,9 @@
             line-height: 1.5;
         }
 
-        .dash-full { grid-column: 1 / -1; }
+        .dash-full {
+            grid-column: 1 / -1;
+        }
 
         .dash-skills-grid {
             display: flex;
@@ -331,21 +522,52 @@
             gap: 8px;
             margin-top: 8px;
         }
+
         .skill-chip {
             padding: 6px 14px;
             border-radius: 8px;
             font-size: 0.8rem;
             font-weight: 500;
-            background: rgba(255,255,255,0.04);
+            background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--border-subtle);
             color: #ddd;
         }
-        .skill-chip.sk-lang { background: rgba(59,130,246,0.10); border-color: rgba(59,130,246,0.20); color: #93c5fd; }
-        .skill-chip.sk-framework { background: rgba(16,185,129,0.10); border-color: rgba(16,185,129,0.20); color: #6ee7b7; }
-        .skill-chip.sk-tool { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.20); color: #fcd34d; }
-        .skill-chip.sk-db { background: rgba(168,85,247,0.10); border-color: rgba(168,85,247,0.20); color: #c4b5fd; }
-        .skill-chip.sk-cloud { background: rgba(6,182,212,0.10); border-color: rgba(6,182,212,0.20); color: #67e8f9; }
-        .skill-chip.sk-other { background: rgba(255,255,255,0.04); border-color: var(--border-subtle); color: #aaa; }
+
+        .skill-chip.sk-lang {
+            background: rgba(59, 130, 246, 0.10);
+            border-color: rgba(59, 130, 246, 0.20);
+            color: #93c5fd;
+        }
+
+        .skill-chip.sk-framework {
+            background: rgba(16, 185, 129, 0.10);
+            border-color: rgba(16, 185, 129, 0.20);
+            color: #6ee7b7;
+        }
+
+        .skill-chip.sk-tool {
+            background: rgba(245, 158, 11, 0.10);
+            border-color: rgba(245, 158, 11, 0.20);
+            color: #fcd34d;
+        }
+
+        .skill-chip.sk-db {
+            background: rgba(168, 85, 247, 0.10);
+            border-color: rgba(168, 85, 247, 0.20);
+            color: #c4b5fd;
+        }
+
+        .skill-chip.sk-cloud {
+            background: rgba(6, 182, 212, 0.10);
+            border-color: rgba(6, 182, 212, 0.20);
+            color: #67e8f9;
+        }
+
+        .skill-chip.sk-other {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--border-subtle);
+            color: #aaa;
+        }
 
         .dash-category-label {
             font-size: 0.65rem;
@@ -357,8 +579,8 @@
         }
 
         .dash-preview-box {
-            background: rgba(255,255,255,0.02);
-            border: 1px dashed rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.08);
             border-radius: 10px;
             padding: 18px 20px;
             margin-top: 12px;
@@ -366,7 +588,10 @@
             font-size: 0.9rem;
             line-height: 1.6;
         }
-        .dash-preview-box strong { color: #ddd; }
+
+        .dash-preview-box strong {
+            color: #ddd;
+        }
 
         .dash-start-btn {
             width: 100%;
@@ -381,97 +606,141 @@
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
+
         .dash-start-btn:hover {
             transform: scale(1.015);
-            box-shadow: 0 0 40px rgba(255,255,255,0.08);
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.08);
             background: #f0f0f0;
         }
 
         @media (max-width: 700px) {
-            .dash-grid { grid-template-columns: 1fr; }
-            .dash-wrapper { padding: 24px 16px 40px; }
-            .dash-greeting { font-size: 1.5rem; }
+            .dash-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dash-wrapper {
+                padding: 24px 16px 40px;
+            }
+
+            .dash-greeting {
+                font-size: 1.5rem;
+            }
         }
 
         /* --- CHAT CONTAINER (FULL SCREEN LAYOUT) --- */
-        #chat-container { 
-            display: none; 
-            width: 100%; 
-            height: 100vh; 
-            flex-direction: column; 
-            align-items: center; /* Centers the inner content */
+        #chat-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            flex-direction: column;
+            align-items: center;
+            /* Centers the inner content */
             transition: opacity 0.5s ease, transform 0.5s ease;
         }
 
-        .chat-header { 
+        .chat-header {
             width: 100%;
-            padding: 24px; 
-            text-align: center; 
-            border-bottom: 1px solid var(--border-subtle); 
-            font-weight: 500; 
-            font-size: 0.9rem; 
-            letter-spacing: 2px; 
+            padding: 24px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-subtle);
+            font-weight: 500;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
             text-transform: uppercase;
             color: var(--text-muted);
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(10px);
             z-index: 10;
         }
-        
+
         /* Restricting the width of the messages to look like a neat column */
-        #messages { 
-            width: 100%; 
-            max-width: 800px; 
-            flex-grow: 1; 
-            overflow-y: auto; 
-            padding: 40px 20px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 24px; 
-            scroll-behavior: smooth; 
+        #messages {
+            width: 100%;
+            max-width: 800px;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            scroll-behavior: smooth;
         }
-        #messages::-webkit-scrollbar { display: none; } /* Clean, hidden scrollbar */
 
-        .msg-wrapper { display: flex; gap: 16px; max-width: 85%; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .bot-wrapper { align-self: flex-start; }
-        .user-wrapper { align-self: flex-end; flex-direction: row-reverse; }
-
-        .avatar { 
-            width: 36px; 
-            height: 36px; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 1rem; 
-            background: var(--bg-elevated); 
-            border: 1px solid var(--border-subtle); 
-            flex-shrink: 0; 
+        #messages::-webkit-scrollbar {
+            display: none;
         }
-        
-        .msg { 
-            padding: 16px 20px; 
-            border-radius: 16px; 
-            line-height: 1.6; 
-            font-size: 0.95rem; 
+
+        /* Clean, hidden scrollbar */
+
+        .msg-wrapper {
+            display: flex;
+            gap: 16px;
+            max-width: 85%;
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .bot-wrapper {
+            align-self: flex-start;
+        }
+
+        .user-wrapper {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            flex-shrink: 0;
+        }
+
+        .msg {
+            padding: 16px 20px;
+            border-radius: 16px;
+            line-height: 1.6;
+            font-size: 0.95rem;
             font-weight: 400;
         }
-        
-        .bot-msg { background: var(--bot-bubble); border: 1px solid var(--border-subtle); }
-        .user-msg { background: var(--user-bubble); border: 1px solid var(--border-subtle); }
+
+        .bot-msg {
+            background: var(--bot-bubble);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .user-msg {
+            background: var(--user-bubble);
+            border: 1px solid var(--border-subtle);
+        }
 
         /* THE NEW EVALUATION CARD WITH GLASSMORPHISM */
-        .eval-card { 
-            background: rgba(10, 10, 10, 0.6); 
+        .eval-card {
+            background: rgba(10, 10, 10, 0.6);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05); 
-            border-radius: 12px; 
-            padding: 20px; 
-            margin-top: 12px; 
-            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); 
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 12px;
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         /* PREMIUM DYNAMIC GLOWS */
@@ -479,140 +748,283 @@
             box-shadow: 0 0 40px rgba(16, 185, 129, 0.1), inset 0 0 20px rgba(16, 185, 129, 0.05);
             border-color: rgba(16, 185, 129, 0.2);
         }
+
         .glow-mid {
             box-shadow: 0 0 40px rgba(245, 158, 11, 0.1), inset 0 0 20px rgba(245, 158, 11, 0.05);
             border-color: rgba(245, 158, 11, 0.2);
         }
+
         .glow-fail {
             box-shadow: 0 0 40px rgba(225, 29, 72, 0.1), inset 0 0 20px rgba(225, 29, 72, 0.05);
             border-color: rgba(225, 29, 72, 0.2);
         }
 
-        .eval-header { display: flex; justify-content: space-between; margin-bottom: 16px; font-weight: 500; }
-        .badge { 
-            background: rgba(255,255,255,0.03); 
-            padding: 6px 14px; 
-            border-radius: 8px; 
-            font-size: 0.85rem; 
-            border: 1px solid var(--border-subtle); 
+        .eval-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            border: 1px solid var(--border-subtle);
             letter-spacing: 0.5px;
         }
 
-        .typing-indicator { display: flex; gap: 6px; padding: 18px 24px; background: var(--bot-bubble); border-radius: 16px; width: fit-content; border: 1px solid var(--border-subtle); }
-        .dot { width: 6px; height: 6px; background-color: var(--text-muted); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
-        .dot:nth-child(1) { animation-delay: -0.32s; }
-        .dot:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        .typing-indicator {
+            display: flex;
+            gap: 6px;
+            padding: 18px 24px;
+            background: var(--bot-bubble);
+            border-radius: 16px;
+            width: fit-content;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--text-muted);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+        }
 
         /* THE NEW INPUT AREA */
-        .input-area { 
-            width: 100%; 
-            max-width: 800px; 
-            display: flex; 
-            gap: 12px; 
-            padding: 20px; 
-            padding-bottom: 40px; /* Gives it breathing room at the bottom of the screen */
-            background: transparent; 
+        .input-area {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            gap: 12px;
+            padding: 20px;
+            padding-bottom: 40px;
+            /* Gives it breathing room at the bottom of the screen */
+            background: transparent;
         }
-        
-        input[type="text"] { 
-            flex-grow: 1; 
-            padding: 16px 24px; 
-            border-radius: 12px; 
-            border: 1px solid var(--border-subtle); 
-            background: var(--bg-elevated); 
-            color: white; 
-            font-size: 1rem; 
-            outline: none; 
-            transition: all 0.3s ease; 
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 16px 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-elevated);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
         }
-        input[type="text"]:focus { 
-            border-color: #555; 
-            background: #111; 
+
+        input[type="text"]:focus {
+            border-color: #555;
+            background: #111;
         }
-        input[type="text"]:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .mic-btn, .send-btn { 
-            padding: 0 24px; 
-            background: var(--bg-elevated); 
-            color: white; 
-            border: 1px solid var(--border-subtle); 
-            border-radius: 12px; 
-            cursor: pointer; 
-            font-size: 1rem; 
-            font-weight: 500; 
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+
+        input[type="text"]:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
-        .mic-btn:hover:not(:disabled), .send-btn:hover:not(:disabled) { background: #1a1a1a; border-color: #555; }
-        .mic-active { color: #ef4444; border-color: rgba(239, 68, 68, 0.5) !important; background: rgba(239, 68, 68, 0.1) !important; }
+
+        .mic-btn,
+        .send-btn {
+            padding: 0 24px;
+            background: var(--bg-elevated);
+            color: white;
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .mic-btn:hover:not(:disabled),
+        .send-btn:hover:not(:disabled) {
+            background: #1a1a1a;
+            border-color: #555;
+        }
+
+        .mic-active {
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.5) !important;
+            background: rgba(239, 68, 68, 0.1) !important;
+        }
 
         /* --- DASHBOARD UI --- */
-        #dashboard-container { 
-            display: none; 
-            width: 100%; 
-            max-width: 800px; 
-            margin: auto; /* Centers it perfectly */
-            height: 90vh; 
-            flex-direction: column; 
-            overflow-y: auto; 
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+        #dashboard-container {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+            /* Centers it perfectly */
+            height: 90vh;
+            flex-direction: column;
+            overflow-y: auto;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             padding: 40px 20px;
         }
-        #dashboard-container::-webkit-scrollbar { display: none; }
 
-        .dashboard-header { 
-            font-size: 2.5rem; 
-            font-weight: 700; 
-            margin-bottom: 40px; 
-            color: #ffffff; 
+        #dashboard-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .dashboard-header {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: #ffffff;
             letter-spacing: -1px;
         }
-        
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 50px; }
-        
-        .stat-box { 
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 50px;
+        }
+
+        .stat-box {
             background: var(--bg-elevated);
-            padding: 30px 20px; 
-            border-radius: 12px; 
-            border: 1px solid var(--border-subtle); 
+            padding: 30px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
         }
-        .stat-value { font-size: 3rem; font-weight: 700; margin-bottom: 8px; line-height: 1; font-family: 'Roboto Mono', monospace; }
-        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
-        
-        .section-title { font-weight: 600; margin-bottom: 24px; font-size: 1.2rem; color: #fff; letter-spacing: 1px;}
-        .history-list { display: grid; grid-template-columns: 1fr; gap: 16px; }
-        .history-card { 
-            background: var(--bg-elevated); 
-            padding: 24px; 
-            border-radius: 12px; 
-            border: 1px solid var(--border-subtle); 
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1;
+            font-family: 'Roboto Mono', monospace;
         }
-        
-        .history-card-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
-        .history-q { font-weight: 500; font-size: 1.1rem; margin-bottom: 16px; color: #fff; line-height: 1.6; }
-        .history-feedback { margin-top: 16px; font-size: 0.9rem; color: #aaa; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.02); }
 
-        .skill-bar-container { margin-bottom: 20px; }
-        .skill-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px; color: #ccc; }
-        .skill-bar-bg { width: 100%; height: 6px; background: #111; border-radius: 10px; overflow: hidden; }
-        .skill-bar-fill { height: 100%; background: #fff; border-radius: 10px; transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
 
-        .retry-btn { 
-            margin: 40px 0; 
-            padding: 16px 30px; 
-            background: white; 
-            color: black; 
-            border: none; 
-            border-radius: 12px; 
-            font-size: 1rem; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: all 0.3s ease; 
+        .section-title {
+            font-weight: 600;
+            margin-bottom: 24px;
+            font-size: 1.2rem;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+
+        .history-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        .history-card {
+            background: var(--bg-elevated);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .history-card-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .history-q {
+            font-weight: 500;
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            color: #fff;
+            line-height: 1.6;
+        }
+
+        .history-feedback {
+            margin-top: 16px;
+            font-size: 0.9rem;
+            color: #aaa;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+
+        .skill-bar-container {
+            margin-bottom: 20px;
+        }
+
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            color: #ccc;
+        }
+
+        .skill-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: #111;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .skill-bar-fill {
+            height: 100%;
+            background: #fff;
+            border-radius: 10px;
+            transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .retry-btn {
+            margin: 40px 0;
+            padding: 16px 30px;
+            background: white;
+            color: black;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
             width: fit-content;
         }
-        .retry-btn:hover { transform: scale(1.02); background: #f0f0f0; }
+
+        .retry-btn:hover {
+            transform: scale(1.02);
+            background: #f0f0f0;
+        }
     </style>
 </head>
+
 <body>
 
     <div id="landing-container">
@@ -623,32 +1035,45 @@
         <div id="resume-upload-section">
             <div class="form-group">
                 <label>📄 Upload Your Resume (Optional)</label>
-                <input type="file" id="resume-file" accept=".pdf,.docx" style="width: 100%; padding: 12px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-elevated); color: white; cursor: pointer;">
+                <input type="file" id="resume-file" accept=".pdf,.docx"
+                    style="width: 100%; padding: 12px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-elevated); color: white; cursor: pointer;">
             </div>
             <button class="start-btn" onclick="uploadResume()">Start Interview →</button>
             <br><br>
-            <button class="start-btn" style="background: #666;" onclick="testQuizDirectly()">TEST: Load Discussion Directly</button>
-            <div id="resume-analysis" style="display: none; margin-top: 20px; padding: 20px; background: var(--bot-bubble); border-radius: 12px; border: 1px solid var(--border-subtle);">
-                <p style="color: #10b981; margin: 5px 0;"><strong>✅ Domain:</strong> <span id="classified-domain"></span></p>
-                <p style="color: #f59e0b; margin: 5px 0;"><strong>🎯 Confidence:</strong> <span id="domain-confidence"></span></p>
-                <p style="color: #3b82f6; margin: 5px 0;"><strong>💼 Experience:</strong> <span id="domain-experience"></span></p>
-                <button class="start-btn" style="margin-top: 12px;" onclick="startQuizFromAnalysis()">Proceed to Resume Discussion →</button>
+            <button class="start-btn" style="background: #666;" onclick="testQuizDirectly()">TEST: Load Discussion
+                Directly</button>
+            <div id="resume-analysis"
+                style="display: none; margin-top: 20px; padding: 20px; background: var(--bot-bubble); border-radius: 12px; border: 1px solid var(--border-subtle);">
+                <p style="color: #10b981; margin: 5px 0;"><strong>✅ Domain:</strong> <span
+                        id="classified-domain"></span></p>
+                <p style="color: #f59e0b; margin: 5px 0;"><strong>🎯 Confidence:</strong> <span
+                        id="domain-confidence"></span></p>
+                <p style="color: #3b82f6; margin: 5px 0;"><strong>💼 Experience:</strong> <span
+                        id="domain-experience"></span></p>
+                <button class="start-btn" style="margin-top: 12px;" onclick="startQuizFromAnalysis()">Proceed to Resume
+                    Discussion →</button>
             </div>
         </div>
 
         <!-- STEP 2: Resume Discussion -->
-        <div id="quiz-section" style="display: none; margin-top: 20px; max-height: 70vh; overflow-y: auto; padding-right: 10px;">
-            <div style="background: var(--bot-bubble); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 20px; position: sticky; top: 0; z-index: 10;">
+        <div id="quiz-section"
+            style="display: none; margin-top: 20px; max-height: 70vh; overflow-y: auto; padding-right: 10px;">
+            <div
+                style="background: var(--bot-bubble); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 20px; position: sticky; top: 0; z-index: 10;">
                 <p style="color: #3b82f6; margin: 0;"><strong>Resume Discussion</strong></p>
-                <p style="color: #888; margin: 5px 0 0 0; font-size: 0.9rem;">Questions based on your projects and experience</p>
+                <p style="color: #888; margin: 5px 0 0 0; font-size: 0.9rem;">Questions based on your projects and
+                    experience</p>
                 <div style="margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                    <p style="margin: 0 0 8px 0; color: #aaa; font-size: 0.85rem;">Progress: <span id="quiz-progress">0</span>/<span id="quiz-total">12</span></p>
-                    <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
-                        <div id="quiz-progress-bar" style="height: 100%; width: 0%; background: #3b82f6; transition: width 0.3s;"></div>
+                    <p style="margin: 0 0 8px 0; color: #aaa; font-size: 0.85rem;">Progress: <span
+                            id="quiz-progress">0</span>/<span id="quiz-total">12</span></p>
+                    <div
+                        style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                        <div id="quiz-progress-bar"
+                            style="height: 100%; width: 0%; background: #3b82f6; transition: width 0.3s;"></div>
                     </div>
                 </div>
             </div>
-            
+
             <div id="quiz-questions-container" style="padding-bottom: 20px;"></div>
         </div>
 
@@ -692,8 +1117,15 @@
         <div class="monitor-video-wrap">
             <video id="gaze-video" autoplay playsinline muted></video>
         </div>
-        <!-- Face presence debug indicator -->
-        <div id="face-status" class="fs-loading">Loading model…</div>
+        <!-- Unified attention-monitoring status: ONE face/attention line
+             plus a subtle gaze + head metrics row underneath it. -->
+        <div id="attention-status" class="attn-loading">
+            <div class="attn-main"><span class="attn-dot"></span><span id="attn-status-text">Loading model…</span></div>
+            <div id="attn-metrics" class="attn-metrics">
+                <span>👁 <span class="metric-label">Gaze:</span> <span id="attn-gaze-value">Screen</span></span>
+                <span>↔ <span class="metric-label">Head:</span> <span id="attn-head-value">Center</span></span>
+            </div>
+        </div>
         <div id="gaze-warning" class="gaze-warning">Please look at the screen.</div>
         <div class="camera-help-text">Camera access is used for approximate attention monitoring only.</div>
     </div>
@@ -721,10 +1153,10 @@
 
     <script>
         let askedIds = [];
-        let interviewHistory = []; 
+        let interviewHistory = [];
         let currentDifficulty = "medium";
         let currentQuestionData = null;
-        let stage = "main_question"; 
+        let stage = "main_question";
         let tempMainAnswer = "";
         let selectedTopic = "All";
         let parsedResumeData = null;  // Stores parsed resume for dashboard
@@ -752,24 +1184,76 @@
         const chatHeader = document.getElementById("chat-header-title");
         const gazeVideo = document.getElementById("gaze-video");
         const gazeWarning = document.getElementById("gaze-warning");
-        const faceStatusEl = document.getElementById("face-status");
+        const attentionStatusEl = document.getElementById("attention-status");
+        const attnStatusTextEl = document.getElementById("attn-status-text");
+        const attnMetricsEl = document.getElementById("attn-metrics");
+        const attnGazeValueEl = document.getElementById("attn-gaze-value");
+        const attnHeadValueEl = document.getElementById("attn-head-value");
         const interviewMonitorPanel = document.getElementById("interview-monitor-panel");
         const cameraStatusText = document.getElementById("camera-status-text");
 
-        // ── Face-presence proctoring badge ────────────────────────────
+        // ── Unified attention status ────────────────────────────────────
+        // ONE face/attention line (never duplicated), plus a subtle
+        // gaze + head metrics row that only appears once a face is
+        // actually present. Same function set as before (setFaceStatus /
+        // setHeadStatus) so all existing call-sites keep working —
+        // only the presentation is unified.
         const _camWrap = document.querySelector(".monitor-video-wrap");
+
         function setFaceStatus(state) {
-            if (!faceStatusEl) return;
-            faceStatusEl.className = "fs-" + state;
+            if (!attentionStatusEl) return;
+
             if (state === "detected") {
-                faceStatusEl.textContent = "Face Detected";
+                attentionStatusEl.className = "attn-ok";
+                attnStatusTextEl.textContent = "Monitoring";
+                if (attnMetricsEl) attnMetricsEl.classList.add("visible");
                 if (_camWrap) { _camWrap.classList.add("cam-ok"); _camWrap.classList.remove("cam-warn"); }
             } else if (state === "notdetected") {
-                faceStatusEl.textContent = "No Face Detected";
+                attentionStatusEl.className = "attn-warn";
+                attnStatusTextEl.textContent = "Face not detected";
+                if (attnMetricsEl) attnMetricsEl.classList.remove("visible");
                 if (_camWrap) { _camWrap.classList.add("cam-warn"); _camWrap.classList.remove("cam-ok"); }
             } else {
-                faceStatusEl.textContent = "Loading...";
+                attentionStatusEl.className = "attn-loading";
+                attnStatusTextEl.textContent = "Loading model…";
+                if (attnMetricsEl) attnMetricsEl.classList.remove("visible");
                 if (_camWrap) { _camWrap.classList.remove("cam-ok", "cam-warn"); }
+            }
+        }
+
+        // Head-pose: no separate badge anymore — just updates the
+        // small "↔ Head: …" value inside the unified metrics row.
+        // Head direction is hidden automatically whenever there's no
+        // face, since setFaceStatus("notdetected") hides attn-metrics.
+        function setHeadStatus(state) {
+            if (!attnHeadValueEl) return;
+            const labels = {
+                center: "Center",
+                left: "Left",
+                right: "Right",
+                up: "Up",
+                down: "Down"
+            };
+            if (state === "noface") {
+                // Face already handled by setFaceStatus("notdetected");
+                // nothing extra to show here — metrics row is hidden.
+                return;
+            }
+            attnHeadValueEl.textContent = labels[state] || "—";
+        }
+
+        // Gaze: driven by the real eye/iris gaze classifier (see
+        // classifyGazeRaw / the detection loop below), NOT by whether a
+        // warning happens to be visible. "Screen" means the classifier
+        // currently believes gaze is centered; "Away" means it detected
+        // sustained left/right/up/down; unknown frames (blinks, glasses
+        // glare) hold whatever was last displayed instead of flipping.
+        let _lastGazeLabel = "Screen";
+        function updateGazeIndicator(label) {
+            if (!attnGazeValueEl) return;
+            if (typeof label === "string") _lastGazeLabel = label;
+            if (attnGazeValueEl.textContent !== _lastGazeLabel) {
+                attnGazeValueEl.textContent = _lastGazeLabel;
             }
         }
 
@@ -800,24 +1284,24 @@
         // ─── SKILL CATEGORIZATION ─────────────────────────────────────
         const SKILL_CATEGORIES = {
             "Languages": {
-                exact: ["python","java","javascript","typescript","c","c++","c#","go","golang","rust","ruby","php","swift","kotlin","scala","r","matlab","perl","haskell","elixir","dart","sql","html","css","sass","scss","bash","shell","powershell","vba","objective-c","assembly","fortran","cobol","lua","groovy"],
-                substring: ["python","java","javascript","typescript","golang","c++","c#","ruby","php","swift","kotlin","scala","matlab","perl","haskell","dart","bash","shell","powershell","vba","fortran","cobol","lua","groovy","rust","go "]
+                exact: ["python", "java", "javascript", "typescript", "c", "c++", "c#", "go", "golang", "rust", "ruby", "php", "swift", "kotlin", "scala", "r", "matlab", "perl", "haskell", "elixir", "dart", "sql", "html", "css", "sass", "scss", "bash", "shell", "powershell", "vba", "objective-c", "assembly", "fortran", "cobol", "lua", "groovy"],
+                substring: ["python", "java", "javascript", "typescript", "golang", "c++", "c#", "ruby", "php", "swift", "kotlin", "scala", "matlab", "perl", "haskell", "dart", "bash", "shell", "powershell", "vba", "fortran", "cobol", "lua", "groovy", "rust", "go "]
             },
             "Frameworks": {
-                exact: ["react","reactjs","react.js","angular","angularjs","vue","vuejs","vue.js","next","nextjs","next.js","nuxt","nuxtjs","svelte","sveltejs","django","flask","fastapi","spring","spring boot","springboot"," express","expressjs","node","nodejs","node.js","rails","ruby on rails","laravel","symfony","ASP.NET","dotnet",".net","blazor","flutter","android","ios"," SwiftUI","tailwind","tailwindcss","bootstrap","jquery"],
-                substring: ["react","angular","vue","next","nuxt","svelte","django","flask","fastapi","spring","express","node","rails","laravel","symfony","asp.net","dotnet","blazor","flutter","tailwind","bootstrap","jquery"]
+                exact: ["react", "reactjs", "react.js", "angular", "angularjs", "vue", "vuejs", "vue.js", "next", "nextjs", "next.js", "nuxt", "nuxtjs", "svelte", "sveltejs", "django", "flask", "fastapi", "spring", "spring boot", "springboot", " express", "expressjs", "node", "nodejs", "node.js", "rails", "ruby on rails", "laravel", "symfony", "ASP.NET", "dotnet", ".net", "blazor", "flutter", "android", "ios", " SwiftUI", "tailwind", "tailwindcss", "bootstrap", "jquery"],
+                substring: ["react", "angular", "vue", "next", "nuxt", "svelte", "django", "flask", "fastapi", "spring", "express", "node", "rails", "laravel", "symfony", "asp.net", "dotnet", "blazor", "flutter", "tailwind", "bootstrap", "jquery"]
             },
             "Tools": {
-                exact: ["git","github","gitlab","bitbucket","docker","dockerfile","kubernetes","k8s","jenkins","travis","circleci","github actions","terraform","ansible","puppet","chef","vagrant","nginx","apache","tomcat","webpack","vite","npm","yarn","pip","conda","maven","gradle","ant","cmake","make","vim","neovim","emacs","vscode","intellij","eclipse","postman","swagger","figma","jira","confluence","trello","notion","slack","discord","linux","unix","macos","windows","ci/cd","devops","mlops"],
-                substring: ["git","github","gitlab","bitbucket","docker","kubernetes","k8s","jenkins","travis","circleci","terraform","ansible","puppet","chef","vagrant","nginx","apache","tomcat","webpack","vite","npm","yarn","pip","conda","maven","gradle","cmake","postman","swagger","figma","jira","confluence","trello","notion","linux","unix","ci/cd","devops","mlops"]
+                exact: ["git", "github", "gitlab", "bitbucket", "docker", "dockerfile", "kubernetes", "k8s", "jenkins", "travis", "circleci", "github actions", "terraform", "ansible", "puppet", "chef", "vagrant", "nginx", "apache", "tomcat", "webpack", "vite", "npm", "yarn", "pip", "conda", "maven", "gradle", "ant", "cmake", "make", "vim", "neovim", "emacs", "vscode", "intellij", "eclipse", "postman", "swagger", "figma", "jira", "confluence", "trello", "notion", "slack", "discord", "linux", "unix", "macos", "windows", "ci/cd", "devops", "mlops"],
+                substring: ["git", "github", "gitlab", "bitbucket", "docker", "kubernetes", "k8s", "jenkins", "travis", "circleci", "terraform", "ansible", "puppet", "chef", "vagrant", "nginx", "apache", "tomcat", "webpack", "vite", "npm", "yarn", "pip", "conda", "maven", "gradle", "cmake", "postman", "swagger", "figma", "jira", "confluence", "trello", "notion", "linux", "unix", "ci/cd", "devops", "mlops"]
             },
             "Databases": {
-                exact: ["mysql","postgresql","postgres","sqlite","mongodb","mongo","redis","elasticsearch","elastic","cassandra","dynamodb","dynamo","couchdb","couchbase","neo4j","firebase","supabase","mariadb","oracle","sql server","mssql","cosmosdb","cosmos","influxdb","riak","memcached","etcd","cockroachdb","clickhouse","snowflake","bigquery","redshift","hbase","couchdb","realm","prisma","sequelize","typeorm","sqlalchemy","mongoose","knex","hibernate"],
-                substring: ["mysql","postgresql","postgres","sqlite","mongodb","redis","elasticsearch","cassandra","dynamodb","couchdb","couchbase","neo4j","firebase","supabase","mariadb","oracle","cosmos","influx","riak","memcached","etcd","cockroach","clickhouse","snowflake","bigquery","redshift","hbase","realm","prisma","sequelize","typeorm","sqlalchemy","mongoose","knex","hibernate"]
+                exact: ["mysql", "postgresql", "postgres", "sqlite", "mongodb", "mongo", "redis", "elasticsearch", "elastic", "cassandra", "dynamodb", "dynamo", "couchdb", "couchbase", "neo4j", "firebase", "supabase", "mariadb", "oracle", "sql server", "mssql", "cosmosdb", "cosmos", "influxdb", "riak", "memcached", "etcd", "cockroachdb", "clickhouse", "snowflake", "bigquery", "redshift", "hbase", "couchdb", "realm", "prisma", "sequelize", "typeorm", "sqlalchemy", "mongoose", "knex", "hibernate"],
+                substring: ["mysql", "postgresql", "postgres", "sqlite", "mongodb", "redis", "elasticsearch", "cassandra", "dynamodb", "couchdb", "couchbase", "neo4j", "firebase", "supabase", "mariadb", "oracle", "cosmos", "influx", "riak", "memcached", "etcd", "cockroach", "clickhouse", "snowflake", "bigquery", "redshift", "hbase", "realm", "prisma", "sequelize", "typeorm", "sqlalchemy", "mongoose", "knex", "hibernate"]
             },
             "Cloud": {
-                exact: ["aws","amazon web services","ec2","s3","lambda","ecs","eks","rds","sqs","sns","cloudfront","route53","azure","microsoft azure","gcp","google cloud","google cloud platform","heroku","netlify","vercel","digitalocean","linode","vultr","cloudflare","cloudrun","cloud functions","pubsub","bigtable","dataflow","dataproc","sagemaker","bedrock","openai api"],
-                substring: ["aws","ec2","s3","lambda","ecs","eks","rds","sqs","sns","cloudfront","route53","azure","gcp","heroku","netlify","vercel","digitalocean","linode","cloudflare","cloudrun","sagemaker","bedrock"]
+                exact: ["aws", "amazon web services", "ec2", "s3", "lambda", "ecs", "eks", "rds", "sqs", "sns", "cloudfront", "route53", "azure", "microsoft azure", "gcp", "google cloud", "google cloud platform", "heroku", "netlify", "vercel", "digitalocean", "linode", "vultr", "cloudflare", "cloudrun", "cloud functions", "pubsub", "bigtable", "dataflow", "dataproc", "sagemaker", "bedrock", "openai api"],
+                substring: ["aws", "ec2", "s3", "lambda", "ecs", "eks", "rds", "sqs", "sns", "cloudfront", "route53", "azure", "gcp", "heroku", "netlify", "vercel", "digitalocean", "linode", "cloudflare", "cloudrun", "sagemaker", "bedrock"]
             }
         };
 
@@ -1042,18 +1526,18 @@
             const el = document.getElementById(elementId);
             const cardElement = document.getElementById(cardId);
             let iterations = 0;
-            const maxIterations = 20; 
-            
-            el.style.fontFamily = "'Roboto Mono', monospace"; 
+            const maxIterations = 20;
+
+            el.style.fontFamily = "'Roboto Mono', monospace";
 
             const interval = setInterval(() => {
                 const randomScramble = (Math.random()).toFixed(2);
                 el.innerText = randomScramble;
-                
+
                 if (iterations >= maxIterations) {
                     clearInterval(interval);
-                    el.innerText = targetScore.toFixed(2); 
-                    
+                    el.innerText = targetScore.toFixed(2);
+
                     // Apply the glow after decryption
                     if (targetScore >= 0.8) {
                         cardElement.classList.add('glow-excellent');
@@ -1080,13 +1564,13 @@
             recognition.continuous = false;
             recognition.interimResults = true;
 
-            recognition.onstart = function() {
+            recognition.onstart = function () {
                 isRecording = true;
                 micBtn.classList.add("mic-active");
                 inputField.placeholder = "Listening...";
             };
 
-            recognition.onresult = function(event) {
+            recognition.onresult = function (event) {
                 let transcript = "";
                 for (let i = 0; i < event.results.length; i++) {
                     transcript += event.results[i][0].transcript;
@@ -1094,14 +1578,14 @@
                 inputField.value = transcript;
             };
 
-            recognition.onerror = function(event) { stopMic(); };
-            recognition.onend = function() { stopMic(); };
+            recognition.onerror = function (event) { stopMic(); };
+            recognition.onend = function () { stopMic(); };
         } else {
-            micBtn.style.display = "none"; 
+            micBtn.style.display = "none";
         }
 
         function toggleMic() {
-            if (isRecording) { stopMic(); } 
+            if (isRecording) { stopMic(); }
             else { if (recognition) recognition.start(); }
         }
 
@@ -1129,20 +1613,32 @@
             }
         }
 
+        // Cancel any in-flight speech synthesis warning (used on reset/stop
+        // so a stale "please return your attention" doesn't keep talking after
+        // monitoring has ended or a new session has started).
+        function cancelAttentionSpeech() {
+            if ('speechSynthesis' in window) {
+                try { window.speechSynthesis.cancel(); } catch (e) { /* no-op */ }
+            }
+        }
+
         function resetGazeTrackingState() {
             gazeAwayStartTime = 0;
             gazeLastFaceDetectedAt = 0;
             gazeLastGoodTimestamp = 0;
             gazeLastEyeCenter = null;
             hideGazeWarning();
+            cancelAttentionSpeech();
+            updateGazeIndicator("Screen");
+            setHeadStatus("center");
         }
 
         // ── MediaPipe Face Landmarker loader ──────────────────────────────
         // Uses dynamic ESM import — the only reliable way to get FaceLandmarker
         // and FilesetResolver in a non-module page without window pollution issues.
         const _MP_VERSION = "0.10.14";
-        const _MP_ESM     = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${_MP_VERSION}/vision_bundle.mjs`;
-        const _MP_WASM    = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${_MP_VERSION}/wasm`;
+        const _MP_ESM = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${_MP_VERSION}/vision_bundle.mjs`;
+        const _MP_WASM = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${_MP_VERSION}/wasm`;
 
         async function ensureGazeLandmarkerReady() {
             if (gazeLandmarker) return;
@@ -1153,8 +1649,8 @@
             let FaceLandmarker, FilesetResolver;
             try {
                 const mp = await import(_MP_ESM);
-                FaceLandmarker   = mp.FaceLandmarker;
-                FilesetResolver  = mp.FilesetResolver;
+                FaceLandmarker = mp.FaceLandmarker;
+                FilesetResolver = mp.FilesetResolver;
                 if (!FaceLandmarker || !FilesetResolver) {
                     throw new Error("FaceLandmarker or FilesetResolver not found in module exports. Keys: " + Object.keys(mp).join(", "));
                 }
@@ -1185,7 +1681,8 @@
                     numFaces: 1,
                     minFaceDetectionConfidence: 0.5,
                     minFacePresenceConfidence: 0.5,
-                    minTrackingConfidence: 0.5
+                    minTrackingConfidence: 0.5,
+                    outputFacialTransformationMatrixes: true
                 });
                 console.log("[FaceLandmarker] Model loaded successfully.");
             } catch (modelErr) {
@@ -1201,7 +1698,8 @@
                         numFaces: 1,
                         minFaceDetectionConfidence: 0.5,
                         minFacePresenceConfidence: 0.5,
-                        minTrackingConfidence: 0.5
+                        minTrackingConfidence: 0.5,
+                        outputFacialTransformationMatrixes: true
                     });
                     console.log("[FaceLandmarker] Model loaded successfully (CPU fallback).");
                 } catch (cpuErr) {
@@ -1326,53 +1824,238 @@
             }
         }
 
-        function getAveragePoint(points) {
-            if (!points || points.length === 0) return null;
-            const total = points.reduce((acc, point) => ({ x: acc.x + point.x, y: acc.y + point.y }), { x: 0, y: 0 });
+        // ── REAL EYE/IRIS GAZE GEOMETRY ─────────────────────────────────
+        // FaceLandmarker's 478-point mesh includes 10 iris landmarks
+        // (468–477) alongside the 468 face-mesh points. For each eye we
+        // use: outer/inner corners (defines eye width + horizontal axis),
+        // upper/lower lid points (defines eye height + vertical axis), and
+        // the iris center point. Iris position is expressed as a fraction
+        // of that eye's own geometry, NOT raw webcam coordinates — this is
+        // what makes it robust to head distance/position and (mostly)
+        // to normal spectacles, since each eye is self-normalizing.
+        const EYE_LEFT = { outer: 33, inner: 133, top: 159, bottom: 145, iris: 468 };
+        const EYE_RIGHT = { outer: 263, inner: 362, top: 386, bottom: 374, iris: 473 };
+
+        function dist(a, b) {
+            return Math.hypot(a.x - b.x, a.y - b.y);
+        }
+
+        // Per-eye analysis: returns normalized horizontal/vertical iris
+        // offset (~ -1..1, 0 = centered in that eye), an eyelid-openness
+        // ratio (for blink detection), and a 0..1 confidence score.
+        function computeSingleEyeGaze(landmarks, eyeDef) {
+            const outer = landmarks[eyeDef.outer];
+            const inner = landmarks[eyeDef.inner];
+            const top = landmarks[eyeDef.top];
+            const bottom = landmarks[eyeDef.bottom];
+            const iris = landmarks[eyeDef.iris];
+            if (!outer || !inner || !top || !bottom || !iris) {
+                return { x: 0, y: 0, openness: 0, confidence: 0 };
+            }
+
+            const eyeWidth = dist(outer, inner);
+            const eyeHeight = dist(top, bottom);
+            if (eyeWidth < 1e-4) {
+                return { x: 0, y: 0, openness: 0, confidence: 0 };
+            }
+
+            // Eyelid-openness ratio (EAR-like, scale-invariant since it's
+            // normalized by eye width rather than an absolute pixel gap).
+            const openness = eyeHeight / eyeWidth;
+
+            // Horizontal: iris offset from the eye's own horizontal
+            // midpoint, normalized by half the eye width.
+            const hCenter = { x: (outer.x + inner.x) / 2, y: (outer.y + inner.y) / 2 };
+            const halfWidth = eyeWidth / 2;
+            const x = (iris.x - hCenter.x) / halfWidth;
+
+            // Vertical: iris offset from the eye's own vertical midpoint,
+            // normalized by half the eye height (falls back to halfWidth
+            // if the eyelids are measured as fully closed to avoid /0).
+            const vCenter = { x: (top.x + bottom.x) / 2, y: (top.y + bottom.y) / 2 };
+            const halfHeight = Math.max(eyeHeight / 2, halfWidth * 0.15);
+            const y = (iris.y - vCenter.y) / halfHeight;
+
+            // Confidence: an eye is considered unreliable this frame if
+            // it looks closed/near-closed (blink, heavy glare, or partial
+            // occlusion from glasses frames/reflections all tend to
+            // collapse the eyelid-distance measurement).
+            const EAR_BLINK_THRESHOLD = 0.14;
+            let confidence = 1.0;
+            if (openness < EAR_BLINK_THRESHOLD) confidence = 0;
+            else if (openness < EAR_BLINK_THRESHOLD * 1.4) confidence = 0.5; // borderline: partially trusted
+
+            return { x, y, openness, confidence };
+        }
+
+        // Combine both eyes into one gaze estimate. Each eye is weighted
+        // by its own confidence, so a single noisy/occluded eye (glasses
+        // reflection, partial blink, side-glare) doesn't corrupt the
+        // result as long as the other eye is still reliable.
+        function combineEyeGaze(leftEye, rightEye) {
+            const totalWeight = leftEye.confidence + rightEye.confidence;
+            if (totalWeight <= 0) {
+                return { x: 0, y: 0, confidence: 0, openness: Math.max(leftEye.openness, rightEye.openness) };
+            }
+            const x = (leftEye.x * leftEye.confidence + rightEye.x * rightEye.confidence) / totalWeight;
+            const y = (leftEye.y * leftEye.confidence + rightEye.y * rightEye.confidence) / totalWeight;
             return {
-                x: total.x / points.length,
-                y: total.y / points.length
+                x, y,
+                confidence: totalWeight / 2, // 0..1
+                openness: Math.max(leftEye.openness, rightEye.openness)
             };
         }
 
-        function getEyeCenter(landmarks, leftIndexes, rightIndexes) {
-            const left = getAveragePoint(leftIndexes.map(index => landmarks[index]));
-            const right = getAveragePoint(rightIndexes.map(index => landmarks[index]));
-            if (!left || !right) return null;
-            return {
-                x: (left.x + right.x) / 2,
-                y: (left.y + right.y) / 2
-            };
+        // ── HEAD POSE CONSTANTS ───────────────────────────────────────
+        // Yaw   = horizontal head rotation (left/right), from atan2(m[8], m[10]).
+        // Pitch = vertical head rotation (up/down),      from atan2(m[6], m[10]).
+        // Positive yaw = head turns to subject's LEFT in camera space; negative = RIGHT.
+        //
+        // PITCH SIGN: on the raw facialTransformationMatrix output, pitch
+        // empirically increases as the head tilts DOWN and decreases as it
+        // tilts UP on typical webcam setups — the opposite of the naive
+        // assumption. HEAD_PITCH_SIGN corrects for that so the classifier
+        // below can stay simple ("positive smoothed pitch = up"). If your
+        // testing shows Up/Down are still swapped, flip this to +1 — the
+        // [HeadPose] / [HeadPose DEBUG] console logs report raw + smoothed
+        // pitch on every state change so this is easy to verify.
+        const HEAD_PITCH_SIGN = -1;
+        const HEAD_YAW_THRESHOLD = 20;   // |yaw|   > 20° → LEFT or RIGHT
+        const HEAD_PITCH_THRESHOLD = 15;   // |pitch| > 15° → UP or DOWN
+        const HEAD_EMA_ALPHA = 0.30;  // EMA responsiveness
+
+        // ── GAZE CLASSIFICATION CONSTANTS ───────────────────────────────
+        const GAZE_EMA_ALPHA = 0.25; // smoothing for combined iris offset
+        const GAZE_X_THRESHOLD = 0.38; // |x| beyond this (post-calibration) = Left/Right
+        const GAZE_Y_THRESHOLD = 0.45; // |y| beyond this (post-calibration) = Up/Down
+        const GAZE_CENTER_HYSTERESIS = 0.10; // extra margin required to re-enter Center (avoids edge flicker)
+        const GAZE_CONFIRM_FRAMES = 5;    // consecutive frames of a new class needed before it "sticks"
+        const GAZE_MIN_CONFIDENCE = 0.35; // combined-eye confidence below this ⇒ treat frame as UNKNOWN
+
+        // ── BASELINE CALIBRATION ────────────────────────────────────────
+        // Short automatic calibration when monitoring starts: while the
+        // head is roughly centered, sample the "natural" iris offset and
+        // use it as a per-person/per-camera baseline. This compensates
+        // for individual eye shape, camera angle, and (partially) glasses,
+        // without any dedicated calibration screen.
+        const CALIBRATION_MIN_SAMPLES = 12;
+        const CALIBRATION_MAX_WAIT_MS = 6000; // give up waiting and use whatever we have (or 0,0)
+
+        // ── ATTENTION STATE MACHINE TIMINGS (ms) ────────────────────────
+        // All tunable in one place. NORMAL -> (deviation starts) -> CAUTION
+        // (internal only) -> WARNING (visible). Face-absence uses its own,
+        // longer timer. Recovery requires a short stable "back to normal"
+        // period before the warning clears, to avoid flicker.
+        const ATTENTION_CAUTION_MS = 1200;  // brief glance — no visible warning yet
+        const ATTENTION_WARNING_MS = 3000;  // sustained deviation — show the warning
+        const FACE_ABSENT_WARNING_MS = 4000;  // sustained face loss — show face-not-detected warning
+        const FACE_BRIEF_LOSS_MS = 1500;  // debounce before even flipping the "no face" badge
+        const RETURN_DEBOUNCE_MS = 600;   // stable-normal time required before clearing a warning
+        const WARNING_AUDIO_COOLDOWN_MS = 10000; // minimum gap between spoken warnings
+
+        // ── CONTROLLED AUDIO WARNING ─────────────────────────────────────
+        // Speaks at most once per WARNING_AUDIO_COOLDOWN_MS, and the caller
+        // (setAttentionState) additionally limits it to once per sustained
+        // attention EVENT — so a candidate who stays away for 30s only
+        // hears one spoken warning, not a repeating loop. Skipped entirely
+        // while the candidate is dictating an answer, so we never talk
+        // over their own speech-to-text input.
+        let _lastAudioWarningAt = 0;
+        function speakAttentionWarning(text) {
+            if (!('speechSynthesis' in window)) return;
+            if (typeof isRecording !== "undefined" && isRecording) return; // don't interrupt dictation
+            const now = performance.now();
+            if (now - _lastAudioWarningAt < WARNING_AUDIO_COOLDOWN_MS) return;
+            try {
+                window.speechSynthesis.cancel(); // clear any stale queued utterance first
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.rate = 1.0;
+                utter.volume = 0.85;
+                window.speechSynthesis.speak(utter);
+                _lastAudioWarningAt = now;
+            } catch (e) {
+                console.warn("[Attention] speech synthesis failed:", e);
+            }
         }
 
-        function computeEyeOpenness(landmarks) {
-            const leftTop = landmarks[159];
-            const leftBottom = landmarks[145];
-            const rightTop = landmarks[386];
-            const rightBottom = landmarks[374];
-            const leftOpen = Math.abs(leftTop.y - leftBottom.y);
-            const rightOpen = Math.abs(rightTop.y - rightBottom.y);
-            return Math.min(leftOpen, rightOpen);
+        // ── ATTENTION STATE MACHINE ──────────────────────────────────────
+        // NORMAL -> CAUTION (internal, no UI) -> WARNING (visible banner +
+        // one spoken warning) — plus a parallel FACE_ABSENT state. This is
+        // the ONLY place that touches the warning banner / speech, so the
+        // visual+audio behavior can't drift out of sync with each other.
+        //
+        // Message text (PART 12/13 of spec): exactly two distinct,
+        // consistent messages — one for sustained attention/gaze deviation,
+        // one for genuine face absence. Visual banner and spoken warning
+        // always use the identical string for a given condition.
+        const ATTENTION_MESSAGE = "Please return your attention to the screen.";
+        const FACE_ABSENT_MESSAGE = "Please make sure your face is visible.";
+
+        let _attentionState = "NORMAL";
+        let _audioIssuedForEvent = false;
+
+        function setAttentionState(newState, headState, gazeState) {
+            if (newState === _attentionState) return;
+            const prevState = _attentionState;
+            _attentionState = newState;
+
+            console.log("[Attention]\n  Face: " + (newState === "FACE_ABSENT" ? "NOT DETECTED" : "DETECTED") +
+                "\n  Gaze: " + (gazeState || "-").toUpperCase() +
+                "\n  Head: " + (headState || "-").toUpperCase() +
+                "\n  Attention: " + newState + " (was " + prevState + ")");
+
+            if (newState === "WARNING") {
+                showGazeWarning(ATTENTION_MESSAGE);
+                if (!_audioIssuedForEvent) {
+                    speakAttentionWarning(ATTENTION_MESSAGE);
+                    _audioIssuedForEvent = true;
+                }
+            } else if (newState === "FACE_ABSENT") {
+                showGazeWarning(FACE_ABSENT_MESSAGE);
+                if (!_audioIssuedForEvent) {
+                    speakAttentionWarning(FACE_ABSENT_MESSAGE);
+                    _audioIssuedForEvent = true;
+                }
+            } else if (newState === "NORMAL") {
+                hideGazeWarning();
+                _audioIssuedForEvent = false; // a fresh deviation later counts as a new event
+            }
+            // CAUTION is intentionally silent/invisible — internal pre-warning stage only.
         }
-
-        // ── GAZE TIMING CONSTANTS ──────────────────────────────────────────
-        // Grace period before warning fires (ms). Long enough to cover thinking glances.
-        const GAZE_AWAY_GRACE_MS   = 3000;  // eyes turned sideways/up: warn after 3 s
-        const GAZE_NOFACE_GRACE_MS = 4000;  // face not visible at all: warn after 4 s
-        const GAZE_RETURN_DEBOUNCE = 500;   // must stay on-screen for 0.5 s before clearing warning
-        const GAZE_XSHIFT_THRESH   = 0.22;  // horizontal eye shift threshold (0–1 normalized)
-        const GAZE_YSHIFT_THRESH   = 0.20;  // vertical eye shift threshold
-
-        // Extra state for return-debounce
-        let gazeReturnTime = 0;
 
         function startGazeDetectionLoop() {
             if (!gazeMonitorActive || !gazeVideo) return;
             console.log("[FaceLandmarker] Detection loop started. Waiting for model...");
 
-            let _lastLoggedState = null;
-            let _noFaceStartTime  = 0;          // when face first disappeared
-            const NO_FACE_DEBOUNCE = 800;        // ms before declaring "no face"
+            let _lastFaceLogState = null;
+            let _lastHeadState = null;
+            let _noFaceStartTime = 0;
+            let _emaYaw = 0;
+            let _emaPitch = 0;
+            let _emaInitialized = false;
+            let _debugFrameCount = 0;
+
+            // Gaze (eye/iris) tracking state — separate from head pose.
+            let _emaGazeX = 0;
+            let _emaGazeY = 0;
+            let _gazeEmaInit = false;
+            let _gazeState = "center";   // confirmed, displayed/used state
+            let _gazeCandidate = "center";   // frame-to-frame raw classification
+            let _gazeCandidateCount = 0;
+            let _lastGazeLogState = null;
+
+            // Lightweight automatic baseline calibration (see constants above).
+            let _calibSamplesX = [];
+            let _calibSamplesY = [];
+            let _calibDone = false;
+            let _calibStartTime = 0;
+            let _baselineX = 0;
+            let _baselineY = 0;
+
+            // Attention (combined head + gaze) state machine timers.
+            let _deviationStartTime = 0;
+            let _normalStartTime = 0;
+            let _faceAbsentStartTime = 0;
 
             const processFrame = () => {
                 if (!gazeMonitorActive) return;
@@ -1388,27 +2071,256 @@
                     }
 
                     const faces = (result && result.faceLandmarks) ? result.faceLandmarks : [];
-                    const now   = performance.now();
+                    const now = performance.now();
 
                     if (faces.length > 0) {
-                        // Face present — reset no-face timer, update immediately
+                        // ── FACE PRESENT ─────────────────────────────────
                         _noFaceStartTime = 0;
-                        if (_lastLoggedState !== "detected") {
+                        _faceAbsentStartTime = 0;
+                        if (_lastFaceLogState !== "detected") {
                             console.log("[FaceLandmarker] FACE DETECTED — landmarks:", faces[0].length);
-                            _lastLoggedState = "detected";
+                            _lastFaceLogState = "detected";
                         }
                         setFaceStatus("detected");
+                        const landmarks = faces[0];
+
+                        // ═══════════════════════════════════════════════
+                        // 1) HEAD POSE — yaw + pitch from the facial
+                        //    transformation matrix (falls back to
+                        //    landmark geometry for yaw only).
+                        // ═══════════════════════════════════════════════
+                        let rawYaw = null;
+                        let rawPitch = null;
+
+                        const matrices = result.facialTransformationMatrixes;
+                        if (matrices && matrices.length > 0 && matrices[0].data) {
+                            const m = matrices[0].data;   // Float32Array, 16 elements
+                            rawYaw = Math.atan2(m[8], m[10]) * (180 / Math.PI);
+                            rawPitch = Math.atan2(m[6], m[10]) * (180 / Math.PI) * HEAD_PITCH_SIGN;
+                        }
+
+                        // Fallback: landmark geometry if matrix unavailable (yaw only)
+                        if (rawYaw === null) {
+                            const nose = landmarks[1];
+                            const leftInCam = landmarks[454];  // subject's RIGHT = camera LEFT
+                            const rightInCam = landmarks[234];  // subject's LEFT  = camera RIGHT
+                            const faceWidth = rightInCam.x - leftInCam.x;
+                            if (faceWidth > 0.01) {
+                                const ratio = (nose.x - leftInCam.x) / faceWidth;
+                                rawYaw = (ratio - 0.5) * 90;
+                            }
+                        }
+
+                        let headState = "center";
+                        if (rawYaw !== null) {
+                            if (!_emaInitialized) {
+                                _emaYaw = rawYaw;
+                                _emaPitch = (rawPitch !== null) ? rawPitch : 0;
+                                _emaInitialized = true;
+                            } else {
+                                _emaYaw = HEAD_EMA_ALPHA * rawYaw + (1 - HEAD_EMA_ALPHA) * _emaYaw;
+                                _emaPitch = HEAD_EMA_ALPHA * (rawPitch !== null ? rawPitch : _emaPitch)
+                                    + (1 - HEAD_EMA_ALPHA) * _emaPitch;
+                            }
+
+                            // UP/DOWN checked first (pitched gaze dominates), then LEFT/RIGHT, then CENTER
+                            const absYaw = Math.abs(_emaYaw);
+                            const absPitch = Math.abs(_emaPitch);
+                            if (absPitch > HEAD_PITCH_THRESHOLD && absPitch >= absYaw) {
+                                headState = _emaPitch > 0 ? "up" : "down";
+                            } else if (absYaw > HEAD_YAW_THRESHOLD) {
+                                headState = _emaYaw > 0 ? "left" : "right";
+                            } else {
+                                headState = "center";
+                            }
+
+                            if (headState !== _lastHeadState) {
+                                console.log("[HeadPose]", headState.toUpperCase(),
+                                    "| yaw:", _emaYaw.toFixed(1) + "°",
+                                    "| pitch:", _emaPitch.toFixed(1) + "°");
+                                _lastHeadState = headState;
+                            }
+                            setHeadStatus(headState);
+                        }
+
+                        // ═══════════════════════════════════════════════
+                        // 2) EYE / IRIS GAZE — computed from real iris
+                        //    geometry, independent of head pose. Uses
+                        //    both eyes; each eye's own confidence
+                        //    (openness-based) decides how much it
+                        //    contributes, so glasses glare/blink in one
+                        //    eye doesn't wreck the estimate as long as
+                        //    the other eye is still readable.
+                        // ═══════════════════════════════════════════════
+                        const leftEyeGaze = computeSingleEyeGaze(landmarks, EYE_LEFT);
+                        const rightEyeGaze = computeSingleEyeGaze(landmarks, EYE_RIGHT);
+                        const combined = combineEyeGaze(leftEyeGaze, rightEyeGaze);
+
+                        // Baseline calibration: collect samples while the
+                        // eyes are reliable AND the head is roughly centered,
+                        // so we don't calibrate against a sideways glance.
+                        if (!_calibDone) {
+                            if (_calibStartTime === 0) _calibStartTime = now;
+                            if (combined.confidence >= GAZE_MIN_CONFIDENCE && headState === "center") {
+                                _calibSamplesX.push(combined.x);
+                                _calibSamplesY.push(combined.y);
+                            }
+                            const haveEnough = _calibSamplesX.length >= CALIBRATION_MIN_SAMPLES;
+                            const timedOut = (now - _calibStartTime) >= CALIBRATION_MAX_WAIT_MS;
+                            if (haveEnough || timedOut) {
+                                if (_calibSamplesX.length > 0) {
+                                    _baselineX = _calibSamplesX.reduce((a, b) => a + b, 0) / _calibSamplesX.length;
+                                    _baselineY = _calibSamplesY.reduce((a, b) => a + b, 0) / _calibSamplesY.length;
+                                } else {
+                                    _baselineX = 0; _baselineY = 0;
+                                }
+                                _calibDone = true;
+                                console.log("[Gaze] Calibration complete. baselineX:", _baselineX.toFixed(3),
+                                    "baselineY:", _baselineY.toFixed(3),
+                                    "samples:", _calibSamplesX.length);
+                            }
+                        }
+
+                        let gazeStateThisFrame; // 'center' | 'left' | 'right' | 'up' | 'down' | 'unknown'
+
+                        if (combined.confidence < GAZE_MIN_CONFIDENCE) {
+                            // Both eyes unreliable this frame (blink, heavy
+                            // occlusion/glare) — do NOT update the EMA, do
+                            // NOT immediately call it "Away". Hold last
+                            // confirmed gaze state; only the raw label is 'unknown'.
+                            gazeStateThisFrame = "unknown";
+                        } else {
+                            const adjX = combined.x - _baselineX;
+                            const adjY = combined.y - _baselineY;
+
+                            if (!_gazeEmaInit) {
+                                _emaGazeX = adjX; _emaGazeY = adjY; _gazeEmaInit = true;
+                            } else {
+                                _emaGazeX = GAZE_EMA_ALPHA * adjX + (1 - GAZE_EMA_ALPHA) * _emaGazeX;
+                                _emaGazeY = GAZE_EMA_ALPHA * adjY + (1 - GAZE_EMA_ALPHA) * _emaGazeY;
+                            }
+
+                            // Hysteresis: require a bigger swing to leave
+                            // "center" than to fall back into it, so a value
+                            // sitting right on the threshold doesn't flicker.
+                            const wasCentered = (_gazeCandidate === "center");
+                            const xThresh = wasCentered ? GAZE_X_THRESHOLD : Math.max(0, GAZE_X_THRESHOLD - GAZE_CENTER_HYSTERESIS);
+                            const yThresh = wasCentered ? GAZE_Y_THRESHOLD : Math.max(0, GAZE_Y_THRESHOLD - GAZE_CENTER_HYSTERESIS);
+
+                            const absX = Math.abs(_emaGazeX);
+                            const absY = Math.abs(_emaGazeY);
+                            let rawClass;
+                            if (absX < xThresh && absY < yThresh) {
+                                rawClass = "center";
+                            } else if (absX >= absY) {
+                                rawClass = _emaGazeX > 0 ? "right" : "left";
+                            } else {
+                                rawClass = _emaGazeY > 0 ? "down" : "up";
+                            }
+
+                            // Consecutive-frame confirmation before the
+                            // classification "sticks" — one noisy frame
+                            // can't flip Center -> Left by itself.
+                            if (rawClass !== _gazeCandidate) {
+                                _gazeCandidate = rawClass;
+                                _gazeCandidateCount = 1;
+                            } else {
+                                _gazeCandidateCount++;
+                            }
+                            if (_gazeCandidateCount >= GAZE_CONFIRM_FRAMES) {
+                                _gazeState = rawClass;
+                            }
+                            gazeStateThisFrame = _gazeState;
+                        }
+
+                        if (gazeStateThisFrame !== _lastGazeLogState) {
+                            console.log("[Gaze]", gazeStateThisFrame.toUpperCase(),
+                                "| x:", _emaGazeX.toFixed(2), "y:", _emaGazeY.toFixed(2),
+                                "| confL:", leftEyeGaze.confidence.toFixed(2), "confR:", rightEyeGaze.confidence.toFixed(2));
+                            _lastGazeLogState = gazeStateThisFrame;
+                        }
+
+                        // Display label: Screen / Away. Unknown frames hold
+                        // whatever was last shown rather than flipping to Away.
+                        if (gazeStateThisFrame === "center") {
+                            updateGazeIndicator("Screen");
+                        } else if (gazeStateThisFrame !== "unknown") {
+                            updateGazeIndicator("Away");
+                        }
+                        // (gazeStateThisFrame === "unknown" → no change to the label)
+
+                        // Periodic full debug dump for calibration/testing.
+                        _debugFrameCount++;
+                        if (_debugFrameCount % 30 === 0) {
+                            console.log("[HeadPose DEBUG] yaw:", _emaYaw.toFixed(1) + "°",
+                                "pitch:", _emaPitch.toFixed(1) + "°", "head:", headState.toUpperCase());
+                            console.log("[Gaze DEBUG] Lx:", leftEyeGaze.x.toFixed(2), "Ly:", leftEyeGaze.y.toFixed(2),
+                                "Lopen:", leftEyeGaze.openness.toFixed(2), "Lconf:", leftEyeGaze.confidence.toFixed(2),
+                                "| Rx:", rightEyeGaze.x.toFixed(2), "Ry:", rightEyeGaze.y.toFixed(2),
+                                "Ropen:", rightEyeGaze.openness.toFixed(2), "Rconf:", rightEyeGaze.confidence.toFixed(2),
+                                "| combined:", combined.x.toFixed(2), combined.y.toFixed(2),
+                                "conf:", combined.confidence.toFixed(2),
+                                "| gaze:", gazeStateThisFrame.toUpperCase(),
+                                "| attention:", _attentionState);
+                        }
+
+                        // ═══════════════════════════════════════════════
+                        // 3) ATTENTION DECISION — head and gaze are only
+                        //    combined HERE, at the final layer. A gaze
+                        //    state of 'unknown' never counts as a
+                        //    deviation by itself (holds prior attention
+                        //    state); it just doesn't add new evidence.
+                        // ═══════════════════════════════════════════════
+                        const gazeDeviating = (gazeStateThisFrame === "left" || gazeStateThisFrame === "right" ||
+                            gazeStateThisFrame === "up" || gazeStateThisFrame === "down");
+                        const isDeviating = (headState !== "center") || gazeDeviating;
+
+                        if (isDeviating) {
+                            _normalStartTime = 0;
+                            if (_deviationStartTime === 0) _deviationStartTime = now;
+                            const elapsed = now - _deviationStartTime;
+                            if (elapsed >= ATTENTION_WARNING_MS) {
+                                setAttentionState("WARNING", headState, gazeStateThisFrame);
+                            } else if (elapsed >= ATTENTION_CAUTION_MS && _attentionState === "NORMAL") {
+                                setAttentionState("CAUTION", headState, gazeStateThisFrame);
+                            }
+                        } else {
+                            _deviationStartTime = 0;
+                            if (_attentionState !== "NORMAL") {
+                                if (_normalStartTime === 0) _normalStartTime = now;
+                                if (now - _normalStartTime >= RETURN_DEBOUNCE_MS) {
+                                    setAttentionState("NORMAL", headState, gazeStateThisFrame);
+                                }
+                            }
+                        }
+
                     } else {
-                        // Debounce: only flip to "no face" after 800 ms of sustained absence
+                        // ── NO FACE ────────────────────────────────────
                         if (_noFaceStartTime === 0) _noFaceStartTime = now;
-                        if (now - _noFaceStartTime >= NO_FACE_DEBOUNCE) {
-                            if (_lastLoggedState !== "noface") {
+                        const noFaceElapsed = now - _noFaceStartTime;
+
+                        if (noFaceElapsed >= FACE_BRIEF_LOSS_MS) {
+                            if (_lastFaceLogState !== "noface") {
                                 console.log("[FaceLandmarker] NO FACE");
-                                _lastLoggedState = "noface";
+                                console.log("[HeadPose] FACE_NOT_DETECTED");
+                                _lastFaceLogState = "noface";
+                                _lastHeadState = "noface";
                             }
                             setFaceStatus("notdetected");
+                            setHeadStatus("noface");
                         }
-                        // Within debounce window — keep current badge, no flicker
+                        // Within the brief-loss debounce window: keep showing
+                        // whatever badges were last displayed (no flicker).
+
+                        // Sustained face absence has its own warning timer,
+                        // independent of the head/gaze deviation timer above.
+                        _deviationStartTime = 0;
+                        if (_faceAbsentStartTime === 0) _faceAbsentStartTime = now;
+                        if (noFaceElapsed >= FACE_ABSENT_WARNING_MS) {
+                            setAttentionState("FACE_ABSENT", "noface", "unknown");
+                        }
+                        // Brief face loss (below FACE_ABSENT_WARNING_MS) intentionally
+                        // triggers no warning at all, per spec.
                     }
                 }
 
@@ -1423,33 +2335,33 @@
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         let classifiedDomain = null;
         let quizAnswers = [];
-        
+
         let resumeSkills = [];  // Store skills from resume for quiz customization
-        
+
         async function testQuizDirectly() {
             initializeGazeMonitoring(); // fire-and-forget; don't block quiz flow
 
             // Hide resume section
             document.getElementById("resume-upload-section").style.display = "none";
             document.getElementById("quiz-section").style.display = "block";
-            
+
             // Directly fetch and show quiz
             const response = await fetch("/api/get-domain-quiz", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ domain: "Software Engineer", skills: [] })
             });
-            
+
             const result = await response.json();
-            
+
             displayQuiz(result.quiz);
         }
-        
+
         async function uploadResume() {
-            
+
             const fileInput = document.getElementById("resume-file");
             const file = fileInput.files[0];
-            
+
             if (!file) {
                 showToast("Please select a resume file first.", "error");
                 return;
@@ -1508,7 +2420,7 @@
                 });
 
                 const result = await response.json();
-                
+
                 if (result.status === "success" && result.quiz && result.quiz.length > 0) {
                     // Update total questions counter
                     const totalQs = result.total_questions || result.quiz.length;
@@ -1527,12 +2439,12 @@
 
         function displayQuiz(questions) {
             const container = document.getElementById("quiz-questions-container");
-            
+
             if (!container) {
                 console.error("FATAL: quiz-questions-container not found!");
                 return;
             }
-            
+
             container.innerHTML = "";
             quizAnswers = [];
 
@@ -1542,9 +2454,9 @@
             questions.forEach((q, index) => {
                 const questionDiv = document.createElement("div");
                 questionDiv.style.cssText = "margin-bottom: 20px; padding: 20px; background: var(--bg-elevated); border-radius: 12px; border: 1px solid var(--border-subtle);";
-                
+
                 const isDiscussion = q._discussion;
-                
+
                 let optionsHtml = "";
                 (q.options || []).forEach((opt, optIndex) => {
                     optionsHtml += `
@@ -1561,7 +2473,7 @@
                 const badgeHtml = isDiscussion
                     ? `<span style="padding: 4px 10px; background: rgba(59,130,246,0.1); border-radius: 6px; border: 1px solid #3b82f6; color: #3b82f6; font-size: 0.75rem; font-weight: 600;">Discussion</span>`
                     : `<span style="padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 6px; border: 1px solid ${difficultyColor}; color: ${difficultyColor}; font-size: 0.75rem; font-weight: 600;">${q.difficulty}</span>`;
-                
+
                 questionDiv.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <p style="color: #3b82f6; margin: 0;"><strong>Q${index + 1}: ${q.question}</strong></p>
@@ -1569,7 +2481,7 @@
                     </div>
                     ${optionsHtml}
                 `;
-                
+
                 container.appendChild(questionDiv);
             });
 
@@ -1584,7 +2496,7 @@
 
         function selectAnswer(questionIndex, answerIndex) {
             quizAnswers[questionIndex] = answerIndex;
-            
+
             // Update progress
             const answered = quizAnswers.filter(a => a !== undefined).length;
             const total = parseInt(document.getElementById("quiz-total").textContent) || 12;
@@ -1595,7 +2507,7 @@
         async function submitQuiz() {
             const total = parseInt(document.getElementById("quiz-total").textContent) || 12;
             const answered = quizAnswers.filter(a => a !== undefined).length;
-            
+
             if (answered < total) {
                 alert(`Please answer all ${total} questions (${answered}/${total} answered)`);
                 return;
@@ -1604,7 +2516,7 @@
             // Hide quiz and show subject selection
             document.getElementById("quiz-section").style.display = "none";
             document.getElementById("subject-selection-section").style.display = "block";
-            
+
             // Show quiz result
             const resultDiv = document.createElement("div");
             resultDiv.style.cssText = "margin-bottom: 20px; padding: 15px; background: var(--bot-bubble); border-radius: 12px; border: 1px solid var(--border-subtle); color: #10b981;";
@@ -1617,7 +2529,7 @@
             chatHeader.innerHTML = `${selectedTopic === 'All' ? 'Operating Systems' : selectedTopic} // Active Session`;
 
             landingContainer.style.opacity = "0";
-            
+
             setTimeout(() => {
                 landingContainer.style.display = "none";
                 chatContainer.style.display = "flex";
@@ -1634,12 +2546,12 @@
             currentDifficulty = "medium";
             stage = "main_question";
             parsedResumeData = null;
-            
+
             messagesDiv.innerHTML = "";
             dashboardContainer.style.display = "none";
             candidateDashboard.style.display = "none";
             dashWrapper.innerHTML = "";
-            
+
             landingContainer.style.display = "block";
             document.getElementById("resume-upload-section").style.display = "block";
             document.getElementById("quiz-section").style.display = "none";
@@ -1649,26 +2561,26 @@
             // Re-enable upload buttons
             const startBtns = document.querySelectorAll("#resume-upload-section .start-btn");
             startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Interview →"; });
-            
+
             setTimeout(() => {
                 landingContainer.style.opacity = "1";
             }, 50);
         }
 
         function disableInput() {
-            stopMic(); 
+            stopMic();
             inputField.disabled = true;
             sendBtn.disabled = true;
-            micBtn.disabled = true; 
+            micBtn.disabled = true;
             inputField.placeholder = "Processing...";
         }
 
         function enableInput() {
             inputField.disabled = false;
             sendBtn.disabled = false;
-            micBtn.disabled = false; 
+            micBtn.disabled = false;
             inputField.placeholder = "Enter response...";
-            inputField.focus(); 
+            inputField.focus();
         }
 
         function addMessage(text, sender, isHtml = false) {
@@ -1681,14 +2593,14 @@
 
             const msgDiv = document.createElement("div");
             msgDiv.className = `msg ${sender}-msg`;
-            
+
             if (isHtml) {
                 msgDiv.innerHTML = text;
             } else {
                 let formattedText = text;
                 msgDiv.innerHTML = formattedText.replace(/\n/g, "<br>");
             }
-            
+
             wrapper.appendChild(avatar);
             wrapper.appendChild(msgDiv);
             messagesDiv.appendChild(wrapper);
@@ -1717,26 +2629,26 @@
 
             setTimeout(() => {
                 chatContainer.style.display = "none";
-                
+
                 const totalQuestions = interviewHistory.length;
                 const totalMarks = interviewHistory.reduce((sum, item) => sum + item.marks, 0);
                 const avgMarks = totalQuestions > 0 ? (totalMarks / totalQuestions).toFixed(1) : 0;
 
                 let topicScores = {};
                 interviewHistory.forEach(item => {
-                    if(!topicScores[item.topic]) topicScores[item.topic] = { total: 0, count: 0 };
+                    if (!topicScores[item.topic]) topicScores[item.topic] = { total: 0, count: 0 };
                     topicScores[item.topic].total += item.marks;
                     topicScores[item.topic].count += 1;
                 });
 
                 let skillsHtml = "";
                 for (const [topic, data] of Object.entries(topicScores)) {
-                    let avgTopicScore = (data.total / data.count) * 10; 
+                    let avgTopicScore = (data.total / data.count) * 10;
                     let color = avgTopicScore >= 80 ? "#34d399" : avgTopicScore >= 50 ? "#fbbf24" : "#fb7185";
-                    
+
                     skillsHtml += `
                         <div class="skill-bar-container">
-                            <div class="skill-header"><span style="font-family: 'Roboto Mono', monospace; text-transform: uppercase;">${topic}</span> <span>${(avgTopicScore/10).toFixed(1)}/10</span></div>
+                            <div class="skill-header"><span style="font-family: 'Roboto Mono', monospace; text-transform: uppercase;">${topic}</span> <span>${(avgTopicScore / 10).toFixed(1)}/10</span></div>
                             <div class="skill-bar-bg"><div class="skill-bar-fill" style="width: ${avgTopicScore}%; background: ${color};"></div></div>
                         </div>
                     `;
@@ -1796,13 +2708,13 @@
 
                 dashboardContainer.style.display = "flex";
 
-            }, 500); 
+            }, 500);
         }
 
         async function loadQuestion() {
-            disableInput(); 
+            disableInput();
             showTyping();
-            
+
             const payload = { asked_ids: askedIds, difficulty: currentDifficulty, topic: selectedTopic };
 
             const res = await fetch("/api/next_question", {
@@ -1811,47 +2723,47 @@
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
-            
-            await sleep(800); 
+
+            await sleep(800);
             hideTyping();
 
-            if (data.status === "completed" || askedIds.length >= 5) { 
+            if (data.status === "completed" || askedIds.length >= 5) {
                 triggerDashboard();
-                return; 
+                return;
             }
-            
+
             currentQuestionData = data.data;
-            askedIds.push(currentQuestionData.sample_id); 
+            askedIds.push(currentQuestionData.sample_id);
             stage = "main_question";
-            
+
             const diffBadge = `<span style="font-size: 0.65rem; border: 1px solid #333; padding: 4px 8px; border-radius: 4px; color: #aaa; text-transform: uppercase;">${currentDifficulty}</span>`;
-            
+
             addMessage(`${diffBadge} <span style="font-size:0.65rem; color:#666; margin-left: 10px; text-transform: uppercase;">${currentQuestionData.topic}</span><br><br><strong style="font-family: 'Roboto Mono', monospace;">Q${askedIds.length}:</strong> ${currentQuestionData.question}`, "bot", true);
-            
-            enableInput(); 
+
+            enableInput();
         }
 
         async function handleSubmission() {
-            if (inputField.disabled) return; 
+            if (inputField.disabled) return;
 
             const text = inputField.value.trim();
             if (!text) return;
-            
-            disableInput(); 
+
+            disableInput();
             addMessage(text, "user");
             inputField.value = "";
 
             if (stage === "main_question") {
                 tempMainAnswer = text;
                 stage = "fill_mask";
-                
+
                 showTyping();
                 await sleep(1000);
                 hideTyping();
-                
+
                 addMessage(`<span style="font-family: 'Roboto Mono', monospace; font-size: 0.85rem; color: #888;">// SYSTEM PROMPT</span><br>Complete the following definition:<br><br>${currentQuestionData.fill_mask.question}`, "bot", true);
-                enableInput(); 
-            } 
+                enableInput();
+            }
             else if (stage === "fill_mask") {
                 const payload = {
                     user_answer: tempMainAnswer,
@@ -1871,7 +2783,7 @@
                 });
                 const result = await res.json();
 
-                await sleep(1000); 
+                await sleep(1000);
                 hideTyping();
 
                 interviewHistory.push({
@@ -1884,7 +2796,7 @@
                 });
 
                 const fillStatus = result.fill_correct ? "<span style='color:#34d399;'>✓ Correct</span>" : "<span style='color:#fb7185;'>✗ Incorrect</span>";
-                
+
                 let logicMessage = "";
                 if (result.score >= 0.75) {
                     if (currentDifficulty === "easy") { currentDifficulty = "medium"; logicMessage = "Difficulty adjusted to Medium"; }
@@ -1918,7 +2830,7 @@
                         ${logicMessage ? `<div style="margin-top: 12px; font-size: 0.75rem; color: #666; font-family: 'Roboto Mono', monospace; text-transform: uppercase;">> Engine Log: ${logicMessage}</div>` : ''}
                     </div>
                 `;
-                
+
                 addMessage(resultHtml, "bot", true);
 
                 // Trigger the sweet visual Juice
@@ -1927,19 +2839,20 @@
                 }, 100);
 
                 setTimeout(() => {
-                    loadQuestion(); 
-                }, 4000); 
+                    loadQuestion();
+                }, 4000);
             }
         }
 
-        inputField.addEventListener("keypress", function(event) {
+        inputField.addEventListener("keypress", function (event) {
             if (event.key === "Enter") handleSubmission();
         });
 
         // Start the webcam as soon as the page loads — before any interview stage
-        window.addEventListener("load", function() {
+        window.addEventListener("load", function () {
             initializeGazeMonitoring();
         });
     </script>
 </body>
+
 </html>

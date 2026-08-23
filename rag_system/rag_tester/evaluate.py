@@ -1,325 +1,260 @@
 """
-Evaluation Module - Scores student answers against reference context
-with rubric breakdown and weighted concept matching.
+Counterfactual grading feedback.
+
+Answers the question "what's the smallest change that would raise my score,
+and by how much, exactly?" by treating compute_rubric_breakdown() as an
+oracle: perturb the student's answer, re-run the REAL scoring function,
+measure the REAL delta. Nothing here is LLM-guessed — every number reported
+is the output of the same deterministic rubric used for the actual grade,
+so a claim like "+6.2 points" is reproducible, not a plausible-sounding
+LLM narrative.
+
+Two things are deliberately NOT invented:
+  1. The score delta — always measured by re-running compute_rubric_breakdown.
+  2. The suggested wording — always a sentence taken verbatim from the
+     reference_context that contains the missing concept, not a paraphrase.
+     (If you want it paraphrased in the candidate's own voice, that's a
+     separate, clearly-labeled generation step — see generate_minimal_edit_llm
+     below, which is optional and never used for the score claim itself.)
 """
+from __future__ import annotations
 
-from sentence_transformers import util
-from collections import Counter
 import re
-import math
-from generate import get_llm_response
+from dataclasses import dataclass, field
 
-# Lazy loaded SentenceTransformer
-_model = None
+from evaluate import compute_rubric_breakdown, extract_weighted_concepts
 
 
-def get_model():
-    """Loads SentenceTransformer only once."""
-    global _model
-    if _model is None:
-        from sentence_transformers import SentenceTransformer
-        _model = SentenceTransformer("all-MiniLM-L6-v2")
-    return _model
+# ---------------------------------------------------------------------------
+# Data model
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ConceptCounterfactual:
+    concept: str
+    weight: float
+    current_hit: bool
+    source_sentence: str | None      # the sentence in reference_context that contains it
+    measured_delta: float            # actual overall_score delta if this concept is added
+    new_overall: float               # overall_score after adding this concept alone
+
+@dataclass
+class CounterfactualReport:
+    baseline_score: float
+    counterfactuals: list[ConceptCounterfactual] = field(default_factory=list)
+    minimal_edit_set: list[str] = field(default_factory=list)   # concepts, in order
+    minimal_edit_sentences: list[str] = field(default_factory=list)
+    minimal_edit_new_score: float = 0.0
+    minimal_edit_delta: float = 0.0
 
 
-def extract_keywords(text):
-    """Extract technical keywords (alphabetic, >5 chars, not stop words)."""
-    STOP_WORDS = {
-        "the","and","for","with","this","that","from","into","using",
-        "have","has","will","also","called","their","there","where",
-        "what","when","which","about","these","those","some","would",
-        "could","should","been","being","through","between","without",
-        "during","within","upon","among","etc","therefore","however"
-    }
-    words = []
-    for word in text.lower().split():
-        word = "".join(c for c in word if c.isalpha())
-        if len(word) > 5 and word.isalpha() and word not in STOP_WORDS:
-            words.append(word)
-    word_counts = Counter(words)
-    unique_words = []
-    for w, _ in word_counts.most_common():
-        if w not in unique_words:
-            unique_words.append(w)
-    return unique_words[:10]
+# ---------------------------------------------------------------------------
+# Locating the source sentence for a concept (grounds the suggestion in the
+# actual reference text — never invented)
+# ---------------------------------------------------------------------------
 
-
-def extract_concepts_from_text(text):
+def find_source_sentence(concept: str, reference_context: str) -> str | None:
     """
-    Extract concepts: bullet points, capitalized phrases, then fallback to keywords.
-    Returns a list of concept strings (most important first).
+    Return the shortest sentence in reference_context that mentions `concept`.
+    Shortest, not first, so the suggested addition stays minimal.
     """
-    concepts = []
-    lines = text.split('\n')
-    for line in lines:
-        line = line.strip()
-        if not line:
+    sentences = re.split(r'(?<=[.!?])\s+', reference_context.strip())
+    candidates = [s.strip() for s in sentences if concept.lower() in s.lower()]
+    if not candidates:
+        # fall back to partial word match for multi-word concepts
+        words = concept.lower().split()
+        candidates = [
+            s.strip() for s in sentences
+            if len(words) > 1 and all(w in s.lower() for w in words)
+        ]
+    if not candidates:
+        return None
+    return min(candidates, key=len)
+
+
+# ---------------------------------------------------------------------------
+# Perturbation + measurement
+# ---------------------------------------------------------------------------
+
+def perturb_with_sentence(student_answer: str, sentence: str) -> str:
+    """
+    Minimal perturbation: append the source sentence as a new clause.
+    Appending (not rewriting) keeps the edit measurable and attributable
+    to exactly one concept, which is what makes per-concept deltas valid —
+    rewriting the whole answer would confound multiple effects at once.
+    """
+    student_answer = student_answer.strip()
+    if not student_answer.endswith(('.', '!', '?')):
+        student_answer += '.'
+    return f"{student_answer} {sentence}"
+
+
+def measure_single_concept_deltas(
+    student_answer: str,
+    reference_context: str,
+    baseline_rubric: dict | None = None,
+) -> list[ConceptCounterfactual]:
+    """
+    For every concept the student missed, measure the ACTUAL score delta
+    from adding just that concept's source sentence, by re-running the
+    real rubric function. This is O(num_missing_concepts) calls to
+    compute_rubric_breakdown — fine for typical rubrics of <10 concepts,
+    since each call is a couple of sentence-transformer encodes.
+    """
+    baseline_rubric = baseline_rubric or compute_rubric_breakdown(student_answer, reference_context)
+    baseline_score = baseline_rubric["overall_score"]
+
+    results = []
+    for match in baseline_rubric["concept_matches"]:
+        concept, weight, hit = match["concept"], match["weight"], match["hit"]
+        source_sentence = find_source_sentence(concept, reference_context)
+
+        if hit or source_sentence is None:
+            # already covered, or we can't ground a suggestion in real text —
+            # skip rather than inventing wording
             continue
-        if line.startswith(('•', '-', '*', '✓', '○', '▪', '→')):
-            parts = line.split(maxsplit=1)
-            if len(parts) > 1:
-                concept = parts[1].strip()
-                if len(concept.split()) >= 2 and not concept.lower().startswith(('the', 'a', 'an')):
-                    concepts.append(concept)
-    if not concepts:
-        cap_pattern = r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+'
-        found = re.findall(cap_pattern, text)
-        for phrase in found[:10]:
-            if len(phrase.split()) >= 2 and phrase not in concepts:
-                concepts.append(phrase)
-    if not concepts:
-        return extract_keywords(text)
-    # Remove duplicates while preserving order
-    seen = set()
-    unique = []
-    for c in concepts:
-        if c not in seen:
-            seen.add(c)
-            unique.append(c)
-    return unique[:10]
+
+        perturbed = perturb_with_sentence(student_answer, source_sentence)
+        perturbed_rubric = compute_rubric_breakdown(perturbed, reference_context)
+        delta = round(perturbed_rubric["overall_score"] - baseline_score, 2)
+
+        results.append(ConceptCounterfactual(
+            concept=concept,
+            weight=weight,
+            current_hit=hit,
+            source_sentence=source_sentence,
+            measured_delta=delta,
+            new_overall=perturbed_rubric["overall_score"],
+        ))
+
+    # rank by measured impact, not just rubric weight — weight is a proxy,
+    # the actual re-run is the ground truth
+    results.sort(key=lambda c: -c.measured_delta)
+    return results
 
 
-def extract_weighted_concepts(text):
-    """
-    Extract concepts and assign weights based on frequency in text.
-    Returns list of (concept, weight) pairs, highest weight first.
-    """
-    concepts = extract_concepts_from_text(text)
-    if not concepts:
-        return []
-    # Count occurrences of each concept (case-insensitive)
-    text_lower = text.lower()
-    concept_counts = {}
-    for concept in concepts:
-        # Count whole word occurrences (approximate)
-        count = len(re.findall(r'\b' + re.escape(concept.lower()) + r'\b', text_lower))
-        concept_counts[concept] = count or 1
-    # Normalize weights: higher count = higher weight, but cap at 2.0
-    max_c = max(concept_counts.values()) if concept_counts else 1
-    weighted = [(c, min(2.0, count / max_c * 1.5)) for c, count in concept_counts.items()]
-    # Sort by weight descending, then by original order
-    weighted.sort(key=lambda x: (-x[1], concepts.index(x[0])))
-    return weighted
+# ---------------------------------------------------------------------------
+# Minimal edit search: smallest set of concept-additions that closes the
+# gap to a target score (or the next grade boundary)
+# ---------------------------------------------------------------------------
+
+GRADE_THRESHOLDS = [(80, 'A'), (70, 'B'), (60, 'C'), (50, 'D'), (0, 'F')]
 
 
-def generate_ai_feedback(student_answer, reference_answer):
+def next_grade_threshold(current_score: float) -> float | None:
+    """Smallest grade threshold strictly greater than current_score, or None if already at the top."""
+    higher = [t for t, _ in GRADE_THRESHOLDS if t > current_score]
+    return min(higher) if higher else None
+
+
+def find_minimal_edit_set(
+    student_answer: str,
+    reference_context: str,
+    target_score: float | None = None,
+) -> CounterfactualReport:
     """
-    Generate human-like feedback using Qwen, strictly grounded in the reference.
+    Greedy minimal-edit search: repeatedly add the single highest-impact
+    missing concept (measured, not estimated), re-measuring after each
+    addition, until the target score is reached or no missing concepts
+    remain. Greedy is not globally optimal but is the right tradeoff here:
+    it keeps the number of compute_rubric_breakdown calls linear rather
+    than combinatorial, and in practice concept contributions are close
+    to additive since each edit only appends one sentence.
     """
+    baseline_rubric = compute_rubric_breakdown(student_answer, reference_context)
+    baseline_score = baseline_rubric["overall_score"]
+    target = target_score if target_score is not None else next_grade_threshold(baseline_score)
+
+    report = CounterfactualReport(baseline_score=baseline_score)
+    report.counterfactuals = measure_single_concept_deltas(student_answer, reference_context, baseline_rubric)
+
+    if target is None or not report.counterfactuals:
+        report.minimal_edit_new_score = baseline_score
+        return report
+
+    current_answer = student_answer
+    current_score = baseline_score
+    remaining = list(report.counterfactuals)  # already sorted by measured delta desc
+
+    while remaining and current_score < target:
+        best = remaining.pop(0)
+        current_answer = perturb_with_sentence(current_answer, best.source_sentence)
+        current_rubric = compute_rubric_breakdown(current_answer, reference_context)
+        new_score = current_rubric["overall_score"]
+
+        report.minimal_edit_set.append(best.concept)
+        report.minimal_edit_sentences.append(best.source_sentence)
+        current_score = new_score
+
+        # re-measure remaining concepts' deltas from the NEW baseline,
+        # since adding one concept can shift semantic/clarity scores
+        # enough to change which concept is now most valuable
+        if remaining:
+            remaining = measure_single_concept_deltas(current_answer, reference_context, current_rubric)
+
+    report.minimal_edit_new_score = current_score
+    report.minimal_edit_delta = round(current_score - baseline_score, 2)
+    return report
+
+
+# ---------------------------------------------------------------------------
+# Rendering
+# ---------------------------------------------------------------------------
+
+def render_counterfactual_markdown(report: CounterfactualReport) -> str:
+    lines = [f"**Current score: {report.baseline_score:.1f}/100**", ""]
+
+    if report.counterfactuals:
+        lines.append("**If you had also mentioned:**")
+        for c in report.counterfactuals[:5]:
+            sign = "+" if c.measured_delta >= 0 else ""
+            lines.append(
+                f"- **{c.concept}** ({sign}{c.measured_delta:.1f} pts, "
+                f"rubric weight {c.weight:.2f}) — reference says: "
+                f"\"{c.source_sentence}\""
+            )
+        lines.append("")
+
+    if report.minimal_edit_set:
+        lines.append(
+            f"**Minimal path to {report.minimal_edit_new_score:.1f}/100 "
+            f"({'+' if report.minimal_edit_delta >= 0 else ''}{report.minimal_edit_delta:.1f} pts):**"
+        )
+        for concept, sentence in zip(report.minimal_edit_set, report.minimal_edit_sentences):
+            lines.append(f"- Add a mention of **{concept}**: \"{sentence}\"")
+    else:
+        lines.append("_No further additions needed to reach the next grade boundary._")
+
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# OPTIONAL: paraphrase the minimal edit in the candidate's own voice.
+# This is clearly separated from the score claim above — the LLM here only
+# rewords, it never touches the number. If this call fails or is skipped,
+# the report above is still fully valid on its own.
+# ---------------------------------------------------------------------------
+
+def generate_minimal_edit_llm(student_answer: str, report: CounterfactualReport) -> str | None:
+    from generate import get_llm_response
+
+    if not report.minimal_edit_sentences:
+        return None
+
+    facts = "\n".join(f"- {s}" for s in report.minimal_edit_sentences)
     prompt = f"""
-You are evaluating a student's answer against a reference answer.
-
-Reference Answer:
-{reference_answer}
-
-Student Answer:
+The student wrote this answer:
 {student_answer}
 
-CRITICAL RULES - YOU MUST FOLLOW THESE EXACTLY:
+These facts are missing and must be added, taken verbatim from the reference:
+{facts}
 
-- You are NOT allowed to use any knowledge outside the reference answer.
-- You MUST ignore everything you know.
-- If a concept does not appear in the reference answer, DO NOT mention it.
-- Do NOT invent examples, languages, design patterns, or databases.
-- Only compare the student answer against the supplied reference.
-- Focus on missing concepts and clarity.
-- Be constructive and concise.
-
-Return ONLY in this format:
-
-Strengths:
-- ...
-
-Missing Concepts:
-- ...
-
-Suggestions:
-- ...
+Rewrite the student's answer to include these facts in the student's own
+phrasing where possible, but DO NOT remove or alter any factual content
+from the facts list, and DO NOT add any information not present in the
+facts list or the student's original answer. Return only the revised answer.
 """
-
     try:
         return get_llm_response(prompt)
     except Exception:
-        return "AI feedback unavailable."
-
-
-def compute_rubric_breakdown(student_answer, reference_context):
-    """
-    Compute separate scores for semantic similarity, concept coverage, and clarity.
-    Returns a dict with keys: semantic, concept, clarity, overall.
-    """
-    model = get_model()
-    # Encode
-    student_emb = model.encode(student_answer, convert_to_tensor=True)
-    reference_emb = model.encode(reference_context, convert_to_tensor=True)
-    semantic_sim = util.cos_sim(student_emb, reference_emb).item()
-    semantic_sim = max(0.0, min(1.0, semantic_sim))
-    semantic_score = semantic_sim * 100
-
-    # Weighted concept matching
-    weighted_ref_concepts = extract_weighted_concepts(reference_context)
-    if not weighted_ref_concepts:
-        concept_score = 100.0
-    else:
-        student_lower = student_answer.lower()
-        total_weight = 0.0
-        matched_weight = 0.0
-        for concept, weight in weighted_ref_concepts:
-            total_weight += weight
-            if concept.lower() in student_lower:
-                matched_weight += weight
-            else:
-                # Partial match: check if all words in concept appear
-                concept_words = concept.lower().split()
-                if len(concept_words) > 1:
-                    if all(w in student_lower for w in concept_words):
-                        matched_weight += weight * 0.7
-        concept_score = (matched_weight / total_weight) * 100 if total_weight > 0 else 0.0
-
-    # Clarity score: based on answer length and sentence structure
-    ref_words = len(reference_context.split())
-    student_words = len(student_answer.split())
-    # Ideal length is at least 60% of reference length, but not too long
-    if student_words == 0:
-        length_ratio = 0
-    else:
-        length_ratio = min(1.0, student_words / (max(1, ref_words) * 0.6))
-        length_ratio = min(length_ratio, 1.5)  # cap at 1.5
-    # Also count sentences (by punctuation)
-    sentences = re.split(r'[.!?]+', student_answer)
-    sent_count = len([s for s in sentences if s.strip()])
-    sentence_score = min(1.0, sent_count / 3)  # at least 3 sentences is good
-    # Combine: 70% length ratio, 30% sentence structure
-    clarity_score = (0.7 * min(1.0, length_ratio) + 0.3 * min(1.0, sentence_score)) * 100
-
-    # Overall: weighted average
-    overall = (0.45 * semantic_score + 0.35 * concept_score + 0.20 * clarity_score)
-    overall = max(0, min(100, overall))
-
-    return {
-        "semantic_score": round(semantic_score, 2),
-        "concept_score": round(concept_score, 2),
-        "clarity_score": round(clarity_score, 2),
-        "overall_score": round(overall, 2),
-    }
-
-
-def evaluate_answer(student_answer, reference_context, question_type="open", test_cases=None, language="python"):
-    """
-    Evaluate how well the student answer matches the reference.
-    Returns dict with scores, grade, feedback, and breakdown.
-    """
-    if not student_answer or not reference_context:
-        return {
-            'score': 0.0,
-            'feedback': 'Invalid input',
-            'grade': 'F',
-            'matched_keywords': [],
-            'missing_keywords': [],
-            'strengths': [],
-            'weaknesses': [],
-            'ai_feedback': 'Invalid input - no answer or reference provided.',
-            'rubric': {
-                'semantic_score': 0,
-                'concept_score': 0,
-                'clarity_score': 0,
-                'overall_score': 0
-            }
-        }
-
-    # Compute rubric breakdown
-    rubric = compute_rubric_breakdown(student_answer, reference_context)
-    overall = rubric["overall_score"]
-
-    # Extract matched/missing concepts (unweighted)
-    ref_concepts = extract_concepts_from_text(reference_context)
-    student_lower = student_answer.lower()
-    matched = []
-    missing = []
-    for concept in ref_concepts:
-        if concept.lower() in student_lower:
-            matched.append(concept)
-        else:
-            # partial match
-            words = concept.lower().split()
-            if len(words) > 1 and all(w in student_lower for w in words):
-                matched.append(concept)
-            else:
-                missing.append(concept)
-
-    # Determine grade
-    if overall >= 80:
-        grade = 'A'
-    elif overall >= 70:
-        grade = 'B'
-    elif overall >= 60:
-        grade = 'C'
-    elif overall >= 50:
-        grade = 'D'
-    else:
-        grade = 'F'
-
-    # Build strengths/weaknesses
-    strengths = []
-    weaknesses = []
-    if matched:
-        strengths.append(f"Correctly covered concepts: {', '.join(matched[:3])}")
-    if len(student_answer.split()) >= len(reference_context.split()) * 0.5:
-        strengths.append("Good answer length and coverage")
-    if rubric["semantic_score"] >= 70:
-        strengths.append("Good semantic alignment with reference")
-
-    if missing:
-        if len(missing) <= 3:
-            weaknesses.append(f"Missing concepts: {', '.join(missing)}")
-        else:
-            weaknesses.append(f"Missing concepts: {', '.join(missing[:3])} and {len(missing)-3} more")
-    if rubric["semantic_score"] < 60:
-        weaknesses.append("Answer could be more aligned with the reference material")
-    if rubric["clarity_score"] < 50:
-        weaknesses.append("Answer lacks clarity or sufficient detail")
-
-    feedback_lines = []
-    if strengths:
-        feedback_lines.append("Strengths:")
-        feedback_lines.extend([f"  ✓ {s}" for s in strengths])
-    if weaknesses:
-        feedback_lines.append("\nWeaknesses:")
-        feedback_lines.extend([f"  ✗ {w}" for w in weaknesses])
-    if not strengths and not weaknesses:
-        feedback_lines.append("Mixed answer quality. Review the reference material for improvement.")
-
-    # Generate AI feedback (strictly grounded)
-    ai_feedback = generate_ai_feedback(student_answer, reference_context)
-
-    return {
-        'score': round(overall, 2),
-        'similarity': rubric['semantic_score'],
-        'concept_coverage': rubric['concept_score'],
-        'quality_score': rubric['clarity_score'],
-        'grade': grade,
-        'feedback': '\n'.join(feedback_lines),
-        'ai_feedback': ai_feedback,
-        'answer_length': len(student_answer.split()),
-        'reference_length': len(reference_context.split()),
-        'matched_keywords': matched,
-        'missing_keywords': missing,
-        'strengths': strengths,
-        'weaknesses': weaknesses,
-        'rubric': rubric,  # detailed breakdown
-    }
-
-
-def compare_answers(answer1, answer2):
-    """Compare two answers for similarity."""
-    model = get_model()
-    emb1 = model.encode(answer1, convert_to_tensor=True)
-    emb2 = model.encode(answer2, convert_to_tensor=True)
-    similarity = util.cos_sim(emb1, emb2).item()
-    similarity = max(0.0, min(1.0, similarity))
-    return {'similarity': round(similarity, 4), 'percentage': round(similarity * 100, 2)}
-
-
-def evaluate_multiple_answers(student_answers, reference_context):
-    """Evaluate multiple student answers."""
-    return [evaluate_answer(ans, reference_context) for ans in student_answers]
+        return None

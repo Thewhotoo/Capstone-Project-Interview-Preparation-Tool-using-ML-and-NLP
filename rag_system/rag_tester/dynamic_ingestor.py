@@ -11,6 +11,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 from bm25_utils import save_bm25_meta
+from diagram_ingestor import ingest_diagrams_for_subject
 
 BASE_DIR = Path(__file__).resolve().parent
 SAMPLES_DIR = BASE_DIR / "samples"
@@ -238,6 +239,10 @@ def needs_rebuild(subject_dir: Path, pdf_hash: str) -> bool:
     meta_file = subject_dir / "metadata.json"
     if not (meta_file.exists() and (subject_dir / "chunks.json").exists() and (subject_dir / "index.faiss").exists()):
         return True
+    if not (subject_dir / "diagram_chunks.json").exists():
+        # text index is up to date but diagrams haven't been ingested yet
+        # (e.g. diagram pipeline was added after this subject was first built)
+        return True
     try:
         with open(meta_file) as f:
             return json.load(f).get("pdf_hash") != pdf_hash
@@ -406,6 +411,12 @@ def process_subject(subject: str, pdfs: list[Path]):
     # Save BM25 metadata (for hybrid retrieval)
     save_bm25_meta(subject_dir, chunks)
 
+    # Extract, classify, and structure diagrams (runs automatically —
+    # fails soft per-diagram, so a missing/unwired VLM never blocks text ingestion)
+    print(f"Extracting diagrams for {subject}...")
+    diagram_chunks = ingest_diagrams_for_subject([str(p) for p in pdfs], subject_dir)
+    print(f"✓ {subject}: {len(diagram_chunks)} diagram(s) extracted and structured")
+
     # Save metadata
     metadata = {
         "subject": subject,
@@ -413,6 +424,7 @@ def process_subject(subject: str, pdfs: list[Path]):
         "pdf_hash": pdf_hash,
         "pages": len({c["page"] for c in chunks}),
         "chunks": len(chunks),
+        "diagram_chunks": len(diagram_chunks),
         "chunking_strategy": "slide_aware_hybrid_merge",
         "embedding_model": "all-MiniLM-L6-v2",
         "ocr_enabled": True,

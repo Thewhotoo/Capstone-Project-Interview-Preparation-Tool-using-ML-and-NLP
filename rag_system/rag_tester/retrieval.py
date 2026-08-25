@@ -83,11 +83,41 @@ def _faiss_search(index: faiss.Index, chunks: list[dict], query: str, top_k: int
 
 
 def _bm25_search(bm25: Any, query: str, top_k: int) -> list[tuple[int, float, str]]:
-    """Keyword search using BM25."""
+    """
+    Keyword search using BM25.
+    Handles both rank_bm25.BM25Okapi and bm25s styles.
+    """
     if bm25 is None:
         return []
-    # Assumes bm25 has a .search(query, top_k) method returning list of (idx, score)
-    return [(idx, float(score), "bm25") for idx, score in bm25.search(query, top_k)]
+
+    # --- rank_bm25.BM25Okapi style ---
+    if hasattr(bm25, "get_scores"):
+        # Tokenize query the same way the corpus was tokenized (simple whitespace split)
+        tokenized_query = query.lower().split()
+        scores = bm25.get_scores(tokenized_query)
+        # Get top_k indices sorted by score descending
+        top_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:top_k]
+        return [(idx, float(scores[idx]), "bm25") for idx in top_indices]
+
+    # --- bm25s style (library by xhlulu) ---
+    if hasattr(bm25, "retrieve"):
+        results = bm25.retrieve(query, k=top_k)
+        if isinstance(results, list) and len(results) > 0 and isinstance(results[0], (list, tuple)):
+            return [(doc_id, float(score), "bm25") for doc_id, score in results]
+        else:
+            # Fallback: if results is a dict or unknown shape, try to convert
+            try:
+                return [(i, float(s), "bm25") for i, s in enumerate(results)]
+            except Exception:
+                pass
+
+    # --- Fallback: try .search() if it exists (original assumption) ---
+    if hasattr(bm25, "search"):
+        return [(idx, float(score), "bm25") for idx, score in bm25.search(query, top_k)]
+
+    # If all else fails, log and return empty
+    print(f"Warning: BM25 object of type {type(bm25)} has no known search method.")
+    return []
 
 
 def _merge_hybrid(
@@ -266,6 +296,7 @@ def get_best_context(subject_name: str, query: str, **kwargs) -> str:
     hits = retrieve_relevant_content(subject_name, query, top_k=1, **kwargs)
     return hits[0]["text"] if hits else ""
 
+
 def load_test_cases(subject_name: str, topic: str) -> list:
     """Load pre‑defined test cases for a topic (from tests.json)."""
     test_path = KNOWLEDGE_BASE_DIR / subject_name / "tests.json"
@@ -275,6 +306,7 @@ def load_test_cases(subject_name: str, topic: str) -> list:
             data = json.load(f)
             return data.get(topic, {}).get("test_cases", [])
     return []
+
 
 def get_context_with_pages(
     subject_name: str,
@@ -312,4 +344,3 @@ def get_context_with_pages(
     unique_concepts = list(dict.fromkeys(concepts))
 
     return "\n\n".join(parts), pages, unique_headings, unique_concepts
-

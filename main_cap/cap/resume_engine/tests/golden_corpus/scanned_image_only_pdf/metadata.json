@@ -1,0 +1,14 @@
+{
+  "fixture_id": "scanned_image_only_pdf",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "easy",
+  "known_edge_cases": [
+    "a blank/text-free page standing in for a scanned image-only PDF -- zero extractable characters",
+    "exercises the typed ExtractionFailure path (MIN_EXTRACTED_CHARS floor), not OCR (explicitly out of scope until Milestone 8+)"
+  ],
+  "notes": "A literal scanned-image PDF isn't shipped in the corpus; a text-free page exercises the identical near-zero-chars failure path.",
+  "added_in_milestone": 1,
+  "expects_extraction_failure": true
+}

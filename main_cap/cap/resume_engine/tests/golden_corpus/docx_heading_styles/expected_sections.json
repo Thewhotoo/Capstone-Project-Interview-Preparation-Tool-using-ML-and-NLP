@@ -1,0 +1,11 @@
+{
+  "expected_labels_in_order": ["contact", "experience", "education"],
+  "min_confidence_by_label": {
+    "experience": 0.95,
+    "education": 0.95
+  },
+  "reason_must_contain": {
+    "experience": "docx_style_match",
+    "education": "docx_style_match"
+  }
+}

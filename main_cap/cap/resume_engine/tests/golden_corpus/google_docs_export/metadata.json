@@ -1,0 +1,13 @@
+{
+  "fixture_id": "google_docs_export",
+  "layout_type": "single_column",
+  "document_type": "docx",
+  "template_style": "google_docs",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "easy",
+  "known_edge_cases": [
+    "a plain-paragraph name line with an explicit run-level font-size override instead of a Heading style -- exercises DOCX resumes that don't use Word's heading styles at all"
+  ],
+  "notes": "Validation-pass fixture (2026-08). Emulates a Google Docs 'Download as .docx' export, which frequently doesn't preserve/assign Word heading styles the way a native Word document would.",
+  "added_in_milestone": 1
+}

@@ -1,0 +1,14 @@
+{
+  "fixture_id": "two_column_sidebar_pdf",
+  "layout_type": "two_column",
+  "document_type": "pdf",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "medium",
+  "known_edge_cases": [
+    "narrow left sidebar with Contact/Skills",
+    "wide right column with Experience/Projects",
+    "full-width name banner above both columns"
+  ],
+  "notes": "Regression fixture for the k=2 column-clustering gap-analysis heuristic (architecture doc Section 4.2).",
+  "added_in_milestone": 1
+}

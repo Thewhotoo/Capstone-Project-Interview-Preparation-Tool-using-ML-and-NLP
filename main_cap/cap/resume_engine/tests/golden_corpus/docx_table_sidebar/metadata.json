@@ -1,0 +1,14 @@
+{
+  "fixture_id": "docx_table_sidebar",
+  "layout_type": "two_column",
+  "document_type": "docx",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "hard",
+  "known_edge_cases": [
+    "two-column sidebar built as a borderless DOCX table (a common real-world Word authoring technique)",
+    "exercises the extraction-time table-as-layout-hack synthetic column geometry",
+    "exercises extraction_quality.notes surfacing 'docx_table_layout_detected:2_columns'"
+  ],
+  "notes": "A genuine tabular-data DOCX table would be mis-treated the same way -- documented known limitation (architecture doc Section 4.1/4.2), not solved generally in Milestone 1.",
+  "added_in_milestone": 1
+}

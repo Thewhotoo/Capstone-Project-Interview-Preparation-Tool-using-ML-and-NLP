@@ -1,0 +1,14 @@
+{
+  "fixture_id": "dense_long_ats_resume",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "ats_plain",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "medium",
+  "known_edge_cases": [
+    "25 lines of dense single-column content, three job entries plus education/skills/certifications",
+    "volume/throughput stress case -- extraction_quality span_count and chars_extracted on the higher end of the corpus"
+  ],
+  "notes": "Validation-pass fixture (2026-08). Representative of a real multi-role senior-engineer resume rather than the corpus's mostly-minimal examples.",
+  "added_in_milestone": 1
+}

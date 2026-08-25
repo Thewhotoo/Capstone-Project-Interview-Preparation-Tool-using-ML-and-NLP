@@ -16,6 +16,19 @@
             --text-main: #fcfcfc;
             --text-muted: #888888;
             --border-subtle: rgba(255, 255, 255, 0.06);
+
+            /* --- Phase 1 additive tokens (shared scale, does not
+                 replace anything the other screens already use) ---
+                 Graphite/charcoal neutrals + a single restrained lime
+                 accent reserved for "the system is alive" moments only
+                 (status, focus, active state) — never a fill color. */
+            --border-hover: rgba(255, 255, 255, 0.16);
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-slow: cubic-bezier(0.22, 1, 0.36, 1);
+            --text-dim: #55564d;
+            --lime: #c8ff5e;
+            --lime-dim: rgba(200, 255, 94, 0.14);
+            --lime-border: rgba(200, 255, 94, 0.4);
         }
         #toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
         .toast { padding: 14px 20px; border-radius: 10px; font-size: 0.9rem; font-weight: 500; color: #fff; background: var(--bg-elevated); border: 1px solid var(--border-subtle); box-shadow: 0 8px 32px rgba(0,0,0,0.4); animation: toastIn 0.3s ease forwards; max-width: 360px; }
@@ -25,9 +38,10 @@
         .toast.toast-out { animation: toastOut 0.3s ease forwards; }
         @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
             height: 100vh;
             color: var(--text-main);
             background-color: var(--bg-base);
@@ -36,16 +50,27 @@
             display: flex;
             flex-direction: column;
         }
+
+        /* --- LANDING PAGE --- */
         #landing-container {
             width: 100%;
             max-width: 500px;
-            margin: auto;
+            margin: auto; /* Centers it perfectly */
             text-align: center;
             transition: opacity 0.5s ease, transform 0.5s ease;
             padding: 40px;
         }
-        .landing-title { font-size: 3rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -1px; color: #ffffff; }
+
+        .landing-title { 
+            font-size: 3rem; 
+            font-weight: 700; 
+            margin-bottom: 8px; 
+            letter-spacing: -1px;
+            color: #ffffff;
+        }
+        
         .landing-sub { color: var(--text-muted); margin-bottom: 40px; font-size: 1.1rem; font-weight: 300; }
+
         .form-group { text-align: left; margin-bottom: 24px; }
         .form-group label { display: block; font-size: 0.75rem; color: #666; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
         select { width: 100%; padding: 16px 20px; border-radius: 12px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); color: white; font-size: 1rem; outline: none; transition: all 0.3s ease; appearance: none; }
@@ -53,17 +78,72 @@
         option { background: var(--bg-elevated); color: white; }
         .start-btn { width: 100%; padding: 18px; margin-top: 20px; background: white; color: black; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .start-btn:hover { transform: scale(1.02); background: #f0f0f0; box-shadow: 0 0 30px rgba(255,255,255,0.1); }
-        #candidate-dashboard { display: none; width: 100%; height: 92vh; overflow-y: auto; background: var(--bg-base); animation: dashFadeIn 0.6s ease forwards; }
+
+        /* --- CANDIDATE ASSESSMENT DASHBOARD --- */
+        #candidate-dashboard {
+            display: none;
+            width: 100%;
+            height: 92vh;
+            overflow-y: auto;
+            background: var(--bg-base);
+            animation: dashFadeIn 0.6s ease forwards;
+        }
         #candidate-dashboard::-webkit-scrollbar { display: none; }
         @keyframes dashFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .dash-wrapper { max-width: 1100px; margin: 0 auto; padding: 40px 32px 60px; }
-        .dash-greeting { font-size: 2rem; font-weight: 700; color: #fff; letter-spacing: -0.5px; margin-bottom: 4px; }
-        .dash-subtitle { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 36px; font-weight: 400; }
-        .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
-        .dash-card { background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 24px; }
-        .dash-card-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
-        .dash-card-value { font-size: 1.5rem; font-weight: 700; color: #fff; font-family: 'Roboto Mono', monospace; }
-        .dash-card-value.small { font-size: 1rem; font-weight: 500; font-family: 'Inter', sans-serif; line-height: 1.5; }
+
+        .dash-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 32px 60px;
+        }
+
+        .dash-greeting {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+        .dash-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 36px;
+            font-weight: 400;
+        }
+
+        .dash-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+        .dash-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 24px;
+        }
+        .dash-card-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .dash-card-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            font-family: 'Roboto Mono', monospace;
+        }
+        .dash-card-value.small {
+            font-size: 1rem;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.5;
+        }
+
         .dash-full { grid-column: 1 / -1; }
         .dash-skills-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
         .skill-chip { padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 500; background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); color: #ddd; }
@@ -73,16 +153,92 @@
         .skill-chip.sk-db { background: rgba(168,85,247,0.10); border-color: rgba(168,85,247,0.20); color: #c4b5fd; }
         .skill-chip.sk-cloud { background: rgba(6,182,212,0.10); border-color: rgba(6,182,212,0.20); color: #67e8f9; }
         .skill-chip.sk-other { background: rgba(255,255,255,0.04); border-color: var(--border-subtle); color: #aaa; }
-        .dash-category-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin: 12px 0 6px; font-weight: 600; }
-        .dash-preview-box { background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); border-radius: 10px; padding: 18px 20px; margin-top: 12px; color: #aaa; font-size: 0.9rem; line-height: 1.6; }
+
+        .dash-category-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin: 12px 0 6px;
+            font-weight: 600;
+        }
+
+        .dash-preview-box {
+            background: rgba(255,255,255,0.02);
+            border: 1px dashed rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-top: 12px;
+            color: #aaa;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
         .dash-preview-box strong { color: #ddd; }
-        .dash-start-btn { width: 100%; padding: 18px; margin-top: 10px; background: #fff; color: #000; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        .dash-start-btn:hover { transform: scale(1.015); box-shadow: 0 0 40px rgba(255,255,255,0.08); background: #f0f0f0; }
-        @media (max-width: 700px) { .dash-grid { grid-template-columns: 1fr; } .dash-wrapper { padding: 24px 16px 40px; } .dash-greeting { font-size: 1.5rem; } }
-        #chat-container { display: none; width: 100%; height: 100vh; flex-direction: column; align-items: center; transition: opacity 0.5s ease, transform 0.5s ease; }
-        .chat-header { width: 100%; padding: 24px; text-align: center; border-bottom: 1px solid var(--border-subtle); font-weight: 500; font-size: 0.9rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); z-index: 10; }
-        #messages { width: 100%; max-width: 800px; flex-grow: 1; overflow-y: auto; padding: 40px 20px; display: flex; flex-direction: column; gap: 24px; scroll-behavior: smooth; }
-        #messages::-webkit-scrollbar { display: none; }
+
+        .dash-start-btn {
+            width: 100%;
+            padding: 18px;
+            margin-top: 10px;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .dash-start-btn:hover {
+            transform: scale(1.015);
+            box-shadow: 0 0 40px rgba(255,255,255,0.08);
+            background: #f0f0f0;
+        }
+
+        @media (max-width: 700px) {
+            .dash-grid { grid-template-columns: 1fr; }
+            .dash-wrapper { padding: 24px 16px 40px; }
+            .dash-greeting { font-size: 1.5rem; }
+        }
+
+        /* --- CHAT CONTAINER (FULL SCREEN LAYOUT) --- */
+        #chat-container { 
+            display: none; 
+            width: 100%; 
+            height: 100vh; 
+            flex-direction: column; 
+            align-items: center; /* Centers the inner content */
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .chat-header { 
+            width: 100%;
+            padding: 24px; 
+            text-align: center; 
+            border-bottom: 1px solid var(--border-subtle); 
+            font-weight: 500; 
+            font-size: 0.9rem; 
+            letter-spacing: 2px; 
+            text-transform: uppercase;
+            color: var(--text-muted);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+        
+        /* Restricting the width of the messages to look like a neat column */
+        #messages { 
+            width: 100%; 
+            max-width: 800px; 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding: 40px 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 24px; 
+            scroll-behavior: smooth; 
+        }
+        #messages::-webkit-scrollbar { display: none; } /* Clean, hidden scrollbar */
+
         .msg-wrapper { display: flex; gap: 16px; max-width: 85%; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .bot-wrapper { align-self: flex-start; }
@@ -91,10 +247,33 @@
         .msg { padding: 16px 20px; border-radius: 16px; line-height: 1.6; font-size: 0.95rem; font-weight: 400; }
         .bot-msg { background: var(--bot-bubble); border: 1px solid var(--border-subtle); }
         .user-msg { background: var(--user-bubble); border: 1px solid var(--border-subtle); }
-        .eval-card { background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 20px; margin-top: 12px; transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-        .glow-excellent { box-shadow: 0 0 40px rgba(16, 185, 129, 0.1), inset 0 0 20px rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2); }
-        .glow-mid { box-shadow: 0 0 40px rgba(245, 158, 11, 0.1), inset 0 0 20px rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2); }
-        .glow-fail { box-shadow: 0 0 40px rgba(225, 29, 72, 0.1), inset 0 0 20px rgba(225, 29, 72, 0.05); border-color: rgba(225, 29, 72, 0.2); }
+
+        /* THE NEW EVALUATION CARD WITH GLASSMORPHISM */
+        .eval-card { 
+            background: rgba(10, 10, 10, 0.6); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin-top: 12px; 
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+
+        /* PREMIUM DYNAMIC GLOWS */
+        .glow-excellent {
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.1), inset 0 0 20px rgba(16, 185, 129, 0.05);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+        .glow-mid {
+            box-shadow: 0 0 40px rgba(245, 158, 11, 0.1), inset 0 0 20px rgba(245, 158, 11, 0.05);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+        .glow-fail {
+            box-shadow: 0 0 40px rgba(225, 29, 72, 0.1), inset 0 0 20px rgba(225, 29, 72, 0.05);
+            border-color: rgba(225, 29, 72, 0.2);
+        }
+
         .eval-header { display: flex; justify-content: space-between; margin-bottom: 16px; font-weight: 500; }
         .badge { background: rgba(255,255,255,0.03); padding: 6px 14px; border-radius: 8px; font-size: 0.85rem; border: 1px solid var(--border-subtle); letter-spacing: 0.5px; }
         .typing-indicator { display: flex; gap: 6px; padding: 18px 24px; background: var(--bot-bubble); border-radius: 16px; width: fit-content; border: 1px solid var(--border-subtle); }
@@ -102,23 +281,67 @@
         .dot:nth-child(1) { animation-delay: -0.32s; }
         .dot:nth-child(2) { animation-delay: -0.16s; }
         @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-        .input-area { width: 100%; max-width: 800px; display: flex; gap: 12px; padding: 20px; padding-bottom: 40px; background: transparent; }
-        input[type="text"] { flex-grow: 1; padding: 16px 24px; border-radius: 12px; border: 1px solid var(--border-subtle); background: var(--bg-elevated); color: white; font-size: 1rem; outline: none; transition: all 0.3s ease; }
-        input[type="text"]:focus { border-color: #555; background: #111; }
+
+        /* THE NEW INPUT AREA */
+        .input-area { 
+            width: 100%; 
+            max-width: 800px; 
+            display: flex; 
+            gap: 12px; 
+            padding: 20px; 
+            padding-bottom: 40px; /* Gives it breathing room at the bottom of the screen */
+            background: transparent; 
+        }
+        
+        input[type="text"] { 
+            flex-grow: 1; 
+            padding: 16px 24px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border-subtle); 
+            background: var(--bg-elevated); 
+            color: white; 
+            font-size: 1rem; 
+            outline: none; 
+            transition: all 0.3s ease; 
+        }
+        input[type="text"]:focus { 
+            border-color: #555; 
+            background: #111; 
+        }
         input[type="text"]:disabled { opacity: 0.5; cursor: not-allowed; }
         .mic-btn, .send-btn { padding: 0 24px; background: var(--bg-elevated); color: white; border: 1px solid var(--border-subtle); border-radius: 12px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .mic-btn:hover:not(:disabled), .send-btn:hover:not(:disabled) { background: #1a1a1a; border-color: #555; }
         .mic-active { color: #ef4444; border-color: rgba(239, 68, 68, 0.5) !important; background: rgba(239, 68, 68, 0.1) !important; }
         #dashboard-container { display: none; width: 100%; max-width: 800px; margin: auto; height: 90vh; flex-direction: column; overflow-y: auto; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; padding: 40px 20px; }
         #dashboard-container::-webkit-scrollbar { display: none; }
-        .dashboard-header { font-size: 2.5rem; font-weight: 700; margin-bottom: 40px; color: #ffffff; letter-spacing: -1px; }
+
+        .dashboard-header { 
+            font-size: 2.5rem; 
+            font-weight: 700; 
+            margin-bottom: 40px; 
+            color: #ffffff; 
+            letter-spacing: -1px;
+        }
+        
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 50px; }
-        .stat-box { background: var(--bg-elevated); padding: 30px 20px; border-radius: 12px; border: 1px solid var(--border-subtle); }
+        
+        .stat-box { 
+            background: var(--bg-elevated);
+            padding: 30px 20px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border-subtle); 
+        }
         .stat-value { font-size: 3rem; font-weight: 700; margin-bottom: 8px; line-height: 1; font-family: 'Roboto Mono', monospace; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
         .section-title { font-weight: 600; margin-bottom: 24px; font-size: 1.2rem; color: #fff; letter-spacing: 1px; }
         .history-list { display: grid; grid-template-columns: 1fr; gap: 16px; }
-        .history-card { background: var(--bg-elevated); padding: 24px; border-radius: 12px; border: 1px solid var(--border-subtle); }
+        .history-card { 
+            background: var(--bg-elevated); 
+            padding: 24px; 
+            border-radius: 12px; 
+            border: 1px solid var(--border-subtle); 
+        }
+        
         .history-card-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
         .history-q { font-weight: 500; font-size: 1.1rem; margin-bottom: 16px; color: #fff; line-height: 1.6; }
         .history-feedback { margin-top: 16px; font-size: 0.9rem; color: #aaa; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.02); }
@@ -128,30 +351,443 @@
         .skill-bar-fill { height: 100%; background: #fff; border-radius: 10px; transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
         .retry-btn { margin: 40px 0; padding: 16px 30px; background: white; color: black; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; width: fit-content; }
         .retry-btn:hover { transform: scale(1.02); background: #f0f0f0; }
+
+        /* ═══════════════════════════════════════════════════════════════
+           RESUME DISCUSSION (dedicated — isolated from #chat-container /
+           #dashboard-container above, which the Technical/Adaptive
+           Interview owns exclusively). Reuses .msg / .avatar / .msg-wrapper
+           / .typing-indicator / .input-area / .retry-btn from above for
+           visual consistency, since those are generic, not interview-
+           specific — only the container, state and behavior are separate.
+           ═══════════════════════════════════════════════════════════════ */
+        /* ═══════════════════════════════════════════════════════════════
+           RESUME DISCUSSION — "workspace" model, not a chat log. One stage
+           is reused turn over turn (question + composer); the previous
+           turn retires into a secondary, collapsed history archive rather
+           than stacking as a visible bubble. See session_handover.md /
+           design proposal for the full rationale.
+           ═══════════════════════════════════════════════════════════════ */
+        #rd-container {
+            display: none;
+            width: 100%;
+            min-height: 100vh;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s var(--ease-slow);
+        }
+
+        #rd-header {
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px 24px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        #rd-header-title {
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+        #rd-position-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 0.3px;
+        }
+
+        /* Chapter rail — orientation only, never a gamified tracker: no
+           connecting line or fill bar implying a fixed itinerary or percent
+           complete. Only categories actually encountered this session
+           appear, in the order first seen (real data, never a precomputed
+           roadmap the Planner doesn't guarantee — see topic_pool.py's
+           priority-scored, non-blocked ordering). */
+        #rd-chapter-rail {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .rd-chapter-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.68rem;
+            letter-spacing: 0.3px;
+            color: var(--text-dim);
+            transition: color 0.5s var(--ease-slow);
+        }
+        .rd-chapter-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: var(--text-dim);
+            transition: background 0.5s var(--ease-slow), box-shadow 0.5s var(--ease-slow);
+        }
+        .rd-chapter-item.current { color: var(--text-main); }
+        .rd-chapter-item.current .rd-chapter-dot { background: var(--lime); box-shadow: 0 0 6px rgba(200,255,94,0.55); }
+        .rd-chapter-item.visited .rd-chapter-dot { background: var(--text-muted); }
+
+        /* ─── The stage: no card, no border — the question sits directly in
+             the environment like the landing headline does. Generous
+             whitespace is what makes it the focal point, not a container. ─── */
+        #rd-stage-wrap {
+            width: 100%;
+            max-width: 1080px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 64px 24px 48px;
+            transition: opacity 0.5s var(--ease-slow), transform 0.5s var(--ease-slow);
+        }
+        #rd-stage-wrap.transitioning { opacity: 0; transform: translateY(12px); }
+        .rd-context-heading {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+            text-align: center;
+            min-height: 1.2em;
+        }
+        .rd-followup-tag {
+            display: inline-block;
+            margin-left: 8px;
+            color: #f59e0b;
+            font-weight: 500;
+        }
+        #rd-stage {
+            width: 100%;
+            text-align: center;
+        }
+        .rd-question-text {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 2.4rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: var(--text-main);
+            margin: 0 0 52px;
+            min-height: 1.5em;
+        }
+        .rd-question-text.type-caret::after {
+            content: ""; display: inline-block; width: 2px; height: 0.85em; margin-left: 2px;
+            background: rgba(255,255,255,0.7); vertical-align: -0.08em;
+            animation: caretBlink 0.9s steps(1) infinite;
+        }
+        #rd-composer {
+            display: flex;
+            gap: 10px;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+        #rd-composer input[type="text"] {
+            flex: 1;
+            background: transparent;
+            border-color: var(--border-subtle);
+        }
+        .rd-icon-btn {
+            flex-shrink: 0;
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-elevated);
+            color: var(--text-muted);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s var(--ease-slow);
+        }
+        .rd-icon-btn:hover:not(:disabled) { border-color: var(--border-hover); color: var(--text-main); }
+        .rd-icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .rd-icon-btn svg { width: 18px; height: 18px; }
+        .rd-send.ready { border-color: var(--lime-border); color: var(--lime); background: var(--lime-dim); }
+
+        /* ─── Discussion Archive: a distinct section, not a continuation of
+             the composer. Large vertical separation (whitespace, not a
+             rule line) marks the boundary; collapsed state is just a
+             centered pill with no transcript content until expanded. When
+             expanded it uses a wider measure than the question stage, so
+             it reads as reference material rather than part of the active
+             turn. ─── */
+        #rd-history-wrap {
+            width: 100%;
+            max-width: 1280px;
+            margin: 160px auto 0;
+            /* Generous bottom clearance -- the fixed bottom-left AI status
+               widget (.system-log) is a viewport-fixed overlay, so however
+               far this section scrolls, nothing here should ever end up
+               directly behind it. */
+            padding: 0 24px 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #rd-history-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 0.3px;
+            padding: 10px 22px;
+            transition: color 0.3s var(--ease-slow), border-color 0.3s var(--ease-slow);
+        }
+        #rd-history-toggle:hover { color: var(--text-muted); border-color: var(--border-hover); }
+        .rd-history-caret {
+            display: inline-block;
+            font-size: 0.6rem;
+            transition: transform 0.3s var(--ease-slow);
+        }
+        #rd-history-toggle.expanded .rd-history-caret { transform: rotate(180deg); }
+        #rd-history-list {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            margin-top: 0;
+            transition: max-height 0.6s var(--ease-slow), opacity 0.4s var(--ease-slow), margin-top 0.5s var(--ease-slow);
+        }
+        #rd-history-list.show { max-height: 4000px; opacity: 1; margin-top: 36px; }
+        .rd-history-item {
+            font-size: 0.85rem;
+            line-height: 1.65;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .rd-history-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .rd-history-item-q { color: var(--text-muted); margin-bottom: 5px; }
+        .rd-history-item-a { color: var(--text-dim); }
+
+        /* ─── Resume Discussion report screen ─── */
+        #rd-report-container {
+            display: none;
+            width: 100%;
+            max-width: 860px;
+            margin: auto;
+            height: 92vh;
+            flex-direction: column;
+            overflow-y: auto;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            padding: 48px 24px 24px;
+        }
+        #rd-report-container::-webkit-scrollbar { display: none; }
+
+        /* ═══════════════════════════════════════════════════════════════
+           RESUME DISCUSSION REPORT — a debrief, not a dashboard, not an API
+           viewer. Five sections, one idea each: Verdict (reaction) -> The
+           Debrief (the narrative, the centerpiece) -> Before Your Next
+           Interview (action) -> How Each Topic Went (light orientation,
+           one line per topic) -> Discussion Record (collapsed reference).
+           Color stays a single restrained lime accent throughout; quality
+           is conveyed through prose, never hue or chip taxonomies.
+           ═══════════════════════════════════════════════════════════════ */
+        .rd-report-eyebrow {
+            font-size: 0.72rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+        .rd-verdict-text {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 1.7rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: var(--text-main);
+            margin: 0 0 12px;
+            min-height: 1.5em;
+        }
+        .rd-verdict-text.type-caret::after {
+            content: ""; display: inline-block; width: 2px; height: 0.85em; margin-left: 2px;
+            background: rgba(255,255,255,0.7); vertical-align: -0.08em;
+            animation: caretBlink 0.9s steps(1) infinite;
+        }
+
+        /* Quiet score caption -- one line, one number, never repeated
+           elsewhere in the report. */
+        .rd-score-line {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 0.85rem; color: var(--text-muted);
+            margin-bottom: 56px; opacity: 0; transition: opacity 0.6s var(--ease-slow);
+        }
+        .rd-score-line.show { opacity: 1; }
+        .rd-score-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 6px rgba(200,255,94,0.6); flex-shrink: 0; }
+        .rd-score-value { font-family: 'Roboto Mono', monospace; color: var(--text-main); font-weight: 600; }
+
+        /* Everything after the score line fades in together, once, after a
+           short pause -- see the entrance sequence in rdRenderReport. */
+        #rd-report-body { opacity: 0; transition: opacity 0.7s var(--ease-slow); }
+        #rd-report-body.show { opacity: 1; }
+
+        .rd-section-title { font-weight: 600; font-size: 0.95rem; letter-spacing: 0.3px; color: var(--text-main); margin: 0 0 16px; }
+
+        /* Performance Snapshot -- supporting evidence beneath the Debrief's
+           narrative, presented editorially: a plain label/value list, no
+           cards, no bars, no color coding. Real per-session averages only,
+           each row omitted entirely when that dimension never scored this
+           session rather than showing a misleading 0%. */
+        .rd-snapshot-list { display: flex; flex-direction: column; margin: 0 0 56px; }
+        .rd-snapshot-row {
+            display: flex; justify-content: space-between; align-items: baseline;
+            font-size: 0.92rem; padding: 11px 0; border-bottom: 1px solid var(--border-subtle);
+        }
+        .rd-snapshot-row:first-child { padding-top: 0; }
+        .rd-snapshot-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .rd-snapshot-label { color: var(--text-muted); }
+        .rd-snapshot-value { font-family: 'Roboto Mono', monospace; color: var(--text-main); font-weight: 600; }
+
+        /* The Debrief -- the centerpiece. One flowing paragraph, serif for
+           the same "considered, human" register as the verdict, generously
+           spaced. Not a bullet list. */
+        .rd-debrief-text {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 1.25rem;
+            font-weight: 400;
+            line-height: 1.75;
+            color: var(--text-main);
+            margin: 0 0 56px;
+        }
+
+        /* Before Your Next Interview -- action items, plain list, medium
+           emphasis (second most important section after the Debrief). */
+        .rd-next-list { margin: 0 0 56px; padding-left: 20px; font-size: 0.98rem; color: var(--text-main); line-height: 1.8; }
+
+        /* How Each Topic Went -- deliberately the lightest section: a name
+           and one line, nothing else. No cards, no scores, no chips. */
+        .rd-topics-list { display: flex; flex-direction: column; gap: 18px; margin-bottom: 56px; }
+        .rd-topic-name { font-size: 0.82rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+        .rd-topic-note { font-size: 0.92rem; color: var(--text-muted); line-height: 1.6; }
+
+        /* Closing transition into the next stage. */
+        .rd-transition-card {
+            border-left: 2px solid var(--lime-border);
+            padding: 4px 0 4px 20px;
+            margin-bottom: 40px;
+        }
+        .rd-transition-title { font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+        .rd-transition-text { font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; }
+
+        /* Discussion Record -- collapsed reference material, same idiom as
+           the live Discussion's archive toggle. */
+        .rd-record-toggle {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 999px;
+            cursor: pointer; font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.3px;
+            padding: 10px 22px; margin-bottom: 40px;
+            transition: color 0.3s var(--ease-slow), border-color 0.3s var(--ease-slow);
+        }
+        .rd-record-toggle:hover { color: var(--text-muted); border-color: var(--border-hover); }
+        .rd-record-caret { display: inline-block; font-size: 0.6rem; transition: transform 0.3s var(--ease-slow); }
+        .rd-record-toggle.expanded .rd-record-caret { transform: rotate(180deg); }
+        .rd-timeline-wrap {
+            max-height: 0; overflow: hidden; opacity: 0; margin-top: 0;
+            /* flex-shrink:0 -- #rd-report-container is a bounded-height
+               (92vh) column flex container; without this, this element's
+               own overflow:hidden makes its flexbox automatic min-height
+               resolve to 0, so it gets shrunk to nothing regardless of
+               max-height once total content exceeds the container height. */
+            flex-shrink: 0;
+            transition: max-height 0.6s var(--ease-slow), opacity 0.4s var(--ease-slow), margin-top 0.5s var(--ease-slow);
+        }
+        .rd-timeline-wrap.show { max-height: 6000px; opacity: 1; margin-top: 8px; margin-bottom: 40px; }
+        .rd-timeline-card { border-bottom: 1px solid var(--border-subtle); padding: 18px 0; cursor: pointer; }
+        .rd-timeline-card:last-child { border-bottom: none; }
+        .rd-timeline-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+        .rd-timeline-grade { font-family: 'Roboto Mono', monospace; color: var(--text-muted); }
+        .rd-timeline-q { font-size: 0.95rem; font-weight: 500; color: var(--text-main); margin-bottom: 8px; line-height: 1.5; }
+        .rd-timeline-a { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
+        .rd-timeline-detail { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-subtle); }
+        .rd-timeline-detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+        .rd-timeline-metric-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
+        .rd-timeline-metric-value { font-family: 'Roboto Mono', monospace; color: var(--text-main); }
+        .rd-timeline-list { margin: 0 0 10px; padding-left: 18px; font-size: 0.85rem; color: var(--text-main); }
+        /* UI-spacing fix (Coaching Note / Your Answer breathing room):
+           padding, line-height and radius nudged up so this reads as a
+           supporting-feedback callout, not a second cramped answer box --
+           see rd-timeline-metric-label's inline margin-bottom (Coaching
+           Note's own label, below) and .rd-timeline-a's inline
+           margin-bottom (Your Answer block, below) for the two other
+           spacing values this pairs with. Content/color/logic unchanged. */
+        .rd-suggested-answer { font-size: 0.85rem; color: var(--text-main); background: var(--lime-dim); padding: 16px 18px; border-radius: 10px; border-left: 3px solid var(--lime); line-height: 1.6; }
+        /* Phase 11: explanatory (not actionable) supporting context, so it
+           deliberately does NOT reuse .rd-suggested-answer's accent styling
+           -- plain muted text, same border-left convention as the rest of
+           the detail card, no color implying "do this". */
+        .rd-confidence-rationale { font-size: 0.8rem; color: var(--text-muted); padding: 10px 14px; border-radius: 8px; border-left: 3px solid var(--border-subtle); line-height: 1.5; margin-top: 10px; }
+        .rd-expand-hint { font-size: 0.68rem; color: var(--text-dim); margin-top: 10px; text-align: center; }
+
+        .rd-report-actions { display: flex; gap: 16px; margin: 8px 0 40px; }
+        .rd-report-btn {
+            flex: 1; padding: 16px 24px; border-radius: 12px; font-size: 0.95rem; font-weight: 500;
+            cursor: pointer; text-align: center; transition: all 0.3s var(--ease-slow);
+            background: transparent; border: 1.5px solid var(--border-hover); color: var(--text-muted);
+        }
+        .rd-report-btn:hover { border-color: var(--text-muted); color: var(--text-main); }
+        .rd-report-btn.primary { border-color: var(--lime-border); color: var(--text-main); box-shadow: 0 0 0 1px var(--lime-dim); }
+        .rd-report-btn.primary:hover { box-shadow: 0 0 0 1px var(--lime-dim), 0 12px 30px -18px rgba(200,255,94,0.3); }
+
+        @media (max-width: 640px) {
+            .rd-timeline-detail-grid { grid-template-columns: 1fr 1fr; }
+        }
     </style>
 </head>
 <body>
+
+    <!-- Persistent system atmosphere — lives at body level, behind every
+         screen, so the "operating system" never visually resets between
+         landing / dashboard / interview / report. -->
+    <div class="app-bg"></div>
+    <div class="app-grain"></div>
+    <div class="app-beam"></div>
+    <div class="app-glow" id="cursor-glow"></div>
+    <div class="system-log" id="system-log"><span class="log-dot"></span><span id="system-log-text"></span></div>
 
     <div id="landing-container">
         <div class="landing-title">AI.interviewer</div>
         <div class="landing-sub">System configuration</div>
 
+        <!-- STEP 1: Resume Upload -->
         <div id="resume-upload-section">
             <div class="form-group">
                 <label>📄 Upload Your Resume (Optional)</label>
                 <input type="file" id="resume-file" accept=".pdf,.docx" style="width: 100%; padding: 12px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-elevated); color: white; cursor: pointer;">
             </div>
-            <button class="start-btn" onclick="uploadResume()">Start Interview →</button>
-            <br><br>
-            <button class="start-btn" style="background: #666;" onclick="testQuizDirectly()">TEST: Load Discussion Directly</button>
-            <div id="resume-analysis" style="display: none; margin-top: 20px; padding: 20px; background: var(--bot-bubble); border-radius: 12px; border: 1px solid var(--border-subtle);">
-                <p style="color: #10b981; margin: 5px 0;"><strong>✅ Domain:</strong> <span id="classified-domain"></span></p>
-                <p style="color: #f59e0b; margin: 5px 0;"><strong>🎯 Confidence:</strong> <span id="domain-confidence"></span></p>
-                <p style="color: #3b82f6; margin: 5px 0;"><strong>💼 Experience:</strong> <span id="domain-experience"></span></p>
-                <button class="start-btn" style="margin-top: 12px;" onclick="startQuizFromAnalysis()">Proceed to Resume Discussion →</button>
-            </div>
-        </div>
+          </div>
 
+          <!-- STEP 1: Resume Upload — one persistent element, four states -->
+          <div class="landing-stage" id="resume-upload-section">
+            <div class="stage-info-row">
+              <div class="stage-tile" id="pipeline-tile">
+                <div class="tile-label">AI Pipeline</div>
+                <div class="pipeline-steps">
+                  <span class="pipeline-step active" data-stage="resume">Resume</span>
+                  <span class="pipeline-sep"></span>
+                  <span class="pipeline-step" data-stage="profile">Profile</span>
+                  <span class="pipeline-sep"></span>
+                  <span class="pipeline-step" data-stage="interview">Interview</span>
+                  <span class="pipeline-sep"></span>
+                  <span class="pipeline-step" data-stage="report">Report</span>
+                </div>
+              </div>
+              <div class="stage-tile" id="status-tile">
+                <div class="tile-label">System Status</div>
+                <div class="status-row"><span class="status-key">Engine</span><span class="status-val online">Online</span></div>
+                <div class="status-row"><span class="status-key">Resume</span><span class="status-val" id="status-resume-val">Awaiting</span></div>
+              </div>
+            </div>
+
+        <!-- STEP 2: Resume Discussion -->
         <div id="quiz-section" style="display: none; margin-top: 20px; max-height: 70vh; overflow-y: auto; padding-right: 10px;">
             <div style="background: var(--bot-bubble); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 20px; position: sticky; top: 0; z-index: 10;">
                 <p style="color: #3b82f6; margin: 0;"><strong>Resume Discussion</strong></p>
@@ -163,9 +799,11 @@
                     </div>
                 </div>
             </div>
+            
             <div id="quiz-questions-container" style="padding-bottom: 20px;"></div>
         </div>
 
+        <!-- STEP 3: Subject Selection -->
         <div id="subject-selection-section" style="display: none; margin-top: 20px;">
             <div class="form-group">
                 <label>Subject Domain</label>
@@ -193,6 +831,7 @@
             </div>
             <button class="start-btn" onclick="startInterview()">Initialize Session</button>
         </div>
+      </div>
     </div>
 
     <div id="chat-container">
@@ -206,6 +845,38 @@
     </div>
 
     <div id="dashboard-container"></div>
+
+    <!-- RESUME DISCUSSION (dedicated — isolated from #chat-container / #dashboard-container
+         above, which the Technical/Adaptive Interview uses; kept fully separate so this
+         redesign has zero visual or behavioral effect on that flow) -->
+    <div id="rd-container">
+        <div id="rd-header">
+            <div id="rd-header-title">Resume Discussion</div>
+            <div id="rd-chapter-rail"></div>
+            <div id="rd-position-label"></div>
+        </div>
+        <div id="rd-stage-wrap">
+            <div class="rd-context-heading" id="rd-context-heading"></div>
+            <div id="rd-stage">
+                <div class="rd-question-text" id="rd-question-text"></div>
+                <div id="rd-composer">
+                    <input type="text" id="rd-user-input" placeholder="Share your answer..." autocomplete="off">
+                    <button class="rd-icon-btn" id="rd-mic-btn" onclick="rdToggleMic()" aria-label="Voice input" title="Voice input">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
+                    </button>
+                    <button class="rd-icon-btn rd-send" id="rd-send-btn" onclick="rdHandleSubmission()" aria-label="Send">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="rd-history-wrap">
+            <button id="rd-history-toggle" onclick="rdToggleHistory()">Discussion Archive (<span id="rd-history-count">0</span>) <span class="rd-history-caret">▾</span></button>
+            <div id="rd-history-list"></div>
+        </div>
+    </div>
+
+    <div id="rd-report-container"></div>
 
     <div id="candidate-dashboard">
         <div class="dash-wrapper" id="dash-wrapper"></div>
@@ -235,117 +906,19 @@
         let stage = "main_question";            // "main_question" or "fill_mask"
         let currentQuestionData = null;
         let tempMainAnswer = "";
+        let selectedTopic = "All";
+        let parsedResumeData = null;  // Stores parsed resume for dashboard
 
-        let interviewActive = false;
-        let violationCount = 0;
-        const MAX_VIOLATIONS = 3;
-
-        // ─── LOCK‑IN / KIOSK MODE ──────────────────────────────────────────
-        function startKioskMode() {
-            interviewActive = true;
-            violationCount = 0;
-            document.documentElement.requestFullscreen().catch(err => {
-                console.warn("Fullscreen request denied:", err);
-            });
-            document.addEventListener('visibilitychange', handleVisibilityChange);
-            window.addEventListener('blur', handleBlur);
-            document.addEventListener('fullscreenchange', handleFullscreenChange);
-            window.addEventListener('beforeunload', handleBeforeUnload);
-        }
-
-        function stopKioskMode() {
-            interviewActive = false;
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            window.removeEventListener('blur', handleBlur);
-            document.removeEventListener('fullscreenchange', handleFullscreenChange);
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-            if (document.fullscreenElement) {
-                document.exitFullscreen().catch(err => console.warn(err));
-            }
-        }
-
-        function handleVisibilityChange() {
-            if (!interviewActive) return;
-            if (document.hidden) {
-                violationCount++;
-                showWarning(`⚠️ You switched tabs! (${violationCount}/${MAX_VIOLATIONS})`);
-                logViolation('tab_switch');
-                if (violationCount >= MAX_VIOLATIONS) {
-                    terminateInterview('Too many tab switches. Interview terminated.');
-                }
-            }
-        }
-
-        function handleBlur() {
-            if (!interviewActive) return;
-            violationCount++;
-            showWarning(`⚠️ You clicked outside the window! (${violationCount}/${MAX_VIOLATIONS})`);
-            logViolation('window_blur');
-            if (violationCount >= MAX_VIOLATIONS) {
-                terminateInterview('Too many window switches. Interview terminated.');
-            }
-        }
-
-        function handleFullscreenChange() {
-            if (!interviewActive) return;
-            if (!document.fullscreenElement) {
-                violationCount++;
-                showWarning(`⚠️ You exited fullscreen! (${violationCount}/${MAX_VIOLATIONS})`);
-                logViolation('fullscreen_exit');
-                if (violationCount >= MAX_VIOLATIONS) {
-                    terminateInterview('Exited fullscreen too many times. Interview terminated.');
-                } else {
-                    document.documentElement.requestFullscreen().catch(err => console.warn(err));
-                }
-            }
-        }
-
-        function handleBeforeUnload(e) {
-            if (interviewActive) {
-                e.preventDefault();
-                e.returnValue = 'Your interview is in progress. Are you sure you want to leave?';
-            }
-        }
-
-        function showWarning(message) {
-            const banner = document.getElementById('warning-banner') || createWarningBanner();
-            banner.textContent = message;
-            banner.style.display = 'block';
-            clearTimeout(banner._timeout);
-            banner._timeout = setTimeout(() => {
-                banner.style.display = 'none';
-            }, 3000);
-        }
-
-        function createWarningBanner() {
-            const div = document.createElement('div');
-            div.id = 'warning-banner';
-            div.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; background: #ff4444;
-                color: white; padding: 10px; text-align: center; font-weight: bold;
-                z-index: 9999; display: none;
-            `;
-            document.body.prepend(div);
-            return div;
-        }
-
-        function logViolation(type) {
-            fetch('/log_violation', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type, timestamp: new Date().toISOString() })
-            }).catch(err => console.warn('Logging failed:', err));
-        }
-
-        function terminateInterview(reason) {
-            interviewActive = false;
-            alert(reason);
-            if (confirm('Your interview has been terminated. Submit your answers so far?')) {
-                document.getElementById('interview-form')?.submit();
-            } else {
-                window.location.href = '/';
-            }
-        }
+        const landingContainer = document.getElementById("landing-container");
+        const chatContainer = document.getElementById("chat-container");
+        const dashboardContainer = document.getElementById("dashboard-container");
+        const candidateDashboard = document.getElementById("candidate-dashboard");
+        const dashWrapper = document.getElementById("dash-wrapper");
+        const messagesDiv = document.getElementById("messages");
+        const inputField = document.getElementById("user-input");
+        const sendBtn = document.getElementById("send-btn");
+        const micBtn = document.getElementById("mic-btn");
+        const chatHeader = document.getElementById("chat-header-title");
 
         // ─── TOAST NOTIFICATION HELPER ──────────────────────────────────────
         function showToast(message, type = "info", duration = 3500) {
@@ -371,6 +944,18 @@
                 .replace(/'/g, "&#039;");
         }
 
+        // ─── EMPTY-VALUE FILTERING (report generation hardening) ──────
+        // Strips null/undefined/whitespace-only entries before a list is
+        // turned into HTML, so a report section never renders a blank
+        // bullet point. A field's own producer (heuristic_evaluator.py /
+        // model_evaluator.py) already validates its own output can't be
+        // blank, but this is defense-in-depth against any future
+        // evaluator implementation, partial data, or edge case that isn't
+        // covered by that validation.
+        function nonEmptyStrings(list) {
+            return (list || []).filter((s) => typeof s === "string" && s.trim().length > 0);
+        }
+
         // ─── SKILL CATEGORIZATION ──────────────────────────────────────────
         const SKILL_CATEGORIES = {
             "Languages": {
@@ -380,6 +965,10 @@
             "Frameworks": {
                 exact: ["react","reactjs","react.js","angular","angularjs","vue","vuejs","vue.js","next","nextjs","next.js","nuxt","nuxtjs","svelte","sveltejs","django","flask","fastapi","spring","spring boot","springboot"," express","expressjs","node","nodejs","node.js","rails","ruby on rails","laravel","symfony","ASP.NET","dotnet",".net","blazor","flutter","android","ios"," SwiftUI","tailwind","tailwindcss","bootstrap","jquery"],
                 substring: ["react","angular","vue","next","nuxt","svelte","django","flask","fastapi","spring","express","node","rails","laravel","symfony","asp.net","dotnet","blazor","flutter","tailwind","bootstrap","jquery"]
+            },
+            "AI/ML": {
+                exact: ["tensorflow","pytorch","keras","scikit-learn","sklearn","hugging face","huggingface","transformers","sentence-transformers","nlp","langchain","langgraph","opencv","spacy","nltk","xgboost","lightgbm","onnx","mlflow","llm","gemini","gemini api","openai","openai api","gpt","bert","roberta","distilbert","flan-t5","rag","faiss","pinecone","chromadb","chroma","deep learning","machine learning","computer vision","cnn","rnn","lstm"],
+                substring: ["tensorflow","pytorch","keras","scikit","sklearn","hugging face","huggingface","transformers","nlp","langchain","langgraph","opencv","spacy","nltk","xgboost","lightgbm","onnx","mlflow","llm","gemini","openai","gpt","bert","rag","faiss","pinecone","chroma","deep learning","machine learning","computer vision"]
             },
             "Tools": {
                 exact: ["git","github","gitlab","bitbucket","docker","dockerfile","kubernetes","k8s","jenkins","travis","circleci","github actions","terraform","ansible","puppet","chef","vagrant","nginx","apache","tomcat","webpack","vite","npm","yarn","pip","conda","maven","gradle","ant","cmake","make","vim","neovim","emacs","vscode","intellij","eclipse","postman","swagger","figma","jira","confluence","trello","notion","slack","discord","linux","unix","macos","windows","ci/cd","devops","mlops"],
@@ -399,6 +988,7 @@
             const result = {
                 "Languages": [],
                 "Frameworks": [],
+                "AI/ML": [],
                 "Tools": [],
                 "Databases": [],
                 "Cloud": [],
@@ -437,10 +1027,12 @@
             return result;
         }
 
-        // ─── CANDIDATE ASSESSMENT DASHBOARD ────────────────────────────────
+        // ─── CANDIDATE ASSESSMENT DASHBOARD RENDER FUNCTIONS ───────────
+
         function showCandidateDashboard(data) {
             parsedResumeData = data;
 
+            // Hide landing, show dashboard
             landingContainer.style.opacity = "0";
             setTimeout(() => {
                 landingContainer.style.display = "none";
@@ -448,164 +1040,1232 @@
             }, 400);
 
             dashWrapper.innerHTML = "";
-            dashWrapper.appendChild(renderDashGreeting(data));
-            dashWrapper.appendChild(renderDashStatsGrid(data));
-            dashWrapper.appendChild(renderDashSkills(data));
-            dashWrapper.appendChild(renderDashInterviewPreview(data));
-            dashWrapper.appendChild(renderDashStartButton());
+            dashWrapper.appendChild(renderBriefingHeader(data));
+            dashWrapper.appendChild(renderBriefingGrid(data));
+            dashWrapper.appendChild(renderBriefingCta());
+
+            requestAnimationFrame(() => runBriefingSequence(data));
         }
 
-        function renderDashGreeting(data) {
+        function renderBriefingHeader(data) {
             const el = document.createElement("div");
+            el.className = "brief-header";
             const name = esc(data.name || "Candidate");
+            const level = data.experience && data.experience.level ? esc(data.experience.level) : "";
+            const domain = esc(data.predicted_domain || "Software Engineering");
+            const subline = level ? `${level} &middot; ${domain}` : domain;
             el.innerHTML = `
-                <div class="dash-greeting">Hello, ${name}</div>
-                <div class="dash-subtitle">Here's your candidate assessment overview</div>
+                <div class="brief-eyebrow-row">
+                    <div class="brief-eyebrow"><span class="eyebrow-dot"></span>Interview Briefing</div>
+                    <div class="brief-pill">Profile generated</div>
+                </div>
+                <div class="brief-name">${name}</div>
+                <div class="brief-subline">${subline}</div>
+                <p class="brief-context">Your resume has been analysed. The interview below will be personalised around the projects, technologies and experience detected in your resume.</p>
             `;
             return el;
         }
 
-        function renderDashStatsGrid(data) {
+        // Flat 5-card grid, in reading order, so CSS grid auto-flows it
+        // into exactly the requested 2 rows:
+        //   Row 1: Candidate Profile | AI Summary | AI Interview Strategy
+        //   Row 2: Experience Timeline (spans 2) | Technical Stack
+        function renderBriefingGrid(data) {
             const el = document.createElement("div");
-            el.className = "dash-grid";
-
-            const domain = esc(data.predicted_domain || "N/A");
-            const confidence = data.confidence ? (data.confidence * 100).toFixed(1) + "%" : "N/A";
-            const years = data.experience ? (data.experience.years || 0) : 0;
-            const level = esc(data.experience ? (data.experience.level || "Unknown") : "Unknown");
-            const education = Array.isArray(data.education) && data.education.length > 0
-                ? data.education.map(e => esc(typeof e === "string" ? e : (e.degree || e.major || JSON.stringify(e)))).join("<br>")
-                : "N/A";
-            const contactParts = [];
-            if (data.email) contactParts.push(esc(data.email));
-            if (data.phone) contactParts.push(esc(data.phone));
-            const contact = contactParts.length > 0 ? contactParts.join("<br>") : "N/A";
-            const projects = Array.isArray(data.projects) ? data.projects : [];
-
-            const cards = [
-                { label: "Domain", value: domain, primary: true },
-                { label: "Confidence", value: confidence },
-                { label: "Experience", value: `${years} years` },
-                { label: "Level", value: level },
-                { label: "Education", value: education, small: true },
-                { label: "Contact", value: contact, small: true },
-            ];
-
-            cards.forEach((c, i) => {
-                const card = document.createElement("div");
-                card.className = "dash-card" + (c.small ? " dash-full" : "");
-                card.innerHTML = `
-                    <div class="dash-card-label">${esc(c.label)}</div>
-                    <div class="dash-card-value${c.small ? ' small' : ''}"${c.primary ? ' style="color:#60a5fa;"' : ''}>${c.value}</div>
-                `;
-                el.appendChild(card);
-            });
-
-            const projCard = document.createElement("div");
-            projCard.className = "dash-card dash-full";
-            let projHtml = `<div class="dash-card-label">Projects (${projects.length})</div>`;
-            if (projects.length === 0) {
-                projHtml += `<div style="color:#666; font-size:0.9rem; margin-top:8px;">No projects detected in resume.</div>`;
-            } else {
-                projHtml += `<div style="margin-top:10px;">`;
-                for (const p of projects) {
-                    const title = esc(p.title || "Untitled Project");
-                    const summary = esc(p.summary || "");
-                    const techs = Array.isArray(p.technologies) ? p.technologies : [];
-                    projHtml += `
-                        <div style="margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #2a2a3e;">
-                            <div style="font-weight:600; color:#e2e8f0; font-size:0.95rem;">${title}</div>
-                            ${summary ? `<div style="color:#94a3b8; font-size:0.85rem; margin-top:4px; line-height:1.4;">${summary}</div>` : ""}
-                            ${techs.length > 0 ? `<div style="margin-top:6px;">${techs.map(t => `<span class="skill-chip sk-lang" style="font-size:0.75rem; margin-right:4px; margin-bottom:2px;">${esc(t)}</span>`).join("")}</div>` : ""}
-                        </div>
-                    `;
-                }
-                projHtml += `</div>`;
-            }
-            projCard.innerHTML = projHtml;
-            el.appendChild(projCard);
-
+            el.className = "brief-grid";
+            el.appendChild(renderCandidateProfileCard(data));
+            el.appendChild(renderAiSummaryCard());
+            el.appendChild(renderStrategyCard(data));
+            el.appendChild(renderTimelineCard(data));
+            el.appendChild(renderTechnicalStackCard(data));
             return el;
         }
 
-        function renderDashSkills(data) {
-            const el = document.createElement("div");
-            el.className = "dash-card dash-full";
-            el.style.marginBottom = "28px";
-
+        // Topics merged into the strategy card itself, as a compact
+        // "Focus Areas" chip row — same real skills/technologies as
+        // before, just no longer a separate panel.
+        function getFocusTopics(data) {
+            // Project technologies FIRST, generic resume skills fill any
+            // remaining slots -- project technologies are what the
+            // interview questions are actually grounded in (topic_pool.py
+            // draws project_deep_dive/skill_in_context questions from
+            // projects[].technologies), so they must survive the 8-item
+            // cap ahead of a long generic skills list. Found during a real
+            // production demo: with skills listed first, a 44-skill resume
+            // meant the briefing's own "Focus Areas" preview never showed
+            // the technologies (React/FastAPI/LangGraph) the interview
+            // actually asked about -- only generic languages (Python/Java/
+            // C++/C) that happened to sort earlier in the resume's own
+            // skills list.
             const skills = Array.isArray(data.skills) ? data.skills : [];
-            const cats = categorizeSkills(skills);
+            const allTechs = collectProjectTechnologies(data);
+            return uniq([...allTechs, ...skills]).slice(0, 8);
+        }
 
-            const chipClassMap = {
-                "Languages": "sk-lang",
-                "Frameworks": "sk-framework",
-                "Tools": "sk-tool",
-                "Databases": "sk-db",
-                "Cloud": "sk-cloud",
-                "Other": "sk-other"
-            };
+        function renderCandidateProfileCard(data) {
+            const el = document.createElement("div");
+            el.className = "dash-card";
 
-            let html = `<div class="dash-card-label">Skills (${skills.length} detected)</div>`;
+            const domain = esc(data.predicted_domain || "N/A");
+            const years = data.experience ? (data.experience.years || 0) : 0;
+            const level = esc(data.experience ? (data.experience.level || "Unknown") : "Unknown");
+            const education = Array.isArray(data.education) && data.education.length > 0
+                ? data.education.map(e => esc(typeof e === "string" ? e : (e.degree || e.major || JSON.stringify(e)))).join(", ")
+                : "Not detected";
+            const contactParts = [];
+            if (data.email) contactParts.push(esc(data.email));
+            if (data.phone) contactParts.push(esc(data.phone));
+            const contact = contactParts.length > 0 ? contactParts.join(" &middot; ") : "Not detected";
 
-            if (skills.length === 0) {
-                html += `<div style="color:#666; font-size:0.9rem; margin-top:8px;">No skills detected in resume.</div>`;
+            el.innerHTML = `
+                <div class="brief-panel-label">Candidate Profile</div>
+                <dl class="brief-dl">
+                    <dt>Domain</dt><dd>${domain}</dd>
+                    <dt>Experience</dt><dd>${years} yr${years === 1 ? "" : "s"} &middot; ${level}</dd>
+                    <dt>Education</dt><dd>${education}</dd>
+                    <dt>Contact</dt><dd>${contact}</dd>
+                </dl>
+            `;
+            return el;
+        }
+
+        function renderAiSummaryCard() {
+            const el = document.createElement("div");
+            el.className = "dash-card";
+            el.innerHTML = `
+                <div class="brief-panel-label">AI Summary</div>
+                <p class="brief-summary-text" id="brief-summary-text"></p>
+            `;
+            return el;
+        }
+
+        function renderStrategyCard(data) {
+            const el = document.createElement("div");
+            el.className = "dash-card";
+            const topics = getFocusTopics(data);
+            const chipsHtml = topics.length
+                ? topics.map(t => `<span class="brief-topic-chip">${esc(t)}</span>`).join("")
+                : `<div style="color:var(--text-muted); font-size:0.8rem;">Not enough resume content to project focus areas.</div>`;
+            el.innerHTML = `
+                <div class="brief-panel-label">AI Interview Strategy</div>
+                <p class="brief-strategy-text">${esc(buildStrategyText(data))}</p>
+                <div class="brief-focus-label">Focus Areas</div>
+                <div>${chipsHtml}</div>
+            `;
+            return el;
+        }
+
+        // Compact by default — title + category only. Clicking expands
+        // the summary/tech chips smoothly (measured max-height, no
+        // nested scrollbar) rather than truncating with an internal scroll.
+        function renderRepoCard(project, index) {
+            const title = esc(project.title || "Untitled Project");
+            const summary = esc(project.summary || "");
+            const techs = Array.isArray(project.technologies) ? project.technologies : [];
+            const category = esc(deriveProjectCategory(project));
+            return `
+                <div class="brief-repo-card" id="repo-card-${index}">
+                    <div class="brief-repo-head" onclick="toggleRepoCard(${index})">
+                        <div class="brief-repo-title">${title}</div>
+                        <div class="brief-repo-head-right">
+                            <div class="brief-repo-category">${category}</div>
+                            <span class="brief-repo-chevron">&#8250;</span>
+                        </div>
+                    </div>
+                    <div class="brief-repo-body" id="repo-body-${index}">
+                        <div class="brief-repo-body-inner">
+                            ${summary ? `<div class="brief-repo-summary-full">${summary}</div>` : ""}
+                            ${techs.length ? `<div class="brief-repo-chips">${techs.map(t => `<span class="skill-chip sk-lang">${esc(t)}</span>`).join("")}</div>` : ""}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleRepoCard(index) {
+            const card = document.getElementById(`repo-card-${index}`);
+            const body = document.getElementById(`repo-body-${index}`);
+            if (!card || !body) return;
+            if (card.classList.contains("expanded")) {
+                body.style.maxHeight = "0px";
+                card.classList.remove("expanded");
             } else {
-                for (const [cat, catSkills] of Object.entries(cats)) {
-                    if (catSkills.length === 0) continue;
-                    html += `<div class="dash-category-label">${esc(cat)}</div>`;
-                    html += `<div class="dash-skills-grid">`;
-                    for (const s of catSkills) {
-                        html += `<span class="skill-chip ${chipClassMap[cat] || ''}">${esc(s)}</span>`;
-                    }
-                    html += `</div>`;
-                }
+                card.classList.add("expanded");
+                body.style.maxHeight = body.scrollHeight + "px";
             }
+        }
 
+        function renderTimelineCard(data) {
+            // Label corrected to match what this card actually renders
+            // (data.projects, below) -- it was previously titled "Experience
+            // Timeline" despite never rendering `experience_detail` (the
+            // candidate's real work-experience entries, e.g. CAVE Labs),
+            // found during a real production demo. Smallest correct fix:
+            // the label now matches its own data, not a redesign of what's
+            // shown on this screen.
+            const el = document.createElement("div");
+            el.className = "dash-card";
+            const projects = Array.isArray(data.projects) ? data.projects : [];
+            let html = `<div class="brief-panel-label">Projects</div>`;
+            if (projects.length === 0) {
+                html += `<div style="color:var(--text-muted); font-size:0.85rem;">No projects detected in resume.</div>`;
+            } else {
+                html += projects.map((p, i) => renderRepoCard(p, i)).join("");
+            }
             el.innerHTML = html;
             return el;
         }
 
-        function renderDashInterviewPreview(data) {
+        // Detected Skills + Detected Technologies merged into one panel —
+        // the union of the resume's own skills list and every project's
+        // technologies, deduplicated and grouped the same way as before.
+        // A fixed-height, naturally scrollable panel (GitHub/Linear-style)
+        // — same union-of-skills-and-technologies data as before, no
+        // expand/collapse interaction needed.
+        function renderTechnicalStackCard(data) {
             const el = document.createElement("div");
-            el.className = "dash-card dash-full";
-            el.style.marginBottom = "28px";
+            el.className = "dash-card";
+            const skills = Array.isArray(data.skills) ? data.skills : [];
+            const projectTechs = collectProjectTechnologies(data);
+            const combined = uniq([...skills, ...projectTechs]);
+            const cats = categorizeSkills(combined);
+            const chipClassMap = { "Languages": "sk-lang", "Frameworks": "sk-framework", "AI/ML": "sk-aiml", "Tools": "sk-tool", "Databases": "sk-db", "Cloud": "sk-cloud", "Other": "sk-other" };
 
-            const domain = esc(data.predicted_domain || "Software Engineering");
-            const quizDomain = esc(data.quiz_domain || "Software Engineer");
-            const yearExp = data.experience ? (data.experience.years || 0) : 0;
-
+            let inner = "";
+            if (combined.length === 0) {
+                inner = `<div style="color:var(--text-muted); font-size:0.85rem;">No technologies detected.</div>`;
+            } else {
+                for (const [cat, catSkills] of Object.entries(cats)) {
+                    if (catSkills.length === 0) continue;
+                    inner += `<div class="dash-category-label">${esc(cat)}</div>`;
+                    inner += `<div class="dash-skills-grid">`;
+                    for (const s of catSkills) inner += `<span class="skill-chip ${chipClassMap[cat] || ''}">${esc(s)}</span>`;
+                    inner += `</div>`;
+                }
+            }
             el.innerHTML = `
-                <div class="dash-card-label">Interview Preview</div>
-                <div class="dash-preview-box">
-                    <strong>Resume Discussion:</strong> ${quizDomain} &mdash; Conversational questions based on your projects, technologies, and experience.<br>
-                    <strong>Adaptive Interview:</strong> ${domain} focus with ${yearExp > 0 ? yearExp + ' years' : 'your'} experience level. Questions adapt based on your responses.<br>
-                    <strong>Evaluation:</strong> Semantic scoring + fill-in-the-blank verification. Results populate the final analytics dashboard.
-                </div>
+                <div class="brief-panel-label">Technical Stack</div>
+                <div class="brief-stack-body">${inner}</div>
             `;
             return el;
         }
 
-        function renderDashStartButton() {
+        function renderBriefingCta() {
             const el = document.createElement("div");
-            el.innerHTML = `<button class="dash-start-btn" onclick="startDomainQuizFromDashboard()">Start Resume Discussion</button>`;
+            el.className = "brief-cta-wrap";
+            el.id = "brief-cta-wrap";
+            el.innerHTML = `<button class="dash-start-btn" onclick="startDomainDiscussionFromDashboard()">Enter Resume Discussion &rarr;</button>`;
             return el;
+        }
+
+        // The workspace entry point appears only once the briefing has
+        // fully rendered — the AI summary finishes "writing" first.
+        async function runBriefingSequence(data) {
+            const summaryEl = document.getElementById("brief-summary-text");
+            if (summaryEl) {
+                await typeLine(summaryEl, buildAiSummaryText(data));
+            }
+            await wait(500);
+            const ctaWrap = document.getElementById("brief-cta-wrap");
+            if (ctaWrap) ctaWrap.classList.add("show");
+        }
+
+        function startDomainDiscussionFromDashboard() {
+            // Re-entrancy guard (see rdSessionStarting's own declaration):
+            // a click while startup is already in flight is a no-op, not a
+            // second session.
+            if (rdSessionStarting) return;
+            rdSessionStarting = true;
+
+            candidateDashboard.style.display = "none";
+            landingContainer.style.display = "none";
+            rdHistoryList.innerHTML = "";
+            rdHistoryList.classList.remove("show");
+            document.getElementById("rd-history-toggle").classList.remove("expanded");
+            rdHistoryCount.textContent = "0";
+            rdSeenCategories = [];
+            rdChapterRail.innerHTML = "";
+            rdQuestionNum = 0;
+            rdStageWrap.classList.remove("transitioning");
+
+            document.body.classList.add("rd-scroll-mode");
+            rdContainer.style.display = "flex";
+            rdContainer.style.opacity = "0";
+            setTimeout(() => { rdContainer.style.opacity = "1"; }, 50);
+
+            rdStartSession();
+        }
+
+        // ─── RESUME DISCUSSION — workspace helpers ─────────────────────
+        // One stage is reused per turn (question + composer); history is
+        // archived, not stacked. See design proposal for the rationale
+        // behind departing from a chat-bubble model.
+        const RD_CATEGORY_LABELS = {
+            "project_overview": "Project Overview",
+            "project_deep_dive": "Project Deep Dive",
+            "skill_in_context": "Skill in Context",
+            "experience": "Experience",
+            "certification": "Certification",
+        };
+
+        function rdCategoryLabel(cat) {
+            return RD_CATEGORY_LABELS[cat] || "Discussion";
+        }
+
+        // Contextual heading \u2014 a short label derived only from fields the
+        // backend actually returns (project_reference / category /
+        // source_id; see question_realizer.py's _project_reference and
+        // conversation_engine.py's _question_payload). Never invents a
+        // project/role/cert name that isn't in the payload. Follow-up is
+        // rendered as its own small tag (see rdRenderStage), not folded
+        // into this string.
+        function rdContextHeadingFor(q) {
+            if (q.project_reference) return q.project_reference;
+            if (q.category === "experience") return q.source_id;
+            if (q.category === "certification") return q.source_id;
+            return "Your Background";
+        }
+
+        // Chapter rail \u2014 orientation only: only categories actually
+        // encountered this session appear, in first-seen order. No fixed
+        // roadmap, no completion percentage (topic_pool.py's ordering is
+        // priority-scored, not a guaranteed sequence of blocks).
+        function rdUpdateChapterRail(category) {
+            if (!rdSeenCategories.includes(category)) rdSeenCategories.push(category);
+            rdChapterRail.innerHTML = rdSeenCategories.map((cat) => {
+                const isCurrent = cat === category;
+                return `<div class="rd-chapter-item${isCurrent ? " current" : " visited"}">` +
+                    `<span class="rd-chapter-dot"></span>${esc(rdCategoryLabel(cat))}</div>`;
+            }).join("");
+        }
+
+        function rdUpdatePositionLabel(num, total) {
+            rdPositionLabel.textContent = `Question ${num} of ~${total}`;
+        }
+
+        // Archive a completed turn into the secondary history record \u2014 a
+        // plain transcript line, deliberately quiet, no evaluation data
+        // (that stays report-only per the approved design).
+        function rdArchiveTurn(turn) {
+            const item = document.createElement("div");
+            item.className = "rd-history-item";
+            item.innerHTML =
+                `<div class="rd-history-item-q">${esc(turn.question)}</div>` +
+                `<div class="rd-history-item-a">${esc(turn.answer || "")}</div>`;
+            rdHistoryList.appendChild(item);
+            rdHistoryCount.textContent = String(rdHistoryList.children.length);
+        }
+
+        function rdToggleHistory() {
+            const opening = !rdHistoryList.classList.contains("show");
+            rdHistoryList.classList.toggle("show");
+            document.getElementById("rd-history-toggle").classList.toggle("expanded");
+
+            if (opening) {
+                // Scroll once the expand transition has actually finished growing
+                // the list, so the target position is the real final layout, not
+                // a mid-animation guess.
+                rdHistoryList.addEventListener("transitionend", function onExpand(e) {
+                    if (e.propertyName !== "max-height") return;
+                    rdHistoryList.removeEventListener("transitionend", onExpand);
+                    document.getElementById("rd-history-wrap").scrollIntoView({ behavior: "smooth", block: "start" });
+                });
+            }
+        }
+
+        // ─── Voice input — a dedicated recognizer for the composer, kept
+        // separate from the Adaptive Interview's `recognition`/`micBtn` so
+        // the two flows never fight over the same handlers. Same Web
+        // Speech API, same "listening" concept, just scoped to #rd-container. ───
+        let rdRecognition = null;
+        let rdIsRecording = false;
+
+        if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            rdRecognition = new SR();
+            rdRecognition.continuous = false;
+            rdRecognition.interimResults = true;
+
+            rdRecognition.onstart = () => {
+                rdIsRecording = true;
+                rdMicBtn.classList.add("mic-active");
+                setSystemLog("Listening...");
+            };
+            rdRecognition.onresult = (event) => {
+                let transcript = "";
+                for (let i = 0; i < event.results.length; i++) transcript += event.results[i][0].transcript;
+                rdInput.value = transcript;
+                rdSendBtn.classList.toggle("ready", transcript.trim().length > 0);
+            };
+            rdRecognition.onerror = () => rdStopMic();
+            rdRecognition.onend = () => rdStopMic();
+        } else if (rdMicBtn) {
+            rdMicBtn.style.display = "none";
+        }
+
+        function rdToggleMic() {
+            if (!rdRecognition || rdInput.disabled) return;
+            if (rdIsRecording) rdRecognition.stop();
+            else rdRecognition.start();
+        }
+
+        function rdStopMic() {
+            if (!rdRecognition || !rdIsRecording) return;
+            rdIsRecording = false;
+            rdMicBtn.classList.remove("mic-active");
+            if (!rdInput.disabled) {
+                setSystemLog("Awaiting your response.");
+                rdInput.focus();
+            }
+        }
+
+        function rdDisableInput() {
+            rdInput.disabled = true;
+            rdSendBtn.disabled = true;
+            if (rdMicBtn) rdMicBtn.disabled = true;
+            rdInput.placeholder = "Thinking...";
+        }
+
+        function rdEnableInput() {
+            rdInput.disabled = false;
+            rdSendBtn.disabled = false;
+            if (rdMicBtn) rdMicBtn.disabled = false;
+            rdInput.placeholder = "Share your answer...";
+            rdInput.focus();
+        }
+
+        function rdHandleSubmission() {
+            if (rdInput.disabled) return;
+            const text = rdInput.value.trim();
+            if (!text) return;
+            if (rdIsRecording) rdStopMic();
+            rdInput.value = "";
+            rdSendBtn.classList.remove("ready");
+            rdHandleReply(text);
+        }
+
+        rdInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") rdHandleSubmission();
+        });
+        rdInput.addEventListener("input", () => {
+            rdSendBtn.classList.toggle("ready", rdInput.value.trim().length > 0);
+        });
+
+        // Renders the next turn onto the single, reused stage: the stage
+        // fades out, the (short) context label swaps, the stage fades back
+        // in, then the question types itself via `typeLine` -- the same
+        // "AI composing" signal used on the landing page and Briefing.
+        // The composer stays disabled until typing completes.
+        async function rdRenderStage(question) {
+            rdStageWrap.classList.add("transitioning");
+            await sleep(320);
+
+            const label = esc(rdContextHeadingFor(question));
+            rdContextHeading.innerHTML = question.is_followup
+                ? `${label} <span class="rd-followup-tag">Follow-up</span>`
+                : label;
+            rdQuestionTextEl.textContent = "";
+
+            rdStageWrap.classList.remove("transitioning");
+            await sleep(60);
+
+            setSystemLog("Composing question...");
+            await typeLine(rdQuestionTextEl, question.text);
+            setSystemLog("Awaiting your response.");
+            rdEnableInput();
+        }
+
+        function rdShowStageError(message) {
+            rdStageWrap.classList.remove("transitioning");
+            rdContextHeading.textContent = "";
+            rdQuestionTextEl.textContent = message;
+            rdDisableInput();
+            rdInput.placeholder = "Share your answer...";
+            setSystemLog("Waiting to continue.");
+        }
+
+        async function rdStartSession() {
+            rdDisableInput();
+            rdContextHeading.textContent = "";
+            rdQuestionTextEl.textContent = "";
+            setSystemLog("Preparing your first question...");
+
+            const sessionId = parsedResumeData ? (parsedResumeData.session_id || "") : "";
+
+            try {
+                const res = await fetch("/api/resume-discussion-v2/start", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    rdShowStageError(data.error);
+                    return;
+                }
+
+                // v2's response shape: {status, conversation_id, question,
+                // total_questions}. total_questions is the REAL planned pool
+                // size for this profile (Planner.total(), session 12) -- not
+                // an estimate, and not a fixed ceiling; question_num comes
+                // from the question's own turn_number.
+                rdSessionId = data.conversation_id;
+                rdTotalQuestions = data.total_questions;
+                rdQuestionNum = data.question.turn_number;
+                rdCurrentCategory = data.question.category;
+                rdTurnHistory = [{
+                    question: data.question.text, category: data.question.category,
+                    project_reference: data.question.project_reference, is_followup: false,
+                    turn_number: data.question.turn_number, answer: null, evaluation: null,
+                }];
+
+                setSystemLog("Composing question...");
+                await typeLine(
+                    rdQuestionTextEl,
+                    "Let's talk through your background \u2014 I'll ask about your projects, experience, and technologies.",
+                );
+                await sleep(700);
+
+                rdUpdatePositionLabel(rdQuestionNum, rdTotalQuestions);
+                rdUpdateChapterRail(rdCurrentCategory);
+                await rdRenderStage(data.question);
+
+            } catch (err) {
+                console.error("Discussion start error:", err);
+                rdShowStageError("Failed to start the discussion. Please try again.");
+            } finally {
+                // Reset on every exit path (success, the data.error early
+                // return, and the catch block) -- a failed startup must
+                // never permanently lock out a legitimate retry.
+                rdSessionStarting = false;
+            }
+        }
+
+        async function rdHandleReply(answer) {
+            rdDisableInput();
+
+            // Archive the just-answered turn immediately -- the stage is
+            // about to be reused for the next question, so the record of
+            // this exchange moves to (secondary) history right away rather
+            // than staying stacked on screen.
+            const answeredTurn = rdTurnHistory[rdTurnHistory.length - 1];
+            if (answeredTurn) {
+                answeredTurn.answer = answer;
+                rdArchiveTurn(answeredTurn);
+            }
+
+            setSystemLog("Processing your response...");
+
+            try {
+                const res = await fetch("/api/resume-discussion-v2/reply", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ session_id: rdSessionId, answer: answer })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    rdShowStageError(data.error);
+                    return;
+                }
+
+                // Record the real TrainedEvaluator result against the turn
+                // just archived -- kept only for the end-of-session report
+                // (rdBuildReportFromV2); never rendered during the live
+                // conversation, per the approved design.
+                if (answeredTurn) answeredTurn.evaluation = data.evaluation;
+
+                if (data.is_completed) {
+                    rdTriggerReport();
+                    return;
+                }
+
+                if (data.next_question) {
+                    // v2 has no top-level question_num/is_followup -- turn_number
+                    // and next_question.is_followup are the equivalent fields.
+                    rdQuestionNum = data.turn_number;
+                    rdCurrentCategory = data.next_question.category;
+                    rdUpdatePositionLabel(rdQuestionNum, rdTotalQuestions);
+                    rdUpdateChapterRail(rdCurrentCategory);
+                    rdTurnHistory.push({
+                        question: data.next_question.text, category: data.next_question.category,
+                        project_reference: data.next_question.project_reference,
+                        is_followup: data.next_question.is_followup, turn_number: data.turn_number,
+                        answer: null, evaluation: null,
+                    });
+
+                    await rdRenderStage(data.next_question);
+                }
+
+            } catch (err) {
+                console.error("Discussion reply error:", err);
+                rdShowStageError("Something went wrong processing that answer. Please try again.");
+            }
+        }
+
+        async function rdTriggerReport() {
+            rdDisableInput();
+            rdStageWrap.classList.add("transitioning");
+            setSystemLog("Building your report...");
+
+            try {
+                const res = await fetch("/api/resume-discussion-v2/end", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ session_id: rdSessionId })
+                });
+                const data = await res.json();
+                await sleep(400);
+
+                rdContainer.style.opacity = "0";
+                await sleep(400);
+                rdContainer.style.display = "none";
+                document.body.classList.remove("rd-scroll-mode");
+
+                // Defensive: this screen must never show a stale message
+                // from an earlier screen (idle cycle, briefing build, etc.)
+                // -- explicitly stop it and pin the log to this screen's own
+                // real state before and after the report renders.
+                stopIdleSystemLogCycle();
+                await rdRenderReport(rdBuildReportFromV2(data, rdTurnHistory));
+                setSystemLog("Resume discussion complete.");
+
+            } catch (err) {
+                console.error("Discussion end error:", err);
+                rdShowStageError("Failed to generate your discussion report.");
+            }
+        }
+
+        // ─── v1 -> v2 report adapter (frontend-only; no backend change) ───
+        // Redesigned from first principles (see design doc): the report is
+        // organized around the CANDIDATE's questions ("how did I do / what
+        // should I improve / where specifically"), not around the backend's
+        // field names. Every backend structure (dimensions, strengths,
+        // weaknesses, missing_reasoning, concept_coverage,
+        // recommended_topics) still feeds this -- but multiple fields that
+        // describe the same underlying idea are SYNTHESIZED into one prose
+        // insight instead of each getting its own section. Nothing is
+        // invented; only how many sentences/sections a given set of real
+        // signals produces is a frontend authoring decision.
+        //
+        // Returns null (not 0) when `name` wasn't a relevant dimension for
+        // this turn's reasoning_type (reasoning_dimension_relevance.py --
+        // e.g. technical_depth is only relevant for 5 of 10 reasoning
+        // types). Session 13 calibration fix: treating "not scored" as a
+        // score of 0 was silently deflating session-level averages for any
+        // dimension that isn't ALWAYS_RELEVANT -- this was a frontend
+        // aggregation bug, not the model being harsh. The model/evaluator
+        // itself is unchanged; only how already-present per-turn results
+        // are averaged is corrected here.
+        function rdDimScore(evaluation, name) {
+            const d = evaluation && (evaluation.dimensions || []).find(x => x.name === name);
+            return d ? d.raw_score : null;
+        }
+
+        // Renders one metric box in the per-question detail grid, or
+        // nothing at all when the dimension wasn't evaluated this turn
+        // (null -- e.g. technical_depth doesn't apply to every reasoning
+        // type). Mirrors the Performance Snapshot's own not-applicable
+        // handling (rdBuildSnapshot: a row is omitted entirely, never
+        // shown as 0%) rather than inventing a second convention here --
+        // found during a real production demo: `(item.technical_depth ||
+        // 0)` was rendering "0%" (a literal failing score) for a
+        // dimension that was simply never assessed that turn.
+        function rdMetricBoxHtml(label, value) {
+            if (value === null || value === undefined) return "";
+            return `<div><div class="rd-timeline-metric-label">${esc(label)}</div><div class="rd-timeline-metric-value">${(value * 100).toFixed(0)}%</div></div>`;
+        }
+
+        function rdAvgDimensionPct(evaluations, name) {
+            const scored = evaluations.map(e => rdDimScore(e, name)).filter(v => v !== null);
+            if (!scored.length) return 0;
+            return (scored.reduce((a, b) => a + b, 0) / scored.length) * 100;
+        }
+
+        // All dimension averages that actually appeared this session
+        // (as fractions 0-1) -- "authenticity" is excluded since it never
+        // contributes to overall_score by design (reasoning_dimension_
+        // relevance.py: diagnostic-only until independently validated).
+        function rdAllDimensionAverages(evaluations) {
+            const sums = {}, counts = {};
+            evaluations.forEach(e => (e.dimensions || []).forEach(d => {
+                if (d.name === "authenticity") return;
+                sums[d.name] = (sums[d.name] || 0) + d.raw_score;
+                counts[d.name] = (counts[d.name] || 0) + 1;
+            }));
+            const out = {};
+            Object.keys(sums).forEach(name => { out[name] = sums[name] / counts[name]; });
+            return out;
+        }
+
+        // ── Natural-language phrase banks: these translate real backend
+        // signals (dimension name + strong/weak, missing_reasoning
+        // category, grade band) into human sentences. The FACT behind each
+        // phrase is always real (which dimension scored how, on which
+        // topic); only the wording is authored here, same principle as
+        // buildAiSummaryText/buildStrategyText on the Briefing screen. ──
+        const RD_DIM_STRONG = {
+            technical_accuracy: "your technical explanations held up well",
+            technical_depth: "you went genuinely deep on the technical details",
+            communication: "you explained things clearly",
+            completeness: "your answers were thorough",
+            resume_grounding: "everything you said tracked back to your resume",
+            architecture: "you laid out how the pieces fit together clearly",
+            tradeoffs: "you reasoned well about trade-offs",
+            ownership: "you were clear about what you personally built",
+            debugging: "you walked through your debugging process well",
+            testing: "you spoke confidently about how you tested things",
+            scalability: "you'd clearly thought about how it would scale",
+        };
+        const RD_DIM_WEAK_SENTENCE = {
+            technical_accuracy: "A few technical details didn't quite hold up.",
+            technical_depth: "Answers stayed fairly surface-level rather than going deep.",
+            communication: "Explanations could have been more clearly structured.",
+            completeness: "Answers left out detail that mattered.",
+            resume_grounding: "A few claims didn't clearly connect back to your resume.",
+            architecture: "The architecture explanation stayed vague.",
+            tradeoffs: "The trade-offs behind your choices went unaddressed.",
+            ownership: "It wasn't always clear what you personally owned versus the team.",
+            debugging: "There wasn't much on how you actually debugged issues.",
+            testing: "Testing didn't really come up.",
+            scalability: "Scalability wasn't addressed.",
+        };
+        // Canonical dimension display order/labels -- the same closed set
+        // RD_DIM_STRONG/RD_DIM_WEAK_SENTENCE above already enumerate
+        // (heuristic_evaluator.py's full dimension taxonomy, minus
+        // "authenticity" which rdAllDimensionAverages already excludes).
+        // Reused by rdBuildSnapshot below so the Performance Snapshot
+        // shows every dimension actually evaluated this session -- not a
+        // hardcoded subset -- without needing a second list kept in sync.
+        const RD_DIM_ORDER = Object.keys(RD_DIM_STRONG);
+        const RD_DIM_LABELS = {
+            technical_accuracy: "Technical Accuracy",
+            technical_depth: "Technical Depth",
+            communication: "Communication",
+            completeness: "Completeness",
+            resume_grounding: "Resume Grounding",
+            architecture: "Architecture",
+            tradeoffs: "Trade-offs",
+            ownership: "Ownership",
+            debugging: "Debugging",
+            testing: "Testing",
+            scalability: "Scalability",
+        };
+        // Same gap taxonomy strong_answer.py uses for the Improved Answer,
+        // reworded here in second person for the interviewer's voice.
+        const RD_GAP_CLAUSE = {
+            tradeoff: "why you chose that approach over the alternatives",
+            architecture: "how the pieces fit together",
+            example: "a concrete example",
+            testing: "how you verified it worked",
+            debugging: "how you worked through the harder cases",
+            metrics: "the results that showed it worked",
+            edge_case: "the edge cases you handled",
+            scalability: "how it would hold up at scale",
+            design_decision: "the reasoning behind that decision",
+            ownership: "which parts you personally owned",
+            communication: "the explanation more clearly",
+        };
+        const RD_VERDICT_BY_GRADE = {
+            excellent: "A strong, confident discussion overall.",
+            good: "A solid discussion overall.",
+            adequate: "A reasonable discussion, with room to grow.",
+            weak: "A thin discussion that needs more depth next time.",
+            poor: "A discussion that didn't fully land — worth another pass.",
+        };
+        const RD_TOPIC_NOTE_BY_GRADE = {
+            excellent: "Clear ownership and technical confidence.",
+            good: "Solid, confident answers throughout.",
+            adequate: "Good overview, but technical justification could be stronger.",
+            weak: "Answers stayed mostly high-level.",
+            poor: "Struggled to move beyond a surface-level answer.",
+        };
+
+        // Before Your Next Interview -- deliberately a DIFFERENT phrase bank
+        // from the Debrief's RD_GAP_CLAUSE (which are noun-clause fragments
+        // like "how the pieces fit together"). These are imperative,
+        // second-person coaching lines so the two sections don't just
+        // repeat each other in different word order.
+        const RD_ADVICE_BY_GAP = {
+            tradeoff: "Practice explaining the trade-offs behind your technical choices, not just what you built.",
+            architecture: "Be ready to walk through how the pieces of your system fit together, not just each one individually.",
+            example: "Prepare a concrete example or two you can walk through in detail.",
+            testing: "Be ready to explain how you verified your work actually worked.",
+            debugging: "Practice narrating how you debug a hard problem, step by step.",
+            metrics: "Have real numbers ready — what improved, and by how much.",
+            edge_case: "Think through the edge cases before you're asked about them.",
+            scalability: "Be ready to talk about how your solution would hold up at scale.",
+            design_decision: "Practice justifying the reasoning behind your design decisions.",
+            ownership: "Be clear about which parts were specifically yours.",
+            communication: "Practice structuring your answers so the key point comes first.",
+        };
+
+        // UI-honesty fix (post-demo forensic investigation): the report used
+        // to present strong_answer.py's output as one "Improved Answer" blob
+        // -- but that blob is, and was always designed to be, the
+        // candidate's OWN answer verbatim plus exactly one deterministic
+        // coaching sentence (never a genuine rewrite -- no LLM, by design,
+        // see strong_answer.py's own docstring). Live-reproduced: every
+        // real turn in a 10-turn browser session retained 100% of the
+        // candidate's wording. The label implied more than the mechanism
+        // delivers, so the card now shows the two pieces honestly and
+        // separately -- "Your Answer" (the candidate's real, unmodified
+        // answer, already on the turn) and "Coaching Note"
+        // (evaluation.coaching_note, computed server-side by
+        // strong_answer.coaching_note from the exact same signals as
+        // before -- missing_reasoning / grounded missing concepts -- just
+        // exposed on its own instead of pre-concatenated). Both are null
+        // together under the same hide conditions strong_answer.py has
+        // always used (already-strong answer, or nothing concrete to add).
+        // DeBERTa remains evaluation-only; no generation logic changed.
+        // Same 5-band taxonomy the backend's own evaluator uses per turn
+        // (heuristic_evaluator.py._grade thresholds) -- applied here to the
+        // session average so the report's overall verdict uses the exact
+        // same language the evaluator already speaks, not a re-invented one.
+        function rdOverallGrade(avgFraction) {
+            if (avgFraction >= 0.80) return "excellent";
+            if (avgFraction >= 0.60) return "good";
+            if (avgFraction >= 0.40) return "adequate";
+            if (avgFraction >= 0.25) return "weak";
+            return "poor";
+        }
+
+        // The Debrief -- the report's centerpiece. One flowing paragraph,
+        // never a fixed sentence count: the shortest honest account of the
+        // session. Every sentence is optional and only appears when there's
+        // a real signal behind it; nothing pads it out to hit a target
+        // length. Priority per sentence slot: strongest signal (anchored to
+        // the strongest project when both exist) -> single lead growth
+        // signal (a reasoning gap beats a merely-low dimension score, since
+        // it names something concrete) -> trend (a genuinely separate,
+        // temporal signal).
+        function rdBuildDebrief(overallGrade, dimAverages, reasoningGaps, strongestProject, weakestProject, timeline) {
+            const sentences = [];
+
+            let bestDim = null, worstDim = null;
+            Object.entries(dimAverages).forEach(([name, avg]) => {
+                if (avg >= 0.65 && (!bestDim || avg > bestDim[1])) bestDim = [name, avg];
+                if (avg <= 0.55 && (!worstDim || avg < worstDim[1])) worstDim = [name, avg];
+            });
+
+            if (strongestProject && bestDim && RD_DIM_STRONG[bestDim[0]]) {
+                sentences.push(`Your discussion of the ${strongestProject} project was the high point of the session — ${RD_DIM_STRONG[bestDim[0]]}.`);
+            } else if (bestDim && RD_DIM_STRONG[bestDim[0]]) {
+                sentences.push(`Across the discussion, ${RD_DIM_STRONG[bestDim[0]]}.`);
+            } else if (strongestProject) {
+                sentences.push(`Your discussion of the ${strongestProject} project was the strongest part of the session.`);
+            } else {
+                sentences.push("This was a steady discussion without one section clearly pulling ahead of the rest.");
+            }
+
+            let growthSentence = null;
+            if (reasoningGaps.length && RD_GAP_CLAUSE[reasoningGaps[0].category]) {
+                const clause = RD_GAP_CLAUSE[reasoningGaps[0].category];
+                growthSentence = (weakestProject && weakestProject !== strongestProject)
+                    ? `In the ${weakestProject} discussion, where it thinned out was ${clause}.`
+                    : `Where it thinned out was ${clause}.`;
+            } else if (worstDim && RD_DIM_WEAK_SENTENCE[worstDim[0]]) {
+                growthSentence = RD_DIM_WEAK_SENTENCE[worstDim[0]];
+            }
+            if (growthSentence) sentences.push(growthSentence);
+
+            // PHASE 9 FIX (do not revert without re-reading the
+            // investigation): this used to also add a "never came up"
+            // sentence naming result.concept_coverage's omitted concepts --
+            // removed for the same reason as rdBuildNextSteps above (see
+            // that function's comment): concept_coverage is registry-
+            // derived, not resume-text-grounded, and is not scoped to
+            // whether it actually explains any turn's real weakness.
+            // concept_coverage itself is untouched -- it remains valid
+            // evaluator/dashboard data; it is just no longer narrated here
+            // as a specific, personalized "this never came up" claim.
+
+            if (timeline.length >= 4) {
+                const mid = Math.floor(timeline.length / 2);
+                const scoresOf = (arr) => arr.reduce((s, t) => s + t.score, 0) / Math.max(arr.length, 1);
+                const firstHalf = scoresOf(timeline.slice(0, mid));
+                const secondHalf = scoresOf(timeline.slice(mid));
+                if (secondHalf - firstHalf >= 0.12) {
+                    sentences.push("You settled in and got stronger as the conversation went on.");
+                } else if (firstHalf - secondHalf >= 0.12) {
+                    sentences.push("Your strongest moments came early, with a little less energy toward the end.");
+                }
+            }
+
+            if (!growthSentence && sentences.length < 2) {
+                sentences.push("There wasn't much to push back on here — a clean, confident discussion.");
+            }
+
+            return sentences.join(" ");
+        }
+
+        // Before Your Next Interview -- two DIFFERENT sources, each in its
+        // own style, so the list never reads as one template repeated:
+        //   1. behavioral advice for the lead reasoning gap (RD_ADVICE_BY_GAP)
+        //   2. a project-specific "justify the choice" line, but ONLY when a
+        //      tradeoff/design_decision gap actually evidences that this
+        //      project's reasoning was the thin spot -- never presumed
+        // Falls back to the backend's own recommended_topics only if neither
+        // of the two real signals above produced anything (never empty AND
+        // silent about a known gap).
+        //
+        // PHASE 9 FIX (do not revert without re-reading the investigation):
+        // this used to also add "Review {missingConcepts} so they naturally
+        // become part of future discussions" -- missingConcepts came from
+        // result.concept_coverage's omitted list, which is populated purely
+        // from expected_concepts_registry.py (a per-technology textbook
+        // lookup, e.g. "fastapi" -> ASGI/dependency injection/routing), not
+        // from anything the candidate's resume text, question, or answer
+        // established (same root cause Phase 8 fixed for the Improved
+        // Answer feature -- concept_coverage has no resume-grounded
+        // counterpart to fall back to here, unlike proj.concepts server-
+        // side). Live-reproduced: a session whose real, repeated weakness
+        // was "no concrete example" / "unclear ownership" across 10/10 and
+        // 2/10 turns still told the candidate to "Review ASGI, async
+        // request handling, dependency injection" off the strength of a
+        // single unrelated skill_in_context turn. concept_coverage remains
+        // valid evaluator/dashboard data (untouched anywhere else) -- it is
+        // simply no longer eligible to be presented as personalized
+        // "go study this" coaching here.
+        function rdBuildNextSteps(recommendedTopics, reasoningGaps, weakestProject, strongestProject) {
+            const steps = [];
+
+            if (reasoningGaps.length && RD_ADVICE_BY_GAP[reasoningGaps[0].category]) {
+                steps.push(RD_ADVICE_BY_GAP[reasoningGaps[0].category]);
+            }
+
+            const hasTradeoffGap = reasoningGaps.some(g => g.category === "tradeoff" || g.category === "design_decision");
+            if (hasTradeoffGap && weakestProject && weakestProject !== strongestProject) {
+                steps.push(`Be ready to justify why you chose your approach for ${weakestProject} over the alternatives.`);
+            }
+
+            if (!steps.length && recommendedTopics.length) {
+                recommendedTopics.slice(0, 3).forEach((topic) => {
+                    steps.push(`Spend some time preparing a clear narrative around ${topic}.`);
+                });
+            }
+
+            return steps.slice(0, 3);
+        }
+
+        // How Each Topic Went -- one line per project/category, purely for
+        // orientation. Hidden entirely by the renderer when only one topic
+        // was discussed (nothing to orient between).
+        function rdBuildTopics(turnHistory) {
+            const buckets = {};
+            turnHistory.forEach((t) => {
+                if (!t.evaluation) return;
+                const key = t.project_reference || t.category;
+                const label = t.project_reference || rdCategoryLabel(t.category);
+                if (!buckets[key]) buckets[key] = { label, scores: [] };
+                buckets[key].scores.push(t.evaluation.overall_score || 0);
+            });
+            const topics = Object.values(buckets).map((b) => ({
+                label: b.label,
+                avg: b.scores.reduce((a, c) => a + c, 0) / b.scores.length,
+            }));
+            let strongestLabel = null;
+            if (topics.length > 1) {
+                let best = topics[0];
+                topics.forEach((t) => { if (t.avg > best.avg) best = t; });
+                strongestLabel = best.label;
+            }
+            return topics.map((t) => ({
+                label: t.label,
+                note: RD_TOPIC_NOTE_BY_GRADE[rdOverallGrade(t.avg)],
+                is_strongest: topics.length > 1 && t.label === strongestLabel,
+            }));
+        }
+
+        // Performance Snapshot -- supporting evidence beneath the Debrief,
+        // not a replacement for it. Every value here is a real per-session
+        // average of an EvaluationResult dimension (or the shared concept-
+        // coverage detector) already computed for the Debrief/dimAverages;
+        // this just renders the same real numbers editorially. A row is
+        // omitted entirely (never shown as 0%) when that dimension never
+        // scored this session.
+        function rdBuildSnapshot(avgOverallPct, dimAverages) {
+            // Every dimension actually evaluated this session appears here
+            // -- not a hardcoded 5-key subset (found during a real
+            // production demo: Ownership scored 25%, the session's single
+            // weakest dimension, explicitly named in the Debrief and Next
+            // Steps, yet was invisible in this table because it wasn't one
+            // of the 5 hardcoded keys). RD_DIM_ORDER is the same closed,
+            // canonical dimension taxonomy RD_DIM_STRONG/RD_DIM_WEAK_SENTENCE
+            // already enumerate -- a row is still omitted entirely (never
+            // shown as 0%) when that dimension never scored this session,
+            // exactly as before.
+            const rows = [{ label: "Overall", value: avgOverallPct }];
+            RD_DIM_ORDER.forEach((key) => {
+                if (dimAverages[key] !== undefined) rows.push({ label: RD_DIM_LABELS[key], value: dimAverages[key] * 100 });
+            });
+
+            // PRODUCT DECISION (post-Phase-10, do not reopen without a new
+            // explicit product requirement): Concept Coverage is
+            // intentionally NOT rendered in this Snapshot. The Phase 10 fix
+            // made the row's honesty problem (a sample-size-blind
+            // percentage) visible rather than hidden -- e.g.
+            // "Concept Coverage (1 of 10 turns): 0%" -- but even the honest
+            // version was judged not useful enough to a candidate to keep
+            // surfacing. This is a presentation-only removal: the
+            // underlying signal (concept_analysis.py, EvaluationResult.
+            // concept_coverage, concept_coverage_percent) is completely
+            // untouched and still computed/sent by the backend every turn;
+            // it simply isn't read into this row anymore. See git history
+            // for the removed conceptCoverageAvg/conceptCoverageSampleSize
+            // calculation this function used to take as parameters.
+            return rows;
+        }
+
+        function rdBuildReportFromV2(endData, turnHistory) {
+            const evaluations = turnHistory.map(t => t.evaluation).filter(Boolean);
+            const uniq = (arr) => Array.from(new Set(arr));
+
+            const avgFraction = evaluations.length
+                ? evaluations.reduce((s, e) => s + (e.overall_score || 0), 0) / evaluations.length
+                : 0;
+            const avgOverall = avgFraction * 100;
+            const overallGrade = rdOverallGrade(avgFraction);
+
+            // Strongest/weakest project: grouped from this session's own
+            // real per-turn scores, not fabricated.
+            const byProject = {};
+            turnHistory.forEach((t) => {
+                if (!t.evaluation || !t.project_reference) return;
+                (byProject[t.project_reference] = byProject[t.project_reference] || []).push(t.evaluation.overall_score || 0);
+            });
+            let strongestProject = null, weakestProject = null, bestAvg = -1, worstAvg = 2;
+            Object.entries(byProject).forEach(([proj, scores]) => {
+                const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+                if (avg > bestAvg) { bestAvg = avg; strongestProject = proj; }
+                if (avg < worstAvg) { worstAvg = avg; weakestProject = proj; }
+            });
+
+            const timeline = turnHistory.map((t) => ({
+                is_followup: t.is_followup,
+                question_num: t.turn_number,
+                category: t.category,
+                score: t.evaluation ? t.evaluation.overall_score : 0,
+                grade: t.evaluation ? t.evaluation.grade : "n/a",
+                question: t.question,
+                answer: t.answer || "",
+                correctness: rdDimScore(t.evaluation, "technical_accuracy"),
+                technical_depth: rdDimScore(t.evaluation, "technical_depth"),
+                completeness: rdDimScore(t.evaluation, "completeness"),
+                communication: rdDimScore(t.evaluation, "communication"),
+                // EvaluationResult.strengths/weaknesses (evaluator.py) are
+                // plain strings, not {claim} objects -- ".claim" on a string
+                // is undefined, which nonEmptyStrings() then silently
+                // filters out, so every per-turn strengths/weaknesses list
+                // in the report was rendering empty. Use the strings as-is.
+                strengths: t.evaluation ? t.evaluation.strengths : [],
+                weaknesses: t.evaluation ? t.evaluation.weaknesses : [],
+                // UI-honesty fix (post-demo forensic investigation):
+                // `improved_answer` (candidate's own answer + one appended
+                // coaching sentence, concatenated) was rendered under an
+                // "Improved Answer" label that implied a rewritten answer --
+                // confirmed live that every real turn retained 100% of the
+                // candidate's own wording and only ever added one fixed
+                // sentence. The card now shows the candidate's real answer
+                // (`item.answer`, already present above) under "Your Answer"
+                // and this `coaching_note` (the same appended sentence,
+                // exposed on its own by strong_answer.coaching_note --
+                // never re-derived by parsing improved_answer) under
+                // "Coaching Note", as two honest, separate pieces. No
+                // regeneration, no LLM -- purely presentation.
+                coaching_note: (t.evaluation && t.evaluation.coaching_note) || null,
+                // PHASE 11 FIX (do not revert without re-reading the
+                // investigation): EvaluationResult.confidence_rationale was
+                // already computed and sent by the backend on every turn
+                // (conversation_engine._result_payload) but never reached
+                // the UI -- every evaluation, low-confidence or high-
+                // confidence, rendered identically. Deliberately NOT paired
+                // with the raw `confidence` float here: the investigation
+                // found confidence and confidence_rationale can describe
+                // different aspects of the same computation (e.g. a ~44%
+                // confidence value alongside rationale wording of "very high
+                // combined confidence" -- see hybrid_evaluator.py's
+                // _compute_confidence/_confidence_tier_label), and inventing
+                // a frontend reconciliation of that relationship is out of
+                // scope for a presentation-only phase. The rationale is
+                // backend-authored prose that already contains the model
+                // confidence, heuristic agreement, agreement band, and tier
+                // wording in one coherent sentence -- render that as-is.
+                confidence_rationale: (t.evaluation && t.evaluation.confidence_rationale) || null,
+            }));
+
+            // Reasoning gaps: EvaluationResult.missing_reasoning describes HOW
+            // the candidate reasoned (missing trade-off discussion, no example,
+            // etc.) -- kept the highest-severity instance per category across
+            // the session, sorted by severity. Only the single lead gap drives
+            // the Debrief/Next Steps; nothing here exposes the full list.
+            const gapByCategory = {};
+            evaluations.forEach(e => {
+                (e.missing_reasoning || []).forEach(m => {
+                    if (!gapByCategory[m.category] || m.severity > gapByCategory[m.category].severity) {
+                        gapByCategory[m.category] = m;
+                    }
+                });
+            });
+            const reasoningGaps = Object.values(gapByCategory).sort((a, b) => b.severity - a.severity);
+
+            // PHASE 9 FIX (do not revert without re-reading the
+            // investigation): a "missing concepts" list used to be collected
+            // here from EvaluationResult.concept_coverage's omitted entries
+            // and woven into the Debrief/Next Steps as personalized "review
+            // this" / "this never came up" prose. Removed: concept_coverage
+            // is populated purely from expected_concepts_registry.py (a
+            // per-technology textbook lookup keyed off the project's
+            // technology names), not from the candidate's actual resume
+            // text, and is not scoped to whether it explains any turn's real
+            // weakness -- rdBuildNextSteps/rdBuildDebrief now rely solely on
+            // reasoningGaps (EvaluationResult.missing_reasoning) for their
+            // growth-signal sentence, which IS per-turn evaluator evidence
+            // of why that turn scored low. concept_coverage itself is
+            // untouched on the backend, but is no longer read into the
+            // report at all here -- see rdBuildSnapshot's own PRODUCT
+            // DECISION comment for the (separate, later) removal of its
+            // Snapshot row.
+
+            const recommendedTopics = uniq(evaluations.flatMap(e => e.recommended_topics || []));
+            const dimAverages = rdAllDimensionAverages(evaluations);
+
+            const totalQuestions = endData.total_questions || turnHistory.length;
+
+            return {
+                average_answer_quality: avgOverall,
+                overall_grade: overallGrade,
+                verdict_text: RD_VERDICT_BY_GRADE[overallGrade],
+                debrief_text: rdBuildDebrief(overallGrade, dimAverages, reasoningGaps, strongestProject, weakestProject, timeline),
+                snapshot: rdBuildSnapshot(avgOverall, dimAverages),
+                next_steps: rdBuildNextSteps(recommendedTopics, reasoningGaps, weakestProject, strongestProject),
+                topics: rdBuildTopics(turnHistory),
+                total_questions: totalQuestions,
+                timeline: timeline,
+            };
+        }
+
+        async function rdRenderReport(data) {
+            rdReportContainer.innerHTML = "";
+            rdReportContainer.style.display = "flex";
+
+            const avg = data.average_answer_quality || 0;
+            const timeline = data.timeline || [];
+
+            const snapshotHtml = (data.snapshot || []).map(row => `
+                <div class="rd-snapshot-row">
+                    <span class="rd-snapshot-label">${esc(row.label)}</span>
+                    <span class="rd-snapshot-value">${typeof row.value === "number" ? row.value.toFixed(0) + "%" : esc(row.note || "Not available")}</span>
+                </div>
+            `).join("");
+
+            const nextStepsHtml = nonEmptyStrings(data.next_steps).map(s => `<li>${esc(s)}</li>`).join("");
+
+            const topics = data.topics || [];
+            const topicsHtml = topics.length > 1 ? topics.map(t => `
+                <div>
+                    <div class="rd-topic-name">${esc(t.label)}</div>
+                    <div class="rd-topic-note">${t.is_strongest ? "Your strongest discussion. " : ""}${esc(t.note)}</div>
+                </div>
+            `).join("") : "";
+
+            let timelineHtml = "";
+            timeline.forEach((item, i) => {
+                const strengthsListHtml = nonEmptyStrings(item.strengths).map(s => `<li>${esc(s)}</li>`).join("");
+                const weaknessesListHtml = nonEmptyStrings(item.weaknesses).map(w => `<li>${esc(w)}</li>`).join("");
+                const answerText = item.answer || "";
+                const answerPreview = esc(answerText.substring(0, 240)) + (answerText.length > 240 ? "\u2026" : "");
+
+                timelineHtml += `
+                    <div class="rd-timeline-card" onclick="this.querySelector('.rd-timeline-detail').style.display = this.querySelector('.rd-timeline-detail').style.display === 'block' ? 'none' : 'block'">
+                        <div class="rd-timeline-head">
+                            <span>${item.is_followup ? "Follow-up" : "Q" + (item.question_num || i + 1)} &middot; ${esc(rdCategoryLabel(item.category))}</span>
+                            <span class="rd-timeline-grade">${(item.score * 100).toFixed(0)}% &middot; ${esc(item.grade)}</span>
+                        </div>
+                        <div class="rd-timeline-q">${esc(item.question)}</div>
+                        <div class="rd-timeline-a">${answerPreview}</div>
+
+                        <div class="rd-timeline-detail">
+                            <div class="rd-timeline-detail-grid">
+                                ${rdMetricBoxHtml("Correctness", item.correctness)}
+                                ${rdMetricBoxHtml("Technical Depth", item.technical_depth)}
+                                ${rdMetricBoxHtml("Completeness", item.completeness)}
+                                ${rdMetricBoxHtml("Communication", item.communication)}
+                            </div>
+                            ${strengthsListHtml ? `<div class="rd-timeline-metric-label">Strengths</div><ul class="rd-timeline-list">${strengthsListHtml}</ul>` : ""}
+                            ${weaknessesListHtml ? `<div class="rd-timeline-metric-label">To improve</div><ul class="rd-timeline-list">${weaknessesListHtml}</ul>` : ""}
+                            ${(item.coaching_note && item.coaching_note.trim()) ? `
+                                <div class="rd-timeline-metric-label" style="margin-bottom:6px;">Your Answer</div>
+                                <div class="rd-timeline-a" style="margin-bottom:20px;">${esc(answerText)}</div>
+                                <div class="rd-timeline-metric-label" style="margin-bottom:8px;">Coaching Note</div>
+                                <div class="rd-suggested-answer">${esc(item.coaching_note)}</div>
+                            ` : ""}
+                            ${(item.confidence_rationale && item.confidence_rationale.trim()) ? `<div class="rd-timeline-metric-label" style="margin-bottom:6px;">Evaluator Confidence</div><div class="rd-confidence-rationale">${esc(item.confidence_rationale)}</div>` : ""}
+                        </div>
+                        <div class="rd-expand-hint">Tap to expand details</div>
+                    </div>
+                `;
+            });
+
+            rdReportContainer.innerHTML = `
+                <div class="rd-report-eyebrow">Resume Discussion &middot; Report</div>
+                <div class="rd-verdict-text" id="rd-verdict-text"></div>
+                <div class="rd-score-line" id="rd-score-line">
+                    <span class="rd-score-dot"></span>
+                    <span><span class="rd-score-value">${avg.toFixed(0)}%</span> overall &middot; ${esc(data.total_questions || 0)} questions</span>
+                </div>
+
+                <div id="rd-report-body">
+                    <p class="rd-debrief-text">${esc((data.debrief_text && data.debrief_text.trim()) || "This was a steady discussion without one section clearly pulling ahead of the rest.")}</p>
+
+                    ${snapshotHtml ? `<div class="rd-section-title">Performance Snapshot</div><div class="rd-snapshot-list">${snapshotHtml}</div>` : ""}
+
+                    ${nextStepsHtml ? `<div class="rd-section-title">Before Your Next Interview</div><ul class="rd-next-list">${nextStepsHtml}</ul>` : ""}
+
+                    ${topicsHtml ? `<div class="rd-section-title">How Each Topic Went</div><div class="rd-topics-list">${topicsHtml}</div>` : ""}
+
+                    <div class="rd-transition-card">
+                        <div class="rd-transition-title">Ready for the Technical Interview</div>
+                        <div class="rd-transition-text">Your resume discussion is complete. The next stage shifts away from project experience and focuses on technical reasoning, implementation, and problem solving.</div>
+                    </div>
+
+                    <button class="rd-record-toggle" id="rd-record-toggle" onclick="rdToggleRecord()">Discussion Record (${timeline.length}) <span class="rd-record-caret">&#9662;</span></button>
+                    <div class="rd-timeline-wrap" id="rd-timeline-wrap">${timelineHtml}</div>
+
+                    <div class="rd-report-actions">
+                        <button class="rd-report-btn" onclick="resetInterview()">Start Over</button>
+                        <button class="rd-report-btn primary" onclick="proceedToAdaptiveInterview()">Proceed to Technical Interview &rarr;</button>
+                    </div>
+                </div>
+            `;
+
+            // Entrance sequence: verdict types in alone, everything else
+            // stays invisible; once typing finishes (typeLine already
+            // removes its own caret), a short pause, then the score line
+            // fades in, then -- after another short pause -- the rest of
+            // the report fades in together as one reveal.
+            const verdictEl = document.getElementById("rd-verdict-text");
+            const scoreLineEl = document.getElementById("rd-score-line");
+            const bodyEl = document.getElementById("rd-report-body");
+            await typeLine(verdictEl, data.verdict_text || "");
+            await sleep(400);
+            scoreLineEl.classList.add("show");
+            await sleep(350);
+            bodyEl.classList.add("show");
         }
 
         function startDomainQuizFromDashboard() {
             candidateDashboard.style.display = "none";
 
+            // Switch to quiz flow
             document.getElementById("resume-upload-section").style.display = "none";
             landingContainer.style.display = "block";
             landingContainer.style.opacity = "0";
-            document.getElementById("quiz-section").style.display = "block";
+            document.getElementById("resume-upload-section").style.display = "none";
+            document.getElementById("subject-selection-section").style.display = "block";
 
             setTimeout(() => { landingContainer.style.opacity = "1"; }, 50);
-
-            const domain = parsedResumeData ? parsedResumeData.quiz_domain : "Software Engineer";
-            const skills = parsedResumeData ? (parsedResumeData.skills || []) : [];
-            classifiedDomain = domain;
-            resumeSkills = skills;
-            loadDomainQuiz(domain, skills);
         }
 
         function animateScore(elementId, targetScore, cardId) {
@@ -683,34 +2343,42 @@
             }
         }
 
-        // ─── RESUME UPLOAD & CLASSIFICATION ────────────────────────────────
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // RESUME UPLOAD & CLASSIFICATION
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         let classifiedDomain = null;
         let quizAnswers = [];
-        let resumeSkills = [];
-
+        
+        let resumeSkills = [];  // Store skills from resume for quiz customization
+        
         async function testQuizDirectly() {
+            // Hide resume section
             document.getElementById("resume-upload-section").style.display = "none";
             document.getElementById("quiz-section").style.display = "block";
-
+            
+            // Directly fetch and show quiz
             const response = await fetch("/api/get-domain-quiz", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ domain: "Software Engineer", skills: [] })
             });
-
+            
             const result = await response.json();
+            
             displayQuiz(result.quiz);
         }
-
+        
         async function uploadResume() {
+            
             const fileInput = document.getElementById("resume-file");
             const file = fileInput.files[0];
-
+            
             if (!file) {
                 showToast("Please select a resume file first.", "error");
                 return;
             }
 
+            // Show loading state
             const startBtns = document.querySelectorAll("#resume-upload-section .start-btn");
             startBtns.forEach(b => { b.disabled = true; b.textContent = "Analyzing..."; });
 
@@ -761,10 +2429,12 @@
                 });
 
                 const result = await response.json();
-
+                
                 if (result.status === "success" && result.quiz && result.quiz.length > 0) {
+                    // Update total questions counter
                     const totalQs = result.total_questions || result.quiz.length;
                     document.getElementById("quiz-total").textContent = totalQs;
+                    // Now display the quiz
                     displayQuiz(result.quiz);
                 } else {
                     console.error("Invalid quiz response:", result);
@@ -774,27 +2444,28 @@
                 console.error("Error loading quiz:", error);
                 alert("Error loading quiz: " + error);
             }
-        }
+        });
 
         function displayQuiz(questions) {
             const container = document.getElementById("quiz-questions-container");
-
+            
             if (!container) {
                 console.error("FATAL: quiz-questions-container not found!");
                 return;
             }
-
+            
             container.innerHTML = "";
             quizAnswers = [];
 
+            // Update total questions
             document.getElementById("quiz-total").textContent = questions.length;
 
             questions.forEach((q, index) => {
                 const questionDiv = document.createElement("div");
                 questionDiv.style.cssText = "margin-bottom: 20px; padding: 20px; background: var(--bg-elevated); border-radius: 12px; border: 1px solid var(--border-subtle);";
-
+                
                 const isDiscussion = q._discussion;
-
+                
                 let optionsHtml = "";
                 (q.options || []).forEach((opt, optIndex) => {
                     optionsHtml += `
@@ -811,7 +2482,7 @@
                 const badgeHtml = isDiscussion
                     ? `<span style="padding: 4px 10px; background: rgba(59,130,246,0.1); border-radius: 6px; border: 1px solid #3b82f6; color: #3b82f6; font-size: 0.75rem; font-weight: 600;">Discussion</span>`
                     : `<span style="padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 6px; border: 1px solid ${difficultyColor}; color: ${difficultyColor}; font-size: 0.75rem; font-weight: 600;">${q.difficulty}</span>`;
-
+                
                 questionDiv.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <p style="color: #3b82f6; margin: 0;"><strong>Q${index + 1}: ${q.question}</strong></p>
@@ -819,10 +2490,11 @@
                     </div>
                     ${optionsHtml}
                 `;
-
+                
                 container.appendChild(questionDiv);
             });
 
+            // Add submit button
             const submitBtn = document.createElement("button");
             submitBtn.className = "start-btn";
             submitBtn.textContent = `Continue to Interview (${questions.length} questions)`;
@@ -833,7 +2505,8 @@
 
         function selectAnswer(questionIndex, answerIndex) {
             quizAnswers[questionIndex] = answerIndex;
-
+            
+            // Update progress
             const answered = quizAnswers.filter(a => a !== undefined).length;
             const total = parseInt(document.getElementById("quiz-total").textContent) || 12;
             document.getElementById("quiz-progress").textContent = answered;
@@ -843,15 +2516,17 @@
         async function submitQuiz() {
             const total = parseInt(document.getElementById("quiz-total").textContent) || 12;
             const answered = quizAnswers.filter(a => a !== undefined).length;
-
+            
             if (answered < total) {
                 alert(`Please answer all ${total} questions (${answered}/${total} answered)`);
                 return;
             }
 
+            // Hide quiz and show subject selection
             document.getElementById("quiz-section").style.display = "none";
             document.getElementById("subject-selection-section").style.display = "block";
-
+            
+            // Show quiz result
             const resultDiv = document.createElement("div");
             resultDiv.style.cssText = "margin-bottom: 20px; padding: 15px; background: var(--bot-bubble); border-radius: 12px; border: 1px solid var(--border-subtle); color: #10b981;";
             resultDiv.innerHTML = `<strong>Discussion Complete!</strong> Resume reviewed. Now let's proceed to the technical interview!`;
@@ -883,21 +2558,27 @@
             currentDifficulty = "medium";
             stage = "main_question";
             parsedResumeData = null;
-
+            
             messagesDiv.innerHTML = "";
+            rdHistoryList.innerHTML = "";
+            rdHistoryList.classList.remove("show");
+            document.getElementById("rd-history-toggle").classList.remove("expanded");
+            rdHistoryCount.textContent = "0";
+            rdSeenCategories = [];
+            rdChapterRail.innerHTML = "";
             dashboardContainer.style.display = "none";
+            rdReportContainer.style.display = "none";
             candidateDashboard.style.display = "none";
             dashWrapper.innerHTML = "";
 
             landingContainer.style.display = "block";
             document.getElementById("resume-upload-section").style.display = "block";
-            document.getElementById("quiz-section").style.display = "none";
             document.getElementById("subject-selection-section").style.display = "none";
-            document.getElementById("resume-analysis").style.display = "none";
 
+            // Re-enable upload buttons
             const startBtns = document.querySelectorAll("#resume-upload-section .start-btn");
             startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Interview →"; });
-
+            
             setTimeout(() => {
                 landingContainer.style.opacity = "1";
             }, 50);
@@ -1083,10 +2764,12 @@
 
             const text = inputField.value.trim();
             if (!text) return;
-
-            disableInput();
+            
+            disableInput(); 
             addMessage(text, "user");
             inputField.value = "";
+
+            addMessage(text, "user");
 
             if (stage === "main_question") {
                 tempMainAnswer = text;

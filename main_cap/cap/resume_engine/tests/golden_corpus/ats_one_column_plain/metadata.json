@@ -1,0 +1,13 @@
+{
+  "fixture_id": "ats_one_column_plain",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "ats_plain",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "easy",
+  "known_edge_cases": [
+    "minimal formatting, uppercase section labels instead of larger font, no bold except the name -- the deliberately unstyled ATS-optimized template real job seekers are told to use"
+  ],
+  "notes": "Validation-pass fixture (2026-08). Represents the most common real-world case: a plain, ATS-friendly single-column resume with almost no typographic variation.",
+  "added_in_milestone": 1
+}

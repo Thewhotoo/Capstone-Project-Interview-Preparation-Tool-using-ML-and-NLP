@@ -1,0 +1,9 @@
+{
+  "expected_labels_in_order": ["contact", "experience", "unknown"],
+  "min_confidence_by_label": {
+    "experience": 0.85
+  },
+  "max_confidence_by_label": {
+    "unknown": 0.3
+  }
+}

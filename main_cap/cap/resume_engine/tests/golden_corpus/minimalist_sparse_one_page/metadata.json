@@ -1,0 +1,14 @@
+{
+  "fixture_id": "minimalist_sparse_one_page",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "ats_plain",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "easy",
+  "known_edge_cases": [
+    "a legitimate but very sparse resume (name, email, one summary line -- 102 chars total) well above MIN_EXTRACTED_CHARS=50 but far below the corpus average",
+    "boundary check: confirms a real (if thin) resume does not spuriously trip ExtractionFailure just for being short"
+  ],
+  "notes": "Validation-pass fixture (2026-08). A recent-graduate resume with almost no content is a real, valid case the engine must not reject.",
+  "added_in_milestone": 1
+}

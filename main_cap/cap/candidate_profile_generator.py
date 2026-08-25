@@ -10,7 +10,7 @@ Architecture:
         -> AnnotatedResume -> CandidateProfile (Pydantic) -> JSON
     OR (dev only):
     Resume (PDF) -> PyMuPDF extracts text -> Gemini 2.5 Flash
-        -> Structured CandidateProfile (Pydantic) -> JSON
+        -> Structured CandidateProfile (Pydantic) -> JSON -> Dashboard / Quiz / Interview
 
 Every module after profile generation consumes the generated Candidate Profile
 without re-parsing the resume.
@@ -23,6 +23,7 @@ import os
 import re
 import time
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -1087,7 +1088,7 @@ def _clean_string_list(items: list) -> list[str]:
 # Frontend Format Conversion (with both quiz_domain and discussion_domain)
 # ═════════════════════════════════════════════════════════════════════════════
 
-_DOMAIN_TO_QUIZ = {
+_DOMAIN_TO_DISCUSSION = {
     "Software Engineering": "Software Engineer",
     "Data Science": "Data Scientist",
     "Cybersecurity": "Network Engineer",
@@ -1115,13 +1116,12 @@ def profile_to_frontend_format(profile: dict) -> dict:
 
     The frontend expects:
         status, name, email, phone, predicted_domain, quiz_domain,
-        discussion_domain, confidence, skills, experience{years,level},
-        education, projects, certifications, focus_topics, resume_summary,
-        experience_detail
+        confidence, skills, experience{years,level}, education,
+        projects_count, certifications, focus_topics, resume_summary,
+        experience_detail, projects_detail
     """
     predicted_domain = profile.get("predicted_domain", "Software Engineering")
     quiz_domain = _DOMAIN_TO_QUIZ.get(predicted_domain, "Software Engineer")
-    discussion_domain = _DOMAIN_TO_DISCUSSION.get(predicted_domain, "Software Engineer")
 
     # Extract contact details (handle both flat and nested formats)
     contact = profile.get("contact_details", {})
@@ -1137,13 +1137,11 @@ def profile_to_frontend_format(profile: dict) -> dict:
         profile.get("experience_level", "Intermediate"), "Unknown"
     )
 
-    # NOTE: We do NOT fall back to synthesizing years from level (as per
-    # the production audit) — `years` will be 0 if no dated evidence.
-    # The frontend handles this by showing only the level (e.g. "Junior").
+    if total_years == 0:
+        lvl = profile.get("experience_level", "Intermediate")
+        total_years = {"Beginner": 1, "Intermediate": 3, "Advanced": 7}.get(lvl, 1)
 
-    # Extract interview_blueprint topics as focus_topics for backward compat.
-    # technical_topics is now a list of {topic, originating_project,
-    # originating_experience, evidence} objects, so we extract only the topic name.
+    # Extract interview_blueprint topics as focus_topics for backward compat
     ib = profile.get("interview_blueprint", {})
     if isinstance(ib, dict):
         focus_topics = [
@@ -1164,8 +1162,7 @@ def profile_to_frontend_format(profile: dict) -> dict:
         "email": email,
         "phone": phone,
         "predicted_domain": predicted_domain,
-        "quiz_domain": quiz_domain,               # for quiz endpoint (first version)
-        "discussion_domain": discussion_domain,   # for discussion engine (second version)
+        "quiz_domain": quiz_domain,
         "confidence": profile.get("confidence", 0.0),
         "skills": profile.get("skills", []),
         "experience": {

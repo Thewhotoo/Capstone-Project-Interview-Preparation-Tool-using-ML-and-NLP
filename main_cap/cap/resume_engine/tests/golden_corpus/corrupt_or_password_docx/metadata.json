@@ -1,0 +1,14 @@
+{
+  "fixture_id": "corrupt_or_password_docx",
+  "layout_type": "single_column",
+  "document_type": "docx",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "easy",
+  "known_edge_cases": [
+    "a file with a .docx extension that is not a valid DOCX package at all",
+    "exercises ExtractionFailure wrapping python-docx's open failure, not a raw library exception surfacing"
+  ],
+  "notes": "Plain garbage bytes stand in for both a corrupt file and a password-protected one -- both fail to open as a valid OOXML package the same way; a real password-protected DOCX isn't separately exercised in this corpus (documented scope note, same as corrupt_pdf).",
+  "added_in_milestone": 1,
+  "expects_extraction_failure": true
+}

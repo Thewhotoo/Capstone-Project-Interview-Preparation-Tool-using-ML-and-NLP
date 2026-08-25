@@ -3,10 +3,16 @@
 # -----------------------------
 PyMuPDF>=1.23.8
 
+<<<<<<< HEAD
 # -----------------------------
 # Vector Search
 # -----------------------------
 faiss-cpu>=1.13.0
+=======
+# Vector Database & Similarity
+faiss-cpu>=1.7.4
+sentence-transformers==2.2.2
+>>>>>>> 7b009cc1fda532f9972caad5aa08802788085c9e
 
 # -----------------------------
 # Embeddings

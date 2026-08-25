@@ -1,0 +1,14 @@
+{
+  "fixture_id": "academic_cv_multipage",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "academic_cv",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "medium",
+  "known_edge_cases": [
+    "two real PDF pages (via pymupdf new_page, not a synthetic docx page-break) -- tests true per-page geometry and page_num assignment",
+    "Publications/Awards sections typical of an academic CV, each page independently single-column"
+  ],
+  "notes": "Validation-pass fixture (2026-08). Tests that a multi-page document is classified independently per page rather than assuming page 1's layout applies document-wide.",
+  "added_in_milestone": 1
+}

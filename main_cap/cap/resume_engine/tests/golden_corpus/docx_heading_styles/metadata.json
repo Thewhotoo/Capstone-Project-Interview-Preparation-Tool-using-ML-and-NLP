@@ -1,0 +1,13 @@
+{
+  "fixture_id": "docx_heading_styles",
+  "layout_type": "single_column",
+  "document_type": "docx",
+  "template_style": "google_docs",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "easy",
+  "known_edge_cases": [
+    "real Word 'Heading 2' styles applied to section headers -- exercises Tier 1 (docx_style_match), the only fixture in the corpus that does"
+  ],
+  "notes": "Milestone 2 fixture (2026-08). Direct regression for Tier 1's confidence boost (0.98) and its interaction with Tier 2's gazetteer match in the same reason string.",
+  "added_in_milestone": 2
+}

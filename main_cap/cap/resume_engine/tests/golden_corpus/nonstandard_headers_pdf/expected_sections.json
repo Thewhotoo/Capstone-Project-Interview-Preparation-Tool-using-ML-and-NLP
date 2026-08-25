@@ -1,0 +1,10 @@
+{
+  "expected_labels_in_order": ["contact", "experience", "education", "skills"],
+  "min_confidence_by_label": {
+    "experience": 0.85,
+    "education": 0.85
+  },
+  "max_confidence_by_label": {
+    "skills": 0.5
+  }
+}

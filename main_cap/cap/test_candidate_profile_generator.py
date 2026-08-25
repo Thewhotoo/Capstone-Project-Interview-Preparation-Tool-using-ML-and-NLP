@@ -27,6 +27,7 @@ from candidate_profile_generator import (
     ExperienceEntry,
     ProjectEntry,
     InterviewBlueprint,
+    TechnicalTopic,
     extract_text_from_pdf,
     generate_candidate_profile,
     profile_to_frontend_format,
@@ -89,7 +90,7 @@ class TestCandidateProfileModel(unittest.TestCase):
                 {"company": "Acme", "role": "SWE", "duration": "2020 - Present", "summary": "Backend"}
             ],
             "projects": [
-                {"title": "ChatBot", "description": "NLP bot", "technologies": ["Python", "spaCy"]}
+                {"title": "ChatBot", "summary": "NLP bot", "technologies": ["Python", "spaCy"]}
             ],
             "certifications": ["AWS SAA"],
             "predicted_domain": "Software Engineering",
@@ -97,7 +98,12 @@ class TestCandidateProfileModel(unittest.TestCase):
             "confidence": 0.92,
             "interview_blueprint": {
                 "resume_verification_topics": ["AWS certification"],
-                "technical_topics": ["distributed systems", "system design"],
+                "technical_topics": [
+                    {"topic": "NLP intent classification", "originating_project": "ChatBot",
+                     "originating_experience": "", "evidence": "built an NLP bot"},
+                    {"topic": "Backend API design", "originating_project": "", "originating_experience": "SWE",
+                     "evidence": "backend work at Acme"},
+                ],
                 "starting_difficulty": "hard",
                 "estimated_strengths": ["cloud architecture"],
                 "estimated_weaknesses": ["frontend frameworks"],
@@ -346,7 +352,12 @@ class TestProfileToFrontendFormat(unittest.TestCase):
             ],
             certifications=["AWS SAA"],
             interview_blueprint=InterviewBlueprint(
-                technical_topics=["system design", "APIs"],
+                technical_topics=[
+                    TechnicalTopic(topic="RAG architecture", originating_project="AI SOC Analyst",
+                                    evidence="built a RAG pipeline"),
+                    TechnicalTopic(topic="Redis caching", originating_project="Real-time Dashboard",
+                                    evidence="Redis caching for the dashboard"),
+                ],
             ),
             resume_summary="Experienced SWE.",
         ).model_dump()
@@ -358,7 +369,7 @@ class TestProfileToFrontendFormat(unittest.TestCase):
         self.assertEqual(f["email"], "shubhammookim@gmail.com")
         self.assertEqual(f["phone"], "+918296461220")
         self.assertEqual(f["predicted_domain"], "Software Engineering")
-        self.assertEqual(f["quiz_domain"], "Software Engineer")
+        self.assertEqual(f["discussion_domain"], "Software Engineer")
         self.assertEqual(f["confidence"], 0.87)
         self.assertEqual(f["skills"], ["Python", "FastAPI", "Docker", "AWS"])
 
@@ -378,10 +389,10 @@ class TestProfileToFrontendFormat(unittest.TestCase):
 
     def test_focus_topics_from_blueprint(self):
         f = profile_to_frontend_format(self._full_profile_dict())
-        self.assertIn("system design", f["focus_topics"])
-        self.assertIn("APIs", f["focus_topics"])
+        self.assertIn("RAG architecture", f["focus_topics"])
+        self.assertIn("Redis caching", f["focus_topics"])
 
-    def test_quiz_domain_mapping(self):
+    def test_discussion_domain_mapping(self):
         tests = {
             "Software Engineering": "Software Engineer",
             "Data Science": "Data Scientist",
@@ -393,15 +404,36 @@ class TestProfileToFrontendFormat(unittest.TestCase):
             p = self._full_profile_dict()
             p["predicted_domain"] = domain
             f = profile_to_frontend_format(p)
-            self.assertEqual(f["quiz_domain"], expected, msg=f"Domain {domain}")
+            self.assertEqual(f["discussion_domain"], expected, msg=f"Domain {domain}")
 
-    def test_empty_experience_estimates_from_level(self):
+    def test_empty_experience_never_fabricates_years_from_level(self):
+        """Regression: with no dated experience evidence at all, `years`
+        must stay 0 -- never backfilled from `experience_level` alone (the
+        literal source of a prior audit's "3 yrs - Mid" finding for a level
+        that had zero years of supporting dated evidence). `level` still
+        reflects the inferred level; only the fabricated year count is
+        gone."""
         p = self._full_profile_dict()
         p["experience"] = []
-        for level, expected in [("Beginner", 1), ("Intermediate", 3), ("Advanced", 7)]:
+        for level, expected_display in [("Beginner", "Junior"), ("Intermediate", "Mid"), ("Advanced", "Senior")]:
             p["experience_level"] = level
             f = profile_to_frontend_format(p)
-            self.assertEqual(f["experience"]["years"], expected, msg=f"Level {level}")
+            self.assertEqual(f["experience"]["years"], 0, msg=f"Level {level}")
+            self.assertEqual(f["experience"]["level"], expected_display, msg=f"Level {level}")
+
+    def test_short_undated_experience_does_not_fabricate_years(self):
+        """Direct regression for the real-resume audit: a single entry
+        whose duration falls within one calendar year (so the year-span
+        heuristic computes 0) must not have that 0 backfilled into a fake
+        year count just because a level was still inferred."""
+        p = self._full_profile_dict()
+        p["experience"] = [
+            {"company": "PES University EC Campus", "role": "CAVE Labs", "duration": "Jun 2025 - Aug 2025", "summary": ""}
+        ]
+        p["experience_level"] = "Beginner"
+        f = profile_to_frontend_format(p)
+        self.assertEqual(f["experience"]["years"], 0)
+        self.assertEqual(f["experience"]["level"], "Junior")
 
     def test_detail_fields(self):
         f = profile_to_frontend_format(self._full_profile_dict())
@@ -435,7 +467,7 @@ class TestProfileToFrontendFormat(unittest.TestCase):
         f = profile_to_frontend_format(flat)
         self.assertEqual(f["name"], "Old Format")
         self.assertEqual(f["email"], "old@example.com")
-        self.assertEqual(f["quiz_domain"], "Data Scientist")
+        self.assertEqual(f["discussion_domain"], "Data Scientist")
         self.assertEqual(f["focus_topics"], ["ML"])
 
 
@@ -497,7 +529,10 @@ class TestEndToEndWithMockedGemini(unittest.TestCase):
             experience_level="Intermediate",
             confidence=0.8,
             interview_blueprint=InterviewBlueprint(
-                technical_topics=["distributed systems", "API design"],
+                technical_topics=[
+                    TechnicalTopic(topic="Test coverage strategy", originating_project="TestProject",
+                                    evidence="a test project"),
+                ],
                 starting_difficulty="intermediate",
                 estimated_strengths=["Python"],
                 estimated_weaknesses=["frontend"],
@@ -539,10 +574,7 @@ class TestEndToEndWithMockedGemini(unittest.TestCase):
                 frontend = profile_to_frontend_format(profile_dict)
                 self.assertEqual(frontend["status"], "success")
                 self.assertEqual(frontend["name"], "Test Candidate")
-                self.assertTrue(
-                    "system design" in frontend["focus_topics"] or
-                    "distributed systems" in frontend["focus_topics"]
-                )
+                self.assertIn("Test coverage strategy", frontend["focus_topics"])
                 # Verify projects have new fields
                 self.assertEqual(len(frontend["projects"]), 1)
                 self.assertIn("technologies", frontend["projects"][0])

@@ -1172,6 +1172,28 @@
         let gazeLastGoodTimestamp = 0;
         let gazeLastEyeCenter = null;
 
+        // ── Attention-loss evaluation metrics (session-level) ────────────
+        // Lightweight counters/accumulators built up over the whole
+        // session by the existing attention + liveness state machines
+        // (see setAttentionState() and startGazeDetectionLoop() below —
+        // nothing new is polled independently, these are just incremented
+        // at the same points those systems already fire). Used at the end
+        // of the interview to show a natural, lenient "Attention Score" —
+        // occasional glancing around during a real interview is normal and
+        // should barely move the score; only sustained/repeated inattention
+        // pulls it down.
+        function createAttentionMetrics() {
+            return {
+                sessionStartedAt: 0,
+                totalWarnings: 0,        // sustained "look back at screen" events that actually fired
+                faceAbsentWarnings: 0,   // sustained "face not visible" events that actually fired
+                totalDeviationMs: 0,     // cumulative time spent in a deviating (away) state
+                livenessRechecks: 0,     // passive re-verifications triggered mid-session
+                livenessFailures: 0      // liveness challenges that timed out without being completed
+            };
+        }
+        let attentionMetrics = createAttentionMetrics();
+
         const landingContainer = document.getElementById("landing-container");
         const chatContainer = document.getElementById("chat-container");
         const dashboardContainer = document.getElementById("dashboard-container");
@@ -1208,6 +1230,16 @@
                 attnStatusTextEl.textContent = "Monitoring";
                 if (attnMetricsEl) attnMetricsEl.classList.add("visible");
                 if (_camWrap) { _camWrap.classList.add("cam-ok"); _camWrap.classList.remove("cam-warn"); }
+            } else if (state === "unverified") {
+                // Face IS technically detected, but liveness hasn't been
+                // confirmed (or has just been re-flagged as suspicious) —
+                // deliberately does NOT show the calm blue "Monitoring"
+                // look, so a static photo/phone held up mid-session is
+                // visibly flagged rather than silently reading "Monitoring".
+                attentionStatusEl.className = "attn-warn";
+                attnStatusTextEl.textContent = "Verifying liveness…";
+                if (attnMetricsEl) attnMetricsEl.classList.remove("visible");
+                if (_camWrap) { _camWrap.classList.add("cam-warn"); _camWrap.classList.remove("cam-ok"); }
             } else if (state === "notdetected") {
                 attentionStatusEl.className = "attn-warn";
                 attnStatusTextEl.textContent = "Face not detected";
@@ -1627,6 +1659,11 @@
             gazeLastFaceDetectedAt = 0;
             gazeLastGoodTimestamp = 0;
             gazeLastEyeCenter = null;
+            _attentionState = "NORMAL";
+            _audioIssuedForEvent = false;
+            _forceNewDeviationTimer = false;
+            _lastAttentionWarningAt = -Infinity;
+            _lastFaceAbsentWarningAt = -Infinity;
             hideGazeWarning();
             cancelAttentionSpeech();
             updateGazeIndicator("Screen");
@@ -1773,6 +1810,7 @@
             gazeMonitorActive = true;
             _cameraInitializing = false;
             resetGazeTrackingState();
+            if (!attentionMetrics.sessionStartedAt) attentionMetrics.sessionStartedAt = performance.now();
 
             // Start the per-frame detection loop (will skip until landmarker is ready)
             startGazeDetectionLoop();
@@ -1932,49 +1970,107 @@
         const GAZE_CONFIRM_FRAMES = 5;    // consecutive frames of a new class needed before it "sticks"
         const GAZE_MIN_CONFIDENCE = 0.35; // combined-eye confidence below this ⇒ treat frame as UNKNOWN
 
+        // ── SENSOR FUSION CONSTANTS ──────────────────────────────────────
+        // Attention score = weighted blend of head-pose magnitude + eye-gaze
+        // magnitude, with agreement bonus when both point the same direction.
+        // Score 0 = looking at screen, score ~1 = clearly looking away.
+        //
+        // ── WHY GAZE OUTWEIGHS HEAD (fix, see notes below) ───────────────
+        // Head pose ALONE (full deviation, eyes still reading as centered)
+        // must NEVER be able to cross FUSION_AWAY_THRESHOLD by itself —
+        // otherwise a simple head turn with eyes still on the screen would
+        // wrongly fire a warning (the #1 complaint). Eye/iris gaze is the
+        // more direct signal of actual attention, so it alone (with head
+        // centered) CAN cross the threshold and legitimately trigger Away.
+        // With these weights: head-only max = 0.35 (< 0.40, no warning),
+        // gaze-only max = 0.55 (>= 0.40, can warn), and head+gaze agreeing
+        // stacks to ~1.0 (strong, fast warning) — matching every case in
+        // the spec (head turn alone never warns; eyes-away-head-centered
+        // can warn; agreement is the strongest signal; uncertain gaze with
+        // head deviation stays weak evidence only).
+        const FUSION_HEAD_WEIGHT = 0.35;     // head pose contribution (capped below away-threshold alone)
+        const FUSION_GAZE_WEIGHT = 0.55;     // eye/iris gaze contribution (can cross threshold alone)
+        const FUSION_AGREEMENT_BONUS = 0.10; // bonus when head+eyes agree direction
+        const FUSION_AWAY_THRESHOLD = 0.40;  // score above this = deviating
+        const FUSION_OK_THRESHOLD = 0.28;    // score below this = back to normal (hysteresis)
+        const FUSION_EMA_ALPHA = 0.20;       // smoothing for the fused score (conservative)
+
         // ── BASELINE CALIBRATION ────────────────────────────────────────
         // Short automatic calibration when monitoring starts: while the
         // head is roughly centered, sample the "natural" iris offset and
         // use it as a per-person/per-camera baseline. This compensates
         // for individual eye shape, camera angle, and (partially) glasses,
         // without any dedicated calibration screen.
-        const CALIBRATION_MIN_SAMPLES = 12;
-        const CALIBRATION_MAX_WAIT_MS = 6000; // give up waiting and use whatever we have (or 0,0)
+        const CALIBRATION_MIN_SAMPLES = 15;
+        const CALIBRATION_MAX_WAIT_MS = 5000; // hard cap — give up and use whatever we have (or 0,0)
+        const CALIBRATION_MIN_TIME_MS = 2000; // require at least 2s of temporally diverse samples
 
         // ── ATTENTION STATE MACHINE TIMINGS (ms) ────────────────────────
         // All tunable in one place. NORMAL -> (deviation starts) -> CAUTION
         // (internal only) -> WARNING (visible). Face-absence uses its own,
         // longer timer. Recovery requires a short stable "back to normal"
         // period before the warning clears, to avoid flicker.
-        const ATTENTION_CAUTION_MS = 1200;  // brief glance — no visible warning yet
-        const ATTENTION_WARNING_MS = 3000;  // sustained deviation — show the warning
+        const ATTENTION_CAUTION_MS = 1500;  // brief glance — no visible warning yet
+        const ATTENTION_WARNING_MS = 5000;  // sustained deviation — show the warning (~5s grace; loosened so brief natural glances never trip it)
         const FACE_ABSENT_WARNING_MS = 4000;  // sustained face loss — show face-not-detected warning
         const FACE_BRIEF_LOSS_MS = 1500;  // debounce before even flipping the "no face" badge
         const RETURN_DEBOUNCE_MS = 600;   // stable-normal time required before clearing a warning
-        const WARNING_AUDIO_COOLDOWN_MS = 10000; // minimum gap between spoken warnings
+        // NOTE (audio bug fix): there used to be a SECOND, independent audio-only
+        // cooldown (WARNING_AUDIO_COOLDOWN_MS = 10000) inside speakAttentionWarning()
+        // that was shorter/out of sync with the event-level cooldown below. Because
+        // both timestamps were seeded at the same "now" but with different cooldown
+        // lengths, a warning event could pass the outer (event) cooldown gate while
+        // still being inside the inner (audio) cooldown gate — the banner would show
+        // but speakAttentionWarning() would silently return early with no sound and
+        // no visible sign anything was wrong. Fixed by deleting the inner cooldown
+        // entirely: WARNING_EVENT_COOLDOWN_MS below is now the ONLY cooldown that
+        // gates a warning event, and visual + audio always fire from the exact same
+        // gated code path in setAttentionState(), so they can never desync again.
+        const WARNING_EVENT_COOLDOWN_MS = 16000; // wider cooldown between full warning EVENTS (visual + audio fire together) — less naggy over a long session
 
         // ── CONTROLLED AUDIO WARNING ─────────────────────────────────────
-        // Speaks at most once per WARNING_AUDIO_COOLDOWN_MS, and the caller
-        // (setAttentionState) additionally limits it to once per sustained
-        // attention EVENT — so a candidate who stays away for 30s only
-        // hears one spoken warning, not a repeating loop. Skipped entirely
-        // while the candidate is dictating an answer, so we never talk
-        // over their own speech-to-text input.
-        let _lastAudioWarningAt = 0;
+        // Speaks exactly once per warning EVENT. Frequency is entirely
+        // controlled by the caller (setAttentionState's cooldown gate) —
+        // this function itself no longer keeps its own separate timer, so
+        // there is only ONE place that decides "is a new warning allowed
+        // right now", eliminating the visual/audio desync bug described
+        // above. Still skipped while the candidate is dictating an answer,
+        // so we never talk over their own speech-to-text input.
+        //
+        // Returns true if speech was actually queued, false if it was
+        // skipped/failed — callers should log/handle the false case
+        // explicitly rather than assuming audio played.
+        let _speechFailureCount = 0;
         function speakAttentionWarning(text) {
-            if (!('speechSynthesis' in window)) return;
-            if (typeof isRecording !== "undefined" && isRecording) return; // don't interrupt dictation
-            const now = performance.now();
-            if (now - _lastAudioWarningAt < WARNING_AUDIO_COOLDOWN_MS) return;
+            if (!('speechSynthesis' in window)) {
+                console.warn("[Audio] speechSynthesis not supported in this browser — warning audio skipped.");
+                return false;
+            }
+            if (typeof isRecording !== "undefined" && isRecording) {
+                console.log("[Audio] Skipped warning speech — candidate is dictating an answer.");
+                return false;
+            }
             try {
-                window.speechSynthesis.cancel(); // clear any stale queued utterance first
+                // If a previous utterance is still playing/pending, cancel it
+                // first so the new warning is always heard immediately and
+                // never silently dropped by the browser's speech queue.
+                if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+                    console.log("[Audio] speechSynthesis busy — cancelling previous utterance before speaking new warning.");
+                    window.speechSynthesis.cancel();
+                }
                 const utter = new SpeechSynthesisUtterance(text);
                 utter.rate = 1.0;
                 utter.volume = 0.85;
+                utter.onerror = (e) => {
+                    _speechFailureCount++;
+                    console.error("[Audio] speechSynthesis utterance error — warning audio did NOT play:", e.error || e);
+                };
                 window.speechSynthesis.speak(utter);
-                _lastAudioWarningAt = now;
+                return true;
             } catch (e) {
-                console.warn("[Attention] speech synthesis failed:", e);
+                _speechFailureCount++;
+                console.error("[Audio] speechSynthesis threw while trying to speak warning — logged, not silently ignored:", e);
+                return false;
             }
         }
 
@@ -1993,9 +2089,43 @@
 
         let _attentionState = "NORMAL";
         let _audioIssuedForEvent = false;
+        let _forceNewDeviationTimer = false; // set true on NORMAL recovery → forces fresh grace period
+        // Cooldown bookkeeping: last time each warning TYPE actually fired
+        // (visual + audio together). Gates the whole event, not just audio,
+        // so the banner and the spoken message can never desync — either
+        // BOTH fire for a given attention-loss event, or NEITHER does
+        // (while on cooldown).
+        let _lastAttentionWarningAt = -Infinity;
+        let _lastFaceAbsentWarningAt = -Infinity;
 
         function setAttentionState(newState, headState, gazeState) {
             if (newState === _attentionState) return;
+
+            // ── COOLDOWN GATE ────────────────────────────────────────────
+            // Check cooldown BEFORE committing the state change.  If the
+            // cooldown blocks the warning, do NOT transition — stay at the
+            // current state (typically CAUTION) so:
+            //   • the old WARNING banner doesn't linger without audio
+            //   • the next deviation event starts a completely fresh timer
+            //   • visual and audio can never desync
+            if (newState === "WARNING") {
+                const _now = performance.now();
+                if (_now - _lastAttentionWarningAt < WARNING_EVENT_COOLDOWN_MS) {
+                    console.log("[Attention] WARNING suppressed — " +
+                        ((_now - _lastAttentionWarningAt) / 1000).toFixed(1) + "s since last (cooldown " +
+                        (WARNING_EVENT_COOLDOWN_MS / 1000) + "s). State stays " + _attentionState + ".");
+                    return; // ← state unchanged
+                }
+            }
+            if (newState === "FACE_ABSENT") {
+                const _now = performance.now();
+                if (_now - _lastFaceAbsentWarningAt < WARNING_EVENT_COOLDOWN_MS) {
+                    console.log("[Attention] FACE_ABSENT suppressed — within cooldown. State stays " + _attentionState + ".");
+                    return; // ← state unchanged
+                }
+            }
+
+            // ── COMMIT state transition ──────────────────────────────────
             const prevState = _attentionState;
             _attentionState = newState;
 
@@ -2005,20 +2135,31 @@
                 "\n  Attention: " + newState + " (was " + prevState + ")");
 
             if (newState === "WARNING") {
+                // Cooldown already verified above — fire visual + audio TOGETHER,
+                // from this single gated code path, so they can never desync.
+                const _now = performance.now();
                 showGazeWarning(ATTENTION_MESSAGE);
-                if (!_audioIssuedForEvent) {
-                    speakAttentionWarning(ATTENTION_MESSAGE);
-                    _audioIssuedForEvent = true;
+                const spoke = speakAttentionWarning(ATTENTION_MESSAGE);
+                if (!spoke) {
+                    console.warn("[Attention] Visual warning shown but audio could not be played this event (see [Audio] log above for reason).");
                 }
+                _lastAttentionWarningAt = _now;
+                _audioIssuedForEvent = spoke;
+                attentionMetrics.totalWarnings++;
             } else if (newState === "FACE_ABSENT") {
+                const _now = performance.now();
                 showGazeWarning(FACE_ABSENT_MESSAGE);
-                if (!_audioIssuedForEvent) {
-                    speakAttentionWarning(FACE_ABSENT_MESSAGE);
-                    _audioIssuedForEvent = true;
+                const spoke = speakAttentionWarning(FACE_ABSENT_MESSAGE);
+                if (!spoke) {
+                    console.warn("[Attention] Face-absent banner shown but audio could not be played this event (see [Audio] log above for reason).");
                 }
+                _lastFaceAbsentWarningAt = _now;
+                _audioIssuedForEvent = spoke;
+                attentionMetrics.faceAbsentWarnings++;
             } else if (newState === "NORMAL") {
                 hideGazeWarning();
                 _audioIssuedForEvent = false; // a fresh deviation later counts as a new event
+                _forceNewDeviationTimer = true; // guarantee the next deviation starts a completely fresh timer
             }
             // CAUTION is intentionally silent/invisible — internal pre-warning stage only.
         }
@@ -2057,6 +2198,100 @@
             let _normalStartTime = 0;
             let _faceAbsentStartTime = 0;
 
+            // ── Active Liveness Challenge ──────────────────────────────────
+            // Instead of passive observation (easily fooled by phone
+            // movement), we ask the candidate to perform a specific
+            // randomised action (blink / turn head left / turn head right)
+            // and verify it from the facial landmarks.  A phone showing
+            // a static photo cannot perform the requested action.
+            //
+            // States: NO_FACE → FACE_DETECTED → LIVENESS_CHECKING →
+            //         LIVE_PERSON_CONFIRMED  (or retry on timeout, or
+            //         re-triggered later by the passive static-face watchdog
+            //         below once already confirmed).
+            let _livenessState = 'NO_FACE';        // current liveness state
+            let _livenessChallenge = null;          // 'blink' | 'turn_left' | 'turn_right'
+            let _livenessChallengeStartTime = 0;
+            let _livenessFaceDetectedTime = 0;      // when face first appeared for this check
+            let _livenessFaceLostTime = 0;           // when face was lost (for reset logic)
+            const LIVENESS_CHALLENGE_TIMEOUT_MS = 12000; // 12s to complete challenge
+            const LIVENESS_CHALLENGE_DELAY_MS = 1500;    // wait 1.5s after face detected before showing
+            const LIVENESS_FACE_LOSS_RESET_MS = 10000;   // reset liveness if face gone >10s
+
+            // Blink challenge tracking
+            let _blinkPhase = 'waiting_close';     // 'waiting_close' → 'waiting_open'
+            let _blinkCloseFrameCount = 0;
+            const LIVENESS_BLINK_CLOSE_FRAMES = 3; // must be closed 3+ consecutive frames
+            const LIVENESS_BLINK_EAR_THRESHOLD = 0.16;
+
+            // Head turn challenge tracking
+            let _turnConfirmFrames = 0;
+            const LIVENESS_TURN_THRESHOLD_DEG = 13;  // degrees of yaw required
+            const LIVENESS_TURN_CONFIRM_FRAMES = 5;  // consecutive frames above threshold
+
+            // ── Continuous passive liveness watchdog ─────────────────────────
+            // Runs on every frame WHILE the person is already
+            // LIVE_PERSON_CONFIRMED (this is the ongoing, recurring half of
+            // the SAME liveness state machine used at startup — not a
+            // separate/independent timer system). There is deliberately no
+            // "verified forever" flag anywhere: LIVE_PERSON_CONFIRMED is just
+            // one state this loop can leave again at any time by setting
+            // _livenessState back to LIVENESS_CHECKING below.
+            //
+            // BUG FIXED HERE: the previous version measured raw (x,y)
+            // landmark deltas. A pure translation of the whole face — e.g.
+            // nudging/panning the phone that's displaying a photo — shifts
+            // every landmark by roughly the same (dx,dy), so that metric
+            // registered "movement" for phone-jiggling even though the
+            // pictured face never actually changed shape. It also used an
+            // extremely tight absolute threshold that MediaPipe's normal
+            // frame-to-frame landmark jitter exceeds on its own, so on a
+            // genuinely static image the timer kept getting reset by pure
+            // noise and never accumulated 6s — which is why re-verification
+            // effectively never fired after the first one.
+            //
+            // Fixed approach: track a small set of DISTANCE-RATIO "shape"
+            // features (eyelid-openness / mouth-aspect-ratio / eyebrow-raise)
+            // instead of absolute point positions. Ratios of inter-landmark
+            // distances don't change under a whole-image translation or
+            // uniform scale (only real deformation of the face — blinking,
+            // talking, expressions — moves them), so panning the phone no
+            // longer counts as activity, while genuine facial motion still
+            // does. A completed blink cycle is additionally tracked directly
+            // and always counts as activity per spec, independent of how the
+            // shape-delta threshold happens to be tuned.
+            let _lastFacialActivityAt = 0;        // timestamp of the last detected genuine activity
+            let _staticPrevShape = null;           // previous frame's shape signature {ear, mar, brow}
+            let _shapeDeltaStreak = 0;              // consecutive frames the shape delta has stayed above threshold
+            let _passiveBlinkPhase = 'waiting_close'; // continuous blink detector, independent of the active-challenge one
+            let _passiveBlinkCloseFrames = 0;
+            let _challengeSource = 'active';       // 'active' (startup/retry) | 'passive' (re-verification) — controls timeout length
+            const STATIC_SUSPICION_MS = 9000;         // ~9s with no genuine facial activity ⇒ suspicious, re-verify (raised so a candidate quietly reading/thinking isn't re-challenged too eagerly)
+            const STATIC_SHAPE_DELTA_THRESHOLD = 0.035; // shape-signature delta counted as real movement (tuned above normal landmark jitter / hand-tremor distortion)
+            const STATIC_SHAPE_DELTA_CONFIRM_FRAMES = 2; // require 2+ consecutive frames above threshold — filters single-frame noise spikes so a trembling phone can't fake "activity"
+            const LIVENESS_REVERIFY_TIMEOUT_MS = 6000;  // ~6s window to comply with a re-verification challenge
+
+            function computeFaceShapeSignature(lm, leftEye, rightEye) {
+                // All translation-invariant ratios of inter-landmark distances.
+                const ear = (leftEye.openness + rightEye.openness) / 2;
+                const mouthWidth = Math.max(dist(lm[61], lm[291]), 1e-4);
+                const mar = dist(lm[13], lm[14]) / mouthWidth;
+                const leftEyeW = Math.max(dist(lm[33], lm[133]), 1e-4);
+                const rightEyeW = Math.max(dist(lm[263], lm[362]), 1e-4);
+                const browL = dist(lm[105], lm[159]) / leftEyeW;
+                const browR = dist(lm[334], lm[386]) / rightEyeW;
+                return { ear, mar, brow: (browL + browR) / 2 };
+            }
+
+            // Sensor fusion: smoothed attention score
+            let _fusionScore = 0;
+            let _fusionScoreInit = false;
+
+            // Frame-to-frame timestamp, used only to accumulate
+            // attentionMetrics.totalDeviationMs (how long the candidate
+            // spent in a deviating state over the whole session).
+            let _prevMetricsFrameTs = 0;
+
             const processFrame = () => {
                 if (!gazeMonitorActive) return;
 
@@ -2077,6 +2312,7 @@
                         // ── FACE PRESENT ─────────────────────────────────
                         _noFaceStartTime = 0;
                         _faceAbsentStartTime = 0;
+                        _livenessFaceLostTime = 0;
                         if (_lastFaceLogState !== "detected") {
                             console.log("[FaceLandmarker] FACE DETECTED — landmarks:", faces[0].length);
                             _lastFaceLogState = "detected";
@@ -2160,24 +2396,31 @@
                         // eyes are reliable AND the head is roughly centered,
                         // so we don't calibrate against a sideways glance.
                         if (!_calibDone) {
-                            if (_calibStartTime === 0) _calibStartTime = now;
+                            if (_calibStartTime === 0) {
+                                _calibStartTime = now;
+                                if (attnStatusTextEl) attnStatusTextEl.textContent = "Calibrating…";
+                            }
                             if (combined.confidence >= GAZE_MIN_CONFIDENCE && headState === "center") {
                                 _calibSamplesX.push(combined.x);
                                 _calibSamplesY.push(combined.y);
                             }
+                            const elapsed = now - _calibStartTime;
                             const haveEnough = _calibSamplesX.length >= CALIBRATION_MIN_SAMPLES;
-                            const timedOut = (now - _calibStartTime) >= CALIBRATION_MAX_WAIT_MS;
-                            if (haveEnough || timedOut) {
+                            const minTimeReached = elapsed >= CALIBRATION_MIN_TIME_MS;
+                            const timedOut = elapsed >= CALIBRATION_MAX_WAIT_MS;
+                            // Complete calibration when: (enough samples AND min time) OR hard timeout
+                            if ((haveEnough && minTimeReached) || timedOut) {
                                 if (_calibSamplesX.length > 0) {
                                     _baselineX = _calibSamplesX.reduce((a, b) => a + b, 0) / _calibSamplesX.length;
                                     _baselineY = _calibSamplesY.reduce((a, b) => a + b, 0) / _calibSamplesY.length;
                                 } else {
                                     _baselineX = 0; _baselineY = 0;
                                 }
-                                _calibDone = true;
-                                console.log("[Gaze] Calibration complete. baselineX:", _baselineX.toFixed(3),
+                                _calibDone = true; // baseline is now FROZEN — never recalibrated
+                                if (attnStatusTextEl) attnStatusTextEl.textContent = "Monitoring";
+                                console.log("[Gaze] Calibration complete (" + elapsed.toFixed(0) + "ms). baselineX:", _baselineX.toFixed(3),
                                     "baselineY:", _baselineY.toFixed(3),
-                                    "samples:", _calibSamplesX.length);
+                                    "samples:", _calibSamplesX.length, "— baseline FROZEN");
                             }
                         }
 
@@ -2240,14 +2483,9 @@
                             _lastGazeLogState = gazeStateThisFrame;
                         }
 
-                        // Display label: Screen / Away. Unknown frames hold
-                        // whatever was last shown rather than flipping to Away.
-                        if (gazeStateThisFrame === "center") {
-                            updateGazeIndicator("Screen");
-                        } else if (gazeStateThisFrame !== "unknown") {
-                            updateGazeIndicator("Away");
-                        }
-                        // (gazeStateThisFrame === "unknown" → no change to the label)
+                        // Display label: Screen / Away — driven by sensor
+                        // fusion score (set below), not raw gaze alone.
+                        // Unknown frames hold prior label.
 
                         // Periodic full debug dump for calibration/testing.
                         _debugFrameCount++;
@@ -2261,35 +2499,347 @@
                                 "| combined:", combined.x.toFixed(2), combined.y.toFixed(2),
                                 "conf:", combined.confidence.toFixed(2),
                                 "| gaze:", gazeStateThisFrame.toUpperCase(),
-                                "| attention:", _attentionState);
+                                "| attention:", _attentionState,
+                                "| fusionScore:", _fusionScore.toFixed(3));
                         }
 
                         // ═══════════════════════════════════════════════
-                        // 3) ATTENTION DECISION — head and gaze are only
-                        //    combined HERE, at the final layer. A gaze
-                        //    state of 'unknown' never counts as a
-                        //    deviation by itself (holds prior attention
-                        //    state); it just doesn't add new evidence.
+                        // 2b) ACTIVE LIVENESS CHALLENGE
+                        //     Asks the candidate to perform a specific
+                        //     randomised action (blink / head turn) and
+                        //     verifies it from facial landmarks.  A phone
+                        //     displaying a static photo cannot perform
+                        //     the requested action.
                         // ═══════════════════════════════════════════════
-                        const gazeDeviating = (gazeStateThisFrame === "left" || gazeStateThisFrame === "right" ||
-                            gazeStateThisFrame === "up" || gazeStateThisFrame === "down");
-                        const isDeviating = (headState !== "center") || gazeDeviating;
+                        if (_livenessState !== 'LIVE_PERSON_CONFIRMED') {
+                            // Overrides the earlier setFaceStatus("detected") call
+                            // for THIS frame — a face is present, but it has not
+                            // (or no longer) passed liveness, so the panel should
+                            // visibly read "Verifying liveness…" in warn styling,
+                            // not the calm blue "Monitoring" look, for the entire
+                            // duration a challenge is outstanding.
+                            setFaceStatus("unverified");
 
-                        if (isDeviating) {
-                            _normalStartTime = 0;
-                            if (_deviationStartTime === 0) _deviationStartTime = now;
-                            const elapsed = now - _deviationStartTime;
-                            if (elapsed >= ATTENTION_WARNING_MS) {
-                                setAttentionState("WARNING", headState, gazeStateThisFrame);
-                            } else if (elapsed >= ATTENTION_CAUTION_MS && _attentionState === "NORMAL") {
-                                setAttentionState("CAUTION", headState, gazeStateThisFrame);
+                            // Face just appeared — begin liveness flow
+                            if (_livenessState === 'NO_FACE') {
+                                _livenessState = 'FACE_DETECTED';
+                                _livenessFaceDetectedTime = now;
+                                _livenessFaceLostTime = 0;
+                                console.log('[Liveness] Face detected — preparing challenge…');
+                            }
+
+                            // Wait briefly for face to stabilise, then issue challenge
+                            if (_livenessState === 'FACE_DETECTED') {
+                                if (now - _livenessFaceDetectedTime >= LIVENESS_CHALLENGE_DELAY_MS) {
+                                    // Pick a random challenge (blink weighted 50%)
+                                    const challenges = ['blink', 'blink', 'turn_left', 'turn_right'];
+                                    _livenessChallenge = challenges[Math.floor(Math.random() * challenges.length)];
+                                    _livenessState = 'LIVENESS_CHECKING';
+                                    _livenessChallengeStartTime = now;
+                                    _challengeSource = 'active';
+
+                                    // Reset challenge-specific trackers
+                                    _blinkPhase = 'waiting_close';
+                                    _blinkCloseFrameCount = 0;
+                                    _turnConfirmFrames = 0;
+
+                                    const challengeMsg = {
+                                        'blink': '\u{1F441} Liveness check: Please blink once.',
+                                        'turn_left': '\u21A9 Liveness check: Please turn your head slightly to your left.',
+                                        'turn_right': '\u21AA Liveness check: Please turn your head slightly to your right.'
+                                    };
+                                    showGazeWarning(challengeMsg[_livenessChallenge]);
+                                    speakAttentionWarning(challengeMsg[_livenessChallenge].replace(/^[^\w]+/, ''));
+                                    if (attnStatusTextEl) attnStatusTextEl.textContent = 'Verifying\u2026';
+                                    console.log('[Liveness] Challenge issued:', _livenessChallenge);
+                                }
+                            }
+
+                            // Verify the specific requested action
+                            if (_livenessState === 'LIVENESS_CHECKING') {
+                                let challengePassed = false;
+
+                                if (_livenessChallenge === 'blink') {
+                                    // Verify OPEN → CLOSED (3+ consecutive frames) → OPEN
+                                    const avgOpen = (leftEyeGaze.openness + rightEyeGaze.openness) / 2;
+                                    if (_blinkPhase === 'waiting_close') {
+                                        if (avgOpen < LIVENESS_BLINK_EAR_THRESHOLD) {
+                                            _blinkCloseFrameCount++;
+                                            if (_blinkCloseFrameCount >= LIVENESS_BLINK_CLOSE_FRAMES) {
+                                                _blinkPhase = 'waiting_open';
+                                                console.log('[Liveness] Blink: eyes closed detected.');
+                                            }
+                                        } else {
+                                            _blinkCloseFrameCount = 0; // must be consecutive
+                                        }
+                                    } else if (_blinkPhase === 'waiting_open') {
+                                        if (avgOpen > LIVENESS_BLINK_EAR_THRESHOLD * 1.3) {
+                                            challengePassed = true;
+                                            console.log('[Liveness] Blink: eyes re-opened — challenge PASSED.');
+                                        }
+                                    }
+                                } else if (_livenessChallenge === 'turn_left') {
+                                    // Positive _emaYaw = subject's head turned LEFT
+                                    if (_emaYaw > LIVENESS_TURN_THRESHOLD_DEG) {
+                                        _turnConfirmFrames++;
+                                        if (_turnConfirmFrames >= LIVENESS_TURN_CONFIRM_FRAMES) {
+                                            challengePassed = true;
+                                            console.log('[Liveness] Turn left detected — PASSED. yaw:', _emaYaw.toFixed(1));
+                                        }
+                                    } else {
+                                        _turnConfirmFrames = 0;
+                                    }
+                                } else if (_livenessChallenge === 'turn_right') {
+                                    // Negative _emaYaw = subject's head turned RIGHT
+                                    if (_emaYaw < -LIVENESS_TURN_THRESHOLD_DEG) {
+                                        _turnConfirmFrames++;
+                                        if (_turnConfirmFrames >= LIVENESS_TURN_CONFIRM_FRAMES) {
+                                            challengePassed = true;
+                                            console.log('[Liveness] Turn right detected — PASSED. yaw:', _emaYaw.toFixed(1));
+                                        }
+                                    } else {
+                                        _turnConfirmFrames = 0;
+                                    }
+                                }
+
+                                if (challengePassed) {
+                                    _livenessState = 'LIVE_PERSON_CONFIRMED';
+                                    hideGazeWarning();
+                                    if (attnStatusTextEl) attnStatusTextEl.textContent = 'Monitoring';
+                                    showToast('\u2705 Liveness verified — monitoring active.', 'success');
+                                    console.log('[Liveness] LIVE_PERSON_CONFIRMED. Passive watchdog re-armed for continuous re-checking.');
+                                    // Reset the passive activity watchdog so it starts fresh
+                                    // from this newly-(re)confirmed live frame. No permanent
+                                    // "verified" flag is set anywhere — the state machine is
+                                    // free to leave LIVE_PERSON_CONFIRMED again at any time.
+                                    _lastFacialActivityAt = now;
+                                    _staticPrevShape = null;
+                                    _shapeDeltaStreak = 0;
+                                    _passiveBlinkPhase = 'waiting_close';
+                                    _passiveBlinkCloseFrames = 0;
+                                    _challengeSource = 'active';
+                                } else {
+                                    const challengeTimeoutMs = (_challengeSource === 'passive') ? LIVENESS_REVERIFY_TIMEOUT_MS : LIVENESS_CHALLENGE_TIMEOUT_MS;
+                                    if (now - _livenessChallengeStartTime >= challengeTimeoutMs) {
+                                        // Timeout — candidate did not comply. Per spec, do NOT
+                                        // fall back to "verified" — go back to FACE_DETECTED so a
+                                        // fresh challenge is issued and the face stays unverified
+                                        // in the meantime.
+                                        _livenessState = 'FACE_DETECTED';
+                                        _livenessFaceDetectedTime = now;
+                                        showGazeWarning('\u26A0 Liveness check timed out. Retrying\u2026');
+                                        console.log('[Liveness] Challenge timed out (' + _challengeSource + ', ' + (challengeTimeoutMs / 1000) + 's window) — will retry. Face remains unverified.');
+                                        attentionMetrics.livenessFailures++;
+                                    }
+                                }
                             }
                         } else {
-                            _deviationStartTime = 0;
-                            if (_attentionState !== "NORMAL") {
-                                if (_normalStartTime === 0) _normalStartTime = now;
-                                if (now - _normalStartTime >= RETURN_DEBOUNCE_MS) {
-                                    setAttentionState("NORMAL", headState, gazeStateThisFrame);
+                            // ═══════════════════════════════════════════
+                            // 2c) CONTINUOUS PASSIVE LIVENESS WATCHDOG
+                            //     Runs every frame while LIVE_PERSON_CONFIRMED.
+                            //     Two independent "genuine activity" signals,
+                            //     BOTH translation-invariant (unaffected by
+                            //     panning/nudging the phone), feed a single
+                            //     _lastFacialActivityAt timestamp:
+                            //       (i)  a completed blink cycle (always
+                            //            counts, regardless of head/body
+                            //            movement, per spec)
+                            //       (ii) a meaningful change in the
+                            //            eyelid/mouth/eyebrow shape ratios
+                            //            (talking, expressions, etc.)
+                            //     If neither has fired for STATIC_SUSPICION_MS,
+                            //     the SAME _livenessState machine used at
+                            //     startup is dropped back into
+                            //     LIVENESS_CHECKING — there is no separate
+                            //     timer system and no "verified forever" flag,
+                            //     so this can keep firing indefinitely, every
+                            //     time the face goes quiet for 6s again.
+                            // ═══════════════════════════════════════════
+                            const shape = computeFaceShapeSignature(landmarks, leftEyeGaze, rightEyeGaze);
+
+                            // (i) Dedicated continuous blink detector.
+                            if (_passiveBlinkPhase === 'waiting_close') {
+                                if (shape.ear < LIVENESS_BLINK_EAR_THRESHOLD) {
+                                    _passiveBlinkCloseFrames++;
+                                    if (_passiveBlinkCloseFrames >= LIVENESS_BLINK_CLOSE_FRAMES) {
+                                        _passiveBlinkPhase = 'waiting_open';
+                                    }
+                                } else {
+                                    _passiveBlinkCloseFrames = 0;
+                                }
+                            } else if (_passiveBlinkPhase === 'waiting_open') {
+                                if (shape.ear > LIVENESS_BLINK_EAR_THRESHOLD * 1.3) {
+                                    _passiveBlinkPhase = 'waiting_close';
+                                    _passiveBlinkCloseFrames = 0;
+                                    _lastFacialActivityAt = now;
+                                    console.log('[Liveness] Passive: natural blink detected — activity timer reset.');
+                                }
+                            }
+
+                            // (ii) Shape-signature delta (ratios only, so pure
+                            // translation of the whole face from moving the
+                            // phone/hand contributes ~0 here — only real
+                            // deformation of the pictured/actual face does).
+                            // Requires STATIC_SHAPE_DELTA_CONFIRM_FRAMES
+                            // consecutive frames above threshold before it
+                            // counts — a single noisy/jittery frame (camera
+                            // sensor noise, a trembling hand tilting the
+                            // photo) can't reset the suspicion timer on its
+                            // own; only a sustained change does.
+                            if (_staticPrevShape) {
+                                const delta = Math.abs(shape.ear - _staticPrevShape.ear)
+                                    + Math.abs(shape.mar - _staticPrevShape.mar)
+                                    + Math.abs(shape.brow - _staticPrevShape.brow);
+                                if (delta > STATIC_SHAPE_DELTA_THRESHOLD) {
+                                    _shapeDeltaStreak++;
+                                    if (_shapeDeltaStreak >= STATIC_SHAPE_DELTA_CONFIRM_FRAMES) {
+                                        _lastFacialActivityAt = now;
+                                    }
+                                } else {
+                                    _shapeDeltaStreak = 0;
+                                }
+                            }
+                            _staticPrevShape = shape;
+
+                            if (_lastFacialActivityAt === 0) _lastFacialActivityAt = now; // first frame right after verification
+
+                            const inactiveElapsed = now - _lastFacialActivityAt;
+                            if (inactiveElapsed >= STATIC_SUSPICION_MS) {
+                                console.log('[Liveness] No genuine blink/facial activity for ' +
+                                    (inactiveElapsed / 1000).toFixed(1) + 's — face suspiciously static. Re-triggering verification.');
+                                _livenessState = 'LIVENESS_CHECKING';
+                                _livenessChallenge = 'blink'; // spec requires exactly this prompt/action here
+                                _challengeSource = 'passive';  // gives the ~6s compliance window
+                                _livenessChallengeStartTime = now;
+                                _blinkPhase = 'waiting_close';
+                                _blinkCloseFrameCount = 0;
+                                const staticMsg = 'Please blink to verify you are present.';
+                                showGazeWarning('\u{1F441} ' + staticMsg);
+                                speakAttentionWarning(staticMsg);
+                                setFaceStatus("unverified");
+                                attentionMetrics.livenessRechecks++;
+                            }
+                        }
+
+                        // ═══════════════════════════════════════════════
+                        // 3) ATTENTION DECISION — SENSOR FUSION
+                        //    Head pose + eye gaze → continuous score.
+                        //    Score 0 = screen, ~1 = clearly away.
+                        //    Uses agreement bonus, temporal EMA, and
+                        //    hysteresis thresholds to avoid flicker.
+                        // ═══════════════════════════════════════════════
+
+                        // 3a) Head-pose magnitude: 0 (centered) to 1 (far off)
+                        //     Uses the raw EMA yaw/pitch, normalized by their
+                        //     thresholds so that exactly-at-threshold = 1.0.
+                        const headMag = Math.min(1.0, Math.max(
+                            Math.abs(_emaYaw) / HEAD_YAW_THRESHOLD,
+                            Math.abs(_emaPitch) / HEAD_PITCH_THRESHOLD
+                        ));
+
+                        // 3b) Eye-gaze magnitude: 0 (centered) to 1 (far off)
+                        //     Uses the smoothed EMA iris offsets, normalized
+                        //     by gaze thresholds. Unknown/blink frames hold
+                        //     the prior value (gazeStateThisFrame === 'unknown'
+                        //     means the EMA wasn't updated this frame).
+                        let gazeMag = 0;
+                        if (gazeStateThisFrame !== "unknown") {
+                            gazeMag = Math.min(1.0, Math.max(
+                                Math.abs(_emaGazeX) / GAZE_X_THRESHOLD,
+                                Math.abs(_emaGazeY) / GAZE_Y_THRESHOLD
+                            ));
+                        }
+
+                        // 3c) Agreement bonus: when head and eyes deviate
+                        //     in the SAME direction, attention loss is
+                        //     more certain → add a bonus. When head is
+                        //     centered and eyes are slightly off, no bonus.
+                        let agreementBonus = 0;
+                        if (headState !== "center" && gazeStateThisFrame !== "center" && gazeStateThisFrame !== "unknown") {
+                            // Check if they agree on direction
+                            const headIsLR = (headState === "left" || headState === "right");
+                            const gazeIsLR = (gazeStateThisFrame === "left" || gazeStateThisFrame === "right");
+                            const headIsUD = (headState === "up" || headState === "down");
+                            const gazeIsUD = (gazeStateThisFrame === "up" || gazeStateThisFrame === "down");
+                            if ((headIsLR && gazeIsLR && headState === gazeStateThisFrame) ||
+                                (headIsUD && gazeIsUD && headState === gazeStateThisFrame)) {
+                                agreementBonus = FUSION_AGREEMENT_BONUS; // same direction → strong evidence
+                            }
+                        }
+
+                        // 3d) Raw fused score
+                        const rawFusionScore = Math.min(1.0,
+                            FUSION_HEAD_WEIGHT * headMag +
+                            FUSION_GAZE_WEIGHT * gazeMag +
+                            agreementBonus
+                        );
+
+                        // 3e) Smooth the score with EMA
+                        if (!_fusionScoreInit) {
+                            _fusionScore = rawFusionScore;
+                            _fusionScoreInit = true;
+                        } else {
+                            _fusionScore = FUSION_EMA_ALPHA * rawFusionScore + (1 - FUSION_EMA_ALPHA) * _fusionScore;
+                        }
+
+                        // 3f) Determine deviating state with hysteresis
+                        const wasDeviating = (_deviationStartTime > 0);
+                        const isDeviating = wasDeviating
+                            ? (_fusionScore >= FUSION_OK_THRESHOLD)   // must drop BELOW ok-threshold to recover
+                            : (_fusionScore >= FUSION_AWAY_THRESHOLD); // must exceed away-threshold to start
+
+                        // Accumulate total time-away for the end-of-session
+                        // attention evaluation metric (only while liveness is
+                        // confirmed, matching when the attention machine runs).
+                        if (_livenessState === 'LIVE_PERSON_CONFIRMED' && _prevMetricsFrameTs > 0) {
+                            const frameDeltaMs = now - _prevMetricsFrameTs;
+                            if (isDeviating && frameDeltaMs > 0 && frameDeltaMs < 1000) {
+                                attentionMetrics.totalDeviationMs += frameDeltaMs;
+                            }
+                        }
+                        _prevMetricsFrameTs = now;
+
+                        // 3g) Update gaze indicator based on fusion
+                        if (gazeStateThisFrame !== "unknown") {
+                            updateGazeIndicator(isDeviating ? "Away" : "Screen");
+                        }
+
+                        // 3h) Attention state machine — only active after
+                        //     liveness is confirmed.  Never fires during
+                        //     liveness challenge to avoid confusing overlap.
+                        if (_livenessState === 'LIVE_PERSON_CONFIRMED') {
+                            if (isDeviating) {
+                                _normalStartTime = 0;
+                                // _forceNewDeviationTimer guarantees a fresh grace
+                                // period after every NORMAL recovery — a previous
+                                // attention event NEVER contributes elapsed time
+                                // to the next event.
+                                if (_deviationStartTime === 0 || _forceNewDeviationTimer) {
+                                    _deviationStartTime = now;
+                                    _forceNewDeviationTimer = false;
+                                }
+                                const elapsed = now - _deviationStartTime;
+                                if (elapsed >= ATTENTION_WARNING_MS) {
+                                    setAttentionState("WARNING", headState, gazeStateThisFrame);
+                                } else if (elapsed >= ATTENTION_CAUTION_MS && _attentionState === "NORMAL") {
+                                    setAttentionState("CAUTION", headState, gazeStateThisFrame);
+                                }
+                            } else {
+                                // Not deviating — recovery path.  Only clear the
+                                // deviation timer AFTER stable NORMAL is confirmed,
+                                // preventing a brief flicker of !isDeviating from
+                                // resetting the grace period prematurely.
+                                if (_attentionState !== "NORMAL") {
+                                    if (_normalStartTime === 0) _normalStartTime = now;
+                                    if (now - _normalStartTime >= RETURN_DEBOUNCE_MS) {
+                                        _deviationStartTime = 0;
+                                        setAttentionState("NORMAL", headState, gazeStateThisFrame);
+                                        _normalStartTime = 0;
+                                    }
+                                } else {
+                                    // Already NORMAL — ensure clean state
+                                    _normalStartTime = 0;
+                                    _deviationStartTime = 0;
                                 }
                             }
                         }
@@ -2316,9 +2866,44 @@
                         // independent of the head/gaze deviation timer above.
                         _deviationStartTime = 0;
                         if (_faceAbsentStartTime === 0) _faceAbsentStartTime = now;
-                        if (noFaceElapsed >= FACE_ABSENT_WARNING_MS) {
-                            setAttentionState("FACE_ABSENT", "noface", "unknown");
+
+                        // Reset the passive liveness watchdog while no face is
+                        // present — nothing to compare facial-shape activity
+                        // against, and a returning/new face must re-verify
+                        // from scratch (see LIVENESS_FACE_LOSS_RESET_MS below).
+                        _lastFacialActivityAt = 0;
+                        _staticPrevShape = null;
+                        _shapeDeltaStreak = 0;
+                        _passiveBlinkPhase = 'waiting_close';
+                        _passiveBlinkCloseFrames = 0;
+
+                        // Only trigger face-absent attention warning after
+                        // liveness is confirmed (otherwise liveness UI handles it).
+                        if (_livenessState === 'LIVE_PERSON_CONFIRMED') {
+                            if (noFaceElapsed >= FACE_ABSENT_WARNING_MS) {
+                                setAttentionState("FACE_ABSENT", "noface", "unknown");
+                            }
                         }
+
+                        // Reset liveness if face absent long enough —
+                        // a returning/new face must re-verify.
+                        if (_livenessFaceLostTime === 0) _livenessFaceLostTime = now;
+                        if (now - _livenessFaceLostTime >= LIVENESS_FACE_LOSS_RESET_MS) {
+                            if (_livenessState === 'LIVE_PERSON_CONFIRMED') {
+                                _livenessState = 'NO_FACE';
+                                console.log('[Liveness] Face absent >' +
+                                    (LIVENESS_FACE_LOSS_RESET_MS / 1000) + 's — liveness reset.');
+                            }
+                        }
+
+                        // If face disappears during liveness checking, reset
+                        if ((_livenessState === 'LIVENESS_CHECKING' || _livenessState === 'FACE_DETECTED') &&
+                            noFaceElapsed >= FACE_BRIEF_LOSS_MS) {
+                            _livenessState = 'NO_FACE';
+                            hideGazeWarning();
+                            console.log('[Liveness] Face lost during liveness check — reset.');
+                        }
+
                         // Brief face loss (below FACE_ABSENT_WARNING_MS) intentionally
                         // triggers no warning at all, per spec.
                     }
@@ -2546,6 +3131,7 @@
             currentDifficulty = "medium";
             stage = "main_question";
             parsedResumeData = null;
+            attentionMetrics = createAttentionMetrics();
 
             messagesDiv.innerHTML = "";
             dashboardContainer.style.display = "none";
@@ -2634,6 +3220,38 @@
                 const totalMarks = interviewHistory.reduce((sum, item) => sum + item.marks, 0);
                 const avgMarks = totalQuestions > 0 ? (totalMarks / totalQuestions).toFixed(1) : 0;
 
+                // ── Attention-loss evaluation metric ─────────────────────
+                // Deliberately lenient: real candidates glance around,
+                // think, and look away briefly without it meaning
+                // anything. Only *sustained* attention-loss episodes
+                // (the ones that actually crossed the warning threshold),
+                // genuine face-absence, and failed liveness checks pull
+                // the score down — and each by a small amount, with the
+                // cumulative "time away" penalty capped so a couple of
+                // long thinking pauses can't tank the score.
+                const sessionMs = attentionMetrics.sessionStartedAt ? Math.max(0, performance.now() - attentionMetrics.sessionStartedAt) : 0;
+                const sessionSec = sessionMs / 1000;
+                const deviationSec = attentionMetrics.totalDeviationMs / 1000;
+
+                let attentionScore = 100;
+                attentionScore -= attentionMetrics.totalWarnings * 4;
+                attentionScore -= attentionMetrics.faceAbsentWarnings * 6;
+                attentionScore -= attentionMetrics.livenessFailures * 5;
+                attentionScore -= Math.min(20, deviationSec * 0.25); // capped cumulative time-away penalty
+                attentionScore = Math.max(0, Math.min(100, Math.round(attentionScore)));
+
+                let attentionLabel, attentionColor;
+                if (attentionScore >= 85) { attentionLabel = "FOCUSED"; attentionColor = "#34d399"; }
+                else if (attentionScore >= 65) { attentionLabel = "MOSTLY FOCUSED"; attentionColor = "#fbbf24"; }
+                else { attentionLabel = "DISTRACTED"; attentionColor = "#fb7185"; }
+
+                const fmtMinSec = (totalSec) => {
+                    const s = Math.max(0, Math.round(totalSec));
+                    const m = Math.floor(s / 60);
+                    const r = s % 60;
+                    return m > 0 ? `${m}m ${r}s` : `${r}s`;
+                };
+
                 let topicScores = {};
                 interviewHistory.forEach(item => {
                     if (!topicScores[item.topic]) topicScores[item.topic] = { total: 0, count: 0 };
@@ -2689,6 +3307,32 @@
                                 ${avgMarks >= 8 ? 'OPTIMAL' : avgMarks >= 6 ? 'ADEQUATE' : 'SUBOPTIMAL'}
                             </div>
                         </div>
+                    </div>
+
+                    <div class="section-title">ATTENTION & FOCUS</div>
+                    <div class="stats-grid" style="margin-bottom: 28px;">
+                        <div class="stat-box">
+                            <div class="stat-label" style="margin-bottom: 12px;">Attention Score</div>
+                            <div class="stat-value" style="color: ${attentionColor};">${attentionScore}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label" style="margin-bottom: 12px;">Assessment</div>
+                            <div class="stat-value" style="color: ${attentionColor}; font-size: 1.4rem; display: flex; height: 48px; align-items: center;">
+                                ${attentionLabel}
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label" style="margin-bottom: 12px;">Session Length</div>
+                            <div class="stat-value" style="color: #fff; font-size: 1.6rem;">${fmtMinSec(sessionSec)}</div>
+                        </div>
+                    </div>
+                    <div class="dash-preview-box" style="margin: 0 0 50px; max-width: none;">
+                        A natural amount of glancing away during an interview is expected and does not affect this score —
+                        only sustained, repeated attention loss counts.<br><br>
+                        <strong>Sustained attention warnings:</strong> ${attentionMetrics.totalWarnings}&nbsp;&nbsp;
+                        <strong>Face-not-visible warnings:</strong> ${attentionMetrics.faceAbsentWarnings}&nbsp;&nbsp;
+                        <strong>Liveness re-checks:</strong> ${attentionMetrics.livenessRechecks} (${attentionMetrics.livenessFailures} not completed in time)&nbsp;&nbsp;
+                        <strong>Time spent looking away:</strong> ${fmtMinSec(deviationSec)}
                     </div>
 
                     <div class="section-title">SKILL MASTERY</div>

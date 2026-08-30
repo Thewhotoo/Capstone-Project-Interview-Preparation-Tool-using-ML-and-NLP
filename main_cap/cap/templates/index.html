@@ -98,40 +98,43 @@
         }
 
         #interview-monitor-panel {
-            display: block;
-            width: min(220px, 32vw);
+            display: none;
+            width: 148px;
             position: fixed;
-            top: 84px;
-            right: 16px;
+            top: 14px;
+            right: 18px;
             margin: 0;
-            background: rgba(10, 10, 10, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 12px;
-            padding: 10px 10px 8px;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
-            z-index: 40;
+            background: rgba(12, 12, 16, 0.68);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 7px;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+            z-index: 50;
+            transition: opacity 0.3s ease;
         }
 
         .monitor-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 8px;
-            font-size: 0.62rem;
-            letter-spacing: 0.12em;
+            gap: 4px;
+            font-size: 0.54rem;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
-            color: #888;
-            margin-bottom: 8px;
+            color: #777;
+            margin-bottom: 5px;
             padding: 0 2px;
         }
 
         .monitor-video-wrap {
             position: relative;
             overflow: hidden;
-            border-radius: 10px;
+            border-radius: 7px;
             border: 1px solid rgba(255, 255, 255, 0.06);
             background: #000;
-            height: 140px;
+            height: 84px;
         }
 
         #gaze-video {
@@ -144,22 +147,18 @@
         }
 
         .camera-help-text {
-            font-size: 0.6rem;
-            color: #888;
-            line-height: 1.4;
-            margin-top: 8px;
-            text-align: center;
+            display: none;
         }
 
         .gaze-warning {
             display: none;
-            margin-top: 8px;
-            padding: 8px 10px;
-            background: rgba(239, 68, 68, 0.18);
-            border: 1px solid rgba(239, 68, 68, 0.5);
+            margin-top: 5px;
+            padding: 5px 6px;
+            background: rgba(239, 68, 68, 0.22);
+            border: 1px solid rgba(239, 68, 68, 0.6);
             color: #fca5a5;
-            border-radius: 8px;
-            font-size: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.65rem;
             text-align: center;
             font-weight: 600;
             animation: gazeWarnPulse 1.4s ease-in-out infinite;
@@ -183,34 +182,30 @@
             }
         }
 
-        /* ── Unified attention-monitoring status (Phase 1) ──────────────
-           One status line (dot + label) + one subtle metrics row
-           (gaze + head) underneath. No duplicated face messages,
-           no independent debug badges. Layout height stays fixed
-           across states so the panel never resizes/jumps. */
+        /* ── Unified attention-monitoring status (Compact) ────────────── */
         #attention-status {
-            margin-top: 8px;
-            padding: 8px 10px;
-            border-radius: 8px;
+            margin-top: 5px;
+            padding: 4px 6px;
+            border-radius: 6px;
             border: 1px solid transparent;
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
             transition: background 0.4s ease, border-color 0.4s ease;
         }
 
         .attn-main {
             display: flex;
             align-items: center;
-            gap: 7px;
-            font-size: 0.68rem;
+            gap: 5px;
+            font-size: 0.58rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.08em;
             transition: color 0.35s ease;
         }
 
         .attn-dot {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             flex-shrink: 0;
             background: #333;
@@ -221,14 +216,14 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
-            margin-top: 6px;
-            padding-top: 6px;
+            gap: 4px;
+            margin-top: 3px;
+            padding-top: 3px;
             border-top: 1px solid rgba(255, 255, 255, 0.06);
-            font-size: 0.64rem;
+            font-size: 0.54rem;
             font-weight: 500;
             letter-spacing: 0.02em;
-            color: #999;
+            color: #888;
             text-transform: none;
             opacity: 0;
             max-height: 0;
@@ -238,7 +233,7 @@
 
         .attn-metrics.visible {
             opacity: 1;
-            max-height: 40px;
+            max-height: 24px;
         }
 
         .attn-metrics span {
@@ -593,7 +588,15 @@
         .node.pulse { animation: nodePulse 2.2s ease-in-out infinite; }
         @keyframes nodePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        .upload-input-hidden { display: none; }
+        .upload-input-hidden {
+            position: absolute;
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            z-index: -1;
+            pointer-events: none;
+        }
 
         /* ---------- the vessel: one element, four states, never swapped ---------- */
         .vessel {
@@ -1910,7 +1913,7 @@
 
               <div class="vessel idle" id="vessel">
                 <div class="vessel-scan"></div>
-                <input type="file" id="resume-file" accept=".pdf,.docx" class="upload-input-hidden">
+                <input type="file" id="resume-file" accept=".pdf,.docx,.doc,.txt" class="upload-input-hidden">
 
               <div class="v-layer v-idle">
                 <div class="v-icon" id="idle-icon">
@@ -1996,7 +1999,7 @@
       </div>
     </div>
 
-    <div id="interview-monitor-panel" aria-live="polite">
+    <div id="interview-monitor-panel" aria-live="polite" style="display: none;">
         <div class="monitor-header">
             <span>Attention</span>
             <span id="camera-status-text">Camera idle</span>
@@ -2139,6 +2142,12 @@
         // used throughout this file (rdSessionId, rdTurnHistory, etc.) --
         // there is no module system here to scope it more tightly.
         let rdSessionStarting = false;
+        let _lastTypingActivityAt = 0;
+        function _recordTypingActivity() {
+            _lastTypingActivityAt = performance.now();
+        }
+        window.addEventListener("keydown", _recordTypingActivity, { passive: true });
+        window.addEventListener("input", _recordTypingActivity, { passive: true });
 
         const landingContainer = document.getElementById("landing-container");
         const chatContainer = document.getElementById("chat-container");
@@ -2702,6 +2711,8 @@
             if (rdSessionStarting) return;
             rdSessionStarting = true;
 
+            initializeGazeMonitoring();
+
             candidateDashboard.style.display = "none";
             landingContainer.style.display = "none";
             rdHistoryList.innerHTML = "";
@@ -3042,6 +3053,8 @@
                 });
                 const data = await res.json();
                 await sleep(400);
+
+                stopGazeMonitoring();
 
                 rdContainer.style.opacity = "0";
                 await sleep(400);
@@ -4007,6 +4020,7 @@
 
         function stopGazeMonitoring() {
             gazeMonitorActive = false;
+            _cameraInitializing = false;
             resetGazeTrackingState();
 
             if (gazeDetectionRafId) {
@@ -4134,75 +4148,38 @@
         // [HeadPose] / [HeadPose DEBUG] console logs report raw + smoothed
         // pitch on every state change so this is easy to verify.
         const HEAD_PITCH_SIGN = -1;
-        const HEAD_YAW_THRESHOLD = 20;   // |yaw|   > 20° → LEFT or RIGHT
-        const HEAD_PITCH_THRESHOLD = 15;   // |pitch| > 15° → UP or DOWN
+        const HEAD_YAW_THRESHOLD = 26;   // |yaw|   > 26° → LEFT or RIGHT
+        const HEAD_PITCH_THRESHOLD = 26;   // |pitch| > 26° → UP or DOWN (relaxed so looking down to type is tolerated)
         const HEAD_EMA_ALPHA = 0.30;  // EMA responsiveness
 
         // ── GAZE CLASSIFICATION CONSTANTS ───────────────────────────────
         const GAZE_EMA_ALPHA = 0.25; // smoothing for combined iris offset
-        const GAZE_X_THRESHOLD = 0.38; // |x| beyond this (post-calibration) = Left/Right
-        const GAZE_Y_THRESHOLD = 0.45; // |y| beyond this (post-calibration) = Up/Down
+        const GAZE_X_THRESHOLD = 0.44; // |x| beyond this (post-calibration) = Left/Right
+        const GAZE_Y_THRESHOLD = 0.60; // |y| beyond this (post-calibration) = Up/Down (relaxed vertical range)
         const GAZE_CENTER_HYSTERESIS = 0.10; // extra margin required to re-enter Center (avoids edge flicker)
         const GAZE_CONFIRM_FRAMES = 5;    // consecutive frames of a new class needed before it "sticks"
         const GAZE_MIN_CONFIDENCE = 0.35; // combined-eye confidence below this ⇒ treat frame as UNKNOWN
 
         // ── SENSOR FUSION CONSTANTS ──────────────────────────────────────
-        // Attention score = weighted blend of head-pose magnitude + eye-gaze
-        // magnitude, with agreement bonus when both point the same direction.
-        // Score 0 = looking at screen, score ~1 = clearly looking away.
-        //
-        // ── WHY GAZE OUTWEIGHS HEAD (fix, see notes below) ───────────────
-        // Head pose ALONE (full deviation, eyes still reading as centered)
-        // must NEVER be able to cross FUSION_AWAY_THRESHOLD by itself —
-        // otherwise a simple head turn with eyes still on the screen would
-        // wrongly fire a warning (the #1 complaint). Eye/iris gaze is the
-        // more direct signal of actual attention, so it alone (with head
-        // centered) CAN cross the threshold and legitimately trigger Away.
-        // With these weights: head-only max = 0.35 (< 0.40, no warning),
-        // gaze-only max = 0.55 (>= 0.40, can warn), and head+gaze agreeing
-        // stacks to ~1.0 (strong, fast warning) — matching every case in
-        // the spec (head turn alone never warns; eyes-away-head-centered
-        // can warn; agreement is the strongest signal; uncertain gaze with
-        // head deviation stays weak evidence only).
         const FUSION_HEAD_WEIGHT = 0.35;     // head pose contribution (capped below away-threshold alone)
         const FUSION_GAZE_WEIGHT = 0.55;     // eye/iris gaze contribution (can cross threshold alone)
         const FUSION_AGREEMENT_BONUS = 0.10; // bonus when head+eyes agree direction
-        const FUSION_AWAY_THRESHOLD = 0.40;  // score above this = deviating
-        const FUSION_OK_THRESHOLD = 0.28;    // score below this = back to normal (hysteresis)
+        const FUSION_AWAY_THRESHOLD = 0.50;  // score above this = deviating (conservative threshold)
+        const FUSION_OK_THRESHOLD = 0.34;    // score below this = back to normal (hysteresis)
         const FUSION_EMA_ALPHA = 0.20;       // smoothing for the fused score (conservative)
 
         // ── BASELINE CALIBRATION ────────────────────────────────────────
-        // Short automatic calibration when monitoring starts: while the
-        // head is roughly centered, sample the "natural" iris offset and
-        // use it as a per-person/per-camera baseline. This compensates
-        // for individual eye shape, camera angle, and (partially) glasses,
-        // without any dedicated calibration screen.
         const CALIBRATION_MIN_SAMPLES = 15;
         const CALIBRATION_MAX_WAIT_MS = 5000; // hard cap — give up and use whatever we have (or 0,0)
         const CALIBRATION_MIN_TIME_MS = 2000; // require at least 2s of temporally diverse samples
 
         // ── ATTENTION STATE MACHINE TIMINGS (ms) ────────────────────────
-        // All tunable in one place. NORMAL -> (deviation starts) -> CAUTION
-        // (internal only) -> WARNING (visible). Face-absence uses its own,
-        // longer timer. Recovery requires a short stable "back to normal"
-        // period before the warning clears, to avoid flicker.
-        const ATTENTION_CAUTION_MS = 1500;  // brief glance — no visible warning yet
-        const ATTENTION_WARNING_MS = 5000;  // sustained deviation — show the warning (~5s grace; loosened so brief natural glances never trip it)
-        const FACE_ABSENT_WARNING_MS = 4000;  // sustained face loss — show face-not-detected warning
-        const FACE_BRIEF_LOSS_MS = 1500;  // debounce before even flipping the "no face" badge
+        const ATTENTION_CAUTION_MS = 3500;  // brief glance — no visible warning
+        const ATTENTION_WARNING_MS = 8500;  // sustained deviation — 8.5s grace before warning
+        const FACE_ABSENT_WARNING_MS = 7500;  // sustained face loss — 7.5s grace
+        const FACE_BRIEF_LOSS_MS = 2500;  // debounce before flipping "no face" status
         const RETURN_DEBOUNCE_MS = 600;   // stable-normal time required before clearing a warning
-        // NOTE (audio bug fix): there used to be a SECOND, independent audio-only
-        // cooldown (WARNING_AUDIO_COOLDOWN_MS = 10000) inside speakAttentionWarning()
-        // that was shorter/out of sync with the event-level cooldown below. Because
-        // both timestamps were seeded at the same "now" but with different cooldown
-        // lengths, a warning event could pass the outer (event) cooldown gate while
-        // still being inside the inner (audio) cooldown gate — the banner would show
-        // but speakAttentionWarning() would silently return early with no sound and
-        // no visible sign anything was wrong. Fixed by deleting the inner cooldown
-        // entirely: WARNING_EVENT_COOLDOWN_MS below is now the ONLY cooldown that
-        // gates a warning event, and visual + audio always fire from the exact same
-        // gated code path in setAttentionState(), so they can never desync again.
-        const WARNING_EVENT_COOLDOWN_MS = 16000; // wider cooldown between full warning EVENTS (visual + audio fire together) — less naggy over a long session
+        const WARNING_EVENT_COOLDOWN_MS = 45000; // 45s cooldown between warning events — prevents repeated nag alerts
 
         // ── CONTROLLED AUDIO WARNING ─────────────────────────────────────
         // Speaks exactly once per warning EVENT. Frequency is entirely
@@ -4391,8 +4368,8 @@
             let _livenessFaceDetectedTime = 0;      // when face first appeared for this check
             let _livenessFaceLostTime = 0;           // when face was lost (for reset logic)
             const LIVENESS_CHALLENGE_TIMEOUT_MS = 12000; // 12s to complete challenge
-            const LIVENESS_CHALLENGE_DELAY_MS = 1500;    // wait 1.5s after face detected before showing
-            const LIVENESS_FACE_LOSS_RESET_MS = 10000;   // reset liveness if face gone >10s
+            const LIVENESS_CHALLENGE_DELAY_MS = 2500;    // wait 2.5s after face detected before showing
+            const LIVENESS_FACE_LOSS_RESET_MS = 15000;   // reset liveness if face gone >15s
 
             // Blink challenge tracking
             let _blinkPhase = 'waiting_close';     // 'waiting_close' → 'waiting_open'
@@ -4406,46 +4383,18 @@
             const LIVENESS_TURN_CONFIRM_FRAMES = 5;  // consecutive frames above threshold
 
             // ── Continuous passive liveness watchdog ─────────────────────────
-            // Runs on every frame WHILE the person is already
-            // LIVE_PERSON_CONFIRMED (this is the ongoing, recurring half of
-            // the SAME liveness state machine used at startup — not a
-            // separate/independent timer system). There is deliberately no
-            // "verified forever" flag anywhere: LIVE_PERSON_CONFIRMED is just
-            // one state this loop can leave again at any time by setting
-            // _livenessState back to LIVENESS_CHECKING below.
-            //
-            // BUG FIXED HERE: the previous version measured raw (x,y)
-            // landmark deltas. A pure translation of the whole face — e.g.
-            // nudging/panning the phone that's displaying a photo — shifts
-            // every landmark by roughly the same (dx,dy), so that metric
-            // registered "movement" for phone-jiggling even though the
-            // pictured face never actually changed shape. It also used an
-            // extremely tight absolute threshold that MediaPipe's normal
-            // frame-to-frame landmark jitter exceeds on its own, so on a
-            // genuinely static image the timer kept getting reset by pure
-            // noise and never accumulated 6s — which is why re-verification
-            // effectively never fired after the first one.
-            //
-            // Fixed approach: track a small set of DISTANCE-RATIO "shape"
-            // features (eyelid-openness / mouth-aspect-ratio / eyebrow-raise)
-            // instead of absolute point positions. Ratios of inter-landmark
-            // distances don't change under a whole-image translation or
-            // uniform scale (only real deformation of the face — blinking,
-            // talking, expressions — moves them), so panning the phone no
-            // longer counts as activity, while genuine facial motion still
-            // does. A completed blink cycle is additionally tracked directly
-            // and always counts as activity per spec, independent of how the
-            // shape-delta threshold happens to be tuned.
             let _lastFacialActivityAt = 0;        // timestamp of the last detected genuine activity
+            let _lastLivenessChallengeAt = 0;     // last time an active/passive challenge fired
             let _staticPrevShape = null;           // previous frame's shape signature {ear, mar, brow}
             let _shapeDeltaStreak = 0;              // consecutive frames the shape delta has stayed above threshold
             let _passiveBlinkPhase = 'waiting_close'; // continuous blink detector, independent of the active-challenge one
             let _passiveBlinkCloseFrames = 0;
             let _challengeSource = 'active';       // 'active' (startup/retry) | 'passive' (re-verification) — controls timeout length
-            const STATIC_SUSPICION_MS = 9000;         // ~9s with no genuine facial activity ⇒ suspicious, re-verify (raised so a candidate quietly reading/thinking isn't re-challenged too eagerly)
-            const STATIC_SHAPE_DELTA_THRESHOLD = 0.035; // shape-signature delta counted as real movement (tuned above normal landmark jitter / hand-tremor distortion)
-            const STATIC_SHAPE_DELTA_CONFIRM_FRAMES = 2; // require 2+ consecutive frames above threshold — filters single-frame noise spikes so a trembling phone can't fake "activity"
-            const LIVENESS_REVERIFY_TIMEOUT_MS = 6000;  // ~6s window to comply with a re-verification challenge
+            const STATIC_SUSPICION_MS = 35000;        // 35s with no genuine facial activity ⇒ re-verify (substantially lengthened so reading/thinking/typing isn't interrupted)
+            const LIVENESS_CHALLENGE_COOLDOWN_MS = 60000; // 60s minimum cooldown between liveness challenges
+            const STATIC_SHAPE_DELTA_THRESHOLD = 0.035; // shape-signature delta counted as real movement
+            const STATIC_SHAPE_DELTA_CONFIRM_FRAMES = 2; // require 2+ consecutive frames above threshold
+            const LIVENESS_REVERIFY_TIMEOUT_MS = 8000;  // 8s window to comply with a re-verification challenge
 
             function computeFaceShapeSignature(lm, leftEye, rightEye) {
                 // All translation-invariant ratios of inter-landmark distances.
@@ -4879,14 +4828,20 @@
 
                             if (_lastFacialActivityAt === 0) _lastFacialActivityAt = now; // first frame right after verification
 
+                            const isRecentlyTyping = (now - _lastTypingActivityAt < 5000);
+                            if (isRecentlyTyping) {
+                                _lastFacialActivityAt = now;
+                            }
+
                             const inactiveElapsed = now - _lastFacialActivityAt;
-                            if (inactiveElapsed >= STATIC_SUSPICION_MS) {
+                            if (inactiveElapsed >= STATIC_SUSPICION_MS && (now - _lastLivenessChallengeAt >= LIVENESS_CHALLENGE_COOLDOWN_MS)) {
                                 console.log('[Liveness] No genuine blink/facial activity for ' +
                                     (inactiveElapsed / 1000).toFixed(1) + 's — face suspiciously static. Re-triggering verification.');
                                 _livenessState = 'LIVENESS_CHECKING';
-                                _livenessChallenge = 'blink'; // spec requires exactly this prompt/action here
-                                _challengeSource = 'passive';  // gives the ~6s compliance window
+                                _livenessChallenge = 'blink';
+                                _challengeSource = 'passive';
                                 _livenessChallengeStartTime = now;
+                                _lastLivenessChallengeAt = now;
                                 _blinkPhase = 'waiting_close';
                                 _blinkCloseFrameCount = 0;
                                 const staticMsg = 'Please blink to verify you are present.';
@@ -4958,11 +4913,17 @@
                             _fusionScore = FUSION_EMA_ALPHA * rawFusionScore + (1 - FUSION_EMA_ALPHA) * _fusionScore;
                         }
 
-                        // 3f) Determine deviating state with hysteresis
+                        // 3f) Determine deviating state with typing tolerance and hysteresis
+                        const isRecentlyTyping = (now - _lastTypingActivityAt < 5000);
+                        const isLookingDownToType = isRecentlyTyping && (_emaPitch < 0 || gazeStateThisFrame === "down" || headState === "down") && Math.abs(_emaYaw) < HEAD_YAW_THRESHOLD * 1.3;
+
                         const wasDeviating = (_deviationStartTime > 0);
-                        const isDeviating = wasDeviating
-                            ? (_fusionScore >= FUSION_OK_THRESHOLD)   // must drop BELOW ok-threshold to recover
-                            : (_fusionScore >= FUSION_AWAY_THRESHOLD); // must exceed away-threshold to start
+                        let isDeviating = false;
+                        if (!isLookingDownToType) {
+                            isDeviating = wasDeviating
+                                ? (_fusionScore >= FUSION_OK_THRESHOLD)   // must drop BELOW ok-threshold to recover
+                                : (_fusionScore >= FUSION_AWAY_THRESHOLD); // must exceed away-threshold to start
+                        }
 
                         // Accumulate total time-away for the end-of-session
                         // attention evaluation metric (only while liveness is
@@ -4977,7 +4938,11 @@
 
                         // 3g) Update gaze indicator based on fusion
                         if (gazeStateThisFrame !== "unknown") {
-                            updateGazeIndicator(isDeviating ? "Away" : "Screen");
+                            if (isLookingDownToType) {
+                                updateGazeIndicator("Screen");
+                            } else {
+                                updateGazeIndicator(isDeviating ? "Away" : "Screen");
+                            }
                         }
 
                         // 3h) Attention state machine — only active after
@@ -5247,9 +5212,15 @@
         }
 
         resumeFileInput.addEventListener("change", handleResumeFileChosen);
+        resumeFileInput.addEventListener("click", (e) => {
+            e.stopPropagation();
+        });
         removeFileBtn.addEventListener("click", clearResumeFile);
-        vessel.addEventListener("click", () => {
-            if (vessel.classList.contains("idle")) resumeFileInput.click();
+        vessel.addEventListener("click", (e) => {
+            if (e.target.closest("#remove-file-btn")) return;
+            if (vessel.classList.contains("idle") || vessel.classList.contains("recognized")) {
+                resumeFileInput.click();
+            }
         });
 
         ["dragenter", "dragover"].forEach(evt => vessel.addEventListener(evt, (e) => {
@@ -5279,7 +5250,6 @@
                 return;
             }
 
-            initializeGazeMonitoring(); // fire-and-forget; don't block the upload
             setVesselStage("building");
             startInterviewBtn.disabled = true;
 
@@ -5338,7 +5308,6 @@
             showToast("Resume parsed successfully!", "success");
             showCandidateDashboard(result);
         }
-        }
 
         startInterviewBtn.addEventListener("click", uploadResume);
 
@@ -5379,7 +5348,7 @@
                 landingContainer.style.display = "none";
                 chatContainer.style.display = "flex";
                 chatContainer.style.opacity = "1";
-                // Camera already initialized on page load; no second call needed
+                initializeGazeMonitoring();
                 loadQuestion();
             }, 500);
         }
@@ -5760,11 +5729,6 @@
 
         inputField.addEventListener("keypress", function (event) {
             if (event.key === "Enter") handleSubmission();
-        });
-
-        // Start the webcam as soon as the page loads — before any interview stage
-        window.addEventListener("load", function () {
-            initializeGazeMonitoring();
         });
     </script>
 </body>

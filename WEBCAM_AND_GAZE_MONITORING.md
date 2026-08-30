@@ -377,6 +377,7 @@ main_cap/cap/templates/index.html	Webcam, MediaPipe, face detection, head pose, 
 main_cap/cap/app.py	Flask server and application/static-file serving
 main_cap/cap/static/models/face_landmarker.task	MediaPipe Face Landmarker model
 17. Current Development Status
+
 Feature	Status
 Webcam access	✅ Complete
 Live webcam display	✅ Complete
@@ -388,7 +389,8 @@ Head direction — Center	✅ Complete
 Head direction — Left/Right	✅ Complete
 Head direction — Up/Down	✅ Complete
 Eye/iris attention estimation	✅ Implemented
-Head + eye attention combination	✅ Implemented
+Per-user gaze adaptation	✅ Implemented
+Gaze smoothing/hysteresis	✅ Implemented
 Sustained attention detection	✅ Complete
 Attention warning	✅ Complete
 Face-absence detection	✅ Complete
@@ -398,52 +400,186 @@ Audio warning	✅ Complete
 Warning cooldown	✅ Complete
 Recovery/debounce	✅ Complete
 Unified monitoring UI	✅ Complete
-Attention-loss metrics	🔄 Pending
-Integration with final evaluation	🔄 Pending
-18. Remaining Work
+Active liveness verification	✅ Implemented
+Randomized periodic liveness	✅ Implemented
+No-blink soft liveness trigger	✅ Implemented
+Attention-loss metrics	✅ Implemented
+Final evaluation integration	🔄 Dashboard presentation
 
-The core real-time webcam attention-monitoring system is now implemented.
+18. Attention Evaluation Metrics
 
-The next phase is to convert the real-time monitoring information into measurable interview-performance data.
+The real-time monitoring system records session-level attention information for the final interview evaluation. These metrics are analytics only and do not control gaze detection, warning thresholds, calibration or liveness.
 
-Planned metrics
+The system tracks:
 
-The system can be extended to record:
+- Total monitoring duration.
+- Valid monitoring duration.
+- Approximate on-screen/attentive duration.
+- Approximate Away duration.
+- Number of attention-warning events.
+- Number of face-absence events.
+- Number of successful liveness challenges.
+- Number of failed liveness challenges.
+- Optional duration of individual Away episodes.
 
-Number of attention-loss incidents.
-Duration of each incident.
-Total time spent looking away.
-Approximate attention ratio.
-Number of face-absence events.
-Average duration of attention-loss events.
-Timeline of attention events during the interview.
+Suggested calculations:
 
-These metrics can then be integrated into the final interview analytics/evaluation dashboard.
+Attention Loss % =
+(Away Time / Valid Monitoring Time) × 100
 
-19. Final System Flow
+Attention Score =
+max(0, 100 - Attention Loss %)
 
-The completed monitoring feature can be summarized as:
+At interview completion, the derived metrics should be sent through the existing Flask/session flow so the final evaluation dashboard can display the candidate's attention score and supporting statistics.
 
-                 CANDIDATE WEBCAM
-                        ↓
-                  VIDEO STREAM
-                        ↓
-              MEDIAPIPE FACE LANDMARKER
-                        ↓
-                 478 LANDMARKS
-                        ↓
-        ┌───────────────┼────────────────┐
-        ↓               ↓                ↓
- FACE PRESENCE      HEAD POSE       EYE ATTENTION
-        ↓               ↓                ↓
-        └───────────────┼────────────────┘
-                        ↓
-               ATTENTION ANALYSIS
-                        ↓
-              SUSTAINED DEVIATION?
-                  ↙           ↘
-                NO             YES
-                ↓               ↓
-             NORMAL       VISUAL WARNING
-                                +
-                          AUDIO WARNING
+Example final dashboard data:
+
+Attention Score:       91%
+Attention Loss:         9%
+Attention Warnings:     2
+Face Absence Events:    1
+Liveness Passed:        3
+Liveness Failed:        0
+
+The Flask backend should receive/store the derived session metrics. Continuous raw webcam video does not need to be uploaded.
+
+19. Active Liveness Verification
+
+The project uses active liveness verification rather than attempting to prove liveness from continuous facial movement.
+
+A static-face watchdog is intentionally excluded because ordinary MediaPipe facial landmarks cannot reliably distinguish a genuinely still person from a still photograph or a rigidly moved phone.
+
+Initial liveness
+
+At the beginning of the interview, the system requests a randomized two-action challenge, for example:
+
+"Blink once AND turn your head slightly LEFT."
+
+or:
+
+"Blink once AND turn your head slightly RIGHT."
+
+Both actions are verified using the existing MediaPipe landmarks. After successful verification, the system immediately returns to normal webcam, gaze and attention monitoring.
+
+Occasional liveness
+
+During a longer interview, another randomized liveness challenge can occur approximately every 3–5 minutes.
+
+Rules:
+
+- Randomize the actual interval rather than using a predictable exact time.
+- Enforce a hard minimum cooldown of approximately 60–90 seconds.
+- Allow one reasonable retry after a failed challenge.
+- Do not repeatedly trigger challenges while the same challenge is active.
+- Do not block the MediaPipe frame-processing loop.
+- After passing, immediately return to normal monitoring.
+
+A typical 15–20 minute interview should therefore have only a few liveness checks, not constant challenges.
+
+No-blink soft trigger
+
+Blink detection can provide an additional lightweight trigger for an active liveness check.
+
+If a valid face remains visible and no reliable blink has been detected for a considerable period, the system may request an active liveness challenge.
+
+The flow is:
+
+Face visible
+    ↓
+Normal monitoring
+    ↓
+Extended period with no detected blink
+    ↓
+Soft liveness trigger
+    ↓
+"Blink once + turn head LEFT/RIGHT"
+    ↓
+PASS → Normal monitoring
+FAIL → One retry → Normal monitoring
+
+No detected blink must NOT directly mean "fake face". Real candidates naturally have different blink rates and can go several seconds without blinking. Therefore, the no-blink condition is only a soft trigger; the active challenge is the actual liveness verification.
+
+The no-blink timer should reset after a reliable blink and after successful liveness verification.
+
+20. Separation of Attention and Liveness
+
+Liveness remains a separate state from attention monitoring.
+
+                    WEBCAM
+                       ↓
+                MediaPipe Landmarker
+                       ↓
+                 478 Landmarks
+                       ↓
+        ┌──────────────┼──────────────┐
+        ↓              ↓              ↓
+   Face Presence    Head Pose      Eye Gaze
+        │              │              │
+        │              │         Attention State
+        │              │              ↓
+        │              │       Sustained Away?
+        │              │          ↓         ↓
+        │              │         NO         YES
+        │              │          ↓          ↓
+        │              │       NORMAL   VISUAL + AUDIO
+        │              │
+        │          Liveness Challenge
+        │              ↓
+        └────────→ Session Metrics
+                       ↓
+                 Final Dashboard
+
+Head pose is not simply combined with eye-gaze coordinates to decide attention. Head movement used to satisfy a liveness challenge must not automatically become Gaze: Away.
+
+Likewise, a gaze warning must not automatically start a liveness challenge.
+
+21. Final System Flow
+
+The complete webcam monitoring and evaluation flow is:
+
+                  CANDIDATE WEBCAM
+                         ↓
+                    VIDEO STREAM
+                         ↓
+               MEDIAPIPE FACE LANDMARKER
+                         ↓
+                    478 LANDMARKS
+                         ↓
+        ┌────────────────┼────────────────┐
+        ↓                ↓                ↓
+ FACE PRESENCE       HEAD POSE        EYE ATTENTION
+        │                │                │
+        │                │                ↓
+        │                │          ATTENTION STATE
+        │                │                ↓
+        │                │       Sustained Away?
+        │                │          ↙          ↘
+        │                │        NO            YES
+        │                │        ↓              ↓
+        │                │     NORMAL      VISUAL + AUDIO
+        │
+        │             ACTIVE LIVENESS
+        │                ↓
+        │        Blink + Head Challenge
+        │                ↓
+        └────────────→ SESSION METRICS
+                         ↓
+                  FLASK / SESSION FLOW
+                         ↓
+                 FINAL EVALUATION
+                         ↓
+                  ATTENTION DASHBOARD
+
+Engineering constraints
+
+- Reuse the existing webcam stream.
+- Reuse the existing MediaPipe Face Landmarker.
+- Reuse the existing processFrame/requestAnimationFrame loop.
+- Do not create a second webcam stream.
+- Do not create a second animation loop.
+- Do not create competing attention or liveness state machines.
+- Keep eye gaze and head pose logically separate.
+- Do not let liveness permanently block webcam processing.
+- Do not use lack of movement as proof of spoofing.
+- Do not classify a candidate as fake solely because they did not blink.
+- Keep liveness occasional and non-annoying.

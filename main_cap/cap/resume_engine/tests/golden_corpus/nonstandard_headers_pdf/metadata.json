@@ -1,0 +1,14 @@
+{
+  "fixture_id": "nonstandard_headers_pdf",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "ats_plain",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "medium",
+  "known_edge_cases": [
+    "'Employment History' instead of 'Experience', 'Academic Background' instead of 'Education' -- both confident gazetteer matches (Tier 2)",
+    "'Core Competencies' instead of 'Skills' -- NOT in the gazetteer's skills aliases, resolves as a weak match (Tier 3) at low confidence rather than a confident one; a real finding worth expanding the gazetteer for later, not silently done here"
+  ],
+  "notes": "Milestone 2 fixture (2026-08). 'Core Competencies' scoring only 83 (alias_gazetteer_weak) shows the gazetteer's real-world coverage gap directly -- flagged rather than quietly patched, per this project's validation discipline. Candidate gazetteer addition for a future pass, not made unilaterally here.",
+  "added_in_milestone": 2
+}

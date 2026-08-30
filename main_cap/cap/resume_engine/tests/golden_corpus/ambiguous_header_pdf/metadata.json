@@ -1,0 +1,13 @@
+{
+  "fixture_id": "ambiguous_header_pdf",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "ats_plain",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "medium",
+  "known_edge_cases": [
+    "a genuinely unrecognized header ('Languages') appearing AFTER a real section -- must become its own low-confidence 'unknown' section, not crash, not get silently absorbed into Experience"
+  ],
+  "notes": "Milestone 2 fixture (2026-08). Direct regression for Tier 3/4's terminal 'unknown' outcome and the architecture doc's own named example category.",
+  "added_in_milestone": 2
+}

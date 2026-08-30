@@ -1,0 +1,14 @@
+{
+  "fixture_id": "repeated_running_header_pdf",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "ats_plain",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "hard",
+  "known_edge_cases": [
+    "a short, bold name/title banner repeated on every page (a real, common resume pattern) -- structurally header-like on page 2 as well as page 1",
+    "CONFIRMED LIMITATION found during Milestone 2 validation (architectural risk #2, named in the milestone plan before implementation): the page-2 repeat occurs AFTER a real section (Experience) has already started, so it does NOT fold into the leading contact bucket -- it becomes its own spurious 'unknown' section and FRAGMENTS the true Experience continuation (the rest of page 2's content, including a second job entry, gets misfiled under this spurious section instead of appending to 'experience')"
+  ],
+  "notes": "Milestone 2 fixture (2026-08). Deliberately NOT patched, per this project's established validation discipline (surface findings, don't silently fix them). This is arguably the most consequential Milestone 2 finding: it's a genuine reading-order/section-assignment defect for a common real-world pattern (running headers/footers), not merely a mislabeled confidence score. Candidate fix directions for a future pass: detect text repeated verbatim near the same position across multiple pages and exclude it from header candidacy; or bias against re-opening a new section immediately following a very short, isolated line with no body content of its own. Not implemented here -- expected_sections.json below asserts the CURRENT (flawed) behavior so it's a locked-in, visible regression target, not silently passing.",
+  "added_in_milestone": 2
+}

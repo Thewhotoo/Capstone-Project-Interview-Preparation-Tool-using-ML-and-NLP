@@ -1,0 +1,6 @@
+{
+  "layout_mode": "single_column",
+  "layout_confidence_min": 0.9,
+  "span_count_min": 2,
+  "hyperlink_count": 2
+}

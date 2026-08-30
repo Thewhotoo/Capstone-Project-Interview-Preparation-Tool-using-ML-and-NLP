@@ -1,0 +1,816 @@
+{
+  "dataset_sizes": {
+    "experiment_2": 2479,
+    "experiment_3_relabeled": 2479
+  },
+  "tier_distribution": {
+    "experiment_2": {
+      "good": 449,
+      "adequate": 446,
+      "poor": 448,
+      "weak": 443,
+      "excellent": 445,
+      "contradictory": 123,
+      "off_topic": 125
+    },
+    "experiment_3_relabeled": {
+      "good": 449,
+      "adequate": 446,
+      "poor": 448,
+      "weak": 443,
+      "excellent": 445,
+      "contradictory": 123,
+      "off_topic": 125
+    }
+  },
+  "correlation": {
+    "mean_abs_pairwise_all_dims": {
+      "experiment_2": 1.0,
+      "experiment_3_relabeled": 0.9177
+    },
+    "mean_abs_pairwise_excl_untouched_dims": {
+      "experiment_2": 1.0,
+      "experiment_3_relabeled": 0.8691
+    },
+    "untouched_dims_excluded": [
+      "resume_grounding",
+      "technical_accuracy",
+      "technical_depth"
+    ],
+    "full_matrix_experiment_2": {
+      "technical_accuracy|technical_depth": 1.0,
+      "technical_accuracy|communication": 1.0,
+      "technical_accuracy|completeness": 1.0,
+      "technical_accuracy|architecture": 1.0,
+      "technical_accuracy|tradeoffs": 1.0,
+      "technical_accuracy|ownership": 1.0,
+      "technical_accuracy|debugging": null,
+      "technical_accuracy|testing": 1.0,
+      "technical_accuracy|scalability": null,
+      "technical_accuracy|resume_grounding": 1.0,
+      "technical_depth|communication": 1.0,
+      "technical_depth|completeness": 1.0,
+      "technical_depth|architecture": 1.0,
+      "technical_depth|tradeoffs": null,
+      "technical_depth|ownership": null,
+      "technical_depth|debugging": null,
+      "technical_depth|testing": 1.0,
+      "technical_depth|scalability": null,
+      "technical_depth|resume_grounding": 1.0,
+      "communication|completeness": 1.0,
+      "communication|architecture": 1.0,
+      "communication|tradeoffs": 1.0,
+      "communication|ownership": 1.0,
+      "communication|debugging": null,
+      "communication|testing": 1.0,
+      "communication|scalability": null,
+      "communication|resume_grounding": 1.0,
+      "completeness|architecture": 1.0,
+      "completeness|tradeoffs": 1.0,
+      "completeness|ownership": 1.0,
+      "completeness|debugging": null,
+      "completeness|testing": 1.0,
+      "completeness|scalability": null,
+      "completeness|resume_grounding": 1.0,
+      "architecture|tradeoffs": 1.0,
+      "architecture|ownership": null,
+      "architecture|debugging": null,
+      "architecture|testing": null,
+      "architecture|scalability": null,
+      "architecture|resume_grounding": 1.0,
+      "tradeoffs|ownership": null,
+      "tradeoffs|debugging": null,
+      "tradeoffs|testing": null,
+      "tradeoffs|scalability": null,
+      "tradeoffs|resume_grounding": 1.0,
+      "ownership|debugging": null,
+      "ownership|testing": null,
+      "ownership|scalability": null,
+      "ownership|resume_grounding": 1.0,
+      "debugging|testing": null,
+      "debugging|scalability": null,
+      "debugging|resume_grounding": null,
+      "testing|scalability": null,
+      "testing|resume_grounding": 1.0,
+      "scalability|resume_grounding": null
+    },
+    "full_matrix_experiment_3_relabeled": {
+      "technical_accuracy|technical_depth": 1.0,
+      "technical_accuracy|communication": 0.9526,
+      "technical_accuracy|completeness": 0.8559,
+      "technical_accuracy|architecture": 0.9527,
+      "technical_accuracy|tradeoffs": 0.9515,
+      "technical_accuracy|ownership": 0.9535,
+      "technical_accuracy|debugging": null,
+      "technical_accuracy|testing": 0.9581,
+      "technical_accuracy|scalability": null,
+      "technical_accuracy|resume_grounding": 1.0,
+      "technical_depth|communication": 0.9519,
+      "technical_depth|completeness": 0.8098,
+      "technical_depth|architecture": 0.9527,
+      "technical_depth|tradeoffs": null,
+      "technical_depth|ownership": null,
+      "technical_depth|debugging": null,
+      "technical_depth|testing": 0.9581,
+      "technical_depth|scalability": null,
+      "technical_depth|resume_grounding": 1.0,
+      "communication|completeness": 0.8023,
+      "communication|architecture": 0.9263,
+      "communication|tradeoffs": 0.9205,
+      "communication|ownership": 0.9218,
+      "communication|debugging": null,
+      "communication|testing": 0.9361,
+      "communication|scalability": null,
+      "communication|resume_grounding": 0.9526,
+      "completeness|architecture": 0.7902,
+      "completeness|tradeoffs": 0.8315,
+      "completeness|ownership": 0.8931,
+      "completeness|debugging": null,
+      "completeness|testing": 0.7488,
+      "completeness|scalability": null,
+      "completeness|resume_grounding": 0.8559,
+      "architecture|tradeoffs": 0.9204,
+      "architecture|ownership": null,
+      "architecture|debugging": null,
+      "architecture|testing": null,
+      "architecture|scalability": null,
+      "architecture|resume_grounding": 0.9527,
+      "tradeoffs|ownership": null,
+      "tradeoffs|debugging": null,
+      "tradeoffs|testing": null,
+      "tradeoffs|scalability": null,
+      "tradeoffs|resume_grounding": 0.9515,
+      "ownership|debugging": null,
+      "ownership|testing": null,
+      "ownership|scalability": null,
+      "ownership|resume_grounding": 0.9535,
+      "debugging|testing": null,
+      "debugging|scalability": null,
+      "debugging|resume_grounding": null,
+      "testing|scalability": null,
+      "testing|resume_grounding": 0.9581,
+      "scalability|resume_grounding": null
+    }
+  },
+  "per_dimension_stats": {
+    "experiment_2": {
+      "technical_accuracy": {
+        "n": 2479,
+        "mean": 0.4908,
+        "stdev": 0.2852,
+        "min": 0.05,
+        "max": 0.9
+      },
+      "technical_depth": {
+        "n": 1235,
+        "mean": 0.4922,
+        "stdev": 0.2863,
+        "min": 0.05,
+        "max": 0.9
+      },
+      "communication": {
+        "n": 2479,
+        "mean": 0.4908,
+        "stdev": 0.2852,
+        "min": 0.05,
+        "max": 0.9
+      },
+      "completeness": {
+        "n": 2479,
+        "mean": 0.4908,
+        "stdev": 0.2852,
+        "min": 0.05,
+        "max": 0.9
+      },
+      "architecture": {
+        "n": 820,
+        "mean": 0.4863,
+        "stdev": 0.2846,
+        "min": 0.05,
+        "max": 0.9
+      },
+      "tradeoffs": {
+        "n": 411,
+        "mean": 0.4775,
+        "stdev": 0.2872,
+        "min": 0.05,
+        "max": 0.9
+      },
+      "ownership": {
+        "n": 833,
+        "mean": 0.4954,
+        "stdev": 0.2823,
+        "min": 0.05,
+        "max": 0.9
+      },
+      "testing": {
+        "n": 416,
+        "mean": 0.4751,
+        "stdev": 0.2896,
+        "min": 0.05,
+        "max": 0.9
+      },
+      "resume_grounding": {
+        "n": 2479,
+        "mean": 0.4908,
+        "stdev": 0.2852,
+        "min": 0.05,
+        "max": 0.9
+      }
+    },
+    "experiment_3_relabeled": {
+      "technical_accuracy": {
+        "n": 2479,
+        "mean": 0.4908,
+        "stdev": 0.2852,
+        "min": 0.05,
+        "max": 0.9
+      },
+      "technical_depth": {
+        "n": 1235,
+        "mean": 0.4922,
+        "stdev": 0.2863,
+        "min": 0.05,
+        "max": 0.9
+      },
+      "communication": {
+        "n": 2479,
+        "mean": 0.4065,
+        "stdev": 0.3194,
+        "min": 0.0061,
+        "max": 0.9
+      },
+      "completeness": {
+        "n": 2479,
+        "mean": 0.641,
+        "stdev": 0.3289,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "architecture": {
+        "n": 820,
+        "mean": 0.401,
+        "stdev": 0.3189,
+        "min": 0.0064,
+        "max": 0.9
+      },
+      "tradeoffs": {
+        "n": 411,
+        "mean": 0.3932,
+        "stdev": 0.3201,
+        "min": 0.0062,
+        "max": 0.9
+      },
+      "ownership": {
+        "n": 833,
+        "mean": 0.4126,
+        "stdev": 0.321,
+        "min": 0.0061,
+        "max": 0.9
+      },
+      "testing": {
+        "n": 416,
+        "mean": 0.3991,
+        "stdev": 0.3222,
+        "min": 0.0061,
+        "max": 0.9
+      },
+      "resume_grounding": {
+        "n": 2479,
+        "mean": 0.4908,
+        "stdev": 0.2852,
+        "min": 0.05,
+        "max": 0.9
+      }
+    }
+  },
+  "per_dimension_histograms_10bin": {
+    "experiment_2": {
+      "technical_accuracy": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          125,
+          448,
+          0,
+          443,
+          0,
+          446,
+          0,
+          572,
+          0,
+          445
+        ]
+      },
+      "technical_depth": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          64,
+          220,
+          0,
+          223,
+          0,
+          218,
+          0,
+          283,
+          0,
+          227
+        ]
+      },
+      "communication": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          125,
+          448,
+          0,
+          443,
+          0,
+          446,
+          0,
+          572,
+          0,
+          445
+        ]
+      },
+      "completeness": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          125,
+          448,
+          0,
+          443,
+          0,
+          446,
+          0,
+          572,
+          0,
+          445
+        ]
+      },
+      "architecture": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          42,
+          152,
+          0,
+          150,
+          0,
+          137,
+          0,
+          201,
+          0,
+          138
+        ]
+      },
+      "tradeoffs": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          27,
+          75,
+          0,
+          77,
+          0,
+          65,
+          0,
+          100,
+          0,
+          67
+        ]
+      },
+      "ownership": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          34,
+          153,
+          0,
+          143,
+          0,
+          163,
+          0,
+          189,
+          0,
+          151
+        ]
+      },
+      "testing": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          21,
+          84,
+          0,
+          80,
+          0,
+          73,
+          0,
+          81,
+          0,
+          77
+        ]
+      },
+      "resume_grounding": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          125,
+          448,
+          0,
+          443,
+          0,
+          446,
+          0,
+          572,
+          0,
+          445
+        ]
+      }
+    },
+    "experiment_3_relabeled": {
+      "technical_accuracy": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          125,
+          448,
+          0,
+          443,
+          0,
+          446,
+          0,
+          572,
+          0,
+          445
+        ]
+      },
+      "technical_depth": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          64,
+          220,
+          0,
+          223,
+          0,
+          218,
+          0,
+          283,
+          0,
+          227
+        ]
+      },
+      "communication": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          676,
+          236,
+          175,
+          169,
+          98,
+          289,
+          23,
+          417,
+          7,
+          389
+        ]
+      },
+      "completeness": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          235,
+          92,
+          131,
+          226,
+          107,
+          201,
+          248,
+          170,
+          257,
+          812
+        ]
+      },
+      "architecture": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          221,
+          89,
+          65,
+          54,
+          35,
+          77,
+          5,
+          148,
+          2,
+          124
+        ]
+      },
+      "tradeoffs": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          120,
+          43,
+          29,
+          22,
+          19,
+          43,
+          1,
+          73,
+          0,
+          61
+        ]
+      },
+      "ownership": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          230,
+          59,
+          72,
+          70,
+          23,
+          83,
+          6,
+          153,
+          2,
+          135
+        ]
+      },
+      "testing": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          118,
+          38,
+          25,
+          42,
+          14,
+          44,
+          2,
+          63,
+          1,
+          69
+        ]
+      },
+      "resume_grounding": {
+        "bin_edges": [
+          0.0,
+          0.1,
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1.0
+        ],
+        "counts": [
+          125,
+          448,
+          0,
+          443,
+          0,
+          446,
+          0,
+          572,
+          0,
+          445
+        ]
+      }
+    }
+  },
+  "finding_1_completeness_flat_tier_fallback": {
+    "experiment_2_pre_relabel": {
+      "flat_count": 2479,
+      "total": 2479,
+      "pct": 100.0
+    },
+    "experiment_3_relabeled": {
+      "flat_count": 164,
+      "total": 2479,
+      "pct": 6.62
+    },
+    "note": "experiment_2 values are pre-relabel (flat tier by definition, this row is a sanity reference, not a finding)."
+  },
+  "finding_2_weak_poor_saturation": {
+    "experiment_2_pre_relabel": {
+      "zero_count": 0,
+      "total": 1805,
+      "pct": 0.0
+    },
+    "experiment_3_relabeled": {
+      "zero_count": 0,
+      "total": 1805,
+      "pct": 0.0
+    }
+  },
+  "exact_tie_rate_reasoning_and_completeness_dims": {
+    "experiment_2": {
+      "ties": 7850,
+      "total": 7850,
+      "pct": 100.0
+    },
+    "experiment_3_relabeled": {
+      "ties": 1299,
+      "total": 7850,
+      "pct": 16.55
+    }
+  }
+}

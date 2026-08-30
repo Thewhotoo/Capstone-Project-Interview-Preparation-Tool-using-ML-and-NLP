@@ -1,0 +1,15 @@
+{
+  "fixture_id": "canva_style_two_column",
+  "layout_type": "two_column",
+  "document_type": "pdf",
+  "template_style": "canva",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "medium",
+  "known_edge_cases": [
+    "Canva-style narrow left sidebar with a photo placeholder and icon-style labels",
+    "large decorative name/title in the main column, uppercase section labels",
+    "sidebar and main column both substantial (not the narrow-sidebar imbalance case, see narrow_sidebar_ats_photo)"
+  ],
+  "notes": "Validation-pass fixture (2026-08). Emulates the structural layout of a typical Canva resume template (color/graphics themselves aren't modeled -- only geometry, since nothing downstream reads color).",
+  "added_in_milestone": 1
+}

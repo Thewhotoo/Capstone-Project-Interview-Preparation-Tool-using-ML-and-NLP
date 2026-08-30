@@ -1,0 +1,19 @@
+{
+  "expected_labels_in_order": [
+    "contact",
+    "summary",
+    "experience",
+    "projects",
+    "education",
+    "skills",
+    "certifications"
+  ],
+  "min_confidence_by_label": {
+    "summary": 0.85,
+    "experience": 0.85,
+    "projects": 0.85,
+    "education": 0.85,
+    "skills": 0.85,
+    "certifications": 0.85
+  }
+}

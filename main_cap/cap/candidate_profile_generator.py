@@ -1,16 +1,12 @@
 """
-Gemini-powered Candidate Profile Generator (with deterministic engine fallback).
+Gemini-powered Candidate Profile Generator.
 
-Production path: uses the Resume Intelligence Engine (Milestones 0-7) by default.
-The Gemini path is retained only for Shadow Mode dev tooling and as a manual
-escape hatch (CAP_RESUME_PARSER=gemini).
+Uses Pydantic models + google-genai native structured output to parse resumes
+into a CandidateProfile in a single Gemini 2.5 Flash call.
 
 Architecture:
-    Resume (PDF/DOCX/TXT) -> Resume Intelligence Engine (deterministic)
-        -> AnnotatedResume -> CandidateProfile (Pydantic) -> JSON
-    OR (dev only):
     Resume (PDF) -> PyMuPDF extracts text -> Gemini 2.5 Flash
-        -> Structured CandidateProfile (Pydantic) -> JSON -> Dashboard / Quiz / Interview
+        -> Structured CandidateProfile (Pydantic) -> JSON -> Dashboard / Discussion / Interview
 
 Every module after profile generation consumes the generated Candidate Profile
 without re-parsing the resume.
@@ -23,7 +19,7 @@ import os
 import re
 import time
 from datetime import datetime
-from typing import Optional
+
 
 from pydantic import BaseModel, Field
 
@@ -206,7 +202,7 @@ class CandidateProfile(BaseModel):
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# PDF Text Extraction (PyMuPDF) – for Gemini fallback path only
+# PDF Text Extraction (PyMuPDF)
 # ═════════════════════════════════════════════════════════════════════════════
 
 
@@ -316,7 +312,7 @@ def _extract_blocks_ordered(page) -> str:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# Gemini Client (lazy singleton) – for Gemini fallback path only
+# Gemini Client (lazy singleton)
 # ═════════════════════════════════════════════════════════════════════════════
 
 _genai_client = None
@@ -1085,15 +1081,8 @@ def _clean_string_list(items: list) -> list[str]:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# Frontend Format Conversion (with both quiz_domain and discussion_domain)
+# Frontend Format Conversion
 # ═════════════════════════════════════════════════════════════════════════════
-
-_DOMAIN_TO_DISCUSSION = {
-    "Software Engineering": "Software Engineer",
-    "Data Science": "Data Scientist",
-    "Cybersecurity": "Network Engineer",
-    "Finance": "Database Engineer",
-}
 
 _DOMAIN_TO_DISCUSSION = {
     "Software Engineering": "Software Engineer",
@@ -1115,13 +1104,13 @@ def profile_to_frontend_format(profile: dict) -> dict:
     the flat format expected by the existing frontend / dashboard.
 
     The frontend expects:
-        status, name, email, phone, predicted_domain, quiz_domain,
+        status, name, email, phone, predicted_domain, discussion_domain,
         confidence, skills, experience{years,level}, education,
-        projects_count, certifications, focus_topics, resume_summary,
-        experience_detail, projects_detail
+        projects, certifications, focus_topics, resume_summary,
+        experience_detail
     """
     predicted_domain = profile.get("predicted_domain", "Software Engineering")
-    quiz_domain = _DOMAIN_TO_QUIZ.get(predicted_domain, "Software Engineer")
+    discussion_domain = _DOMAIN_TO_DISCUSSION.get(predicted_domain, "Software Engineer")
 
     # Extract contact details (handle both flat and nested formats)
     contact = profile.get("contact_details", {})
@@ -1137,11 +1126,22 @@ def profile_to_frontend_format(profile: dict) -> dict:
         profile.get("experience_level", "Intermediate"), "Unknown"
     )
 
-    if total_years == 0:
-        lvl = profile.get("experience_level", "Intermediate")
-        total_years = {"Beginner": 1, "Intermediate": 3, "Advanced": 7}.get(lvl, 1)
+    # `total_years` is left at 0 (never synthesized from `experience_level`
+    # alone) when the resume has no dated evidence to compute a real
+    # span from -- e.g. a single internship entry within one calendar
+    # year, or no Experience section at all. Found during the production
+    # walkthrough audit: this used to backfill a fabricated year count
+    # (Beginner->1, Intermediate->3, Advanced->7) purely from the level
+    # label, with zero supporting dated evidence -- the literal source of
+    # the "3 yrs - Mid" text a prior audit flagged as unsupported. The
+    # frontend's own `expText` fallback (falsy `years` -> show the level
+    # alone, e.g. "Junior") already handles years==0 correctly; this
+    # backend fallback was defeating it.
 
-    # Extract interview_blueprint topics as focus_topics for backward compat
+    # Extract interview_blueprint topics as focus_topics for backward compat.
+    # technical_topics is now a list of {topic, originating_project,
+    # originating_experience, evidence} objects, not plain strings — this
+    # flat display field only ever wants the topic name.
     ib = profile.get("interview_blueprint", {})
     if isinstance(ib, dict):
         focus_topics = [
@@ -1162,7 +1162,7 @@ def profile_to_frontend_format(profile: dict) -> dict:
         "email": email,
         "phone": phone,
         "predicted_domain": predicted_domain,
-        "quiz_domain": quiz_domain,
+        "discussion_domain": discussion_domain,
         "confidence": profile.get("confidence", 0.0),
         "skills": profile.get("skills", []),
         "experience": {

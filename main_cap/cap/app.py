@@ -8,14 +8,13 @@ from dotenv import load_dotenv
 import os
 import sys
 import logging
-from datetime import datetime
 
-# ---- NEW imports from second version ----
 import conversation_engine
 import deployment_evaluator
 import discussion_engine
 
-# Load .env file (only used for optional dev tooling; not required for production)
+# Load .env file (unused by the default resume-parsing path; kept for any
+# optional dev tooling -- see the note below)
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 # Setup logging
@@ -23,29 +22,24 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # ── Startup note: GEMINI_API_KEY ────────────────────────────────────────────
-# Post-Milestone‑7 cutover: resume upload (`/api/classify-resume`) runs the
-# deterministic Resume Intelligence Engine and does NOT require GEMINI_API_KEY.
-# Gemini remains only in dev tooling (never imported from this file).
+# Post-Milestone-7-cutover: resume upload (`/api/classify-resume`) runs the
+# deterministic Resume Intelligence Engine and does NOT require
+# GEMINI_API_KEY. Gemini remains wired into candidate_profile_generator.py
+# only for Shadow Mode dev tooling (resume_engine/devtools/), which is
+# never imported from this file and never reachable from a real request --
+# so an unset key here is expected in a normal deployment, not an error.
 if not os.environ.get("GEMINI_API_KEY", "").strip():
     logger.info(
-        "GEMINI_API_KEY not set – fine for normal operation (resume "
+        "GEMINI_API_KEY not set -- fine for normal operation (resume "
         "parsing uses the deterministic engine); only needed for the "
         "Shadow Mode dev-comparison tooling."
     )
 
 # ── Startup wiring: production evaluator (trained model, falls back to
-# HeuristicEvaluator automatically) ──────────────────────────────────────────
+# HeuristicEvaluator automatically -- see deployment_evaluator.py) ──────────
 deployment_evaluator.bootstrap_production_evaluator()
 
 app = Flask(__name__, template_folder="templates")
-
-# ── DISABLE CACHING FOR DEVELOPMENT ──────────────────────────────────
-@app.after_request
-def add_no_cache_headers(response):
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
-    return response
 
 # Base paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -103,11 +97,7 @@ _asked_rag_ids = set()       # IDs already asked
 # Module-level adaptive session storage
 _adaptive_sessions = {}      # session_id -> session state dict
 
-# ── In-memory Candidate Profile store (shared) ──────────────────────────────
-_candidate_profiles = {}   # session_id -> Candidate Profile dict
-
 import time
-import re
 
 # ═══════════════════════════════════════════════════════════════════════════
 # WEB UI ROUTES
@@ -123,105 +113,72 @@ def health():
     """Health check"""
     return jsonify({"status": "ok"}), 200
 
-@app.route("/log_violation", methods=["POST"])  # from first version
-def log_violation():
-    data = request.json
-    with open('violations.log', 'a') as f:
-        f.write(f"{datetime.now()}: {data}\n")
-    return '', 204
-
-# ═══════════════════════════════════════════════════════════════════════════
-# RESUME UPLOAD & PROFILE ENDPOINTS (deterministic engine)
-# ═══════════════════════════════════════════════════════════════════════════
-
-@app.route("/api/classify-resume", methods=["POST"])
-def classify_resume():
+@app.route("/api/get-resume-discussion", methods=["POST"])
+def get_resume_discussion():
     """
-    Parse an uploaded resume with the deterministic Resume Intelligence
-    Engine (no LLM/API call). Stores the Candidate Profile in memory.
+    Generate Resume Discussion questions from the Candidate Profile.
+
+    Request:
+        {"session_id": "...", "domain": "...", "skills": [...]}
+
+    If session_id maps to a stored Candidate Profile, questions are derived
+    from projects, interview_seeds, experience, technologies, and skills.
+
+    Falls back to hardcoded MCQ banks when no profile is available.
     """
-    import tempfile
-    import uuid
-
-    from resume_engine.extractor import ExtractionFailure
-
     try:
-        if "file" not in request.files:
-            return jsonify({"error": "No file provided"}), 400
+        data = request.get_json() or {}
+        session_id = data.get("session_id", "")
+        domain = data.get("domain", "Software Engineer")
 
-        file = request.files["file"]
-        if file.filename == "":
-            return jsonify({"error": "No file selected"}), 400
+        # Try to load the Candidate Profile (single source of truth)
+        profile = _candidate_profiles.get(session_id) if session_id else None
 
-        ext = os.path.splitext(file.filename)[1].lower()
-
-        from candidate_profile_generator import engine_supports_format
-
-        if not engine_supports_format(ext):
+        if profile:
+            questions = _generate_resume_discussion_questions(profile)
             return jsonify({
-                "error": f"Unsupported file format '{ext}'. Please upload a PDF, DOCX, or TXT resume."
-            }), 400
+                "status": "success",
+                "mode": "resume_discussion",
+                "domain": domain,
+                "total_questions": len(questions),
+                "questions": questions,
+            }), 200
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-            file.save(tmp.name)
-            tmp_path = tmp.name
-
-        try:
-            from candidate_profile_generator import (
-                generate_candidate_profile_via_engine,
-                profile_to_frontend_format,
-            )
-
-            profile = generate_candidate_profile_via_engine(tmp_path)
-
-            session_id = f"profile_{uuid.uuid4().hex[:12]}"
-            _candidate_profiles[session_id] = profile
-
-            result = profile_to_frontend_format(profile)
-            result["session_id"] = session_id
-
-            logger.info(
-                "Candidate profile generated for session %s: domain=%s",
-                session_id,
-                result.get("predicted_domain"),
-            )
-            return jsonify(result), 200
-
-        finally:
-            try:
-                if os.path.exists(tmp_path):
-                    os.remove(tmp_path)
-            except Exception as e:
-                logger.warning(f"Failed to cleanup temp file: {e}")
-
-    except ExtractionFailure as e:
-        logger.warning("Resume extraction failed: %s", e)
-        return jsonify({"error": str(e)}), 400
+        # Fallback: hardcoded MCQs when no profile available
+        fallback_questions = _hardcoded_fallback(domain)
+        return jsonify({
+            "status": "success",
+            "mode": "fallback",
+            "domain": domain,
+            "total_questions": len(fallback_questions),
+            "questions": fallback_questions,
+        }), 200
 
     except Exception as e:
-        logger.error(f"Resume classification error: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Error: {e}")
+        return jsonify({"error": str(e)}), 400
 
-
-@app.route("/api/candidate-profile/<session_id>", methods=["GET"])
-def get_candidate_profile(session_id):
-    """Retrieve a stored Candidate Profile by session ID."""
-    profile = _candidate_profiles.get(session_id)
-    if not profile:
-        return jsonify({"error": "Profile not found or session expired"}), 404
-    return jsonify(profile), 200
-
-# ═══════════════════════════════════════════════════════════════════════════
-# RESUME DISCUSSION / DOMAIN QUIZ (v1 and v2)
-# ═══════════════════════════════════════════════════════════════════════════
 
 def _generate_resume_discussion_questions(profile: dict, num_questions: int = 10):
-    """Build open-ended Resume Discussion questions from the Candidate Profile."""
+    """
+    Build open-ended Resume Discussion questions from the Candidate Profile.
+
+    Priority order:
+        1. interview_seeds (from projects)
+        2. project titles / summaries
+        3. experience entries
+        4. technologies (from projects)
+        5. skills
+
+    Returns a list of dicts compatible with the existing discussion renderer:
+        {question, options, answer, difficulty, _discussion: True}
+    """
     import random
 
     questions: list[dict] = []
     used_seeds: set[str] = set()
 
+    # ── 1. Questions from interview_seeds ──────────────────────────────
     for project in profile.get("projects", []):
         title = project.get("title", "your project")
         for seed in project.get("interview_seeds", []):
@@ -240,6 +197,7 @@ def _generate_resume_discussion_questions(profile: dict, num_questions: int = 10
                 "_discussion": True,
             })
 
+    # ── 2. Questions about project technologies ────────────────────────
     for project in profile.get("projects", []):
         title = project.get("title", "your project")
         techs = project.get("technologies", [])
@@ -257,6 +215,7 @@ def _generate_resume_discussion_questions(profile: dict, num_questions: int = 10
                 "_discussion": True,
             })
 
+    # ── 3. Questions from experience ───────────────────────────────────
     for exp in profile.get("experience", []):
         role = exp.get("role", "")
         company = exp.get("company", "")
@@ -276,6 +235,7 @@ def _generate_resume_discussion_questions(profile: dict, num_questions: int = 10
                 "_discussion": True,
             })
 
+    # ── 4. Technology-specific questions ───────────────────────────────
     all_techs: list[str] = []
     for project in profile.get("projects", []):
         all_techs.extend(project.get("technologies", []))
@@ -295,6 +255,7 @@ def _generate_resume_discussion_questions(profile: dict, num_questions: int = 10
             "_discussion": True,
         })
 
+    # ── 5. Skill-based questions ───────────────────────────────────────
     skills = profile.get("skills", [])
     if skills:
         q_text = (
@@ -312,206 +273,210 @@ def _generate_resume_discussion_questions(profile: dict, num_questions: int = 10
             "_discussion": True,
         })
 
+    # ── Shuffle and cap ────────────────────────────────────────────────
     random.shuffle(questions)
     return questions[:num_questions]
 
 
-def _hardcoded_quiz(domain):
-    """Return the static question bank for a domain (used as fallback)."""
+def _hardcoded_fallback(domain):
+    """Return the static question bank for a domain."""
     all_questions = {
             "Software Engineer": [
-                # (full list omitted for brevity – same as in both versions)
-                # We'll keep the complete list from the first version here.
-                # Since it's long, we include it but you can copy the exact list from either version.
+                # EASY
+                {"question": "What does OOP stand for?", "options": ["Object Oriented Programming", "Object Organization Protocol", "Online Operating Process", "Object Output Parameter"], "answer": 0, "difficulty": "Easy"},
+                {"question": "Which of these is NOT a SOLID principle?", "options": ["Single Responsibility", "Open/Closed", "Liskov Substitution", "Interface Inheritance"], "answer": 3, "difficulty": "Easy"},
+                {"question": "What is version control primarily used for?", "options": ["Encrypting data", "Tracking code changes and collaboration", "Compiling code", "Hosting websites"], "answer": 1, "difficulty": "Easy"},
+                
+                # MEDIUM
+                {"question": "What is the difference between a class and an interface?", "options": ["Interfaces define contracts; classes implement behavior", "They are the same", "Classes are for data; interfaces are for methods", "Interfaces cannot have methods"], "answer": 0, "difficulty": "Medium"},
+                {"question": "Explain the Single Responsibility Principle (SRP):", "options": ["A class should do many things", "Each class should have one reason to change", "Classes should inherit from one parent", "Functions should be very long"], "answer": 1, "difficulty": "Medium"},
+                {"question": "What is the purpose of design patterns in software development?", "options": ["To make code slower", "To provide reusable solutions for common problems", "To replace frameworks", "To eliminate functions"], "answer": 1, "difficulty": "Medium"},
+                
+                # HARD
+                {"question": "In SOLID principles, the Liskov Substitution Principle states that:", "options": ["Objects should be open for extension but closed for modification", "Subclasses should be substitutable for their base classes without breaking the system", "High-level modules should not depend on low-level modules", "Depend on abstractions, not concrete implementations"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is the primary difference between composition and inheritance in OOP?", "options": ["Inheritance is faster than composition", "Composition provides flexibility and avoids tight coupling; inheritance creates an 'is-a' relationship", "They are functionally identical", "Inheritance is only for interfaces"], "answer": 1, "difficulty": "Hard"},
+                {"question": "In a microservices architecture, what is the primary challenge with distributed transactions?", "options": ["They are slower than monolithic transactions", "ACID guarantees don't hold across services; need eventual consistency and saga pattern", "Microservices don't support transactions", "They require a central database"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is the difference between REST and GraphQL?", "options": ["GraphQL always requires more bandwidth", "REST uses multiple endpoints; GraphQL uses single endpoint with flexible queries", "They are identical", "REST cannot query nested data"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain the difference between mutable and immutable objects in programming:", "options": ["They have no difference", "Mutable can be changed; immutable cannot; immutability aids concurrency and debugging", "Mutable objects are always slower", "Immutable objects cannot be created"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is a deadlock in concurrent programming and how do you prevent it?", "options": ["A type of lock statement", "Situation where threads wait indefinitely; prevent by lock ordering, timeouts, or deadlock detection", "A hardware issue", "Cannot be prevented"], "answer": 1, "difficulty": "Hard"},
             ],
-            "Network Engineer": [...],
-            "Data Scientist": [...],
-            "Database Engineer": [...],
+            
+            "Network Engineer": [
+                # EASY
+                {"question": "What does TCP stand for?", "options": ["Transfer Control Protocol", "Transmission Control Protocol", "Transfer Communication Process", "Temporary Connectivity Protocol"], "answer": 1, "difficulty": "Easy"},
+                {"question": "How many layers does the OSI model have?", "options": ["5", "6", "7", "8"], "answer": 2, "difficulty": "Easy"},
+                {"question": "What is the primary function of a router?", "options": ["To encrypt data", "To forward packets between networks", "To store files", "To display web pages"], "answer": 1, "difficulty": "Easy"},
+                
+                # MEDIUM
+                {"question": "What is the difference between UDP and TCP?", "options": ["UDP is connection-oriented and reliable; TCP is connectionless and fast", "TCP is connection-oriented and reliable; UDP is connectionless and fast", "They are identical", "UDP is used for web browsing"], "answer": 1, "difficulty": "Medium"},
+                {"question": "What is DHCP used for?", "options": ["Encryption", "Automatic IP address assignment", "Domain management", "Packet filtering"], "answer": 1, "difficulty": "Medium"},
+                {"question": "Explain the purpose of a firewall:", "options": ["To speed up networks", "To filter and control traffic based on security rules", "To increase bandwidth", "To replace routers"], "answer": 1, "difficulty": "Medium"},
+                
+                # HARD
+                {"question": "What is the main purpose of the TCP window size in congestion control?", "options": ["To display network graphs", "To control how much data can be in flight before acknowledgment is needed", "To encrypt packets", "To route packets"], "answer": 1, "difficulty": "Hard"},
+                {"question": "In BGP (Border Gateway Protocol), what is an AS (Autonomous System)?", "options": ["A single server", "A collection of IP networks under common administration following a single routing policy", "A type of firewall", "An encryption algorithm"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is the difference between a stateless and stateful firewall?", "options": ["Stateless is more secure", "Stateless filters packets independently; stateful tracks connection states and context", "They are the same", "Stateful is only for routers"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain the concept of subnetting and CIDR notation:", "options": ["A way to encrypt networks", "A method to divide networks into smaller subnets using prefix notation", "A type of firewall", "Only for IPv6"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is the difference between NAT and PAT in networking?", "options": ["They are the same", "NAT maps IPs; PAT (Port Address Translation) maps IPs and ports for multiple internal hosts to share one external IP", "PAT is faster", "NAT is only for IPv4"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain the three-way handshake in TCP connection establishment:", "options": ["Not necessary for TCP", "SYN -> SYN-ACK -> ACK; establishes connection, exchange of sequence numbers", "Only used in UDP", "Happens automatically without packets"], "answer": 1, "difficulty": "Hard"},
+            ],
+            
+            "Data Scientist": [
+                # EASY
+                {"question": "What is the purpose of train/test split in machine learning?", "options": ["To save storage", "To evaluate model performance on unseen data", "To increase model speed", "To reduce data collection costs"], "answer": 1, "difficulty": "Easy"},
+                {"question": "What does 'overfitting' mean?", "options": ["Model is too small", "Model performs well on training data but poorly on test data", "Model is very fast", "Model has too few parameters"], "answer": 1, "difficulty": "Easy"},
+                {"question": "What is supervised learning?", "options": ["Learning without labels", "Learning from labeled data to predict outputs", "Learning without a teacher", "Learning only from images"], "answer": 1, "difficulty": "Easy"},
+                
+                # MEDIUM
+                {"question": "Explain the purpose of feature scaling/normalization:", "options": ["To make data smaller", "To bring features to similar scale, improving model performance and training speed", "To remove outliers", "To reduce dimensionality"], "answer": 1, "difficulty": "Medium"},
+                {"question": "What is cross-validation and why is it important?", "options": ["Validating multiple models", "Dividing data into k folds to get robust performance estimate", "Testing on all data", "Only for deep learning"], "answer": 1, "difficulty": "Medium"},
+                {"question": "What is the difference between precision and recall?", "options": ["They are the same", "Precision: correct positives/predicted positives; Recall: correct positives/actual positives", "Recall is always higher", "Precision is only for regression"], "answer": 1, "difficulty": "Medium"},
+                
+                # HARD
+                {"question": "What is the difference between bagging and boosting in ensemble methods?", "options": ["Bagging is faster; boosting is more accurate", "Bagging uses parallel training; boosting trains sequentially on misclassified samples", "They produce identical results", "Boosting can only be used for regression"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain the vanishing gradient problem in deep neural networks:", "options": ["Learning rate too high", "Gradients become exponentially small during backpropagation, preventing weight updates in early layers", "Loss function is missing", "No gradients exist"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is the purpose of batch normalization in neural networks?", "options": ["To make model smaller", "To normalize layer inputs per batch, reducing internal covariate shift and allowing higher learning rates", "To reduce parameters", "To encrypt data"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain the difference between L1 and L2 regularization:", "options": ["They are the same", "L1 (Lasso) uses absolute values for feature selection; L2 (Ridge) uses squared values for weight shrinkage", "L1 is slower", "L2 cannot handle sparse data"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is a ROC curve and what does AUC represent?", "options": ["Chart of costs", "Curve plotting True Positive Rate vs False Positive Rate; AUC measures overall classification performance", "Only for regression", "Used only in clustering"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain the difference between parametric and non-parametric models:", "options": ["Parametric is faster", "Parametric assumes fixed structure; non-parametric is flexible and data-driven", "They require same data size", "Non-parametric cannot make predictions"], "answer": 1, "difficulty": "Hard"},
+            ],
+            
+            "Database Engineer": [
+                # EASY
+                {"question": "What does ACID stand for in databases?", "options": ["Atomicity, Consistency, Isolation, Durability", "Assessment, Configuration, Integration, Data", "Automatic, Control, Input, Database", "Analysis, Compression, Indexing, Distribution"], "answer": 0, "difficulty": "Easy"},
+                {"question": "What is a primary key?", "options": ["A key that opens the database", "A unique identifier for each row in a table", "The most important column", "A type of password"], "answer": 1, "difficulty": "Easy"},
+                {"question": "What is the purpose of a foreign key?", "options": ["To encrypt data", "To establish relationships between tables", "To store large files", "To speed up queries"], "answer": 1, "difficulty": "Easy"},
+                
+                # MEDIUM
+                {"question": "Explain normalization in database design:", "options": ["Making data alphabetical", "Organizing data to minimize redundancy and improve data integrity", "Removing all columns", "Making all columns the same size"], "answer": 1, "difficulty": "Medium"},
+                {"question": "What is the difference between INNER JOIN and LEFT JOIN?", "options": ["INNER JOIN includes unmatched rows; LEFT JOIN only matched", "INNER JOIN only matched rows; LEFT JOIN includes all left table rows plus matches", "They are identical", "LEFT JOIN is always faster"], "answer": 1, "difficulty": "Medium"},
+                {"question": "What is denormalization and when is it used?", "options": ["Removing a database", "Intentionally introducing redundancy for performance; used when read performance is critical", "Only for small databases", "Makes queries slower"], "answer": 1, "difficulty": "Medium"},
+                
+                # HARD
+                {"question": "What is the difference between a clustered and non-clustered index?", "options": ["Clustered is faster; non-clustered is slower", "Clustered determines physical row order (one per table); non-clustered is separate structure (multiple allowed)", "They are identical", "Non-clustered can only be on strings"], "answer": 1, "difficulty": "Hard"},
+                {"question": "In NoSQL databases, what is eventual consistency?", "options": ["Database is always consistent", "After write, reads may return stale data but will eventually reflect the write", "NoSQL has no consistency", "All nodes update simultaneously"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain the CAP theorem in distributed databases:", "options": ["It has no relevance", "Only Consistency, Availability, OR Partition tolerance can be guaranteed simultaneously; choose two", "All three can be achieved", "Only for relational databases"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is a write-heavy vs read-heavy database optimization trade-off?", "options": ["No trade-off exists", "Write-heavy prioritizes insert/update speed; read-heavy uses indexing and denormalization for fast queries", "Write-heavy is always better", "Only applies to SQL databases"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain sharding and when it is used:", "options": ["A type of password", "Horizontal partitioning of data across multiple servers; used when data is too large for single server", "Deleting old data", "Compressing database files"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is the difference between pessimistic and optimistic locking?", "options": ["They are the same", "Pessimistic locks before access; optimistic assumes no conflict and checks at commit; optimistic better for low contention", "Pessimistic is always better", "Only for specific databases"], "answer": 1, "difficulty": "Hard"},
+            ]
         }
-    # For brevity in this merged answer, we assume the full list is present.
-    # In practice, copy the exact `all_questions` dictionary from one of the versions.
+
     return all_questions.get(domain, all_questions["Software Engineer"])
 
+# ── In-memory Candidate Profile store ────────────────────────────────────────
+# Keyed by session: stores the full Candidate Profile generated by the
+# deterministic Resume Intelligence Engine (post-cutover; no Gemini call)
+# so downstream modules (discussion, interview) never need to re-parse the
+# resume.
+_candidate_profiles = {}   # session_id -> Candidate Profile dict
 
-# Endpoint from first version – maintained for backward compatibility
-@app.route("/api/get-domain-quiz", methods=["POST"])
-def get_domain_quiz():
+
+@app.route("/api/classify-resume", methods=["POST"])
+def classify_resume():
     """
-    Generate Resume Discussion questions from the Candidate Profile.
-    If no profile is available, falls back to hardcoded MCQs.
+    Parse an uploaded resume with the deterministic Resume Intelligence
+    Engine (Milestones 0-7) -- no LLM/API call, no GEMINI_API_KEY required
+    for this route. The generated Candidate Profile is stored in memory
+    for the lifetime of the session so that dashboard, discussion, and
+    interview modules consume it directly without re-parsing.
+
+    Post-cutover: this is the ONLY resume-parsing path in production.
+    Gemini-based parsing (`candidate_profile_generator.generate_candidate_
+    profile`) still exists in that module for Shadow Mode's own use
+    (`resume_engine/devtools/`, dev-only, never imported from here) but is
+    no longer reachable from any real user request.
+
+    Returns the profile in the exact format the frontend already expects.
     """
+    import tempfile
+    import uuid
+
+    from resume_engine.extractor import ExtractionFailure
+
     try:
-        data = request.get_json() or {}
-        session_id = data.get("session_id", "")
-        domain = data.get("domain", "Software Engineer")
+        if "file" not in request.files:
+            return jsonify({"error": "No file provided"}), 400
 
-        profile = _candidate_profiles.get(session_id) if session_id else None
+        file = request.files["file"]
+        if file.filename == "":
+            return jsonify({"error": "No file selected"}), 400
 
-        if profile:
-            questions = _generate_resume_discussion_questions(profile)
+        # Validate extension
+        ext = os.path.splitext(file.filename)[1].lower()
+
+        from candidate_profile_generator import engine_supports_format
+
+        if not engine_supports_format(ext):
             return jsonify({
-                "status": "success",
-                "mode": "resume_discussion",
-                "domain": domain,
-                "total_questions": len(questions),
-                "quiz": questions,   # key matches first version
-            }), 200
+                "error": f"Unsupported file format '{ext}'. Please upload a PDF, DOCX, or TXT resume."
+            }), 400
 
-        fallback = _hardcoded_quiz(domain)
-        return jsonify({
-            "status": "success",
-            "mode": "quiz",
-            "domain": domain,
-            "total_questions": len(fallback),
-            "quiz": fallback,
-        }), 200
+        # Save to a temp file so the engine's extractor can read it from disk
+        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+            file.save(tmp.name)
+            tmp_path = tmp.name
 
-    except Exception as e:
-        logger.error(f"Error: {e}")
+        try:
+            from candidate_profile_generator import (
+                generate_candidate_profile_via_engine,
+                profile_to_frontend_format,
+            )
+
+            # The engine does its own extraction internally -- no separate
+            # text-extraction step needed.
+            profile = generate_candidate_profile_via_engine(tmp_path)
+
+            # Store in memory (keyed by a generated session ID)
+            session_id = f"profile_{uuid.uuid4().hex[:12]}"
+            _candidate_profiles[session_id] = profile
+
+            # Convert to frontend format and attach session_id
+            result = profile_to_frontend_format(profile)
+            result["session_id"] = session_id
+
+            logger.info(
+                "Candidate profile generated for session %s: domain=%s",
+                session_id,
+                result.get("predicted_domain"),
+            )
+            return jsonify(result), 200
+
+        finally:
+            # Clean up temp file
+            try:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+            except Exception as e:
+                logger.warning(f"Failed to cleanup temp file: {e}")
+
+    except ExtractionFailure as e:
+        # Corrupt/scanned/password-protected/unreadable file -- a client
+        # error (bad input), not a server error.
+        logger.warning("Resume extraction failed: %s", e)
         return jsonify({"error": str(e)}), 400
 
-
-# Endpoint from second version – kept with its original name and response key
-@app.route("/api/get-resume-discussion", methods=["POST"])
-def get_resume_discussion():
-    """Same as above, but returns 'questions' key (for newer frontends)."""
-    try:
-        data = request.get_json() or {}
-        session_id = data.get("session_id", "")
-        domain = data.get("domain", "Software Engineer")
-
-        profile = _candidate_profiles.get(session_id) if session_id else None
-
-        if profile:
-            questions = _generate_resume_discussion_questions(profile)
-            return jsonify({
-                "status": "success",
-                "mode": "resume_discussion",
-                "domain": domain,
-                "total_questions": len(questions),
-                "questions": questions,   # key matches second version
-            }), 200
-
-        fallback = _hardcoded_quiz(domain)
-        return jsonify({
-            "status": "success",
-            "mode": "fallback",
-            "domain": domain,
-            "total_questions": len(fallback),
-            "questions": fallback,
-        }), 200
-
     except Exception as e:
-        logger.error(f"Error: {e}")
-        return jsonify({"error": str(e)}), 400
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# RESUME DISCUSSION — CONVERSATION ENGINE (v1, legacy)
-# ═══════════════════════════════════════════════════════════════════════════
-
-@app.route("/api/resume-discussion/start", methods=["POST"])
-def resume_discussion_start():
-    """Start a conversational Resume Discussion session (v1)."""
-    try:
-        data = request.get_json() or {}
-        profile_session_id = data.get("session_id", "")
-        profile = _candidate_profiles.get(profile_session_id)
-        if not profile:
-            return jsonify({"error": "Candidate Profile not found. Upload a resume first."}), 404
-
-        result, status = discussion_engine.start_session(profile, profile_session_id)
-        return jsonify(result), status
-
-    except Exception as e:
-        logger.error(f"Resume discussion start error: {e}", exc_info=True)
+        logger.error(f"Resume classification error: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/api/resume-discussion/reply", methods=["POST"])
-def resume_discussion_reply():
-    """Submit an answer and receive evaluation + next question (v1)."""
-    try:
-        data = request.get_json() or {}
-        disc_session_id = data.get("session_id", "")
-        answer = data.get("answer", "").strip()
-        result, status = discussion_engine.reply(disc_session_id, answer)
-        return jsonify(result), status
-
-    except Exception as e:
-        logger.error(f"Resume discussion reply error: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/api/resume-discussion/end", methods=["POST"])
-def resume_discussion_end():
-    """End a Resume Discussion session and return the summary (v1)."""
-    try:
-        data = request.get_json() or {}
-        disc_session_id = data.get("session_id", "")
-        result, status = discussion_engine.end_session(disc_session_id)
-        return jsonify(result), status
-
-    except Exception as e:
-        logger.error(f"Resume discussion end error: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
+@app.route("/api/candidate-profile/<session_id>", methods=["GET"])
+def get_candidate_profile(session_id):
+    """
+    Retrieve a stored Candidate Profile by session ID.
+    Downstream modules use this instead of re-parsing the resume.
+    """
+    profile = _candidate_profiles.get(session_id)
+    if not profile:
+        return jsonify({"error": "Profile not found or session expired"}), 404
+    return jsonify(profile), 200
 
 # ═══════════════════════════════════════════════════════════════════════════
-# RESUME DISCUSSION — CONVERSATION ENGINE (v2, Phase 2+3)
+# API ENDPOINTS FOR UI
 # ═══════════════════════════════════════════════════════════════════════════
 
-@app.route("/api/resume-discussion-v2/start", methods=["POST"])
-def resume_discussion_v2_start():
-    """Start a Phase 2 Conversation Engine session."""
-    try:
-        data = request.get_json() or {}
-        profile_session_id = data.get("session_id", "")
-        profile = _candidate_profiles.get(profile_session_id)
-        if not profile:
-            return jsonify({"error": "Candidate Profile not found. Upload a resume first."}), 404
-
-        result, status = conversation_engine.start_conversation(profile)
-        return jsonify(result), status
-
-    except Exception as e:
-        logger.error(f"Resume discussion v2 start error: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/api/resume-discussion-v2/reply", methods=["POST"])
-def resume_discussion_v2_reply():
-    """Submit an answer and receive evaluation + next question (v2)."""
-    try:
-        data = request.get_json() or {}
-        conversation_id = data.get("session_id", "")
-        answer = data.get("answer", "").strip()
-        result, status = conversation_engine.advance_conversation(conversation_id, answer)
-        return jsonify(result), status
-
-    except Exception as e:
-        logger.error(f"Resume discussion v2 reply error: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/api/resume-discussion-v2/end", methods=["POST"])
-def resume_discussion_v2_end():
-    """End a conversation and return its summary (v2)."""
-    try:
-        data = request.get_json() or {}
-        conversation_id = data.get("session_id", "")
-        result, status = conversation_engine.end_conversation(conversation_id)
-        return jsonify(result), status
-
-    except Exception as e:
-        logger.error(f"Resume discussion v2 end error: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# STANDARD QUESTION / EVALUATION ENDPOINTS (from both versions)
-# ═══════════════════════════════════════════════════════════════════════════
-
+# Sample data for testing
 SAMPLE_QUESTIONS = [
     {
         "sample_id": 1,
@@ -521,30 +486,47 @@ SAMPLE_QUESTIONS = [
         "difficulty": "medium",
         "fill_mask": {"question": "What is the first packet sent in TCP handshake?", "answer": "SYN"}
     },
-    # ... (full list from both versions – same content)
+    {
+        "sample_id": 2,
+        "question": "What is the purpose of DNS?",
+        "reference_answer": "DNS (Domain Name System) translates domain names into IP addresses. It allows users to access websites using human-readable names instead of IP addresses.",
+        "topic": "DNS",
+        "difficulty": "easy",
+        "fill_mask": {"question": "DNS translates ___ into IP addresses", "answer": "domain names"}
+    },
+    {
+        "sample_id": 3,
+        "question": "Explain IP routing and how packets are forwarded.",
+        "reference_answer": "IP routing is the process of forwarding packets from one network to another based on IP addresses. Routers use routing tables to determine the next hop for each packet.",
+        "topic": "IP Routing",
+        "difficulty": "hard",
+        "fill_mask": {"question": "Routers use ___ to determine packet routing", "answer": "routing tables"}
+    },
+    {
+        "sample_id": 4,
+        "question": "What is UDP and how is it different from TCP?",
+        "reference_answer": "UDP (User Datagram Protocol) is a connectionless protocol that does not establish a connection before sending data. Unlike TCP, UDP is faster but less reliable.",
+        "topic": "UDP",
+        "difficulty": "medium",
+        "fill_mask": {"question": "UDP is a ___ protocol", "answer": "connectionless"}
+    },
+    {
+        "sample_id": 5,
+        "question": "Explain the concept of network congestion control.",
+        "reference_answer": "Congestion control is a mechanism that prevents network overload by regulating the rate at which data is sent. TCP uses algorithms like Reno and Cubic for congestion control.",
+        "topic": "Congestion Control",
+        "difficulty": "hard",
+        "fill_mask": {"question": "TCP uses ___ algorithm for congestion control", "answer": "Reno"}
+    }
 ]
-
-def _make_fill_mask(reference_answer):
-    """Create a fill-in-the-blank question from a reference answer."""
-    words = re.findall(r"[A-Za-z\-]+", reference_answer)
-    technical = [w for w in words if len(w) > 5 and w.lower() not in
-                 {"system", "network", "process", "protocol", "processes", "between", "before", "establish", "connection", "mechanism", "through", "different", "without", "requests", "response"}]
-    if not technical:
-        technical = [w for w in words if len(w) > 5]
-    if not technical:
-        technical = words[-2:] if len(words) >= 2 else [words[0]] if words else ["this"]
-
-    key_term = technical[0]
-    first_sentence = re.split(r"[.!?]", reference_answer)[0]
-    blanked = first_sentence.replace(key_term, "___", 1)
-    if blanked == first_sentence:
-        blanked = f"Complete: ... {key_term} ..."
-    return {"question": blanked, "answer": key_term}
-
 
 @app.route("/api/next_question", methods=["POST"])
 def next_question():
-    """Get next question for interview – RAG first, fallback to hardcoded."""
+    """
+    Get next question for the interview.
+    Tries RAG open-ended questions first (if available), falls back to hardcoded.
+    Request: {"asked_ids": [], "difficulty": "medium", "topic": "All"}
+    """
     global _rag_question_counter
 
     try:
@@ -553,7 +535,7 @@ def next_question():
         target_difficulty = data.get("difficulty", "medium")
         target_topic = data.get("topic", "All")
 
-        # Seed RAG pool if available
+        # ── Seed RAG question pool on first call (if available) ───────────
         if _rag_available and not _rag_question_pool:
             try:
                 _rag_question_counter = 0
@@ -561,6 +543,7 @@ def next_question():
                     rags = _rag_gen.generate_open_questions("cn_unit1", topic, num_questions=2)
                     for r in rags:
                         _rag_question_counter += 1
+                        # Build a fill_mask from the reference_answer
                         fill_mask = _make_fill_mask(r.get("reference_answer", ""))
                         _rag_question_pool.append({
                             "sample_id": 1000 + _rag_question_counter,
@@ -575,7 +558,7 @@ def next_question():
             except Exception as e:
                 logger.warning(f"RAG pool seeding failed: {e}")
 
-        # Try RAG questions first
+        # ── Try RAG questions first ───────────────────────────────────────
         if _rag_question_pool:
             available_rag = [
                 q for q in _rag_question_pool
@@ -585,6 +568,7 @@ def next_question():
                 and (target_topic == "All" or target_topic in q.get("topic", ""))
             ]
             if not available_rag:
+                # Relax difficulty/topic filter, just avoid already-asked
                 available_rag = [
                     q for q in _rag_question_pool
                     if q["sample_id"] not in _asked_rag_ids
@@ -596,7 +580,7 @@ def next_question():
                 _asked_rag_ids.add(chosen["sample_id"])
                 return jsonify({"status": "success", "data": chosen}), 200
 
-        # Fallback to hardcoded questions
+        # ── Fallback: hardcoded questions ─────────────────────────────────
         available = [
             q for q in SAMPLE_QUESTIONS
             if q["sample_id"] not in asked_ids
@@ -617,11 +601,35 @@ def next_question():
         return jsonify({"error": str(e)}), 400
 
 
+def _make_fill_mask(reference_answer):
+    """
+    Create a fill-in-the-blank question from a reference answer.
+    Picks the longest meaningful word (>5 chars) and blanks it out.
+    """
+    import re as _re
+    words = _re.findall(r"[A-Za-z\-]+", reference_answer)
+    technical = [w for w in words if len(w) > 5 and w.lower() not in
+                 {"system", "network", "process", "protocol", "processes", "between", "before", "establish", "connection", "mechanism", "through", "different", "without", "requests", "response"}]
+    if not technical:
+        technical = [w for w in words if len(w) > 5]
+    if not technical:
+        technical = words[-2:] if len(words) >= 2 else [words[0]] if words else ["this"]
+
+    key_term = technical[0]
+    # Blank it out in the first sentence
+    first_sentence = _re.split(r"[.!?]", reference_answer)[0]
+    blanked = first_sentence.replace(key_term, "___", 1)
+    if blanked == first_sentence:
+        # If word not in first sentence, prepend a prompt
+        blanked = f"Complete: ... {key_term} ..."
+
+    return {"question": blanked, "answer": key_term}
+
 @app.route("/api/evaluate", methods=["POST"])
 def evaluate():
     """
-    Evaluate user's answer with strict gibberish detection and lenient matching.
-    (Combined logic from both versions – same implementation.)
+    Evaluate user's answer with STRICT gibberish detection and LENIENT proper answers
+    Request: {"user_answer": "...", "reference_answer": "...", "question": "...", "user_fill_mask": "...", "reference_fill_mask": "...", "fill_question": "..."}
     """
     try:
         data = request.get_json() or {}
@@ -631,53 +639,85 @@ def evaluate():
         user_fill = data.get("user_fill_mask", "").strip().lower()
         ref_fill = data.get("reference_fill_mask", "").strip().lower()
 
+        # ═══════════════════════════════════════════════════════════════
+        # MAIN ANSWER EVALUATION (STRICT with gibberish, LENIENT with correct)
+        # ═══════════════════════════════════════════════════════════════
+        
         def is_gibberish(text):
+            """Detect if answer is gibberish/nonsense"""
             import re
+
             if len(text) < 5:
                 return True
+
             gibberish_patterns = [
-                "routing packet", "xxxx", "asdf", "qwerty", "zzzzz",
+                "routing packet",  # Wrong answer for TCP handshake
+                "xxxx", "asdf", "qwerty", "zzzzz",  # keyboard gibberish
                 "blah", "bla bla", "idk", "dunno", "no idea",
                 "random", "whatever", "test", "hello world",
             ]
+
+            # Whole-word/whole-phrase match only, so legitimate technical
+            # answers containing these as substrings of a longer word
+            # (e.g. "test suite", "randomized", "whatever alternative")
+            # aren't misflagged -- \b anchors each pattern to word
+            # boundaries rather than matching anywhere in the string.
             for pattern in gibberish_patterns:
                 if re.search(r"\b" + re.escape(pattern) + r"\b", text):
                     return True
+
+            # Check if answer has too many random/unrelated words
             if any(re.search(r"\b" + re.escape(word) + r"\b", text) for word in ["lol", "haha", "wtf", "omg"]):
                 return True
+
             return False
-
+        
         def extract_key_concepts(answer_text):
-            return set(answer_text.split())
-
+            """Extract important technical terms from answer"""
+            words = set(answer_text.split())
+            return words
+        
         def semantic_score(user_text, ref_text, question_text):
+            """Calculate semantic relevance score"""
             user_concepts = extract_key_concepts(user_text)
             ref_concepts = extract_key_concepts(ref_text)
             question_concepts = extract_key_concepts(question_text)
-
+            
+            # Check overlap with reference answer
             ref_overlap = len(user_concepts & ref_concepts)
+            
+            # Check overlap with question (should mention related concepts)
             question_overlap = len(user_concepts & question_concepts)
+            
+            # Total unique meaningful words in user answer
             answer_quality = len(user_text.split())
-
+            
+            # Calculate base score
             if ref_overlap >= 3:
+                # Good overlap with reference - LENIENT
                 base_score = 0.85 + (ref_overlap * 0.05)
             elif ref_overlap == 2:
+                # Some overlap - MEDIUM
                 base_score = 0.70
             elif ref_overlap == 1:
+                # Minimal overlap
                 base_score = 0.50
             elif question_overlap >= 2 and answer_quality > 10:
+                # Related to question but not perfectly matching reference
                 base_score = 0.65
             else:
+                # No meaningful overlap - STRICT
                 base_score = 0.20
-
+            
+            # Adjust for answer length (proper answers are detailed)
             if answer_quality < 5:
-                base_score *= 0.6
+                base_score *= 0.6  # Too short
             elif answer_quality > 50:
-                base_score *= 1.05
-
+                base_score *= 1.05  # Detailed
+            
             return min(0.99, base_score)
-
-        # Main evaluation
+        
+        # Evaluate main answer
         if is_gibberish(user_answer):
             score = 0.0
             feedback = "❌ Gibberish answer detected. Please provide a meaningful technical response."
@@ -689,6 +729,7 @@ def evaluate():
             feedback = "⚠️ Answer too brief. Provide more technical detail."
         else:
             score = semantic_score(user_answer, ref_answer, question)
+            
             if score >= 0.85:
                 feedback = "✅ Excellent answer! Strong technical understanding demonstrated."
             elif score >= 0.70:
@@ -699,12 +740,18 @@ def evaluate():
                 feedback = "⚠️ Weak answer. The response shows minimal understanding of the concept."
             else:
                 feedback = "❌ Incorrect. Answer does not match expected technical response."
-
-        # Fill-in-the-blank evaluation
+        
+        # ═══════════════════════════════════════════════════════════════
+        # FILL-IN-THE-BLANK EVALUATION (Flexible with synonyms/variations)
+        # ═══════════════════════════════════════════════════════════════
+        
         def flexible_fill_match(user, reference):
+            """Flexible matching for fill-in-the-blank with synonyms"""
+            # Exact match
             if user.lower() == reference.lower():
                 return True, 1.0
-
+            
+            # Abbreviation/acronym matching
             acronym_map = {
                 "syn": "synchronize",
                 "ack": "acknowledge",
@@ -722,39 +769,55 @@ def evaluate():
                 "bgp": "border gateway protocol",
                 "ospf": "open shortest path first",
             }
-
+            
+            # Check if either is a key for the other
             for short, long in acronym_map.items():
                 if (user.lower() == short and reference.lower() == long) or \
                    (user.lower() == long and reference.lower() == short):
                     return True, 1.0
-
+            
+            # Partial match (contains reference)
             if reference.lower() in user.lower():
                 return True, 0.95
+            
             if user.lower() in reference.lower():
                 return True, 0.90
-
+            
+            # Word overlap
             user_words = set(user.lower().split())
             ref_words = set(reference.lower().split())
             if user_words == ref_words:
                 return True, 0.95
+            
+            # Key word match
             if len(user_words & ref_words) >= 2:
                 return True, 0.85
-
+            
             return False, 0.0
-
+        
         fill_correct, fill_score = flexible_fill_match(user_fill, ref_fill)
-
+        
         fill_feedback = ""
         if fill_correct:
-            fill_feedback = "✅ Perfect! Exact answer." if fill_score == 1.0 else "✓ Correct! (Accepted variation)"
+            if fill_score == 1.0:
+                fill_feedback = "✅ Perfect! Exact answer."
+            else:
+                fill_feedback = "✓ Correct! (Accepted variation)"
         else:
             fill_feedback = f"❌ Incorrect. Expected: '{ref_fill}' but got '{user_fill}'"
-
+        
+        # ═══════════════════════════════════════════════════════════════
+        # COMBINE SCORES
+        # ═══════════════════════════════════════════════════════════════
+        
+        # Main answer accounts for 70%, fill-in-the-blank for 30%
         combined_score = (score * 0.7) + (fill_score * 0.3)
         marks = round(combined_score * 10)
+        
+        # Adjust marks based on fill correctness
         if fill_correct and score >= 0.7:
-            marks = min(10, marks + 1)
-
+            marks = min(10, marks + 1)  # Bonus for both correct
+        
         return jsonify({
             "score": round(combined_score, 2),
             "marks": marks,
@@ -764,15 +827,18 @@ def evaluate():
             "main_score": round(score, 2),
             "fill_score": round(fill_score, 2),
         }), 200
-
+    
     except Exception as e:
         logger.error(f"Error: {e}")
         return jsonify({"error": str(e)}), 400
 
-
 @app.route("/roberta/classify", methods=["POST"])
 def roberta_classify():
-    """Classify a question using RoBERTa multitask model or rule-based fallback."""
+    """
+    Classify a question using the RoBERTa multitask model (or rule-based fallback).
+    Request: {"text": "What is deadlock?"}
+    Returns: {intent, difficulty, topics, confidence, source}
+    """
     try:
         data = request.get_json() or {}
         text = data.get("text", "").strip()
@@ -781,6 +847,7 @@ def roberta_classify():
             return jsonify({"error": "Text required"}), 400
 
         predictors = _get_roberta_predictors()
+
         if not predictors:
             return jsonify({"error": "RoBERTa inference pipeline not available"}), 503
 
@@ -788,8 +855,10 @@ def roberta_classify():
         difficulty_result = predictors["difficulty"](text)
         topic_result = predictors["topic"](text)
 
+        # Normalize: topic can be list or single label
         topics = topic_result.get("labels", [])
         if not topics and isinstance(topic_result.get("scores"), dict):
+            # Pick the top-scoring topic
             scores = topic_result["scores"]
             if scores:
                 topics = [max(scores, key=scores.get)]
@@ -810,10 +879,13 @@ def roberta_classify():
         logger.error(f"RoBERTa classify error: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
-
 @app.route("/adaptive/session", methods=["POST"])
 def adaptive_session():
-    """Start an adaptive interview session using RoBERTa adaptive engine."""
+    """
+    Start an adaptive interview session using the RoBERTa adaptive engine.
+    Request: {"user_id": "...", "num_questions": 5}
+    Returns: profile summary + first question
+    """
     try:
         data = request.get_json() or {}
         user_id = data.get("user_id", "guest")
@@ -835,10 +907,12 @@ def adaptive_session():
         profile = profile_manager.get_or_create_profile(user_id)
         selector = AdaptiveSelector(dataset)
 
+        # Pick first question
         question = selector.select_next_question(profile)
         if not question:
             return jsonify({"error": "No questions available"}), 500
 
+        # Store session state in-memory
         session_id = f"session_{user_id}_{int(time.time())}"
         _adaptive_sessions[session_id] = {
             "user_id": user_id,
@@ -877,10 +951,14 @@ def adaptive_session():
 
 @app.route("/adaptive/next", methods=["POST"])
 def adaptive_next():
-    """Get next question in an adaptive session."""
+    """
+    Get next question in an adaptive session.
+    Request: {"session_id": "..."}
+    """
     try:
         data = request.get_json() or {}
         session_id = data.get("session_id", "")
+
         session = _adaptive_sessions.get(session_id)
         if not session:
             return jsonify({"error": "Invalid or expired session"}), 404
@@ -911,7 +989,10 @@ def adaptive_next():
 
 @app.route("/adaptive/evaluate", methods=["POST"])
 def adaptive_evaluate():
-    """Evaluate user's answer in an adaptive session and update profile."""
+    """
+    Evaluate user's answer in an adaptive session and update profile.
+    Request: {"session_id": "...", "question_text": "...", "user_answer": "..."}
+    """
     try:
         data = request.get_json() or {}
         session_id = data.get("session_id", "")
@@ -926,26 +1007,32 @@ def adaptive_evaluate():
         if not predictors:
             return jsonify({"error": "RoBERTa inference pipeline not available"}), 503
 
+        # Classify the question
         q_intent = predictors["intent"](question_text)
         q_difficulty = predictors["difficulty"](question_text)
         q_topic_result = predictors["topic"](question_text)
         q_topics = q_topic_result.get("labels", ["General"])
 
+        # Evaluate answer using intent/topic overlap + length heuristics
         a_intent = predictors["intent"](user_answer)
         a_topic_result = predictors["topic"](user_answer)
         a_topics = a_topic_result.get("labels", [])
 
+        # Score components
         topic_overlap = len(set(q_topics) & set(a_topics))
         topic_score = min(1.0, topic_overlap / max(len(q_topics), 1))
+
         intent_match = 1.0 if a_intent.get("label") == q_intent.get("label") else 0.3
         comprehensiveness = min(1.0, len(user_answer.split()) / 30)
 
         score = round((topic_score * 0.5 + intent_match * 0.25 + comprehensiveness * 0.25) * 100, 1)
         is_correct = score >= 60
 
+        # Record in session
         session["asked"].append(question_text)
         session["scores"].append(score)
 
+        # Update profile
         profile = session["profile"]
         for topic in q_topics:
             profile.record_attempt(
@@ -956,6 +1043,7 @@ def adaptive_evaluate():
             )
         session["profile_manager"].save_profile(profile)
 
+        # Grade
         if score >= 85:
             grade = "excellent"
         elif score >= 65:
@@ -977,6 +1065,151 @@ def adaptive_evaluate():
 
     except Exception as e:
         logger.error(f"Adaptive evaluate error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+# ═══════════════════════════════════════════════════════════════════════════
+# RESUME DISCUSSION ENGINE (Conversational Interview)
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/resume-discussion/start", methods=["POST"])
+def resume_discussion_start():
+    """
+    Start a conversational Resume Discussion session.
+
+    Delegates to discussion_engine.start_session — see that module for the
+    Gemini-driven question decision + heuristic fallback logic.
+    """
+    try:
+        data = request.get_json() or {}
+        profile_session_id = data.get("session_id", "")
+
+        profile = _candidate_profiles.get(profile_session_id)
+        if not profile:
+            return jsonify({"error": "Candidate Profile not found. Upload a resume first."}), 404
+
+        result, status = discussion_engine.start_session(profile, profile_session_id)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion start error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/resume-discussion/reply", methods=["POST"])
+def resume_discussion_reply():
+    """
+    Submit an answer and receive evaluation + next question.
+
+    Delegates to discussion_engine.reply.
+    """
+    try:
+        data = request.get_json() or {}
+        disc_session_id = data.get("session_id", "")
+        answer = data.get("answer", "").strip()
+
+        result, status = discussion_engine.reply(disc_session_id, answer)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion reply error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/resume-discussion/end", methods=["POST"])
+def resume_discussion_end():
+    """
+    End a Resume Discussion session and return the full summary.
+
+    Delegates to discussion_engine.end_session.
+    """
+    try:
+        data = request.get_json() or {}
+        disc_session_id = data.get("session_id", "")
+
+        result, status = discussion_engine.end_session(disc_session_id)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion end error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# RESUME DISCUSSION — CONVERSATION ENGINE (Phase 2 planning/realization,
+# Phase 3 evaluation)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Additive, parallel entry points using the Phase 2 planning + realization
+# pipeline (Planner -> QuestionRealizer -> InterviewQuestion,
+# conversation_engine.py) instead of discussion_engine.py's legacy
+# dict-based phrasing. Deliberately versioned (/resume-discussion-v2/...)
+# and does not touch the existing /api/resume-discussion/* routes above —
+# those remain exactly as Phase 1.5 left them, still backed by
+# discussion_engine.py (via legacy_topic_pool_adapter.py) and its existing
+# evaluator/decision policy. As of Phase 3, this engine DOES evaluate every
+# answer -- conversation_engine.py resolves the process's active evaluator
+# once per session (evaluator_registry.get_active_evaluator(), the same
+# HybridEvaluator deployment_evaluator.bootstrap_production_evaluator()
+# registers at app startup) and appends each turn's EvaluationResult to the
+# session's Evaluation Ledger. Adaptive probing/skipping based on that
+# evaluation is still out of scope (the Adaptive Controller's job) --
+# every specification is still presented exactly once, in the Planner's
+# own deterministic order -- only the "no evaluator at all" characterization
+# is out of date.
+
+@app.route("/api/resume-discussion-v2/start", methods=["POST"])
+def resume_discussion_v2_start():
+    """Start a Phase 2 Conversation Engine session against a real,
+    previously-generated Candidate Profile (the same `_candidate_profiles`
+    store the v1 routes and the resume-upload flow already use)."""
+    try:
+        data = request.get_json() or {}
+        profile_session_id = data.get("session_id", "")
+
+        profile = _candidate_profiles.get(profile_session_id)
+        if not profile:
+            return jsonify({"error": "Candidate Profile not found. Upload a resume first."}), 404
+
+        result, status = conversation_engine.start_conversation(profile)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion v2 start error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/resume-discussion-v2/reply", methods=["POST"])
+def resume_discussion_v2_reply():
+    """Submit an answer and receive the next InterviewQuestion plus that
+    turn's evaluation (Phase 3) -- scoring exists; adaptive probing/
+    skipping based on the score does not (still out of scope)."""
+    try:
+        data = request.get_json() or {}
+        conversation_id = data.get("session_id", "")
+        answer = data.get("answer", "").strip()
+
+        result, status = conversation_engine.advance_conversation(conversation_id, answer)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion v2 reply error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/resume-discussion-v2/end", methods=["POST"])
+def resume_discussion_v2_end():
+    """End a conversation and return its summary: Phase 2's evaluation-free
+    ConversationMemory fields, plus (Phase 3) the full Evaluation Ledger as
+    a separate section -- see conversation_engine.end_conversation."""
+    try:
+        data = request.get_json() or {}
+        conversation_id = data.get("session_id", "")
+
+        result, status = conversation_engine.end_conversation(conversation_id)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion v2 end error: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 

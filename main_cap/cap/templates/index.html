@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Interview System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        /* --- (same styles as before) --- */
         :root {
+            /* Pure black and ultra-dark grays for that sleek look */
             --bg-base: #000000;
             --bg-elevated: #0a0a0a;
             --bot-bubble: rgba(20, 20, 20, 0.8);
@@ -30,8 +30,29 @@
             --lime-dim: rgba(200, 255, 94, 0.14);
             --lime-border: rgba(200, 255, 94, 0.4);
         }
-        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; }
-        .toast { padding: 14px 20px; border-radius: 10px; font-size: 0.9rem; font-weight: 500; color: #fff; background: var(--bg-elevated); border: 1px solid var(--border-subtle); box-shadow: 0 8px 32px rgba(0,0,0,0.4); animation: toastIn 0.3s ease forwards; max-width: 360px; }
+
+        /* --- TOAST NOTIFICATIONS --- */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #fff;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            animation: toastIn 0.3s ease forwards;
+            max-width: 360px;
+        }
         .toast.toast-success { border-left: 3px solid #10b981; }
         .toast.toast-error { border-left: 3px solid #ef4444; }
         .toast.toast-info { border-left: 3px solid #3b82f6; }
@@ -39,53 +60,452 @@
         @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
 
-        body { 
-            font-family: 'Inter', sans-serif; 
-            margin: 0; 
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
             height: 100vh;
             color: var(--text-main);
             background-color: var(--bg-base);
+            /* Subtle top-down glow so it's not totally flat */
             background-image: radial-gradient(circle at 50% -20%, rgba(29, 78, 216, 0.15), transparent 50%);
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
+        /* Every other screen is its own fixed-viewport region with an
+           internal overflow-y:auto scroller (see #landing-container,
+           #dashboard-container, #rd-report-container). Resume Discussion's
+           content (chapter rail + stage + Discussion Archive) has no such
+           fixed-height chrome to scroll within, and the Archive can grow
+           arbitrarily long -- so instead of trapping it in a bounded inner
+           box, the document itself is allowed to grow while this screen is
+           active. Scoped to a class, toggled only while #rd-container is
+           visible, so no other screen's fixed-viewport behavior changes. */
+        body.rd-scroll-mode {
+            height: auto;
+            min-height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        body.rd-scroll-mode::-webkit-scrollbar { display: none; }
 
-        /* --- LANDING PAGE --- */
+        /* ═══════════════════════════════════════════════════════════
+           LANDING — "Interview Operating System"
+           One continuous scene (idle → recognised → building → ready).
+           Graphite/charcoal neutrals throughout; lime (--lime) is used
+           ONLY as a status signal (active state, focus, progress,
+           scanning) — never as a fill or decorative color.
+           ═══════════════════════════════════════════════════════════ */
         #landing-container {
             width: 100%;
-            max-width: 500px;
-            margin: auto; /* Centers it perfectly */
-            text-align: center;
+            max-height: 100vh;
+            margin: auto;
             transition: opacity 0.5s ease, transform 0.5s ease;
-            padding: 40px;
+            padding: 48px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+            z-index: 1;
+        }
+        #landing-container::-webkit-scrollbar { display: none; }
+
+        /* ═══════════════════════════════════════════════════════════
+           APP-WIDE ATMOSPHERE — lives at body level (see markup),
+           behind every screen (landing, dashboard, interview, report).
+           This is the single biggest fix for "feels like separate
+           websites stitched together": one persistent environment that
+           never resets when the active screen changes underneath it.
+           ═══════════════════════════════════════════════════════════ */
+        .app-bg, .app-grain, .app-beam, .app-glow {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .app-bg {
+            background:
+                radial-gradient(ellipse 1100px 700px at 50% -15%, rgba(255,255,255,0.05), transparent 60%),
+                radial-gradient(ellipse 900px 700px at 88% 105%, rgba(200,255,94,0.045), transparent 62%),
+                linear-gradient(180deg, var(--bg-base), #0d0d0e 55%, var(--bg-base));
+        }
+        .app-grain {
+            opacity: 0.05;
+            mix-blend-mode: overlay;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px 180px;
+        }
+        /* a single slow light sweep — a moment, not a loop you consciously notice */
+        .app-beam {
+            top: -20%; left: -10%; width: 160%; height: 380px;
+            background: linear-gradient(100deg, transparent 40%, rgba(255,255,255,0.04) 48%, rgba(255,255,255,0.065) 50%, rgba(255,255,255,0.04) 52%, transparent 60%);
+            transform: rotate(-8deg);
+            animation: beamSweep 18s var(--ease) infinite;
+        }
+        @keyframes beamSweep {
+            0% { transform: rotate(-8deg) translateY(-60px); opacity: 0; }
+            8% { opacity: 1; }
+            32% { transform: rotate(-8deg) translateY(140px); opacity: 0; }
+            100% { opacity: 0; }
+        }
+        /* cursor-following volumetric light — subtle, JS-driven (see script) */
+        .app-glow {
+            width: 700px; height: 700px; left: 0; top: 0;
+            margin-left: -350px; margin-top: -350px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 65%);
+            will-change: transform;
         }
 
-        .landing-title { 
-            font-size: 3rem; 
-            font-weight: 700; 
-            margin-bottom: 8px; 
-            letter-spacing: -1px;
-            color: #ffffff;
+        /* ambient system log — small, honest framing: an illustrative
+           sense of "something is always running", not a literal event
+           feed. Fixed, so it persists across screens like the rest of
+           the atmosphere. */
+        .system-log {
+            position: fixed; left: 24px; bottom: 22px; z-index: 5;
+            display: flex; align-items: center; gap: 8px;
+            font-family: 'Roboto Mono', monospace; font-size: 0.72rem;
+            color: var(--text-dim); letter-spacing: 0.02em;
+            pointer-events: none; max-width: 360px;
         }
-        
-        .landing-sub { color: var(--text-muted); margin-bottom: 40px; font-size: 1.1rem; font-weight: 300; }
+        .system-log .log-dot {
+            width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+            background: var(--lime); box-shadow: 0 0 6px rgba(200,255,94,0.7);
+            animation: breathe 2.4s ease-in-out infinite;
+        }
+        #system-log-text { transition: opacity 0.6s var(--ease-slow); }
+        #system-log-text.fade { opacity: 0; }
+        @media (max-width: 900px) { .system-log { display: none; } }
+
+        .landing-content { width: 100%; position: relative; z-index: 1; }
+
+        .capability-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+        .capability-chip {
+            font-size: 0.76rem; color: var(--text-muted); font-weight: 500;
+            padding: 7px 13px; border-radius: 100px;
+            border: 1px solid var(--border-subtle);
+            background: rgba(255,255,255,0.025);
+        }
+
+        .landing-grid {
+            width: 100%;
+            max-width: 1320px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        /* ---------- left: copy — typography carries the hierarchy ---------- */
+        .landing-copy { text-align: left; }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+            padding: 8px 16px 8px 12px;
+            border-radius: 100px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+            border: 1px solid var(--border-subtle);
+        }
+        .eyebrow-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--lime);
+            box-shadow: 0 0 8px rgba(200,255,94,0.8);
+            animation: breathe 2.4s ease-in-out infinite;
+        }
+        @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .hero-title {
+            font-family: 'Newsreader', Georgia, serif;
+            font-weight: 400;
+            font-size: clamp(2.4rem, 3.4vw, 3.6rem);
+            letter-spacing: -0.01em;
+            line-height: 1.12;
+            color: #ffffff;
+            margin: 0 0 22px;
+            max-width: 560px;
+            min-height: 1.12em;
+        }
+        #hero-title-text.type-caret::after {
+            content: ""; display: inline-block; width: 3px; height: 0.82em; margin-left: 3px;
+            background: rgba(255,255,255,0.75); vertical-align: -0.06em;
+            animation: caretBlink 0.9s steps(1) infinite;
+        }
+
+        .hero-subtitle {
+            font-size: 1.02rem;
+            font-weight: 400;
+            line-height: 1.65;
+            color: var(--text-muted);
+            max-width: 440px;
+            margin: 0 0 30px;
+        }
+
+        .trust-footnote { font-size: 0.78rem; color: var(--text-dim); }
+
+        /* ---------- right: the stage — vessel + real supporting information ---------- */
+        .landing-stage { position: relative; }
+
+        /* Two in-flow (never overlapping) tiles above the vessel. Each
+           communicates something true: the pipeline the resume is about
+           to enter, and the system's actual current state — not
+           decoration for its own sake. */
+        .stage-info-row { display: flex; gap: 14px; margin-bottom: 22px; }
+        .stage-tile {
+            flex: 1;
+            min-width: 0;
+            border-radius: 14px;
+            border: 1px solid var(--border-subtle);
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.008));
+            padding: 14px 16px;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 20px 40px -28px rgba(0,0,0,0.7);
+        }
+        .tile-label {
+            font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em;
+            color: var(--text-dim); margin-bottom: 10px; font-weight: 600;
+        }
+        .pipeline-steps { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+        .pipeline-step {
+            font-size: 0.72rem; font-weight: 500; color: var(--text-dim);
+            transition: color 0.4s var(--ease-slow);
+        }
+        .pipeline-step.done { color: var(--text-muted); }
+        .pipeline-step.active { color: var(--lime); }
+        .pipeline-sep { width: 10px; height: 1px; background: var(--border-subtle); flex-shrink: 0; }
+
+        .status-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem; }
+        .status-row + .status-row { margin-top: 8px; }
+        .status-key { color: var(--text-dim); }
+        .status-val { color: var(--text-muted); font-family: 'Roboto Mono', monospace; font-weight: 500; }
+        .status-val.online { color: var(--lime); display: inline-flex; align-items: center; gap: 6px; }
+        .status-val.online::before {
+            content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--lime);
+            box-shadow: 0 0 6px rgba(200,255,94,0.7); animation: breathe 2.4s ease-in-out infinite;
+        }
+
+        .vessel-wrap { position: relative; }
+
+        .ambient-graph {
+            position: absolute;
+            top: -56px; right: -30px; width: 260px; height: 200px;
+            opacity: 0.5; pointer-events: none; z-index: 0;
+        }
+        .ambient-graph circle.node { fill: var(--text-dim); }
+        .ambient-graph circle.node.active { fill: var(--lime); filter: drop-shadow(0 0 4px rgba(200,255,94,0.7)); }
+        .ambient-graph line { stroke: var(--border-subtle); stroke-width: 1; }
+        .ambient-graph line.active { stroke: rgba(200,255,94,0.3); }
+        .ambient-graph .drift-a { animation: driftA 14s ease-in-out infinite alternate; }
+        .ambient-graph .drift-b { animation: driftB 18s ease-in-out infinite alternate; }
+        @keyframes driftA { from { transform: translate(0,0); } to { transform: translate(8px, -10px); } }
+        @keyframes driftB { from { transform: translate(0,0); } to { transform: translate(-10px, 8px); } }
+        .node.pulse { animation: nodePulse 2.2s ease-in-out infinite; }
+        @keyframes nodePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .upload-input-hidden { display: none; }
+
+        /* ---------- the vessel: one element, four states, never swapped ---------- */
+        .vessel {
+            position: relative;
+            width: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.008)), var(--bg-elevated);
+            box-shadow:
+                0 1px 0 rgba(255,255,255,0.04) inset,
+                0 10px 24px -12px rgba(0,0,0,0.6),
+                0 36px 70px -30px rgba(0,0,0,0.75);
+            cursor: pointer;
+            height: 100px;
+            transition: height 0.9s var(--ease-slow), border-color 0.5s var(--ease-slow),
+                        box-shadow 0.7s var(--ease-slow), transform 0.4s var(--ease-slow);
+        }
+        .vessel:hover { transform: translateY(-1px); border-color: var(--border-hover); }
+        /* idle: nearly invisible, blends into the composition — a
+           docking station, not an upload box — until hovered/engaged */
+        .vessel.idle {
+            border-color: rgba(255,255,255,0.045);
+            background: rgba(255,255,255,0.012);
+            box-shadow: none;
+        }
+        .vessel.idle:hover {
+            border-color: var(--border-hover);
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.008)), var(--bg-elevated);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 10px 24px -12px rgba(0,0,0,0.6), 0 36px 70px -30px rgba(0,0,0,0.75);
+        }
+        .vessel.recognized, .vessel.building, .vessel.drag-over { border-color: var(--lime-border); box-shadow: 0 0 0 1px var(--lime-dim), 0 10px 24px -12px rgba(0,0,0,0.6), 0 36px 70px -30px rgba(0,0,0,0.75), 0 0 60px -22px rgba(200,255,94,0.16); }
+        .vessel.drag-over { transform: scale(1.006); }
+        .vessel.building { height: 244px; }
+        .vessel.ready { height: 140px; border-color: var(--lime-border); }
+
+        .vessel-scan {
+            position: absolute; left: 1px; right: 1px; top: -1px; height: 2px; border-radius: 2px;
+            background: linear-gradient(90deg, transparent, var(--lime), transparent);
+            opacity: 0; box-shadow: 0 0 12px rgba(200,255,94,0.6); pointer-events: none;
+        }
+        .vessel.building .vessel-scan { animation: scanDown 1.2s linear infinite; opacity: 1; }
+        @keyframes scanDown { from { top: -1px; } to { top: 100%; } }
+
+        .v-layer {
+            position: absolute; inset: 0; padding: 28px 30px;
+            display: flex; align-items: center; gap: 16px;
+            opacity: 0; pointer-events: none; transform: translateY(6px);
+            transition: opacity 0.45s var(--ease-slow), transform 0.45s var(--ease-slow);
+        }
+        .vessel.idle .v-idle,
+        .vessel.recognized .v-recognized,
+        .vessel.building .v-building,
+        .vessel.ready .v-ready { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+        .v-icon {
+            width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+            background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.4s var(--ease-slow);
+        }
+        .v-icon svg { width: 18px; height: 18px; stroke: var(--text-muted); transition: stroke 0.4s var(--ease-slow); }
+        .v-icon.on { background: var(--lime-dim); border-color: var(--lime-border); }
+        .v-icon.on svg { stroke: var(--lime); }
+
+        .v-text { text-align: left; flex-grow: 1; min-width: 0; }
+        .v-title { font-size: 0.98rem; font-weight: 500; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .v-sub { font-size: 0.82rem; color: var(--text-muted); margin-top: 2px; }
+        .v-action {
+            font-size: 0.78rem; color: var(--text-muted); font-weight: 600; flex-shrink: 0;
+            padding: 8px 14px; border-radius: 9px; border: 1px solid var(--border-subtle);
+            background: transparent; font-family: inherit; cursor: pointer;
+            transition: all 0.2s var(--ease);
+        }
+        .v-action:hover { color: var(--text-main); border-color: var(--border-hover); }
+
+        /* building layer: fields arrive as the system reads the document */
+        .v-building { flex-direction: column; align-items: stretch; justify-content: center; gap: 0; padding: 22px 26px; }
+        .build-status {
+            font-size: 0.8rem; color: var(--lime); font-family: 'Roboto Mono', monospace;
+            min-height: 20px; margin-bottom: 12px;
+        }
+        .build-status.type-caret::after {
+            content: ""; display: inline-block; width: 6px; height: 13px; margin-left: 2px;
+            background: var(--lime); vertical-align: -2px;
+            animation: caretBlink 0.9s steps(1) infinite;
+        }
+        @keyframes caretBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+        .build-row {
+            display: flex; align-items: center; justify-content: space-between; padding: 8px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            opacity: 0; transform: translateX(-6px);
+            transition: opacity 0.5s var(--ease-slow), transform 0.5s var(--ease-slow);
+        }
+        .build-row:last-child { border-bottom: none; }
+        .build-row.show { opacity: 1; transform: translateX(0); }
+        .build-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); }
+        .build-value { font-size: 0.86rem; color: var(--text-main); font-weight: 500; font-family: 'Roboto Mono', monospace; }
+
+        .v-ready { flex-direction: column; align-items: center; justify-content: center; gap: 5px; text-align: center; }
+        .ready-title { font-size: 1rem; font-weight: 500; color: var(--text-main); }
+        .ready-sub { font-size: 0.82rem; color: var(--text-muted); }
+
+        /* ---------- steps: neutral, except the one that's active ---------- */
+        .upload-steps { display: flex; align-items: center; gap: 10px; margin-top: 32px; flex-wrap: wrap; position: relative; z-index: 1; }
+        .upload-step { display: flex; align-items: center; gap: 8px; font-size: 0.79rem; color: var(--text-muted); font-weight: 500; }
+        .upload-step-num {
+            width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--border-subtle);
+            background: rgba(255,255,255,0.03);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.66rem; font-weight: 600; font-family: 'Roboto Mono', monospace; color: var(--text-muted);
+        }
+        .upload-step.active { color: var(--text-main); }
+        .upload-step.active .upload-step-num { border-color: var(--lime-border); background: var(--lime-dim); color: var(--lime); }
+        .upload-step-connector { width: 20px; height: 1px; background: var(--border-subtle); }
+
+        .btn-primary {
+            width: 100%; margin-top: 28px; padding: 16px; border-radius: 13px; cursor: pointer;
+            background: transparent; border: 1.5px solid var(--border-hover); color: var(--text-muted);
+            font-size: 1rem; font-weight: 600; font-family: inherit;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.4s var(--ease-slow); position: relative; z-index: 1;
+        }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-primary.ready-state { border-color: var(--lime-border); color: var(--text-main); box-shadow: 0 0 0 1px var(--lime-dim), 0 20px 50px -24px rgba(200,255,94,0.25); }
+        .btn-primary.ready-state:hover:not(:disabled) { background: var(--lime); color: #0a0a08; border-color: var(--lime); box-shadow: 0 8px 30px -8px rgba(200,255,94,0.5); transform: translateY(-1px); }
+        .btn-arrow { display: inline-block; transition: transform 0.2s var(--ease); }
+        .btn-primary.ready-state:hover:not(:disabled) .btn-arrow { transform: translateX(2px); }
+
+        @media (max-width: 980px) {
+            .landing-grid { grid-template-columns: 1fr; gap: 44px; }
+            .landing-copy { text-align: center; }
+            .hero-title, .hero-subtitle { margin-left: auto; margin-right: auto; }
+            .hero-eyebrow, .capability-row { margin-left: auto; margin-right: auto; justify-content: center; }
+            .ambient-graph { display: none; }
+        }
+        @media (max-width: 640px) {
+            #landing-container { padding: 28px 20px; }
+            .hero-title { font-size: 1.9rem; }
+            .hero-subtitle { font-size: 0.92rem; }
+            .stage-info-row { flex-direction: column; gap: 10px; }
+        }
 
         .form-group { text-align: left; margin-bottom: 24px; }
-        .form-group label { display: block; font-size: 0.75rem; color: #666; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; }
-        select { width: 100%; padding: 16px 20px; border-radius: 12px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); color: white; font-size: 1rem; outline: none; transition: all 0.3s ease; appearance: none; }
+        .form-group label { 
+            display: block; 
+            font-size: 0.75rem; 
+            color: #666; 
+            margin-bottom: 12px; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            font-weight: 600; 
+        }
+        
+        select {
+            width: 100%; 
+            padding: 16px 20px; 
+            border-radius: 12px; 
+            background: var(--bg-elevated); 
+            border: 1px solid var(--border-subtle); 
+            color: white; 
+            font-size: 1rem; 
+            outline: none; 
+            transition: all 0.3s ease;
+            appearance: none;
+        }
         select:focus { border-color: #555; }
         option { background: var(--bg-elevated); color: white; }
-        .start-btn { width: 100%; padding: 18px; margin-top: 20px; background: white; color: black; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        .start-btn {
+            width: 100%; 
+            padding: 18px; 
+            margin-top: 20px; 
+            background: white; 
+            color: black; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 1.1rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
         .start-btn:hover { transform: scale(1.02); background: #f0f0f0; box-shadow: 0 0 30px rgba(255,255,255,0.1); }
 
-        /* --- CANDIDATE ASSESSMENT DASHBOARD --- */
+        /* --- CANDIDATE ASSESSMENT DASHBOARD ---
+           Same operating system as the landing screen: transparent
+           background so the app-wide atmosphere shows through, serif
+           headline, glass cards with layered shadows, lime reserved
+           for the one "this is the headline stat" moment. */
         #candidate-dashboard {
             display: none;
             width: 100%;
             height: 92vh;
             overflow-y: auto;
-            background: var(--bg-base);
+            background: transparent;
             animation: dashFadeIn 0.6s ease forwards;
         }
         #candidate-dashboard::-webkit-scrollbar { display: none; }
@@ -95,14 +515,17 @@
             max-width: 1100px;
             margin: 0 auto;
             padding: 40px 32px 60px;
+            position: relative;
+            z-index: 1;
         }
 
         .dash-greeting {
-            font-size: 2rem;
-            font-weight: 700;
+            font-family: 'Newsreader', Georgia, serif;
+            font-weight: 400;
+            font-size: 2.2rem;
             color: #fff;
-            letter-spacing: -0.5px;
-            margin-bottom: 4px;
+            letter-spacing: -0.01em;
+            margin-bottom: 6px;
         }
         .dash-subtitle {
             font-size: 0.95rem;
@@ -118,10 +541,11 @@
             margin-bottom: 28px;
         }
         .dash-card {
-            background: var(--bg-elevated);
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.008)), var(--bg-elevated);
             border: 1px solid var(--border-subtle);
-            border-radius: 14px;
+            border-radius: 18px;
             padding: 24px;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 50px -30px rgba(0,0,0,0.7);
         }
         .dash-card-label {
             font-size: 0.7rem;
@@ -145,14 +569,29 @@
         }
 
         .dash-full { grid-column: 1 / -1; }
-        .dash-skills-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-        .skill-chip { padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 500; background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); color: #ddd; }
+
+        .dash-skills-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .skill-chip {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-subtle);
+            color: #ddd;
+        }
         .skill-chip.sk-lang { background: rgba(59,130,246,0.10); border-color: rgba(59,130,246,0.20); color: #93c5fd; }
         .skill-chip.sk-framework { background: rgba(16,185,129,0.10); border-color: rgba(16,185,129,0.20); color: #6ee7b7; }
         .skill-chip.sk-tool { background: rgba(245,158,11,0.10); border-color: rgba(245,158,11,0.20); color: #fcd34d; }
         .skill-chip.sk-db { background: rgba(168,85,247,0.10); border-color: rgba(168,85,247,0.20); color: #c4b5fd; }
         .skill-chip.sk-cloud { background: rgba(6,182,212,0.10); border-color: rgba(6,182,212,0.20); color: #67e8f9; }
         .skill-chip.sk-other { background: rgba(255,255,255,0.04); border-color: var(--border-subtle); color: #aaa; }
+        .skill-chip.sk-aiml { background: var(--lime-dim); border-color: var(--lime-border); color: var(--lime); }
 
         .dash-category-label {
             font-size: 0.65rem;
@@ -177,27 +616,178 @@
 
         .dash-start-btn {
             width: 100%;
-            padding: 18px;
+            padding: 17px;
             margin-top: 10px;
-            background: #fff;
-            color: #000;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.05rem;
+            background: transparent;
+            color: var(--text-main);
+            border: 1.5px solid var(--lime-border);
+            border-radius: 13px;
+            font-size: 1.02rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 0 1px var(--lime-dim), 0 20px 50px -24px rgba(200,255,94,0.2);
+            transition: all 0.3s var(--ease-slow);
         }
         .dash-start-btn:hover {
-            transform: scale(1.015);
-            box-shadow: 0 0 40px rgba(255,255,255,0.08);
-            background: #f0f0f0;
+            transform: translateY(-1px);
+            background: var(--lime);
+            color: #0a0a08;
+            box-shadow: 0 8px 30px -8px rgba(200,255,94,0.5);
         }
 
         @media (max-width: 700px) {
             .dash-grid { grid-template-columns: 1fr; }
             .dash-wrapper { padding: 24px 16px 40px; }
             .dash-greeting { font-size: 1.5rem; }
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           INTERVIEW BRIEFING (Candidate Dashboard v2)
+           Same visual language as the landing page — charcoal/graphite,
+           restrained lime, serif for the one big moment, glass panels,
+           staggered reveal. This screen answers "what did the AI learn
+           from this resume" — nothing here is a score, a percentage
+           beyond what the classifier genuinely returns, or a
+           performance claim. Those belong in the final report.
+           ═══════════════════════════════════════════════════════════ */
+        @keyframes riseIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+        .brief-header { margin-bottom: 6px; opacity: 0; animation: riseIn 0.7s var(--ease-slow) forwards; }
+        .brief-eyebrow-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+        .brief-eyebrow {
+            display: inline-flex; align-items: center; gap: 9px;
+            font-size: 0.7rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 8px 16px 8px 12px; border-radius: 100px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+            border: 1px solid var(--border-subtle);
+        }
+        .brief-pill {
+            font-size: 0.7rem; font-weight: 600; color: var(--lime);
+            padding: 7px 14px; border-radius: 100px;
+            border: 1px solid var(--lime-border); background: var(--lime-dim);
+            display: inline-flex; align-items: center; gap: 7px;
+        }
+        .brief-pill::before {
+            content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--lime);
+            box-shadow: 0 0 6px rgba(200,255,94,.7); animation: breathe 2.4s ease-in-out infinite;
+        }
+        .brief-name {
+            font-family: 'Newsreader', Georgia, serif; font-weight: 400;
+            font-size: clamp(1.7rem, 2.6vw, 2.2rem); letter-spacing: -0.01em;
+            color: #fff; margin: 0 0 6px;
+        }
+        .brief-subline { font-size: 0.88rem; color: var(--text-muted); font-family: 'Roboto Mono', monospace; margin-bottom: 10px; }
+        .brief-context { font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; max-width: 720px; }
+
+        /* Dense 3-column, 2-row workspace grid. Row 2's Experience
+           Timeline spans the first two tracks (it benefits most from
+           width) while Technical Stack takes the third — five cards
+           total now that Topics has merged into AI Interview Strategy. */
+        .brief-grid {
+            display: grid;
+            grid-template-columns: 0.8fr 1.3fr 0.8fr;
+            gap: 18px;
+            margin-top: 22px;
+        }
+        .brief-grid > .dash-card {
+            opacity: 0; transform: translateY(10px);
+            animation: riseIn 0.5s var(--ease-slow) forwards;
+            display: flex; flex-direction: column;
+            transition: transform 0.35s var(--ease-slow), border-color 0.35s var(--ease-slow), box-shadow 0.35s var(--ease-slow);
+        }
+        .brief-grid > .dash-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-hover);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 50px -30px rgba(0,0,0,0.7), 0 0 0 1px var(--lime-dim), 0 16px 40px -28px rgba(200,255,94,0.12);
+        }
+        .brief-grid > .dash-card:nth-child(1) { animation-delay: 0.1s; }
+        .brief-grid > .dash-card:nth-child(2) { animation-delay: 0.2s; }
+        .brief-grid > .dash-card:nth-child(3) { animation-delay: 0.3s; }
+        .brief-grid > .dash-card:nth-child(4) { animation-delay: 0.42s; grid-column: span 2; }
+        .brief-grid > .dash-card:nth-child(5) { animation-delay: 0.52s; }
+
+        .brief-panel-label { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); font-weight: 600; margin-bottom: 10px; }
+
+        /* candidate profile — compact definition list, not stacked cards */
+        .brief-dl { display: grid; grid-template-columns: auto 1fr; gap: 7px 16px; margin: 0; }
+        .brief-dl dt { font-size: 0.72rem; color: var(--text-dim); white-space: nowrap; }
+        .brief-dl dd { font-size: 0.84rem; color: var(--text-main); margin: 0; text-align: left; overflow-wrap: anywhere; }
+
+        /* AI summary — the visual centerpiece; wider column. Top-aligned
+           like every other card: label first, text grows downward. */
+        .brief-summary-text { font-size: 1.02rem; line-height: 1.62; color: var(--text-main); margin: 0; }
+        .brief-summary-text.type-caret::after {
+            content: ""; display: inline-block; width: 2px; height: 1em; margin-left: 2px;
+            background: rgba(255,255,255,0.7); vertical-align: -0.12em;
+            animation: caretBlink 0.9s steps(1) infinite;
+        }
+
+        .brief-strategy-text { font-size: 0.87rem; color: var(--text-muted); line-height: 1.55; margin: 0 0 14px; }
+        .brief-focus-label { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 8px; }
+
+        /* experience timeline — GitHub-repo-style cards, compact by
+           default, expand smoothly on click. No nested scrollbars. */
+        .brief-repo-card {
+            border: 1px solid var(--border-subtle); border-radius: 10px;
+            margin-bottom: 8px; background: rgba(255,255,255,0.015);
+            overflow: hidden;
+            transition: border-color 0.3s var(--ease-slow);
+        }
+        .brief-repo-card:last-child { margin-bottom: 0; }
+        .brief-repo-card:hover { border-color: var(--border-hover); }
+        .brief-repo-card.expanded { border-color: var(--lime-border); }
+        .brief-repo-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; cursor: pointer; }
+        .brief-repo-title { font-size: 0.85rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .brief-repo-head-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .brief-repo-category {
+            font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em;
+            color: var(--lime); border: 1px solid var(--lime-border); background: var(--lime-dim);
+            padding: 2px 8px; border-radius: 5px;
+        }
+        .brief-repo-chevron { color: var(--text-dim); font-size: 0.85rem; display: inline-block; transition: transform 0.3s var(--ease-slow), color 0.3s var(--ease-slow); }
+        .brief-repo-card.expanded .brief-repo-chevron { transform: rotate(90deg); color: var(--lime); }
+        .brief-repo-body { max-height: 0; overflow: hidden; transition: max-height 0.4s var(--ease-slow); }
+        .brief-repo-body-inner { padding: 0 12px 12px; }
+        .brief-repo-summary-full { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 8px; }
+        .brief-repo-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+        .brief-repo-chips .skill-chip { font-size: 0.66rem; padding: 3px 8px; }
+
+        .brief-topic-chip {
+            font-size: 0.76rem; padding: 5px 11px; border-radius: 8px;
+            border: 1px solid var(--lime-border); background: var(--lime-dim); color: var(--lime);
+            display: inline-block; margin: 0 6px 6px 0;
+        }
+
+        /* technical stack — a genuinely scrollable fixed-height panel.
+           Scrolling (wheel/trackpad/keyboard/touch) stays fully
+           functional; the scrollbar itself is hidden across all major
+           browsers. Persistent bottom fade signals there's more below. */
+        .brief-stack-body {
+            position: relative;
+            max-height: 220px;
+            overflow-y: auto;
+            -ms-overflow-style: none; /* IE/old Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+        .brief-stack-body::-webkit-scrollbar { /* Chrome, Edge, Safari */
+            width: 0;
+            height: 0;
+            display: none;
+        }
+        .brief-stack-body::after {
+            content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 30px;
+            background: linear-gradient(180deg, transparent, var(--bg-elevated)); pointer-events: none;
+        }
+
+        /* the entry point deeper into the workspace — appears only
+           once the briefing has fully rendered, never immediately */
+        .brief-cta-wrap { margin-top: 22px; opacity: 0; transform: translateY(10px); transition: opacity 0.7s var(--ease-slow), transform 0.7s var(--ease-slow); }
+        .brief-cta-wrap.show { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 980px) {
+            .brief-grid { grid-template-columns: 1fr; }
+            .brief-grid > .dash-card:nth-child(4) { grid-column: span 1; }
         }
 
         /* --- CHAT CONTAINER (FULL SCREEN LAYOUT) --- */
@@ -241,21 +831,42 @@
 
         .msg-wrapper { display: flex; gap: 16px; max-width: 85%; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
         .bot-wrapper { align-self: flex-start; }
         .user-wrapper { align-self: flex-end; flex-direction: row-reverse; }
-        .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; background: var(--bg-elevated); border: 1px solid var(--border-subtle); flex-shrink: 0; }
-        .msg { padding: 16px 20px; border-radius: 16px; line-height: 1.6; font-size: 0.95rem; font-weight: 400; }
+
+        .avatar { 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1rem; 
+            background: var(--bg-elevated); 
+            border: 1px solid var(--border-subtle); 
+            flex-shrink: 0; 
+        }
+        
+        .msg { 
+            padding: 16px 20px; 
+            border-radius: 16px; 
+            line-height: 1.6; 
+            font-size: 0.95rem; 
+            font-weight: 400;
+        }
+        
         .bot-msg { background: var(--bot-bubble); border: 1px solid var(--border-subtle); }
         .user-msg { background: var(--user-bubble); border: 1px solid var(--border-subtle); }
 
         /* THE NEW EVALUATION CARD WITH GLASSMORPHISM */
-        .eval-card { 
-            background: rgba(10, 10, 10, 0.6); 
+        .eval-card {
+            background: rgba(10, 10, 10, 0.6);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05); 
-            border-radius: 12px; 
-            padding: 20px; 
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
             margin-top: 12px; 
             transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); 
         }
@@ -275,7 +886,15 @@
         }
 
         .eval-header { display: flex; justify-content: space-between; margin-bottom: 16px; font-weight: 500; }
-        .badge { background: rgba(255,255,255,0.03); padding: 6px 14px; border-radius: 8px; font-size: 0.85rem; border: 1px solid var(--border-subtle); letter-spacing: 0.5px; }
+        .badge { 
+            background: rgba(255,255,255,0.03); 
+            padding: 6px 14px; 
+            border-radius: 8px; 
+            font-size: 0.85rem; 
+            border: 1px solid var(--border-subtle); 
+            letter-spacing: 0.5px;
+        }
+
         .typing-indicator { display: flex; gap: 6px; padding: 18px 24px; background: var(--bot-bubble); border-radius: 16px; width: fit-content; border: 1px solid var(--border-subtle); }
         .dot { width: 6px; height: 6px; background-color: var(--text-muted); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
         .dot:nth-child(1) { animation-delay: -0.32s; }
@@ -304,52 +923,94 @@
             outline: none; 
             transition: all 0.3s ease; 
         }
-        input[type="text"]:focus { 
-            border-color: #555; 
-            background: #111; 
+        input[type="text"]:focus {
+            border-color: var(--lime-border);
+            background: #111;
+            box-shadow: 0 0 0 3px var(--lime-dim);
         }
         input[type="text"]:disabled { opacity: 0.5; cursor: not-allowed; }
-        .mic-btn, .send-btn { padding: 0 24px; background: var(--bg-elevated); color: white; border: 1px solid var(--border-subtle); border-radius: 12px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        .mic-btn, .send-btn { 
+            padding: 0 24px; 
+            background: var(--bg-elevated); 
+            color: white; 
+            border: 1px solid var(--border-subtle); 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            font-weight: 500; 
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
         .mic-btn:hover:not(:disabled), .send-btn:hover:not(:disabled) { background: #1a1a1a; border-color: #555; }
         .mic-active { color: #ef4444; border-color: rgba(239, 68, 68, 0.5) !important; background: rgba(239, 68, 68, 0.1) !important; }
-        #dashboard-container { display: none; width: 100%; max-width: 800px; margin: auto; height: 90vh; flex-direction: column; overflow-y: auto; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; padding: 40px 20px; }
+
+        /* --- DASHBOARD UI --- */
+        #dashboard-container { 
+            display: none; 
+            width: 100%; 
+            max-width: 800px; 
+            margin: auto; /* Centers it perfectly */
+            height: 90vh; 
+            flex-direction: column; 
+            overflow-y: auto; 
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+            padding: 40px 20px;
+        }
         #dashboard-container::-webkit-scrollbar { display: none; }
 
-        .dashboard-header { 
-            font-size: 2.5rem; 
-            font-weight: 700; 
-            margin-bottom: 40px; 
-            color: #ffffff; 
-            letter-spacing: -1px;
+        .dashboard-header {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 2.4rem;
+            font-weight: 400;
+            margin-bottom: 40px;
+            color: #ffffff;
+            letter-spacing: -0.01em;
         }
         
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 50px; }
         
-        .stat-box { 
-            background: var(--bg-elevated);
-            padding: 30px 20px; 
-            border-radius: 12px; 
-            border: 1px solid var(--border-subtle); 
+        .stat-box {
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.008)), var(--bg-elevated);
+            padding: 30px 20px;
+            border-radius: 18px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 50px -30px rgba(0,0,0,0.7);
         }
         .stat-value { font-size: 3rem; font-weight: 700; margin-bottom: 8px; line-height: 1; font-family: 'Roboto Mono', monospace; }
         .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
-        .section-title { font-weight: 600; margin-bottom: 24px; font-size: 1.2rem; color: #fff; letter-spacing: 1px; }
+        
+        .section-title { font-weight: 600; margin-bottom: 24px; font-size: 1.2rem; color: #fff; letter-spacing: 1px;}
         .history-list { display: grid; grid-template-columns: 1fr; gap: 16px; }
-        .history-card { 
-            background: var(--bg-elevated); 
-            padding: 24px; 
-            border-radius: 12px; 
-            border: 1px solid var(--border-subtle); 
+        .history-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.008)), var(--bg-elevated);
+            padding: 24px;
+            border-radius: 18px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 50px -30px rgba(0,0,0,0.7);
         }
         
         .history-card-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
         .history-q { font-weight: 500; font-size: 1.1rem; margin-bottom: 16px; color: #fff; line-height: 1.6; }
         .history-feedback { margin-top: 16px; font-size: 0.9rem; color: #aaa; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.02); }
+
         .skill-bar-container { margin-bottom: 20px; }
         .skill-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px; color: #ccc; }
         .skill-bar-bg { width: 100%; height: 6px; background: #111; border-radius: 10px; overflow: hidden; }
         .skill-bar-fill { height: 100%; background: #fff; border-radius: 10px; transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
-        .retry-btn { margin: 40px 0; padding: 16px 30px; background: white; color: black; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; width: fit-content; }
+
+        .retry-btn { 
+            margin: 40px 0; 
+            padding: 16px 30px; 
+            background: white; 
+            color: black; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            width: fit-content;
+        }
         .retry-btn:hover { transform: scale(1.02); background: #f0f0f0; }
 
         /* ═══════════════════════════════════════════════════════════════
@@ -754,14 +1415,20 @@
     <div class="system-log" id="system-log"><span class="log-dot"></span><span id="system-log-text"></span></div>
 
     <div id="landing-container">
-        <div class="landing-title">AI.interviewer</div>
-        <div class="landing-sub">System configuration</div>
+      <div class="landing-content">
+        <div class="landing-grid">
+          <div class="landing-copy">
+            <div class="hero-eyebrow"><span class="eyebrow-dot"></span>Interview Operating System</div>
+            <h1 class="hero-title"><span id="hero-title-text"></span></h1>
+            <p class="hero-subtitle">Upload your resume to get a structured conversation and evaluation report grounded in your actual projects and experience.</p>
+            <div class="trust-footnote">No sign-up required &mdash; your resume is used only to personalize this session.</div>
 
-        <!-- STEP 1: Resume Upload -->
-        <div id="resume-upload-section">
-            <div class="form-group">
-                <label>📄 Upload Your Resume (Optional)</label>
-                <input type="file" id="resume-file" accept=".pdf,.docx" style="width: 100%; padding: 12px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-elevated); color: white; cursor: pointer;">
+            <div class="capability-row">
+              <div class="capability-chip">Adaptive follow-up questioning</div>
+              <div class="capability-chip">Technical project deep-dives</div>
+              <div class="capability-chip">Concept coverage &amp; improved answers</div>
+              <div class="capability-chip">Technical reasoning analysis</div>
+              <div class="capability-chip">Detailed performance report</div>
             </div>
           </div>
 
@@ -787,23 +1454,82 @@
               </div>
             </div>
 
-        <!-- STEP 2: Resume Discussion -->
-        <div id="quiz-section" style="display: none; margin-top: 20px; max-height: 70vh; overflow-y: auto; padding-right: 10px;">
-            <div style="background: var(--bot-bubble); padding: 20px; border-radius: 12px; border: 1px solid var(--border-subtle); margin-bottom: 20px; position: sticky; top: 0; z-index: 10;">
-                <p style="color: #3b82f6; margin: 0;"><strong>Resume Discussion</strong></p>
-                <p style="color: #888; margin: 5px 0 0 0; font-size: 0.9rem;">Questions based on your projects and experience</p>
-                <div style="margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                    <p style="margin: 0 0 8px 0; color: #aaa; font-size: 0.85rem;">Progress: <span id="quiz-progress">0</span>/<span id="quiz-total">12</span></p>
-                    <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
-                        <div id="quiz-progress-bar" style="height: 100%; width: 0%; background: #3b82f6; transition: width 0.3s;"></div>
-                    </div>
+            <div class="vessel-wrap">
+              <svg class="ambient-graph" viewBox="0 0 340 340" aria-hidden="true">
+                <g class="drift-a">
+                  <line x1="40" y1="60" x2="120" y2="110" />
+                  <line x1="120" y1="110" x2="90" y2="190" />
+                  <line x1="120" y1="110" x2="210" y2="90" class="active" />
+                </g>
+                <g class="drift-b">
+                  <line x1="210" y1="90" x2="270" y2="160" class="active" />
+                  <line x1="90" y1="190" x2="180" y2="230" />
+                  <line x1="270" y1="160" x2="180" y2="230" />
+                </g>
+                <circle class="node" cx="40" cy="60" r="4" />
+                <circle class="node" cx="120" cy="110" r="4" />
+                <circle class="node active pulse" cx="210" cy="90" r="5" />
+                <circle class="node" cx="90" cy="190" r="4" />
+                <circle class="node active pulse" cx="270" cy="160" r="5" />
+                <circle class="node" cx="180" cy="230" r="4" />
+              </svg>
+
+              <div class="vessel idle" id="vessel">
+                <div class="vessel-scan"></div>
+                <input type="file" id="resume-file" accept=".pdf,.docx" class="upload-input-hidden">
+
+              <div class="v-layer v-idle">
+                <div class="v-icon" id="idle-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
                 </div>
+                <div class="v-text">
+                  <div class="v-title">Drop your resume to begin</div>
+                  <div class="v-sub">PDF or DOCX, up to 10MB &mdash; click anywhere in this seam</div>
+                </div>
+                <div class="v-action">Browse</div>
+              </div>
+
+              <div class="v-layer v-recognized">
+                <div class="v-icon on">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                </div>
+                <div class="v-text">
+                  <div class="v-title" id="rec-filename"></div>
+                  <div class="v-sub" id="rec-filesize"></div>
+                </div>
+                <button type="button" class="v-action" id="remove-file-btn">Remove</button>
+              </div>
+
+              <div class="v-layer v-building">
+                <div class="build-status" id="build-status"></div>
+                <div class="build-row" id="row-candidate"><span class="build-label">Candidate</span><span class="build-value" id="val-candidate"></span></div>
+                <div class="build-row" id="row-domain"><span class="build-label">Domain</span><span class="build-value" id="val-domain"></span></div>
+                <div class="build-row" id="row-experience"><span class="build-label">Experience</span><span class="build-value" id="val-experience"></span></div>
+                <div class="build-row" id="row-skills"><span class="build-label">Skills detected</span><span class="build-value" id="val-skills"></span></div>
+              </div>
+
+              <div class="v-layer v-ready">
+                <div class="ready-title">Profile built.</div>
+                <div class="ready-sub">Opening your candidate overview&hellip;</div>
+              </div>
+              </div>
             </div>
-            
-            <div id="quiz-questions-container" style="padding-bottom: 20px;"></div>
+
+            <div class="upload-steps">
+                <div class="upload-step active"><span class="upload-step-num">1</span>Upload resume</div>
+                <div class="upload-step-connector"></div>
+                <div class="upload-step"><span class="upload-step-num">2</span>Discuss your projects</div>
+                <div class="upload-step-connector"></div>
+                <div class="upload-step"><span class="upload-step-num">3</span>Get a detailed report</div>
+            </div>
+
+            <button class="btn-primary" id="start-interview-btn" disabled>
+                <span id="start-btn-label">Start Interview</span><span class="btn-arrow">→</span>
+            </button>
+          </div>
         </div>
 
-        <!-- STEP 3: Subject Selection -->
+        <!-- STEP 2: Subject Selection -->
         <div id="subject-selection-section" style="display: none; margin-top: 20px;">
             <div class="form-group">
                 <label>Subject Domain</label>
@@ -816,6 +1542,7 @@
                     <option value="OOP">Object-Oriented Programming</option>
                 </select>
             </div>
+
             <div class="form-group">
                 <label>Knowledge Focus Area</label>
                 <select id="topic-select">
@@ -829,6 +1556,7 @@
                     <option value="IP Routing">IP Routing</option>
                 </select>
             </div>
+
             <button class="start-btn" onclick="startInterview()">Initialize Session</button>
         </div>
       </div>
@@ -878,36 +1606,50 @@
 
     <div id="rd-report-container"></div>
 
+    <!-- CANDIDATE ASSESSMENT DASHBOARD -->
     <div id="candidate-dashboard">
         <div class="dash-wrapper" id="dash-wrapper"></div>
     </div>
 
+    <!-- TOAST CONTAINER -->
     <div id="toast-container"></div>
 
     <script>
-        // ─── GET DOM REFERENCES (FIXES micBtn, landingContainer, etc.) ───
-        const landingContainer = document.getElementById('landing-container');
-        const micBtn = document.getElementById('mic-btn');
-        const messagesDiv = document.getElementById('messages');
-        const inputField = document.getElementById('user-input');
-        const sendBtn = document.getElementById('send-btn');
-        const chatContainer = document.getElementById('chat-container');
-        const dashboardContainer = document.getElementById('dashboard-container');
-        const candidateDashboard = document.getElementById('candidate-dashboard');
-        const dashWrapper = document.getElementById('dash-wrapper');
-        const chatHeader = document.getElementById('chat-header-title');
-
-        // ─── GLOBAL VARIABLES ──────────────────────────────────────────────
-        let parsedResumeData = null;            // from resume upload
-        let selectedTopic = "All";              // from dropdown
-        let currentDifficulty = "medium";
         let askedIds = [];
-        let interviewHistory = [];
-        let stage = "main_question";            // "main_question" or "fill_mask"
+        let interviewHistory = []; 
+        let currentDifficulty = "medium";
         let currentQuestionData = null;
+        let stage = "main_question"; 
         let tempMainAnswer = "";
         let selectedTopic = "All";
         let parsedResumeData = null;  // Stores parsed resume for dashboard
+
+        // ─── RESUME DISCUSSION STATE (dedicated — see #rd-container) ──
+        let rdSessionId = null;
+        let rdQuestionNum = 0;
+        let rdTotalQuestions = 12;
+        let rdCurrentCategory = "project_overview";
+        // Categories actually encountered this session, in first-seen order
+        // -- the chapter rail only ever shows real history, never a
+        // precomputed roadmap (topic_pool.py's ordering isn't fixed/blocked).
+        let rdSeenCategories = [];
+        // v2 migration: the v2 backend (conversation_engine.py) never returns
+        // question/answer text on its own -- only metadata + evaluations. The
+        // frontend already sees both as it renders them, so it accumulates
+        // them here and zips them with each turn's real evaluation to build
+        // the report client-side (see rdBuildReportFromV2).
+        let rdTurnHistory = [];
+        // Re-entrancy guard against a double-click/double-tap on "Enter
+        // Resume Discussion" -- the button has no built-in disable-on-click,
+        // so without this a fast double click fires rdStartSession() twice,
+        // creating two real backend conversations (one silently orphaned)
+        // and racing two typeLine() animations onto the same question
+        // element. Reset in rdStartSession's own finally block (success OR
+        // failure), so a failed startup never permanently locks out a
+        // legitimate retry. Same script-scoped-state convention already
+        // used throughout this file (rdSessionId, rdTurnHistory, etc.) --
+        // there is no module system here to scope it more tightly.
+        let rdSessionStarting = false;
 
         const landingContainer = document.getElementById("landing-container");
         const chatContainer = document.getElementById("chat-container");
@@ -920,7 +1662,20 @@
         const micBtn = document.getElementById("mic-btn");
         const chatHeader = document.getElementById("chat-header-title");
 
-        // ─── TOAST NOTIFICATION HELPER ──────────────────────────────────────
+        const rdContainer = document.getElementById("rd-container");
+        const rdInput = document.getElementById("rd-user-input");
+        const rdSendBtn = document.getElementById("rd-send-btn");
+        const rdMicBtn = document.getElementById("rd-mic-btn");
+        const rdChapterRail = document.getElementById("rd-chapter-rail");
+        const rdPositionLabel = document.getElementById("rd-position-label");
+        const rdContextHeading = document.getElementById("rd-context-heading");
+        const rdStageWrap = document.getElementById("rd-stage-wrap");
+        const rdQuestionTextEl = document.getElementById("rd-question-text");
+        const rdHistoryList = document.getElementById("rd-history-list");
+        const rdHistoryCount = document.getElementById("rd-history-count");
+        const rdReportContainer = document.getElementById("rd-report-container");
+
+        // ─── TOAST NOTIFICATION HELPER ────────────────────────────────
         function showToast(message, type = "info", duration = 3500) {
             const container = document.getElementById("toast-container");
             const toast = document.createElement("div");
@@ -933,7 +1688,7 @@
             }, duration);
         }
 
-        // ─── XSS ESCAPE HELPER ──────────────────────────────────────────────
+        // ─── XSS ESCAPE HELPER ────────────────────────────────────────
         function esc(str) {
             if (str == null) return "";
             return String(str)
@@ -956,7 +1711,7 @@
             return (list || []).filter((s) => typeof s === "string" && s.trim().length > 0);
         }
 
-        // ─── SKILL CATEGORIZATION ──────────────────────────────────────────
+        // ─── SKILL CATEGORIZATION ─────────────────────────────────────
         const SKILL_CATEGORIES = {
             "Languages": {
                 exact: ["python","java","javascript","typescript","c","c++","c#","go","golang","rust","ruby","php","swift","kotlin","scala","r","matlab","perl","haskell","elixir","dart","sql","html","css","sass","scss","bash","shell","powershell","vba","objective-c","assembly","fortran","cobol","lua","groovy"],
@@ -1002,6 +1757,7 @@
                 const sLower = skill.toLowerCase().trim();
                 let placed = false;
 
+                // Pass 1: exact match
                 for (const [cat, rules] of Object.entries(SKILL_CATEGORIES)) {
                     if (rules.exact.some(e => sLower === e.toLowerCase())) {
                         result[cat].push(skill);
@@ -1012,6 +1768,7 @@
                 }
                 if (placed) continue;
 
+                // Pass 2: substring match
                 for (const [cat, rules] of Object.entries(SKILL_CATEGORIES)) {
                     if (rules.substring.some(s => sLower.includes(s) || s.includes(sLower))) {
                         result[cat].push(skill);
@@ -1027,12 +1784,107 @@
             return result;
         }
 
-        // ─── CANDIDATE ASSESSMENT DASHBOARD RENDER FUNCTIONS ───────────
+        // ─── INTERVIEW BRIEFING RENDER FUNCTIONS ───────────────────────
+        // Answers exactly one question: "what did the AI learn from this
+        // resume?" Every value below traces back to a real field on the
+        // /api/classify-resume response (name, predicted_domain,
+        // experience, education, contact, skills, projects). Nothing here
+        // is a score, a confidence percentage, or a performance claim —
+        // those belong in the final report, not this briefing.
+
+        function uniq(arr) { return Array.from(new Set((arr || []).filter(Boolean))); }
+
+        // Project category is derived only from each project's own real
+        // technologies/title/summary — the same spirit as categorizeSkills,
+        // just applied per-project instead of per-skill.
+        const PROJECT_CATEGORY_RULES = [
+            { label: "Machine Learning", keywords: ["tensorflow","pytorch","keras","scikit","sklearn","nlp","llm","gemini","openai","gpt","bert","transformer","huggingface","hugging face","langchain","langgraph","rag","faiss","machine learning","deep learning","computer vision","cnn","rnn","lstm","xgboost"] },
+            { label: "Full-Stack Development", keywords: ["react","angular","vue","next","node","express","django","flask","fastapi","spring","rails","laravel",".net","tailwind","bootstrap","html","css","javascript","typescript"] },
+            { label: "Mobile Development", keywords: ["flutter","android","ios","swift","kotlin","react native","swiftui"] },
+            { label: "Cloud & DevOps", keywords: ["aws","azure","gcp","docker","kubernetes","terraform","ci/cd","jenkins","devops"] },
+            { label: "Cybersecurity", keywords: ["nmap","burp","metasploit","penetration","security","encryption","owasp","vulnerability"] },
+            { label: "Data Engineering", keywords: ["spark","kafka","airflow","etl","hadoop","bigquery","redshift","snowflake"] },
+            { label: "Databases", keywords: ["mysql","postgres","mongodb","redis","sql","database"] },
+        ];
+
+        function deriveProjectCategory(project) {
+            const techs = Array.isArray(project.technologies) ? project.technologies : [];
+            const haystack = (techs.join(" ") + " " + (project.title || "") + " " + (project.summary || "")).toLowerCase();
+            for (const rule of PROJECT_CATEGORY_RULES) {
+                if (rule.keywords.some(k => haystack.includes(k))) return rule.label;
+            }
+            return "Software Development";
+        }
+
+        function collectProjectTechnologies(data) {
+            const projects = Array.isArray(data.projects) ? data.projects : [];
+            const all = [];
+            projects.forEach(p => { if (Array.isArray(p.technologies)) all.push(...p.technologies); });
+            return uniq(all);
+        }
+
+        // One AI-composed paragraph, addressed directly to the candidate
+        // ("you") so it reads like the AI briefing them rather than
+        // describing a document — template-generated purely from real
+        // fields, no invented facts, no evaluative claims.
+        function buildAiSummaryText(data) {
+            const level = data.experience && data.experience.level ? data.experience.level : "";
+            const years = data.experience && data.experience.years ? data.experience.years : 0;
+            const domain = data.predicted_domain || null;
+            const projects = Array.isArray(data.projects) ? data.projects : [];
+            const skills = Array.isArray(data.skills) ? data.skills : [];
+            const categories = uniq(projects.map(p => deriveProjectCategory(p)));
+            const topSkills = skills.slice(0, 5);
+
+            let intro = "You";
+            if (years > 0 && level) {
+                intro += ` bring ${years} year${years === 1 ? "" : "s"} of experience as a ${level.toLowerCase()} professional`;
+            } else if (years > 0) {
+                intro += ` bring ${years} year${years === 1 ? "" : "s"} of experience`;
+            } else if (level) {
+                intro += ` are approaching this as a ${level.toLowerCase()} professional`;
+            } else {
+                intro += " are early in your professional journey";
+            }
+            if (domain) intro += ` in ${domain}`;
+            intro += ".";
+            const parts = [intro];
+
+            if (projects.length > 0) {
+                const catText = categories.length > 1
+                    ? `spanning ${categories.slice(0, -1).join(", ")} and ${categories[categories.length - 1]}`
+                    : `in ${categories[0] || "software development"}`;
+                parts.push(`Your resume highlights ${projects.length} project${projects.length === 1 ? "" : "s"} ${catText}.`);
+            }
+
+            if (topSkills.length > 0) {
+                parts.push(`I'll ground our conversation in the technologies you've used most — ${topSkills.join(", ")}.`);
+            }
+
+            return parts.join(" ");
+        }
+
+        // Derived only from detected projects, technologies and domain —
+        // a forward-looking statement about what the conversation will
+        // cover, never a judgment about the candidate.
+        function buildStrategyText(data) {
+            const domain = data.predicted_domain || "your background";
+            const projects = Array.isArray(data.projects) ? data.projects : [];
+            const categories = uniq(projects.map(p => deriveProjectCategory(p))).slice(0, 3);
+            const skills = Array.isArray(data.skills) ? data.skills : [];
+            const topTechs = skills.slice(0, 4);
+
+            let sentence = `The interview will center on ${domain}`;
+            if (categories.length > 0) sentence += `, with deep-dives into ${categories.join(", ")}`;
+            if (topTechs.length > 0) sentence += `, and practical questions on ${topTechs.join(", ")}`;
+            sentence += ".";
+            return sentence;
+        }
 
         function showCandidateDashboard(data) {
             parsedResumeData = data;
 
-            // Hide landing, show dashboard
+            // Hide landing, show briefing
             landingContainer.style.opacity = "0";
             setTimeout(() => {
                 landingContainer.style.display = "none";
@@ -2255,11 +3107,48 @@
             bodyEl.classList.add("show");
         }
 
-        function startDomainQuizFromDashboard() {
-            candidateDashboard.style.display = "none";
+        function rdToggleRecord() {
+            const wrap = document.getElementById("rd-timeline-wrap");
+            const btn = document.getElementById("rd-record-toggle");
+            const opening = !wrap.classList.contains("show");
+            btn.classList.toggle("expanded");
 
-            // Switch to quiz flow
-            document.getElementById("resume-upload-section").style.display = "none";
+            if (opening) {
+                wrap.classList.add("show");
+                // #rd-report-container is a bounded-height (92vh) flex
+                // column; overflow:hidden left on this element permanently
+                // makes it collapse to zero height once expanded, regardless
+                // of max-height (a flex sizing quirk, not a real content
+                // problem -- see the CSS comment on .rd-timeline-wrap). Only
+                // needed while collapsed, so drop it once the expand
+                // transition actually finishes.
+                wrap.addEventListener("transitionend", function onExpand(e) {
+                    if (e.propertyName !== "max-height") return;
+                    wrap.removeEventListener("transitionend", onExpand);
+                    wrap.style.overflow = "visible";
+                });
+            } else {
+                wrap.style.overflow = "hidden";
+                wrap.classList.remove("show");
+            }
+        }
+
+        function proceedToAdaptiveInterview() {
+            setSystemLog("Preparing technical interview...");
+            rdSessionId = null;
+            rdQuestionNum = 0;
+            rdTurnHistory = [];
+            document.body.classList.remove("rd-scroll-mode");
+
+            rdReportContainer.style.display = "none";
+            rdHistoryList.innerHTML = "";
+            rdHistoryList.classList.remove("show");
+            document.getElementById("rd-history-toggle").classList.remove("expanded");
+            rdHistoryCount.textContent = "0";
+            rdSeenCategories = [];
+            rdChapterRail.innerHTML = "";
+
+            // Show subject selection for Adaptive Technical Interview
             landingContainer.style.display = "block";
             landingContainer.style.opacity = "0";
             document.getElementById("resume-upload-section").style.display = "none";
@@ -2272,18 +3161,19 @@
             const el = document.getElementById(elementId);
             const cardElement = document.getElementById(cardId);
             let iterations = 0;
-            const maxIterations = 20;
-
-            el.style.fontFamily = "'Roboto Mono', monospace";
+            const maxIterations = 20; 
+            
+            el.style.fontFamily = "'Roboto Mono', monospace"; 
 
             const interval = setInterval(() => {
                 const randomScramble = (Math.random()).toFixed(2);
                 el.innerText = randomScramble;
-
+                
                 if (iterations >= maxIterations) {
                     clearInterval(interval);
-                    el.innerText = targetScore.toFixed(2);
-
+                    el.innerText = targetScore.toFixed(2); 
+                    
+                    // Apply the glow after decryption
                     if (targetScore >= 0.8) {
                         cardElement.classList.add('glow-excellent');
                         el.style.color = "#34d399";
@@ -2299,7 +3189,7 @@
             }, 40);
         }
 
-        // ─── SPEECH RECOGNITION ─────────────────────────────────────────────
+        // --- SPEECH RECOGNITION LOGIC ---
         let recognition;
         let isRecording = false;
 
@@ -2326,11 +3216,11 @@
             recognition.onerror = function(event) { stopMic(); };
             recognition.onend = function() { stopMic(); };
         } else {
-            micBtn.style.display = "none";
+            micBtn.style.display = "none"; 
         }
 
         function toggleMic() {
-            if (isRecording) { stopMic(); }
+            if (isRecording) { stopMic(); } 
             else { if (recognition) recognition.start(); }
         }
 
@@ -2344,221 +3234,308 @@
         }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        // RESUME UPLOAD & CLASSIFICATION
+        // RESUME UPLOAD — one continuous scene: idle → recognized →
+        // building → ready. The vessel element is never swapped for a
+        // different component; only its state class, height and inner
+        // layer visibility change. Same /api/classify-resume contract
+        // and same showCandidateDashboard() handoff as before.
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        let classifiedDomain = null;
-        let quizAnswers = [];
-        
-        let resumeSkills = [];  // Store skills from resume for quiz customization
-        
-        async function testQuizDirectly() {
-            // Hide resume section
-            document.getElementById("resume-upload-section").style.display = "none";
-            document.getElementById("quiz-section").style.display = "block";
-            
-            // Directly fetch and show quiz
-            const response = await fetch("/api/get-domain-quiz", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ domain: "Software Engineer", skills: [] })
-            });
-            
-            const result = await response.json();
-            
-            displayQuiz(result.quiz);
+        const vessel = document.getElementById("vessel");
+        const resumeFileInput = document.getElementById("resume-file");
+        const recFilename = document.getElementById("rec-filename");
+        const recFilesize = document.getElementById("rec-filesize");
+        const removeFileBtn = document.getElementById("remove-file-btn");
+        const startInterviewBtn = document.getElementById("start-interview-btn");
+        const buildStatusEl = document.getElementById("build-status");
+
+        function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + " B";
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + " KB";
+            return (bytes / (1024 * 1024)).toFixed(1) + " MB";
         }
-        
+
+        // ─── context-aware system log: only ever states what is
+        // actually happening right now. Idle cycles a small honest set
+        // of lines; every other state is set explicitly from the real
+        // event that triggered it (see handleResumeFileChosen,
+        // clearResumeFile, uploadResume below). ───
+        const systemLogTextEl = document.getElementById("system-log-text");
+        const SYSTEM_LOG_IDLE_LINES = ["Initializing Interview Engine...", "Waiting for resume...", "System ready."];
+        let systemLogIdleTimer = null;
+        let systemLogIdleIndex = 0;
+
+        function setSystemLog(text) {
+            if (!systemLogTextEl) return;
+            systemLogTextEl.classList.add("fade");
+            setTimeout(() => {
+                systemLogTextEl.textContent = text;
+                systemLogTextEl.classList.remove("fade");
+            }, 300);
+        }
+
+        function stopIdleSystemLogCycle() {
+            if (systemLogIdleTimer) { clearInterval(systemLogIdleTimer); systemLogIdleTimer = null; }
+        }
+
+        function startIdleSystemLogCycle() {
+            stopIdleSystemLogCycle();
+            systemLogIdleIndex = 0;
+            setSystemLog(SYSTEM_LOG_IDLE_LINES[0]);
+            systemLogIdleTimer = setInterval(() => {
+                systemLogIdleIndex = (systemLogIdleIndex + 1) % SYSTEM_LOG_IDLE_LINES.length;
+                setSystemLog(SYSTEM_LOG_IDLE_LINES[systemLogIdleIndex]);
+            }, 4200);
+        }
+
+        // ─── the two informational tiles above the vessel: an honest,
+        // live reflection of where the resume actually is in the
+        // pipeline — not decoration. ───
+        const pipelineSteps = document.querySelectorAll("#pipeline-tile .pipeline-step");
+        const statusResumeVal = document.getElementById("status-resume-val");
+        const VESSEL_STATUS_TEXT = { idle: "Awaiting", recognized: "Recognised", building: "Analyzing...", ready: "Ready" };
+
+        function setVesselStage(stage) {
+            vessel.classList.remove("idle", "recognized", "building", "ready");
+            vessel.classList.add(stage);
+
+            const activeStep = (stage === "building" || stage === "ready") ? "profile" : "resume";
+            pipelineSteps.forEach(el => {
+                el.classList.remove("active", "done");
+                if (el.dataset.stage === activeStep) el.classList.add("active");
+                else if (el.dataset.stage === "resume" && activeStep === "profile") el.classList.add("done");
+            });
+            if (statusResumeVal) statusResumeVal.textContent = VESSEL_STATUS_TEXT[stage] || "Awaiting";
+        }
+
+        // ─── AI-writing status text: natural pace, punctuation pauses,
+        // caret lingers then fades. Plays once per line, never loops. ───
+        // Self-cancelling per element: if typeLine() is called again on the
+        // SAME element before a prior call has finished ticking, the prior
+        // call's tick chain must stop appending rather than race the new
+        // one onto the same el.textContent (the two chains interleaving
+        // character-by-character is exactly what produced permanently
+        // garbled question text -- e.g. a double-clicked "Enter Resume
+        // Discussion" firing two typeLine() calls on #rd-question-text).
+        // The token lives ON THE ELEMENT (el.__typeToken), not in a module-
+        // level/global registry -- each element tracks its own latest
+        // invocation, nothing shared across elements or call sites. A
+        // superseded call's Promise deliberately never resolves: that's
+        // what halts its ENTIRE calling async chain (e.g. the rest of
+        // rdStartSession) at the `await`, not just this one animation.
+        function typeLine(el, text) {
+            const token = (el.__typeToken = (el.__typeToken || 0) + 1);
+            return new Promise(resolve => {
+                el.textContent = "";
+                el.classList.add("type-caret");
+                let i = 0;
+                function tick() {
+                    if (el.__typeToken !== token) return; // superseded -- stop silently
+                    if (i < text.length) {
+                        const ch = text[i];
+                        el.textContent += ch;
+                        i++;
+                        let delay = 46 + (Math.random() * 26 - 13); // ~100-120wpm feel
+                        if (/[,.:;!?]/.test(ch)) delay += 200;
+                        setTimeout(tick, delay);
+                    } else {
+                        setTimeout(() => {
+                            if (el.__typeToken !== token) return;
+                            el.classList.remove("type-caret");
+                            resolve();
+                        }, 550);
+                    }
+                }
+                tick();
+            });
+        }
+
+        function revealRow(rowId, valueId, text) {
+            document.getElementById(rowId).classList.add("show");
+            document.getElementById(valueId).textContent = text;
+        }
+
+        function resetBuildRows() {
+            ["candidate", "domain", "experience", "skills"].forEach(name => {
+                document.getElementById(`row-${name}`).classList.remove("show");
+                document.getElementById(`val-${name}`).textContent = "";
+            });
+            buildStatusEl.textContent = "";
+            buildStatusEl.classList.remove("type-caret");
+        }
+
+        // ─── stage: idle → recognized ───
+        function handleResumeFileChosen() {
+            const file = resumeFileInput.files[0];
+            if (!file) return;
+            recFilename.textContent = file.name;
+            recFilesize.textContent = formatFileSize(file.size) + " — recognised, ready to enter the system";
+            setVesselStage("recognized");
+            startInterviewBtn.disabled = false;
+            startInterviewBtn.classList.add("ready-state");
+            stopIdleSystemLogCycle();
+            setSystemLog("Resume detected.");
+        }
+
+        function clearResumeFile(e) {
+            if (e) e.stopPropagation();
+            resumeFileInput.value = "";
+            setVesselStage("idle");
+            resetBuildRows();
+            startInterviewBtn.disabled = true;
+            startInterviewBtn.classList.remove("ready-state");
+            startIdleSystemLogCycle();
+        }
+
+        resumeFileInput.addEventListener("change", handleResumeFileChosen);
+        removeFileBtn.addEventListener("click", clearResumeFile);
+        vessel.addEventListener("click", () => {
+            if (vessel.classList.contains("idle")) resumeFileInput.click();
+        });
+
+        ["dragenter", "dragover"].forEach(evt => vessel.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (vessel.classList.contains("idle")) vessel.classList.add("drag-over");
+        }));
+        ["dragleave", "drop"].forEach(evt => vessel.addEventListener(evt, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            vessel.classList.remove("drag-over");
+        }));
+        vessel.addEventListener("drop", (e) => {
+            if (!vessel.classList.contains("idle")) return;
+            const dt = e.dataTransfer;
+            if (dt && dt.files && dt.files.length) {
+                resumeFileInput.files = dt.files;
+                handleResumeFileChosen();
+            }
+        });
+
+        // ─── stage: recognized → building → ready → handoff ───
         async function uploadResume() {
-            
-            const fileInput = document.getElementById("resume-file");
-            const file = fileInput.files[0];
-            
+            const file = resumeFileInput.files[0];
             if (!file) {
                 showToast("Please select a resume file first.", "error");
                 return;
             }
 
-            // Show loading state
-            const startBtns = document.querySelectorAll("#resume-upload-section .start-btn");
-            startBtns.forEach(b => { b.disabled = true; b.textContent = "Analyzing..."; });
+            setVesselStage("building");
+            startInterviewBtn.disabled = true;
 
-            try {
+            const fetchPromise = (async () => {
                 const formData = new FormData();
                 formData.append("file", file);
-
-                const response = await fetch("/api/classify-resume", {
-                    method: "POST",
-                    body: formData
-                });
-
+                const response = await fetch("/api/classify-resume", { method: "POST", body: formData });
                 const result = await response.json();
-
                 if (!response.ok || result.error) {
-                    showToast(result.error || "Failed to analyze resume.", "error");
-                    startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Interview →"; });
-                    return;
+                    throw new Error(result.error || "Failed to analyze resume.");
                 }
+                if (result.status !== "success") {
+                    throw new Error("Unexpected response from server.");
+                }
+                return result;
+            })();
 
-                if (result.status === "success") {
-                    showToast("Resume parsed successfully!", "success");
-                    showCandidateDashboard(result);
-                } else {
-                    showToast("Unexpected response from server.", "error");
-                    startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Interview →"; });
-                }
+            setSystemLog("Reading resume...");
+            await typeLine(buildStatusEl, "Reading resume...");
+
+            let result;
+            try {
+                result = await fetchPromise;
             } catch (err) {
                 console.error("Upload error:", err);
-                showToast("Network error. Please try again.", "error");
-                startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Interview →"; });
-            }
-        }
-
-        function startQuizFromAnalysis() {
-            document.getElementById("resume-analysis").style.display = "none";
-            document.getElementById("quiz-section").style.display = "block";
-            loadDomainQuiz(classifiedDomain, resumeSkills);
-        }
-
-        async function loadDomainQuiz(domain, skills = []) {
-            try {
-                const sessionId = parsedResumeData ? (parsedResumeData.session_id || "") : "";
-                const response = await fetch("/api/get-domain-quiz", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ session_id: sessionId, domain: domain, skills: skills })
-                });
-
-                const result = await response.json();
-                
-                if (result.status === "success" && result.quiz && result.quiz.length > 0) {
-                    // Update total questions counter
-                    const totalQs = result.total_questions || result.quiz.length;
-                    document.getElementById("quiz-total").textContent = totalQs;
-                    // Now display the quiz
-                    displayQuiz(result.quiz);
-                } else {
-                    console.error("Invalid quiz response:", result);
-                    alert("Error loading quiz. Check console.");
-                }
-            } catch (error) {
-                console.error("Error loading quiz:", error);
-                alert("Error loading quiz: " + error);
-            }
-        });
-
-        function displayQuiz(questions) {
-            const container = document.getElementById("quiz-questions-container");
-            
-            if (!container) {
-                console.error("FATAL: quiz-questions-container not found!");
-                return;
-            }
-            
-            container.innerHTML = "";
-            quizAnswers = [];
-
-            // Update total questions
-            document.getElementById("quiz-total").textContent = questions.length;
-
-            questions.forEach((q, index) => {
-                const questionDiv = document.createElement("div");
-                questionDiv.style.cssText = "margin-bottom: 20px; padding: 20px; background: var(--bg-elevated); border-radius: 12px; border: 1px solid var(--border-subtle);";
-                
-                const isDiscussion = q._discussion;
-                
-                let optionsHtml = "";
-                (q.options || []).forEach((opt, optIndex) => {
-                    optionsHtml += `
-                        <div style="margin: 12px 0;">
-                            <label style="display: flex; align-items: flex-start; cursor: pointer; color: #aaa;">
-                                <input type="radio" name="q${index}" value="${optIndex}" onchange="selectAnswer(${index}, ${optIndex})" style="margin-right: 12px; margin-top: 4px; cursor: pointer;">
-                                <span style="line-height: 1.4;">${opt}</span>
-                            </label>
-                        </div>
-                    `;
-                });
-
-                const difficultyColor = q.difficulty === "Hard" ? "#fb7185" : q.difficulty === "Medium" ? "#fbbf24" : "#10b981";
-                const badgeHtml = isDiscussion
-                    ? `<span style="padding: 4px 10px; background: rgba(59,130,246,0.1); border-radius: 6px; border: 1px solid #3b82f6; color: #3b82f6; font-size: 0.75rem; font-weight: 600;">Discussion</span>`
-                    : `<span style="padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 6px; border: 1px solid ${difficultyColor}; color: ${difficultyColor}; font-size: 0.75rem; font-weight: 600;">${q.difficulty}</span>`;
-                
-                questionDiv.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <p style="color: #3b82f6; margin: 0;"><strong>Q${index + 1}: ${q.question}</strong></p>
-                        ${badgeHtml}
-                    </div>
-                    ${optionsHtml}
-                `;
-                
-                container.appendChild(questionDiv);
-            });
-
-            // Add submit button
-            const submitBtn = document.createElement("button");
-            submitBtn.className = "start-btn";
-            submitBtn.textContent = `Continue to Interview (${questions.length} questions)`;
-            submitBtn.style.cssText = "margin-top: 20px; width: 100%;";
-            submitBtn.onclick = submitQuiz;
-            container.appendChild(submitBtn);
-        }
-
-        function selectAnswer(questionIndex, answerIndex) {
-            quizAnswers[questionIndex] = answerIndex;
-            
-            // Update progress
-            const answered = quizAnswers.filter(a => a !== undefined).length;
-            const total = parseInt(document.getElementById("quiz-total").textContent) || 12;
-            document.getElementById("quiz-progress").textContent = answered;
-            document.getElementById("quiz-progress-bar").style.width = (answered / total * 100) + "%";
-        }
-
-        async function submitQuiz() {
-            const total = parseInt(document.getElementById("quiz-total").textContent) || 12;
-            const answered = quizAnswers.filter(a => a !== undefined).length;
-            
-            if (answered < total) {
-                alert(`Please answer all ${total} questions (${answered}/${total} answered)`);
+                showToast(err.message || "Network error. Please try again.", "error");
+                setVesselStage("recognized");
+                resetBuildRows();
+                startInterviewBtn.disabled = false;
+                setSystemLog("Resume detected.");
                 return;
             }
 
-            // Hide quiz and show subject selection
-            document.getElementById("quiz-section").style.display = "none";
-            document.getElementById("subject-selection-section").style.display = "block";
-            
-            // Show quiz result
-            const resultDiv = document.createElement("div");
-            resultDiv.style.cssText = "margin-bottom: 20px; padding: 15px; background: var(--bot-bubble); border-radius: 12px; border: 1px solid var(--border-subtle); color: #10b981;";
-            resultDiv.innerHTML = `<strong>Discussion Complete!</strong> Resume reviewed. Now let's proceed to the technical interview!`;
-            document.getElementById("subject-selection-section").insertBefore(resultDiv, document.getElementById("subject-selection-section").firstChild);
+            revealRow("row-candidate", "val-candidate", result.name || "Candidate");
+            revealRow("row-domain", "val-domain", result.predicted_domain || "—");
+
+            setSystemLog("Detecting technologies...");
+            await typeLine(buildStatusEl, "Understanding projects...");
+            const years = result.experience ? (result.experience.years || 0) : 0;
+            const level = result.experience ? (result.experience.level || "") : "";
+            const expText = years ? `${years} yr${years === 1 ? "" : "s"}${level ? " · " + level : ""}` : (level || "—");
+            revealRow("row-experience", "val-experience", expText);
+
+            setSystemLog("Extracting projects...");
+            await typeLine(buildStatusEl, "Building candidate profile...");
+            const skillCount = Array.isArray(result.skills) ? result.skills.length : 0;
+            revealRow("row-skills", "val-skills", `${skillCount} skill${skillCount === 1 ? "" : "s"}`);
+
+            setSystemLog("Building candidate profile...");
+            await typeLine(buildStatusEl, "Preparing interview...");
+
+            setVesselStage("ready");
+            setSystemLog("Candidate profile ready.");
+            await wait(700);
+            setSystemLog("AI waiting to begin interview.");
+            showToast("Resume parsed successfully!", "success");
+            showCandidateDashboard(result);
         }
 
-        // ─── START INTERVIEW ──────────────────────────────────────────────────
+        startInterviewBtn.addEventListener("click", uploadResume);
+
+        // ─── cursor-following volumetric light — app-wide, not just the
+        // landing screen, so the environment reacts on every screen ───
+        (function () {
+            const glow = document.getElementById("cursor-glow");
+            if (!glow) return;
+            let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+            let glowX = mouseX, glowY = mouseY;
+            window.addEventListener("mousemove", (e) => { mouseX = e.clientX; mouseY = e.clientY; });
+            function tick() {
+                glowX += (mouseX - glowX) * 0.06;
+                glowY += (mouseY - glowY) * 0.06;
+                glow.style.transform = `translate(${glowX}px, ${glowY}px)`;
+                requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        })();
+
+        // ─── the hero headline writes itself once, on first load ───
+        (function () {
+            const el = document.getElementById("hero-title-text");
+            if (!el) return;
+            typeLine(el, "Interview practice built on your real resume");
+        })();
+
+        // The page loads with no resume yet — start the honest idle cycle.
+        startIdleSystemLogCycle();
+
         function startInterview() {
             selectedTopic = document.getElementById("topic-select").value;
             chatHeader.innerHTML = `${selectedTopic === 'All' ? 'Operating Systems' : selectedTopic} // Active Session`;
 
             landingContainer.style.opacity = "0";
-
+            
             setTimeout(() => {
                 landingContainer.style.display = "none";
                 chatContainer.style.display = "flex";
                 chatContainer.style.opacity = "1";
-                startKioskMode();
                 loadQuestion();
             }, 500);
         }
 
-        // ─── RESET INTERVIEW ──────────────────────────────────────────────────
         function resetInterview() {
-            stopKioskMode();
-
             askedIds = [];
             interviewHistory = [];
             currentDifficulty = "medium";
             stage = "main_question";
             parsedResumeData = null;
-            
+
+            // Reset Resume Discussion state
+            rdSessionId = null;
+            rdQuestionNum = 0;
+            rdTurnHistory = [];
+            document.body.classList.remove("rd-scroll-mode");
+
             messagesDiv.innerHTML = "";
             rdHistoryList.innerHTML = "";
             rdHistoryList.classList.remove("show");
@@ -2575,29 +3552,28 @@
             document.getElementById("resume-upload-section").style.display = "block";
             document.getElementById("subject-selection-section").style.display = "none";
 
-            // Re-enable upload buttons
-            const startBtns = document.querySelectorAll("#resume-upload-section .start-btn");
-            startBtns.forEach(b => { b.disabled = false; b.textContent = "Start Interview →"; });
-            
+            // Reset the vessel back to its idle state
+            clearResumeFile();
+
             setTimeout(() => {
                 landingContainer.style.opacity = "1";
             }, 50);
         }
 
         function disableInput() {
-            stopMic();
+            stopMic(); 
             inputField.disabled = true;
             sendBtn.disabled = true;
-            micBtn.disabled = true;
+            micBtn.disabled = true; 
             inputField.placeholder = "Processing...";
         }
 
         function enableInput() {
             inputField.disabled = false;
             sendBtn.disabled = false;
-            micBtn.disabled = false;
+            micBtn.disabled = false; 
             inputField.placeholder = "Enter response...";
-            inputField.focus();
+            inputField.focus(); 
         }
 
         function addMessage(text, sender, isHtml = false) {
@@ -2610,14 +3586,14 @@
 
             const msgDiv = document.createElement("div");
             msgDiv.className = `msg ${sender}-msg`;
-
+            
             if (isHtml) {
                 msgDiv.innerHTML = text;
             } else {
                 let formattedText = text;
                 msgDiv.innerHTML = formattedText.replace(/\n/g, "<br>");
             }
-
+            
             wrapper.appendChild(avatar);
             wrapper.appendChild(msgDiv);
             messagesDiv.appendChild(wrapper);
@@ -2645,23 +3621,23 @@
 
             setTimeout(() => {
                 chatContainer.style.display = "none";
-
+                
                 const totalQuestions = interviewHistory.length;
                 const totalMarks = interviewHistory.reduce((sum, item) => sum + item.marks, 0);
                 const avgMarks = totalQuestions > 0 ? (totalMarks / totalQuestions).toFixed(1) : 0;
 
                 let topicScores = {};
                 interviewHistory.forEach(item => {
-                    if (!topicScores[item.topic]) topicScores[item.topic] = { total: 0, count: 0 };
+                    if(!topicScores[item.topic]) topicScores[item.topic] = { total: 0, count: 0 };
                     topicScores[item.topic].total += item.marks;
                     topicScores[item.topic].count += 1;
                 });
 
                 let skillsHtml = "";
                 for (const [topic, data] of Object.entries(topicScores)) {
-                    let avgTopicScore = (data.total / data.count) * 10;
+                    let avgTopicScore = (data.total / data.count) * 10; 
                     let color = avgTopicScore >= 80 ? "#34d399" : avgTopicScore >= 50 ? "#fbbf24" : "#fb7185";
-
+                    
                     skillsHtml += `
                         <div class="skill-bar-container">
                             <div class="skill-header"><span style="font-family: 'Roboto Mono', monospace; text-transform: uppercase;">${topic}</span> <span>${(avgTopicScore/10).toFixed(1)}/10</span></div>
@@ -2689,7 +3665,7 @@
 
                 dashboardContainer.innerHTML = `
                     <div class="dashboard-header">Session Analytics</div>
-
+                    
                     <div class="stats-grid">
                         <div class="stat-box">
                             <div class="stat-label" style="margin-bottom: 12px;">Questions</div>
@@ -2724,13 +3700,13 @@
 
                 dashboardContainer.style.display = "flex";
 
-            }, 500);
+            }, 500); 
         }
 
         async function loadQuestion() {
-            disableInput();
+            disableInput(); 
             showTyping();
-
+            
             const payload = { asked_ids: askedIds, difficulty: currentDifficulty, topic: selectedTopic };
 
             const res = await fetch("/api/next_question", {
@@ -2739,34 +3715,33 @@
                 body: JSON.stringify(payload)
             });
             const data = await res.json();
-
-            await sleep(800);
+            
+            await sleep(800); 
             hideTyping();
 
-            if (data.status === "completed" || askedIds.length >= 5) {
+            if (data.status === "completed" || askedIds.length >= 5) { 
                 triggerDashboard();
-                return;
+                return; 
             }
-
+            
             currentQuestionData = data.data;
-            askedIds.push(currentQuestionData.sample_id);
+            askedIds.push(currentQuestionData.sample_id); 
             stage = "main_question";
-
+            
             const diffBadge = `<span style="font-size: 0.65rem; border: 1px solid #333; padding: 4px 8px; border-radius: 4px; color: #aaa; text-transform: uppercase;">${currentDifficulty}</span>`;
-
+            
             addMessage(`${diffBadge} <span style="font-size:0.65rem; color:#666; margin-left: 10px; text-transform: uppercase;">${currentQuestionData.topic}</span><br><br><strong style="font-family: 'Roboto Mono', monospace;">Q${askedIds.length}:</strong> ${currentQuestionData.question}`, "bot", true);
-
-            enableInput();
+            
+            enableInput(); 
         }
 
         async function handleSubmission() {
-            if (inputField.disabled) return;
+            if (inputField.disabled) return; 
 
             const text = inputField.value.trim();
             if (!text) return;
             
-            disableInput(); 
-            addMessage(text, "user");
+            disableInput();
             inputField.value = "";
 
             addMessage(text, "user");
@@ -2774,14 +3749,14 @@
             if (stage === "main_question") {
                 tempMainAnswer = text;
                 stage = "fill_mask";
-
+                
                 showTyping();
                 await sleep(1000);
                 hideTyping();
-
+                
                 addMessage(`<span style="font-family: 'Roboto Mono', monospace; font-size: 0.85rem; color: #888;">// SYSTEM PROMPT</span><br>Complete the following definition:<br><br>${currentQuestionData.fill_mask.question}`, "bot", true);
-                enableInput();
-            }
+                enableInput(); 
+            } 
             else if (stage === "fill_mask") {
                 const payload = {
                     user_answer: tempMainAnswer,
@@ -2801,7 +3776,7 @@
                 });
                 const result = await res.json();
 
-                await sleep(1000);
+                await sleep(1000); 
                 hideTyping();
 
                 interviewHistory.push({
@@ -2814,7 +3789,7 @@
                 });
 
                 const fillStatus = result.fill_correct ? "<span style='color:#34d399;'>✓ Correct</span>" : "<span style='color:#fb7185;'>✗ Incorrect</span>";
-
+                
                 let logicMessage = "";
                 if (result.score >= 0.75) {
                     if (currentDifficulty === "easy") { currentDifficulty = "medium"; logicMessage = "Difficulty adjusted to Medium"; }
@@ -2824,6 +3799,7 @@
                     else if (currentDifficulty === "medium") { currentDifficulty = "easy"; logicMessage = "Difficulty adjusted to Easy"; }
                 }
 
+                // Generate unique IDs for the animation targets
                 const uniqueId = Date.now();
                 const scoreSpanId = `score-val-${uniqueId}`;
                 const cardId = `eval-card-${uniqueId}`;
@@ -2847,16 +3823,17 @@
                         ${logicMessage ? `<div style="margin-top: 12px; font-size: 0.75rem; color: #666; font-family: 'Roboto Mono', monospace; text-transform: uppercase;">> Engine Log: ${logicMessage}</div>` : ''}
                     </div>
                 `;
-
+                
                 addMessage(resultHtml, "bot", true);
 
+                // Trigger the sweet visual Juice
                 setTimeout(() => {
                     animateScore(scoreSpanId, result.score, cardId);
                 }, 100);
 
                 setTimeout(() => {
-                    loadQuestion();
-                }, 4000);
+                    loadQuestion(); 
+                }, 4000); 
             }
         }
 

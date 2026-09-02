@@ -1,0 +1,14 @@
+{
+  "subject": "os",
+  "pdfs": [
+    "OS.pdf"
+  ],
+  "pdf_hash": "43c3908e02038eb859e008e46d7603ace35e08e3ee3887a907e968d6710d52a8",
+  "pages": 232,
+  "chunks": 232,
+  "diagram_chunks": 0,
+  "chunking_strategy": "slide_aware_hybrid_merge",
+  "embedding_model": "all-MiniLM-L6-v2",
+  "ocr_enabled": true,
+  "created_at": "2026-09-02T13:19:40.362485"
+}

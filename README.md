@@ -8,6 +8,7 @@ This is an **AI-powered interview preparation tool** built around a candidate's 
 2. **Resume Discussion** — a 10-question conversational interview is planned and asked directly against that profile (projects, experience, skills), not a generic question bank.
 3. **Evaluation** — each answer is scored by a trained **DeBERTa** evaluator (with an automatic heuristic fallback if the trained model isn't available), producing per-dimension scores, strengths/weaknesses, and an **Improved Answer** (a strengthened rewrite of the candidate's own response).
 4. **Dashboard** — a results dashboard summarizes scores, concept coverage, and the discussion timeline.
+5. **Attention & Gaze Monitoring** — real-time webcam attention monitoring with gaze and head-pose tracking powered by client-side MediaPipe Face Landmarker.
 
 The repo also contains supporting/exploratory subsystems that ship alongside the main app but are not wired into its primary UI flow: a RAG-based question generator (`rag_system/`), a standalone resume domain classifier (`resume_classifier/`), and a RoBERTa multitask question-classification model (`Roberta/`).
 
@@ -188,6 +189,11 @@ Additional endpoints exist for optional/exploratory subsystems and are not calle
 ### RoBERTa Multitask Model (optional)
 - **Input**: Interview question text
 - **Output**: Intent (definition/explanation/etc.), difficulty, topics — used by `/roberta/classify` and the `/adaptive/*` endpoints for adaptive question selection.
+
+### Webcam & Attention Monitoring
+- **Input**: Candidate webcam video stream (client-side in browser)
+- **Process**: Real-time facial landmark detection and gaze / head-orientation tracking using MediaPipe FaceMesh / Face Landmarker
+- **Output**: Non-intrusive attention telemetry, real-time gaze warnings, and a calibrated session Attention Score in the assessment report.
 
 ---
 

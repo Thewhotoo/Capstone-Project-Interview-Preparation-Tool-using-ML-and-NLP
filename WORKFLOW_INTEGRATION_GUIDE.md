@@ -546,11 +546,32 @@ Modify `SessionManager` in `Roberta/roberta-multitask-model/adaptive/`:
 
 ---
 
+## 📹 Webcam & Attention Monitoring System
+
+The platform includes an integrated video monitoring panel embedded in the interactive interview screen.
+
+### 1. Current Implementation Status
+- **Live Video Feed (Implemented)**: Camera stream is accessed via browser `getUserMedia` and rendered in the top-right monitoring panel (`#interview-monitor-panel`).
+- **Non-blocking Lifecycle (Implemented)**: Camera initialization runs in the background and does not block resume parsing, classification, or question delivery.
+- **Backend Asset Support (Implemented)**: Flask is configured with `static_folder="static"` to serve static model files.
+- **Visual Warning Banner (UI Template Ready, Trigger Logic Pending)**: The pulsating UI warning container (`#gaze-warning`) exists in HTML/CSS, but active automatic gaze-deviation warning triggers are **yet to be implemented**.
+
+### 2. Eye Gaze Detection & Warning Trigger Logic (Yet to be Implemented)
+> **Note**: The automated eye detection and real-time warning trigger system is currently pending implementation.
+- **Face & Eye Landmark Tracking**: Real-time extraction of eye midpoint and pupil coordinates via client-side face landmarking (MediaPipe / WebAssembly / OpenCV).
+- **Cognitive Thinking Tolerance (Generalized Heuristic)**:
+  - Natural glance-aways when recalling concepts or thinking (looking up/to the side) should be permitted within a calibrated grace period (~3.0 to 4.0 seconds).
+  - Sustained focus loss or complete absence from the camera view will trigger the visual prompt (`👀 Please focus on the screen`).
+  - **Hysteresis / Anti-Flicker**: Dismissing the warning will require maintaining screen focus for at least 0.5 seconds continuously.
+- **Session Attention Metrics**: Quantifying total attention loss events and overall focus ratio across the interview session.
+
+---
+
 ## 📝 Future Enhancements
 
-- [ ] Web UI dashboard for interviews
-- [ ] Real-time video interview with speech-to-text
-- [ ] Multi-language support
+- [x] Live webcam video feed & UI monitor layout
+- [ ] **[Yet to Implement]** Real-time eye detection & automatic look-away warning triggers
+- [ ] Speech-to-text live interview mode
 - [ ] Custom RAG fine-tuning per domain
 - [ ] Interview analytics dashboard
 - [ ] Competitive benchmarking (compare with other candidates)
@@ -566,7 +587,8 @@ Modify `SessionManager` in `Roberta/roberta-multitask-model/adaptive/`:
 | RAG System | NLP Team | ✅ Production |
 | RoBERTa Multitask | ML Team | ✅ Production |
 | Flask Integration | Backend Team | ✅ Production |
-| Web UI | Frontend Team | 🚧 In Progress |
+| Web UI & Interview Dashboard | Frontend Team | ✅ Production |
+| Webcam & Gaze Monitor | Frontend / ML | 🚧 Feed Ready / Gaze In Progress |
 
 ---
 

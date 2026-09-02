@@ -1,14 +1,14 @@
 {
   "subject": "dsa",
   "pdfs": [
-    "dsa.pdf"
+    "DSA.pdf"
   ],
-  "pdf_hash": "61f25289694ca7138aa66a2cf429f57aa5bf3daf2d296e5fd7a299cc83f3565b",
-  "pages": 371,
-  "chunks": 371,
+  "pdf_hash": "8d7cb60ab38c5e3478eaa2cfb403a860ce8aca5277cb768102763a7750efce5b",
+  "pages": 727,
+  "chunks": 727,
   "diagram_chunks": 0,
   "chunking_strategy": "slide_aware_hybrid_merge",
   "embedding_model": "all-MiniLM-L6-v2",
   "ocr_enabled": true,
-  "created_at": "2026-08-24T00:14:39.478128"
+  "created_at": "2026-09-02T13:18:56.733188"
 }

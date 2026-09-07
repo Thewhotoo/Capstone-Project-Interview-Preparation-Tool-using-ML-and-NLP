@@ -1568,6 +1568,7 @@
         <div class="input-area" id="input-area">
             <input type="text" id="user-input" placeholder="Enter response..." autocomplete="off">
             <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Dictate">🎤</button>
+            <button class="mic-btn" id="tts-toggle-btn" onclick="toggleTTS()" title="Read questions aloud">🔊</button>
             <button class="send-btn" id="send-btn" onclick="handleSubmission()">Send</button>
         </div>
     </div>
@@ -1661,6 +1662,51 @@
         const sendBtn = document.getElementById("send-btn");
         const micBtn = document.getElementById("mic-btn");
         const chatHeader = document.getElementById("chat-header-title");
+
+        // --- TTS (read questions aloud) ---
+        const ttsToggleBtn = document.getElementById("tts-toggle-btn");
+        let ttsEnabled = true; // on by default; toggle button flips this
+        let currentTTSAudio = null;
+
+        function toggleTTS() {
+            ttsEnabled = !ttsEnabled;
+            ttsToggleBtn.style.opacity = ttsEnabled ? "1" : "0.4";
+            ttsToggleBtn.textContent = ttsEnabled ? "🔊" : "🔇";
+            ttsToggleBtn.title = ttsEnabled ? "Read questions aloud (on)" : "Read questions aloud (off)";
+            if (ttsEnabled) {
+                speakQuestion("Voice enabled.");   // audible confirmation the moment it's turned on
+            } else if (currentTTSAudio) {
+                currentTTSAudio.pause();
+            }
+        }
+
+        async function speakQuestion(text) {
+            if (!ttsEnabled || !text) return;
+            try {
+                const res = await fetch("/audio/tts", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ text })
+                });
+                if (!res.ok) {
+                    console.error("TTS request failed:", res.status, await res.text());
+                    return;
+                }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                if (currentTTSAudio) currentTTSAudio.pause();
+                currentTTSAudio = new Audio(url);
+                await currentTTSAudio.play().catch(err => {
+                    // Autoplay can be blocked if this wasn't triggered close
+                    // enough to a user gesture -- log so it's visible instead
+                    // of silently doing nothing.
+                    console.warn("TTS playback blocked by browser autoplay policy:", err);
+                });
+            } catch (err) {
+                console.error("TTS error:", err);
+            }
+        }
+
 
         const rdContainer = document.getElementById("rd-container");
         const rdInput = document.getElementById("rd-user-input");
@@ -3189,48 +3235,124 @@
             }, 40);
         }
 
-        // --- SPEECH RECOGNITION LOGIC ---
-        let recognition;
+        // --- VOICE INPUT: MediaRecorder + server-side Whisper STT + tone/cadence analysis ---
+        // Replaces the old Web Speech API recognizer. Web Speech API discards
+        // the raw audio after transcribing, which meant (a) accuracy on
+        // non-US/UK accents was whatever the browser's built-in engine gave
+        // us with no way to improve it, and (b) there was no audio left to
+        // analyze for scripted-answer/tone detection. Capturing real audio
+        // and sending it to Whisper solves both at once.
         let isRecording = false;
-
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = true;
-
-            recognition.onstart = function() {
-                isRecording = true;
-                micBtn.classList.add("mic-active");
-                inputField.placeholder = "Listening...";
-            };
-
-            recognition.onresult = function(event) {
-                let transcript = "";
-                for (let i = 0; i < event.results.length; i++) {
-                    transcript += event.results[i][0].transcript;
-                }
-                inputField.value = transcript;
-            };
-
-            recognition.onerror = function(event) { stopMic(); };
-            recognition.onend = function() { stopMic(); };
-        } else {
-            micBtn.style.display = "none"; 
-        }
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let recordingStartTime = null;
+        let firstSoundTime = null;
+        let micStream = null;
 
         function toggleMic() {
-            if (isRecording) { stopMic(); } 
-            else { if (recognition) recognition.start(); }
+            if (isRecording) { stopMicAndProcess(); }
+            else { startMicRecording(); }
         }
 
-        function stopMic() {
-            if (recognition && isRecording) {
-                recognition.stop();
-                isRecording = false;
-                micBtn.classList.remove("mic-active");
-                inputField.placeholder = "Enter response...";
+        async function startMicRecording() {
+            try {
+                micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch (err) {
+                console.error("Microphone access denied or unavailable:", err);
+                inputField.placeholder = "Microphone unavailable";
+                return;
             }
+
+            recordedChunks = [];
+            firstSoundTime = null;
+            recordingStartTime = performance.now();
+            isRecording = true;
+            micBtn.classList.add("mic-active");
+            inputField.placeholder = "Listening... click mic again to stop";
+
+            mediaRecorder = new MediaRecorder(micStream, { mimeType: "audio/webm" });
+            mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+            mediaRecorder.start();
+
+            // crude client-side voice-activity timestamp, fed to the backend
+            // as one input to the "reading from notes" latency signal
+            const audioCtx = new AudioContext();
+            const source = audioCtx.createMediaStreamSource(micStream);
+            const analyser = audioCtx.createAnalyser();
+            source.connect(analyser);
+            const data = new Uint8Array(analyser.fftSize);
+            function checkVolume() {
+                if (firstSoundTime !== null || !isRecording) return;
+                analyser.getByteTimeDomainData(data);
+                const amplitude = Math.max(...data.map(v => Math.abs(v - 128)));
+                if (amplitude > 10) {
+                    firstSoundTime = (performance.now() - recordingStartTime) / 1000;
+                } else {
+                    requestAnimationFrame(checkVolume);
+                }
+            }
+            requestAnimationFrame(checkVolume);
+        }
+
+        async function stopMicAndProcess() {
+            if (!isRecording || !mediaRecorder) return;
+            isRecording = false;
+            micBtn.classList.remove("mic-active");
+            inputField.placeholder = "Transcribing...";
+            inputField.disabled = true;
+
+            const audioBlob = await new Promise((resolve) => {
+                mediaRecorder.onstop = () => resolve(new Blob(recordedChunks, { type: "audio/webm" }));
+                mediaRecorder.stop();
+            });
+            micStream.getTracks().forEach(t => t.stop());
+
+            const formData = new FormData();
+            formData.append("audio", audioBlob, "answer.webm");
+            formData.append("question", currentQuestionData ? currentQuestionData.question : "");
+            formData.append("topic", currentQuestionData ? currentQuestionData.topic : "");
+            if (currentQuestionData && currentQuestionData.reference_answer) {
+                formData.append("reference_answer", currentQuestionData.reference_answer);
+            }
+            formData.append("user_id", "default");
+            if (firstSoundTime !== null) formData.append("time_to_first_sound", firstSoundTime);
+
+            try {
+                const res = await fetch("/audio/process", { method: "POST", body: formData });
+                const result = await res.json();
+
+                if (!res.ok) {
+                    console.error("Audio processing failed:", result.error || res.status);
+                    inputField.placeholder = result.error || "Voice processing unavailable — type your answer instead";
+                    inputField.disabled = false;
+                    return;
+                }
+
+                if (result.terminated) {
+                    handleSessionTermination(result);
+                    return;
+                }
+
+                inputField.value = result.transcript || "";
+                inputField.placeholder = "Enter response...";
+                inputField.disabled = false;
+                if (result.is_scripted || result.is_cheating) {
+                    console.warn("Answer flagged (below termination threshold):", result.scripted_score, result.metrics);
+                }
+            } catch (err) {
+                console.error("Audio upload error:", err);
+                inputField.placeholder = "Voice processing failed — type your answer instead";
+                inputField.disabled = false;
+            }
+        }
+
+        function handleSessionTermination(result) {
+            document.querySelectorAll("button, input, textarea").forEach(el => el.disabled = true);
+            const banner = document.createElement("div");
+            banner.style.cssText = "position:fixed;top:0;left:0;right:0;background:#7f1d1d;color:#fff;" +
+                "padding:14px;text-align:center;font-family:'Roboto Mono',monospace;z-index:9999;";
+            banner.textContent = `⚠ Interview ended: ${result.reason}`;
+            document.body.prepend(banner);
         }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -3731,7 +3853,8 @@
             const diffBadge = `<span style="font-size: 0.65rem; border: 1px solid #333; padding: 4px 8px; border-radius: 4px; color: #aaa; text-transform: uppercase;">${currentDifficulty}</span>`;
             
             addMessage(`${diffBadge} <span style="font-size:0.65rem; color:#666; margin-left: 10px; text-transform: uppercase;">${currentQuestionData.topic}</span><br><br><strong style="font-family: 'Roboto Mono', monospace;">Q${askedIds.length}:</strong> ${currentQuestionData.question}`, "bot", true);
-            
+            speakQuestion(currentQuestionData.question);
+
             enableInput(); 
         }
 
@@ -3755,6 +3878,7 @@
                 hideTyping();
                 
                 addMessage(`<span style="font-family: 'Roboto Mono', monospace; font-size: 0.85rem; color: #888;">// SYSTEM PROMPT</span><br>Complete the following definition:<br><br>${currentQuestionData.fill_mask.question}`, "bot", true);
+                speakQuestion(`Complete the following definition: ${currentQuestionData.fill_mask.question}`);
                 enableInput(); 
             } 
             else if (stage === "fill_mask") {

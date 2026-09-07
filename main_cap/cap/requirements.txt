@@ -15,3 +15,14 @@ keybert
 transformers>=4.40.0
 torch>=2.0.0
 sentencepiece>=0.1.99
+sounddevice>=0.4.6
+scipy>=1.11.3
+numpy>=1.26.0
+whisper>=1.1.10
+librosa>=0.12.2
+pydub>=0.25.1
+datetime>=0.8.2
+pathlib>=1.0.0
+asyncio>=3.0.0
+edge_tts>=2.0.0
+

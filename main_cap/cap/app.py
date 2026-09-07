@@ -12,6 +12,8 @@ import logging
 import conversation_engine
 import deployment_evaluator
 import discussion_engine
+from tts_routes import tts_bp
+from audio_routes import audio_bp
 
 # Load .env file (unused by the default resume-parsing path; kept for any
 # optional dev tooling -- see the note below)
@@ -40,6 +42,8 @@ if not os.environ.get("GEMINI_API_KEY", "").strip():
 deployment_evaluator.bootstrap_production_evaluator()
 
 app = Flask(__name__, template_folder="templates")
+app.register_blueprint(tts_bp)
+app.register_blueprint(audio_bp)
 
 # Base paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

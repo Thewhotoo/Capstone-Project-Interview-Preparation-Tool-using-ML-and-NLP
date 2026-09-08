@@ -20,12 +20,22 @@ from typing import Optional
 import torch
 from torch.utils.data import DataLoader, Dataset
 
+from evaluation_dimensions import all_keys as canonical_dimension_keys
 from evaluation_result import ConceptObservationStatus
-from model_backbone import BackboneConfig, tokenize_pair
+from model_backbone import BackboneConfig, build_dimension_pair, grounding_to_text, tokenize_pair
 from model_heads import _MISSING_REASONING_CATEGORIES
 from reasoning_dimension_relevance import ALL_DIMENSIONS, relevant_dimensions
 from training_example import TrainingExample
 from training_experimentation import DatasetSplit
+
+# Four-dimension migration (additive): the canonical dimension names, as
+# plain strings (matching `DimensionLabel.name`'s literal keys — see
+# `four_dim_dataset._judge_dimension_labels`), not the `EvaluationDimension`
+# enum objects themselves. `collate_fn`/`build_dataloaders` default to the
+# LEGACY `ALL_DIMENSIONS` scheme unchanged (every existing call site keeps
+# today's exact behavior); passing `dimension_names=CANONICAL_DIMENSION_KEYS`
+# switches to the four-canonical-dimension scheme.
+CANONICAL_DIMENSION_KEYS: tuple[str, ...] = canonical_dimension_keys()
 
 _CONCEPT_STATUS_ORDER: tuple[ConceptObservationStatus, ...] = (
     ConceptObservationStatus.DEMONSTRATED, ConceptObservationStatus.SUPERFICIAL, ConceptObservationStatus.OMITTED,
@@ -82,6 +92,7 @@ def collate_fn(
     tokenizer,
     backbone_config: BackboneConfig,
     missing_reasoning_categories: tuple[str, ...] = _MISSING_REASONING_CATEGORIES,
+    dimension_names: tuple[str, ...] = ALL_DIMENSIONS,
 ) -> dict:
     """
     Tokenizes the main (question, answer) pair per example (dynamic
@@ -89,23 +100,57 @@ def collate_fn(
     across the whole batch (approved: "simplest correct implementation" for
     variable-length concept batching — flatten with an index-back-to-example
     mapping rather than pad to a per-batch max-concepts count).
+
+    DIMENSION SCHEME (additive, four-dimension migration): `dimension_names`
+    defaults to the LEGACY `ALL_DIMENSIONS` (12-dimension) set, so every
+    existing call site is completely unaffected. Passing
+    `dimension_names=CANONICAL_DIMENSION_KEYS` switches `dimension_targets`/
+    `dimension_mask` to the four canonical dimensions
+    (technical_correctness, depth_specificity, relevance_completeness,
+    grounding_ownership), in that exact order. The two schemes need
+    different masking rules and are never mixed within one call:
+      - LEGACY: a dimension is masked in only when it is BOTH labeled AND
+        `reasoning_dimension_relevance.relevant_dimensions(...)`-relevant
+        for the example's reasoning_type (today's exact behavior).
+      - CANONICAL FOUR: every one of the four dimensions applies to every
+        question intent by design (`evaluation_dimensions.py`'s own
+        `applies_to: "all question intents"` on each rubric) — there is no
+        legacy relevance table entry for these names (calling
+        `relevant_dimensions()` on them would silently return an
+        always-empty set, zeroing every canonical loss term), so masking is
+        presence-only: in whenever the example actually carries a labeled
+        score for that dimension.
     """
-    main_encodings = [
-        tokenize_pair(tokenizer, e.inputs.question_text, e.inputs.answer_text, backbone_config.max_length)
-        for e in batch
-    ]
+    use_legacy_relevance = set(dimension_names) == set(ALL_DIMENSIONS)
+    # Step 2: the main (dimension) pair is now (context, answer) where context
+    # = QUESTION + RELEVANT CONTEXT (grounding) + EXPECTED CONCEPTS, built by
+    # the SAME `build_dimension_pair` helper the live evaluator uses so the
+    # training-time and inference-time framing are identical. The grounding /
+    # expected_concepts already live on every TrainingExample's inputs.
+    main_encodings = []
+    for e in batch:
+        context_text, answer_text = build_dimension_pair(
+            e.inputs.question_text,
+            grounding_to_text(e.inputs.specification.grounding),
+            e.inputs.expected_concepts,
+            e.inputs.answer_text,
+        )
+        main_encodings.append(tokenize_pair(tokenizer, context_text, answer_text, backbone_config.max_length))
     main_batch = tokenizer.pad(main_encodings, return_tensors="pt")
 
     n = len(batch)
-    dimension_targets = torch.zeros((n, len(ALL_DIMENSIONS)), dtype=torch.long)
-    dimension_mask = torch.zeros((n, len(ALL_DIMENSIONS)), dtype=torch.float)
+    dimension_targets = torch.zeros((n, len(dimension_names)), dtype=torch.long)
+    dimension_mask = torch.zeros((n, len(dimension_names)), dtype=torch.float)
     for i, example in enumerate(batch):
         labels_by_name = {d.name: d.score for d in example.labels.dimension_labels}
-        relevant = relevant_dimensions(example.inputs.reasoning_type)
-        for j, name in enumerate(ALL_DIMENSIONS):
+        relevant = relevant_dimensions(example.inputs.reasoning_type) if use_legacy_relevance else None
+        for j, name in enumerate(dimension_names):
             if name in labels_by_name:
                 dimension_targets[i, j] = score_to_tier(labels_by_name[name])
-                if name in relevant:
+                if use_legacy_relevance:
+                    if name in relevant:
+                        dimension_mask[i, j] = 1.0
+                else:
                     dimension_mask[i, j] = 1.0
 
     presence_target = torch.zeros((n, len(missing_reasoning_categories)), dtype=torch.float)
@@ -160,6 +205,7 @@ def build_dataloaders(
     batch_size: int = 8,
     missing_reasoning_categories: tuple[str, ...] = _MISSING_REASONING_CATEGORIES,
     seed: Optional[int] = None,
+    dimension_names: tuple[str, ...] = ALL_DIMENSIONS,
 ) -> tuple[DataLoader, DataLoader, DataLoader]:
     """Builds (train_loader, val_loader, test_loader) from an
     already-computed `DatasetSplit` — this module never calls
@@ -179,7 +225,7 @@ def build_dataloaders(
     """
 
     def _collate(batch: list[TrainingExample]) -> dict:
-        return collate_fn(batch, tokenizer, backbone_config, missing_reasoning_categories)
+        return collate_fn(batch, tokenizer, backbone_config, missing_reasoning_categories, dimension_names)
 
     def _loader(subset: str, shuffle: bool) -> DataLoader:
         dataset = TrainingExampleDataset(examples, split, subset)

@@ -1,0 +1,116 @@
+"""
+Tests for `run_four_dim_training.py`'s LOCAL-safe pieces only: environment
+reporting, the hard CUDA-required gate, and config/path sanity. Never
+downloads the real backbone, never trains -- that requires a GPU-backed
+Colab runtime (see COLAB_RUN.md) and is explicitly out of scope for local
+tests, per this phase's own constraint.
+"""
+
+import os
+import sys
+import unittest
+from unittest import mock
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from evaluation_dimensions import CANONICAL_DIMENSIONS
+import run_four_dim_training as entrypoint
+
+
+class TestEnvironmentReport(unittest.TestCase):
+    def test_report_contains_required_fields(self):
+        report = entrypoint.environment_report()
+        for key in ("python_version", "torch_version", "transformers_version", "cuda_available", "gpu_name", "gpu_count"):
+            self.assertIn(key, report)
+
+    def test_gpu_name_is_none_when_cuda_unavailable(self):
+        with mock.patch("torch.cuda.is_available", return_value=False):
+            report = entrypoint.environment_report()
+        self.assertFalse(report["cuda_available"])
+        self.assertIsNone(report["gpu_name"])
+        self.assertEqual(report["gpu_count"], 0)
+
+
+class TestRequireCudaOrExit(unittest.TestCase):
+    def test_exits_when_cuda_unavailable(self):
+        with self.assertRaises(SystemExit) as ctx:
+            entrypoint.require_cuda_or_exit({"cuda_available": False})
+        self.assertEqual(ctx.exception.code, 1)
+
+    def test_does_not_exit_when_cuda_available(self):
+        try:
+            entrypoint.require_cuda_or_exit({"cuda_available": True})
+        except SystemExit:
+            self.fail("require_cuda_or_exit must not exit when cuda_available is True")
+
+
+class TestDryRunIsSafe(unittest.TestCase):
+    def test_dry_run_never_requires_cuda_and_loads_the_frozen_pool(self):
+        # No mocking needed here -- dry_run() must genuinely work on a
+        # CPU-only machine (that's the entire point of --dry-run).
+        exit_code = entrypoint.dry_run()
+        self.assertEqual(exit_code, 0)
+
+    def test_dry_run_does_not_import_the_real_backbone_model_class(self):
+        # AST-level check (same discipline as the existing
+        # test_pipeline_does_not_reference_fake_generation_client-style
+        # boundary tests) that dry_run's own body never references
+        # anything that would trigger a real pretrained-weights download
+        # (AutoModel construction lives inside CrossEncoderBackbone /
+        # MultiTaskModel, neither of which dry_run touches).
+        import ast
+        import inspect
+        source = inspect.getsource(entrypoint.dry_run)
+        tree = ast.parse(source)
+        names = {n.id for n in ast.walk(tree) if isinstance(n, ast.Name)}
+        self.assertNotIn("MultiTaskModel", names)
+        self.assertNotIn("build_tokenizer", names)
+
+
+class TestConfigSanity(unittest.TestCase):
+    def test_config_declares_fresh_initialization_from_the_named_base_model(self):
+        self.assertEqual(entrypoint.CONFIG["base_model"], "microsoft/deberta-v3-base")
+        self.assertTrue(entrypoint.CONFIG["fresh_initialization"])
+
+    def test_config_dataset_identifiers_match_the_frozen_split(self):
+        self.assertEqual(entrypoint.CONFIG["dataset_split_identifier"], "four_dim_experiment_v1")
+        self.assertEqual(entrypoint.CONFIG["split_seed"], "four_dim_experiment_v1_41")
+
+    def test_canonical_dimension_keys_match_evaluation_dimensions(self):
+        self.assertEqual(entrypoint.CANONICAL_DIMENSION_KEYS, tuple(d.value for d in CANONICAL_DIMENSIONS))
+
+    def test_split_json_path_points_at_the_frozen_phase3_artifact(self):
+        self.assertTrue(entrypoint.SPLIT_JSON_PATH.replace("\\", "/").endswith(
+            "artifacts/four_dim_experiment_v1/split.json"
+        ))
+
+    def test_output_dir_is_distinct_from_the_frozen_split_artifact_dir(self):
+        # Must never write into (and thereby risk mutating) Phase 3's own
+        # frozen split.json / distribution_report.json directory.
+        self.assertNotEqual(entrypoint.ARTIFACTS_DIR, os.path.dirname(entrypoint.SPLIT_JSON_PATH))
+
+
+class TestPerDimensionMetrics(unittest.TestCase):
+    def test_perfect_predictions_yield_qwk_one_and_zero_mae(self):
+        y_true = [0, 1, 2, 3, 4, 2, 1]
+        metrics = entrypoint._dimension_metrics(y_true, list(y_true))
+        self.assertEqual(metrics["accuracy"], 1.0)
+        self.assertEqual(metrics["within_1_accuracy"], 1.0)
+        self.assertEqual(metrics["mae"], 0.0)
+        self.assertEqual(metrics["qwk"], 1.0)
+
+    def test_confusion_matrix_shape_and_totals(self):
+        y_true = [0, 1, 2, 3, 4]
+        y_pred = [0, 1, 1, 3, 3]
+        metrics = entrypoint._dimension_metrics(y_true, y_pred)
+        self.assertEqual(len(metrics["confusion_matrix"]), 5)
+        self.assertEqual(len(metrics["confusion_matrix"][0]), 5)
+        self.assertEqual(sum(sum(row) for row in metrics["confusion_matrix"]), 5)
+
+    def test_mean_qwk_averages_across_all_four_dimensions(self):
+        metrics_by_dim = {name: {"qwk": q} for name, q in zip(entrypoint.CANONICAL_DIMENSION_KEYS, [1.0, 0.5, 0.0, 0.5])}
+        self.assertAlmostEqual(entrypoint._mean_qwk(metrics_by_dim), 0.5)
+
+
+if __name__ == "__main__":
+    unittest.main()

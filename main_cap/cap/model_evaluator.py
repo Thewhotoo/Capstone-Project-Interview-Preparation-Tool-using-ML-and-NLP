@@ -44,8 +44,9 @@ from evaluation_result import (
     EvidenceLinkedClaim,
     MissingReasoningItem,
 )
+from evaluation_dimensions import all_keys as canonical_dimension_keys
 from evaluator_registry import register_evaluator
-from model_backbone import BackboneConfig, tokenize_pair
+from model_backbone import BackboneConfig, build_dimension_pair, grounding_to_text, tokenize_pair
 from model_heads import _MISSING_REASONING_CATEGORIES, MultiTaskModel, coral_confidence, coral_predict
 from question_families import ReasoningType
 from reasoning_dimension_relevance import (
@@ -58,6 +59,17 @@ from reasoning_dimension_relevance import (
     relevant_dimensions,
 )
 from training_experimentation import Checkpoint, PromotionDecision
+
+# Four-dimension migration (additive): the canonical dimension names, as
+# plain strings. `TrainedEvaluator` supports EITHER scheme, chosen entirely
+# by which `dimension_names` the loaded `MultiTaskModel` was built with (see
+# `__init__`/`evaluate()` below) — never a hard rip-and-replace, since the
+# currently-deployed legacy checkpoint (12-dimension) and its evaluator
+# wiring (conversation_engine.py / deployment_evaluator.py /
+# hybrid_evaluator.py) must keep working unchanged until it is explicitly
+# retired, per this migration's own compatibility constraint (do not
+# migrate/reuse the old checkpoint's weights, but do not break it either).
+CANONICAL_DIMENSION_KEYS: tuple[str, ...] = canonical_dimension_keys()
 
 logger = logging.getLogger(__name__)
 
@@ -122,12 +134,10 @@ def _contradiction_flag(answer: str, grounding_text: str) -> bool:
 
 
 def _grounding_text(spec) -> str:
-    g = spec.grounding
-    if g.project is not None:
-        return " ".join(filter(None, [g.project.title, g.project.summary, *g.project.technologies, *g.project.concepts]))
-    if g.experience is not None:
-        return " ".join(filter(None, [g.experience.role, g.experience.company, g.experience.summary]))
-    return g.certification.name
+    """Delegates to `model_backbone.grounding_to_text` so the contradiction
+    check and the new contextual dimension input flatten grounding the exact
+    same way (single source of truth, no drift)."""
+    return grounding_to_text(spec.grounding)
 
 
 def _claims(dimensions: list[DimensionScore]) -> tuple[tuple[EvidenceLinkedClaim, ...], tuple[EvidenceLinkedClaim, ...]]:
@@ -173,6 +183,15 @@ class TrainedEvaluator:
         self.backbone_config = backbone_config
         self.name = f"trained-{checkpoint.model_version}"
         self.version = checkpoint.schema_version
+        # Four-dimension migration (additive): declared_dimensions reflects
+        # whatever THIS model was actually built with (model.dimension_names,
+        # already stored by MultiTaskModel.__init__) rather than the fixed
+        # legacy class attribute below — an instance attribute shadows the
+        # class one, so evaluators built from a legacy model (the current
+        # production checkpoint) still see the class default (ALL_DIMENSIONS)
+        # unchanged, while an evaluator built from a four-canonical-dimension
+        # model correctly declares only those four.
+        self.declared_dimensions = tuple(model.dimension_names)
         # Portability (Colab/GPU vs local/CPU, session 10): inferred from
         # the model itself rather than a separate constructor argument, so
         # there is no way to pass a device that disagrees with where the
@@ -185,36 +204,67 @@ class TrainedEvaluator:
     def evaluate(self, request: EvaluationRequest) -> EvaluationResult:
         self.model.eval()
         with torch.no_grad():
+            # Step 2: the dimension model now sees QUESTION + RELEVANT CONTEXT
+            # (grounding) + EXPECTED CONCEPTS as text_a, with the answer as
+            # text_b -- the grounding/expected_concepts already carried by the
+            # EvaluationRequest but previously discarded for dimension scoring.
+            context_text, answer_text = build_dimension_pair(
+                request.question_text,
+                _grounding_text(request.specification),
+                request.expected_concepts,
+                request.answer_text,
+            )
             main_encoding = tokenize_pair(
-                self.tokenizer, request.question_text, request.answer_text, self.backbone_config.max_length,
+                self.tokenizer, context_text, answer_text, self.backbone_config.max_length,
             )
             main_batch = self.tokenizer.pad([main_encoding], return_tensors="pt")
             main_input_ids = main_batch["input_ids"].to(self.device)
             main_attention_mask = main_batch["attention_mask"].to(self.device)
             outputs = self.model.forward_dimensions(main_input_ids, main_attention_mask)
 
-            # Phase 6: category passed through -- same rationale as
-            # heuristic_evaluator.py's own call site, see
-            # reasoning_dimension_relevance.py's
-            # DIMENSION_EXCLUSIONS_BY_CATEGORY docstring.
-            relevant = relevant_dimensions(request.reasoning_type, request.specification.category)
-            # Proportional, not uniform, weighting -- same Phase 3
-            # evaluation-fairness fix as heuristic_evaluator.py's `evaluate()`
-            # (see that module for the full rationale). The four
-            # ALWAYS-relevant dimensions carry more weight than the 1-2 extra
-            # dimensions a reasoning_type pulls in on top, since those extras
-            # weren't necessarily what THIS specific question asked about.
-            always_relevant = {TECHNICAL_ACCURACY, COMMUNICATION, COMPLETENESS, RESUME_GROUNDING}
-            _ALWAYS_WEIGHT = 1.5
-            _EXTRA_WEIGHT = 1.0
-            raw_weights = {
-                name: (_ALWAYS_WEIGHT if name in always_relevant else _EXTRA_WEIGHT)
-                for name in relevant
-            }
+            # Four-dimension migration (additive): which scheme this
+            # particular loaded model uses decides which relevance/weighting
+            # policy applies -- never a hard swap, so a legacy-scheme model
+            # (the current production checkpoint) gets EXACTLY today's
+            # behavior, unchanged.
+            is_canonical_scheme = set(self.model.dimension_names) == set(CANONICAL_DIMENSION_KEYS)
+
+            if is_canonical_scheme:
+                # All four canonical dimensions apply to EVERY question
+                # intent by construction (evaluation_dimensions.py's own
+                # `applies_to: "all question intents"` on each rubric) --
+                # there is no legacy relevance/exclusion table entry for
+                # these names (relevant_dimensions() wouldn't recognize
+                # them), and there is no "always-relevant vs extra" split in
+                # the four-dimension design, so every dimension is reported,
+                # equally weighted.
+                relevant = set(CANONICAL_DIMENSION_KEYS)
+                raw_weights = {name: 1.0 for name in CANONICAL_DIMENSION_KEYS}
+                dim_order = CANONICAL_DIMENSION_KEYS
+            else:
+                # Phase 6: category passed through -- same rationale as
+                # heuristic_evaluator.py's own call site, see
+                # reasoning_dimension_relevance.py's
+                # DIMENSION_EXCLUSIONS_BY_CATEGORY docstring.
+                relevant = relevant_dimensions(request.reasoning_type, request.specification.category)
+                # Proportional, not uniform, weighting -- same Phase 3
+                # evaluation-fairness fix as heuristic_evaluator.py's `evaluate()`
+                # (see that module for the full rationale). The four
+                # ALWAYS-relevant dimensions carry more weight than the 1-2 extra
+                # dimensions a reasoning_type pulls in on top, since those extras
+                # weren't necessarily what THIS specific question asked about.
+                always_relevant = {TECHNICAL_ACCURACY, COMMUNICATION, COMPLETENESS, RESUME_GROUNDING}
+                _ALWAYS_WEIGHT = 1.5
+                _EXTRA_WEIGHT = 1.0
+                raw_weights = {
+                    name: (_ALWAYS_WEIGHT if name in always_relevant else _EXTRA_WEIGHT)
+                    for name in relevant
+                }
+                dim_order = ALL_DIMENSIONS
             weight_total = sum(raw_weights.values())
 
             dimensions: list[DimensionScore] = []
-            for name in ALL_DIMENSIONS:
+            for name in dim_order:
                 if name not in relevant:
                     continue
                 logits = outputs["dimension_logits"][name]
@@ -225,7 +275,7 @@ class TrainedEvaluator:
                     name=name, raw_score=round(raw_score, 3),
                     weight_used=round(raw_weights[name] / weight_total, 4),
                     confidence=round(confidence, 3), confidence_source=_CONFIDENCE_SOURCE_MODEL_DERIVED,
-                    contributes_to_overall=contributes_by_default(name),
+                    contributes_to_overall=(True if is_canonical_scheme else contributes_by_default(name)),
                     evidence_refs=(request.specification.source_id,),
                 ))
 

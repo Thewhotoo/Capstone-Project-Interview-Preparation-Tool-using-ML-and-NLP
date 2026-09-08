@@ -67,6 +67,98 @@ def tokenize_pair(tokenizer, text_a: str, text_b: str, max_length: int):
     return tokenizer(text_a, text_b, truncation=True, max_length=max_length)
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+# Contextual dimension-model input (Step 2: feed context into the evaluator)
+# ═════════════════════════════════════════════════════════════════════════════
+# The dimension model is a CROSS-ENCODER over a (text_a, text_b) pair. Before
+# this step text_a was the bare question; the grounding/expected-concepts that
+# already exist on EvaluationRequest / TrainingExampleInputs were never shown
+# to the model, so it could not judge relevance-completeness or
+# grounding-ownership properly. These helpers build a DETERMINISTIC, labeled
+# text_a from that context; the candidate ANSWER stays as text_b (segment B),
+# so the model still sees exactly one [CLS] context [SEP] answer [SEP] pair —
+# the cross-encoder shape and the CORAL heads are unchanged.
+#
+# Answer-as-segment-B is deliberate (not a fourth "ANSWER:" section inside
+# text_a): it keeps the answer as the distinct thing being judged, matches the
+# pre-existing segment-B-is-answer convention, and avoids duplicating the
+# answer text (which would waste the max_length budget). Truncation is
+# unchanged (`tokenize_pair(..., truncation=True, max_length=...)`), and HF's
+# default longest-first strategy trims the (usually longer) context before the
+# answer, so the answer is preserved under truncation.
+#
+# NOTE (checkpoint compatibility): the CURRENTLY deployed checkpoint was
+# trained on (question, answer) only. This change makes the INPUT PIPELINE
+# context-aware for the FUTURE four-dimension retrain; it does NOT make the
+# existing checkpoint context-aware or more accurate — the existing weights
+# have never seen the "QUESTION:/RELEVANT CONTEXT:/EXPECTED CONCEPTS:" framing.
+
+
+def grounding_to_text(grounding) -> str:
+    """Flattens a QuestionSpecification-style grounding (project / experience
+    / certification) into a single plain-text context string. Duck-typed
+    (attribute access via getattr) so it works for both the real
+    `Grounding` object and any lightweight test stand-in, and never raises on
+    a missing/empty field."""
+    project = getattr(grounding, "project", None)
+    if project is not None:
+        parts = [getattr(project, "title", "") or "", getattr(project, "summary", "") or ""]
+        parts += [str(t) for t in (getattr(project, "technologies", ()) or [])]
+        parts += [str(c) for c in (getattr(project, "concepts", ()) or [])]
+        return " ".join(p for p in parts if p).strip()
+    experience = getattr(grounding, "experience", None)
+    if experience is not None:
+        parts = [
+            getattr(experience, "role", "") or "",
+            getattr(experience, "company", "") or "",
+            getattr(experience, "summary", "") or "",
+        ]
+        return " ".join(p for p in parts if p).strip()
+    certification = getattr(grounding, "certification", None)
+    if certification is not None:
+        return (getattr(certification, "name", "") or "").strip()
+    return ""
+
+
+def build_dimension_input_text(
+    question_text: str,
+    grounding_text: str = "",
+    expected_concepts: "tuple[str, ...] | list[str]" = (),
+) -> str:
+    """Builds the deterministic, labeled context string used as `text_a` for
+    the dimension model. Always includes a QUESTION section; includes
+    RELEVANT CONTEXT and EXPECTED CONCEPTS sections ONLY when non-empty, so an
+    absent grounding or empty concept list simply omits that section rather
+    than emitting a dangling label (safe handling of missing context). The
+    candidate answer is NOT included here — it is passed separately as the
+    pair's second segment (see module note above)."""
+    sections = [f"QUESTION:\n{(question_text or '').strip()}"]
+    grounding = (grounding_text or "").strip()
+    if grounding:
+        sections.append(f"RELEVANT CONTEXT:\n{grounding}")
+    concepts = [str(c).strip() for c in (expected_concepts or ()) if c and str(c).strip()]
+    if concepts:
+        sections.append("EXPECTED CONCEPTS:\n" + ", ".join(concepts))
+    return "\n\n".join(sections)
+
+
+def build_dimension_pair(
+    question_text: str,
+    grounding_text: str,
+    expected_concepts: "tuple[str, ...] | list[str]",
+    answer_text: str,
+) -> tuple[str, str]:
+    """The full (text_a, text_b) pair the dimension model is tokenized on:
+    the labeled context block, and the candidate answer. A single call site
+    for both training (`model_dataset.collate_fn`) and inference
+    (`model_evaluator.TrainedEvaluator.evaluate`) so the framing can never
+    drift between them."""
+    return (
+        build_dimension_input_text(question_text, grounding_text, expected_concepts),
+        answer_text or "",
+    )
+
+
 class CrossEncoderBackbone(nn.Module):
     """Wraps a HuggingFace `AutoModel` encoder. One forward pass = one
     (text_a, text_b) pair -> one pooled embedding vector. `encoder` may be

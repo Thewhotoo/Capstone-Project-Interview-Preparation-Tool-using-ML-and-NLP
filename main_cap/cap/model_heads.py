@@ -315,6 +315,7 @@ def train_model(
     learning_rate: float = 2e-5,
     num_ordinal_classes: int = _NUM_ORDINAL_CLASSES_DEFAULT,
     missing_reasoning_categories: tuple[str, ...] = _MISSING_REASONING_CATEGORIES,
+    dimension_names: tuple[str, ...] = ALL_DIMENSIONS,
     device: str = "cpu",
     backbone: Optional[nn.Module] = None,
     random_seed: Optional[int] = None,
@@ -341,6 +342,17 @@ def train_model(
     `torch.optim.AdamW`'s own default, so omitting it (as every existing
     caller does) is bit-for-bit identical to before this parameter existed;
     it is now explicit rather than implicit.
+
+    DIMENSION SCHEME (additive, four-dimension migration): `dimension_names`
+    defaults to `ALL_DIMENSIONS` (the legacy 12-dimension set), so every
+    existing call site trains a legacy-scheme model exactly as before.
+    Pass `dimension_names=model_dataset.CANONICAL_DIMENSION_KEYS` (with a
+    matching `dimension_names` on the loaders' own `collate_fn`/
+    `build_dataloaders` call — the two must always agree) to train a
+    four-canonical-dimension model instead. `MultiTaskModel`/
+    `DimensionOrdinalHeads` were already parameterized by `dimension_names`
+    before this change; this parameter just lets `train_model` forward a
+    non-default choice instead of always constructing the legacy default.
 
     REPRODUCIBILITY (Experiment 0, research-validity milestone): if
     `random_seed` is given, `torch.manual_seed(random_seed)` is called
@@ -384,7 +396,8 @@ def train_model(
             torch.backends.cudnn.benchmark = False
 
     model = MultiTaskModel(
-        backbone_config, backbone=backbone, missing_reasoning_categories=missing_reasoning_categories,
+        backbone_config, backbone=backbone, dimension_names=dimension_names,
+        missing_reasoning_categories=missing_reasoning_categories,
         num_ordinal_classes=num_ordinal_classes,
     )
     model.to(device)

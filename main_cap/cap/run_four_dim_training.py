@@ -29,17 +29,31 @@ is this script's own orchestration and per-dimension metric computation
 `overall_label.grade`, not per-dimension ordinal predictions).
 
 USAGE:
-    python run_four_dim_training.py --dry-run   # LOCAL, safe: environment
+    python run_four_dim_training.py --dry-run [v1|v2]  # LOCAL, safe: environment
                                                   # report only, no download,
                                                   # no training, always exits
                                                   # before requiring CUDA.
-    python run_four_dim_training.py train        # COLAB (GPU runtime
+    python run_four_dim_training.py train [v1|v2]      # COLAB (GPU runtime
                                                   # required): the real
                                                   # experiment. See
                                                   # COLAB_RUN.md.
 
-See docs/architecture/DeBERTa_Dataset_Rebuild_Status.md and
-artifacts/four_dim_experiment_v1/README.md for the frozen dataset/split
+EXPERIMENT SELECTOR (additive, Phase 6): the optional second argument
+selects which frozen pool+split to train on -- `v1` (default, IDENTICAL
+behavior to every prior call site that omits it: the frozen 170-example
+pool, `artifacts/four_dim_experiment_v1/split.json`, output to
+`artifacts/four_dim_training_v1/`) or `v2` (the 220-example V2 pool,
+`artifacts/four_dim_experiment_v2/split.json`, output to
+`artifacts/four_dim_training_v2/`). Both experiments use the EXACT SAME
+architecture, contextual input builder, loss, and hyperparameters (`CONFIG`
+below) -- only the pool/split/output-directory/model-version differ. This
+is the smallest additive change that supports V2 without touching V1
+behavior at all: omitting the argument, or passing `v1` explicitly, is
+byte-for-byte identical to this script before this change.
+
+See docs/architecture/DeBERTa_Dataset_Rebuild_Status.md,
+artifacts/four_dim_experiment_v1/README.md, and
+artifacts/four_dim_experiment_v2/README.md for the frozen dataset/splits
 this script consumes.
 """
 
@@ -57,6 +71,7 @@ import torch
 from evaluation_dimensions import all_keys as canonical_dimension_keys
 from evaluation_request import ConversationContextSnapshot, EvaluationRequest
 from four_dim_experiment_split import load_core_pool
+from four_dim_experiment_v2_split import load_v2_pool
 from model_backbone import BackboneConfig, build_tokenizer
 from model_checkpoint_io import load_checkpoint_artifact, save_checkpoint_artifact
 from model_dataset import build_dataloaders
@@ -68,17 +83,45 @@ CANONICAL_DIMENSION_KEYS: tuple[str, ...] = canonical_dimension_keys()
 NUM_CLASSES = 5
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-ARTIFACTS_DIR = os.path.join(_HERE, "artifacts", "four_dim_training_v1")
-SPLIT_JSON_PATH = os.path.join(_HERE, "artifacts", "four_dim_experiment_v1", "split.json")
+
+# ── Experiment selector (additive, Phase 6) ──────────────────────────────
+# "v1" preserves every path/loader/count from before this change exactly.
+# "v2" points at the approved 220-example pool + its own split/output dir.
+# Nothing else (architecture, contextual input, loss, CONFIG hyperparameters
+# below) differs between the two -- see module docstring.
+EXPERIMENTS = {
+    "v1": dict(
+        load_pool=load_core_pool,
+        split_json_path=os.path.join(_HERE, "artifacts", "four_dim_experiment_v1", "split.json"),
+        artifacts_dir=os.path.join(_HERE, "artifacts", "four_dim_training_v1"),
+        expected_total=170, expected_counts=(128, 20, 22),
+        dataset_split_identifier="four_dim_experiment_v1",
+        split_seed="four_dim_experiment_v1_41",
+        model_version="deberta_v3_base_four_dim_training_v1",
+        label="Four-Dimension Training V1",
+    ),
+    "v2": dict(
+        load_pool=load_v2_pool,
+        split_json_path=os.path.join(_HERE, "artifacts", "four_dim_experiment_v2", "split.json"),
+        artifacts_dir=os.path.join(_HERE, "artifacts", "four_dim_training_v2"),
+        expected_total=220, expected_counts=(166, 27, 27),
+        dataset_split_identifier="four_dim_experiment_v2",
+        split_seed="four_dim_v2_split_348",
+        model_version="deberta_v3_base_four_dim_training_v2",
+        label="Four-Dimension Training V2",
+    ),
+}
 
 # ── Training configuration (recorded verbatim in the checkpoint + report) ───
 # Sized for a Colab T4-class GPU (~16GB), NOT for local CPU execution --
 # see the module docstring for why local execution is dry-run-only.
+# SHARED, UNCHANGED ACROSS v1/v2 -- only dataset_split_identifier/split_seed/
+# model_version vary by experiment (see EXPERIMENTS above); every other key
+# is the literal, identical V1 recipe, per the "same architecture + same
+# recipe + more data" experimental control.
 CONFIG = {
     "base_model": "microsoft/deberta-v3-base",
     "fresh_initialization": True,
-    "dataset_split_identifier": "four_dim_experiment_v1",
-    "split_seed": "four_dim_experiment_v1_41",
     "random_seed": 42,
     "learning_rate": 2e-5,
     "batch_size": 8,
@@ -101,7 +144,6 @@ CONFIG = {
         "and only the single best epoch's weights are kept. The untrained (epoch 0) point "
         "is benchmarked but deliberately excluded from best-checkpoint selection."
     ),
-    "model_version": "deberta_v3_base_four_dim_training_v1",
 }
 
 
@@ -135,8 +177,8 @@ def require_cuda_or_exit(report: dict) -> None:
         sys.exit(1)
 
 
-def _load_frozen_split() -> DatasetSplit:
-    with open(SPLIT_JSON_PATH, encoding="utf-8") as f:
+def _load_frozen_split(split_json_path: str) -> DatasetSplit:
+    with open(split_json_path, encoding="utf-8") as f:
         raw = json.load(f)
     return DatasetSplit(
         train_ids=tuple(raw["train_ids"]), val_ids=tuple(raw["val_ids"]), test_ids=tuple(raw["test_ids"]),
@@ -210,21 +252,29 @@ def _aggregate_secondary_score(metrics_by_dim: dict[str, dict]) -> dict:
 
 # ── dry-run (LOCAL, safe) ─────────────────────────────────────────────────
 
-def dry_run() -> int:
-    """LOCAL, safe: reports the environment and confirms the frozen split
-    is loadable, but never downloads the real backbone and never trains.
-    Structural correctness of every piece this script calls is covered by
-    the existing test suite (tiny random backbone, no network weights) --
-    run that separately; this is just an environment/data sanity check."""
+def dry_run(experiment: str = "v1") -> int:
+    """LOCAL, safe: reports the environment and confirms the selected
+    experiment's frozen pool+split is loadable, but never downloads the
+    real backbone and never trains. Structural correctness of every piece
+    this script calls is covered by the existing test suite (tiny random
+    backbone, no network weights) -- run that separately; this is just an
+    environment/data sanity check."""
+    cfg = EXPERIMENTS[experiment]
     report = environment_report()
     _log(f"Environment report: {json.dumps(report, indent=2)}")
-    examples = load_core_pool()
-    split = _load_frozen_split()
-    _log(f"Frozen core pool: {len(examples)} examples. Split: "
+    examples = cfg["load_pool"]()
+    split = _load_frozen_split(cfg["split_json_path"])
+    _log(f"[{experiment}] {cfg['label']} pool: {len(examples)} examples. Split: "
          f"train={len(split.train_ids)} val={len(split.val_ids)} test={len(split.test_ids)}")
-    if len(examples) != 170:
-        _log(f"BLOCKER: expected 170 core-pool examples, got {len(examples)}")
+    if len(examples) != cfg["expected_total"]:
+        _log(f"BLOCKER: expected {cfg['expected_total']} pool examples, got {len(examples)}")
         return 1
+    expected_tr, expected_va, expected_te = cfg["expected_counts"]
+    actual = (len(split.train_ids), len(split.val_ids), len(split.test_ids))
+    if actual != (expected_tr, expected_va, expected_te):
+        _log(f"BLOCKER: expected split counts {(expected_tr, expected_va, expected_te)}, got {actual}")
+        return 1
+    _log(f"[{experiment}] canonical dimensions: {len(CANONICAL_DIMENSION_KEYS)} -- {CANONICAL_DIMENSION_KEYS}")
     _log("--dry-run complete: no download, no training. "
          f"CUDA available here: {report['cuda_available']} (irrelevant for dry-run).")
     return 0
@@ -232,23 +282,56 @@ def dry_run() -> int:
 
 # ── train (COLAB, GPU required) ──────────────────────────────────────────
 
-def train() -> int:
+def _assert_no_group_leakage(examples, split) -> None:
+    """Pre-training defense-in-depth re-check (the split artifact was
+    already leakage-validated at construction time -- this re-confirms it
+    against the ACTUAL examples about to be trained on, in case the wrong
+    split/pool combination was ever passed)."""
+    by_id = {e.metadata.example_id: e for e in examples}
+    groups = {
+        "train": {by_id[i].inputs.specification.source_id for i in split.train_ids},
+        "val": {by_id[i].inputs.specification.source_id for i in split.val_ids},
+        "test": {by_id[i].inputs.specification.source_id for i in split.test_ids},
+    }
+    overlaps = {
+        "train|val": sorted(groups["train"] & groups["val"]),
+        "train|test": sorted(groups["train"] & groups["test"]),
+        "val|test": sorted(groups["val"] & groups["test"]),
+    }
+    if any(overlaps.values()):
+        raise SystemExit(f"BLOCKER: source/group leakage detected before training: {overlaps}")
+    _log(f"Leakage check: 0 shared source_id across train/val/test (groups: "
+         f"train={len(groups['train'])} val={len(groups['val'])} test={len(groups['test'])}).")
+
+
+def train(experiment: str = "v1") -> int:
+    cfg = EXPERIMENTS[experiment]
     report = environment_report()
     _log(f"Environment report: {json.dumps(report, indent=2)}")
     require_cuda_or_exit(report)
     device = "cuda"
 
-    os.makedirs(ARTIFACTS_DIR, exist_ok=True)
-    _log(f"=== Four-Dimension Training v1 (device={device}, GPU={report['gpu_name']}) ===")
+    artifacts_dir = cfg["artifacts_dir"]
+    os.makedirs(artifacts_dir, exist_ok=True)
+    _log(f"=== {cfg['label']} (experiment={experiment}, device={device}, GPU={report['gpu_name']}) ===")
     _log(f"Config: {json.dumps(CONFIG, indent=2)}")
+    _log(f"Experiment: dataset_split_identifier={cfg['dataset_split_identifier']!r} "
+         f"split_seed={cfg['split_seed']!r} model_version={cfg['model_version']!r}")
 
-    examples = load_core_pool()
-    if len(examples) != 170:
-        _log(f"BLOCKER: expected 170 core-pool examples, got {len(examples)}")
+    examples = cfg["load_pool"]()
+    if len(examples) != cfg["expected_total"]:
+        _log(f"BLOCKER: expected {cfg['expected_total']} pool examples, got {len(examples)}")
         return 1
-    split = _load_frozen_split()
-    _log(f"Frozen split loaded from {SPLIT_JSON_PATH!r}: "
-         f"train={len(split.train_ids)} val={len(split.val_ids)} test={len(split.test_ids)}")
+    split = _load_frozen_split(cfg["split_json_path"])
+    expected_tr, expected_va, expected_te = cfg["expected_counts"]
+    actual = (len(split.train_ids), len(split.val_ids), len(split.test_ids))
+    _log(f"Frozen split loaded from {cfg['split_json_path']!r}: "
+         f"train={actual[0]} val={actual[1]} test={actual[2]} (expected {(expected_tr, expected_va, expected_te)})")
+    if actual != (expected_tr, expected_va, expected_te):
+        _log(f"BLOCKER: split counts do not match the approved {experiment} split -- refusing to train.")
+        return 1
+    _log(f"canonical dimensions: {len(CANONICAL_DIMENSION_KEYS)} -- {CANONICAL_DIMENSION_KEYS}")
+    _assert_no_group_leakage(examples, split)
 
     backbone_config = BackboneConfig(hf_model_id=CONFIG["base_model"], max_length=CONFIG["max_length"])
     tokenizer = build_tokenizer(backbone_config)
@@ -258,16 +341,17 @@ def train() -> int:
     )
     _log(f"Dataloaders: train_batches={len(train_loader)} val_batches={len(val_loader)} test_batches={len(test_loader)}")
 
-    best_weights_path = os.path.join(ARTIFACTS_DIR, "best_checkpoint_weights.pt")
-    best_checkpoint_path = os.path.join(ARTIFACTS_DIR, "best_checkpoint.json")
+    best_weights_path = os.path.join(artifacts_dir, "best_checkpoint_weights.pt")
+    best_checkpoint_path = os.path.join(artifacts_dir, "best_checkpoint.json")
     epoch_curve: list[dict] = []
     best = {"val_mean_qwk": -1.0, "epoch": None, "checkpoint": None, "val_metrics": None}
 
     experiment_config = ExperimentConfig(
         backbone_name=backbone_config.hf_model_id, random_seed=CONFIG["random_seed"],
-        dataset_version=CONFIG["dataset_split_identifier"],
+        dataset_version=cfg["dataset_split_identifier"],
         parameters={
             **{k: (v if isinstance(v, (str, int, float, bool)) else str(v)) for k, v in CONFIG.items()},
+            "split_seed": cfg["split_seed"], "experiment": experiment,
             "environment": json.dumps(report),
         },
     )
@@ -287,7 +371,7 @@ def train() -> int:
         if epoch_index > 0 and mean_qwk > best["val_mean_qwk"]:
             save_checkpoint_artifact(model, best_weights_path)
             checkpoint = assemble_checkpoint(
-                model_version=f"{CONFIG['model_version']}_epoch{epoch_index}",
+                model_version=f"{cfg['model_version']}_epoch{epoch_index}",
                 experiment_config=experiment_config, artifact_uri=best_weights_path,
             )
             with open(best_checkpoint_path, "w", encoding="utf-8") as f:
@@ -307,7 +391,7 @@ def train() -> int:
     duration_s = time.time() - t0
     _log(f"Training complete in {duration_s:.1f}s ({duration_s/60:.1f} min).")
 
-    with open(os.path.join(ARTIFACTS_DIR, "epoch_curve.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(artifacts_dir, "epoch_curve.json"), "w", encoding="utf-8") as f:
         json.dump(epoch_curve, f, indent=2)
 
     if best["epoch"] is None:
@@ -325,7 +409,7 @@ def train() -> int:
         _log(f"    {name}: acc={m['accuracy']:.3f} within1={m['within_1_accuracy']:.3f} "
              f"mae={m['mae']:.3f} qwk={m['qwk']:.3f} (n={m['n']})")
 
-    with open(os.path.join(ARTIFACTS_DIR, "test_metrics.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(artifacts_dir, "test_metrics.json"), "w", encoding="utf-8") as f:
         json.dump({
             "best_epoch": best["epoch"], "val_mean_qwk": round(best["val_mean_qwk"], 4),
             "val_metrics": best["val_metrics"], "test_metrics": test_metrics,
@@ -347,7 +431,7 @@ def train() -> int:
                 row[f"{name}_true"] = yt[i]
                 row[f"{name}_pred"] = yp[i]
         qualitative.append(row)
-    with open(os.path.join(ARTIFACTS_DIR, "test_predictions.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(artifacts_dir, "test_predictions.json"), "w", encoding="utf-8") as f:
         json.dump(qualitative, f, indent=2)
 
     # ── Evaluator smoke test ─────────────────────────────────────────────────
@@ -373,21 +457,25 @@ def train() -> int:
             "overall_score": result.overall_score,
         })
         _log(f"    {example_id}: dims={sorted(produced)} overall_score={result.overall_score}")
-    with open(os.path.join(ARTIFACTS_DIR, "evaluator_smoke_test.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(artifacts_dir, "evaluator_smoke_test.json"), "w", encoding="utf-8") as f:
         json.dump(smoke_results, f, indent=2)
 
-    _log("=== FOUR-DIMENSION TRAINING V1 COMPLETE ===")
-    _log(f"Copy back to the repository: {ARTIFACTS_DIR!r}")
+    _log(f"=== {cfg['label'].upper()} COMPLETE ===")
+    _log(f"Copy back to the repository: {artifacts_dir!r}")
     return 0
 
 
 def main() -> int:
-    if len(sys.argv) != 2 or sys.argv[1] not in ("--dry-run", "train"):
-        print("Usage: python run_four_dim_training.py [--dry-run|train]", file=sys.stderr)
+    if len(sys.argv) not in (2, 3) or sys.argv[1] not in ("--dry-run", "train"):
+        print("Usage: python run_four_dim_training.py [--dry-run|train] [v1|v2]", file=sys.stderr)
+        return 2
+    experiment = sys.argv[2] if len(sys.argv) == 3 else "v1"
+    if experiment not in EXPERIMENTS:
+        print(f"Unknown experiment {experiment!r}; must be one of {sorted(EXPERIMENTS)}", file=sys.stderr)
         return 2
     if sys.argv[1] == "--dry-run":
-        return dry_run()
-    return train()
+        return dry_run(experiment)
+    return train(experiment)
 
 
 if __name__ == "__main__":

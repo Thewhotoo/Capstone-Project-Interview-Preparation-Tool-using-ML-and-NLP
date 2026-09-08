@@ -51,6 +51,15 @@ class TestDryRunIsSafe(unittest.TestCase):
         exit_code = entrypoint.dry_run()
         self.assertEqual(exit_code, 0)
 
+    def test_dry_run_default_is_v1(self):
+        # Omitting the experiment argument must be identical to passing "v1"
+        # explicitly -- the Phase 6 selector must not change existing behavior.
+        self.assertEqual(entrypoint.dry_run(), entrypoint.dry_run("v1"))
+
+    def test_dry_run_v2_loads_the_220_example_pool(self):
+        exit_code = entrypoint.dry_run("v2")
+        self.assertEqual(exit_code, 0)
+
     def test_dry_run_does_not_import_the_real_backbone_model_class(self):
         # AST-level check (same discipline as the existing
         # test_pipeline_does_not_reference_fake_generation_client-style
@@ -72,22 +81,74 @@ class TestConfigSanity(unittest.TestCase):
         self.assertEqual(entrypoint.CONFIG["base_model"], "microsoft/deberta-v3-base")
         self.assertTrue(entrypoint.CONFIG["fresh_initialization"])
 
-    def test_config_dataset_identifiers_match_the_frozen_split(self):
-        self.assertEqual(entrypoint.CONFIG["dataset_split_identifier"], "four_dim_experiment_v1")
-        self.assertEqual(entrypoint.CONFIG["split_seed"], "four_dim_experiment_v1_41")
+    def test_config_has_no_per_experiment_keys(self):
+        # dataset_split_identifier/split_seed/model_version live in
+        # EXPERIMENTS now (per-experiment), not in the shared CONFIG --
+        # CONFIG must be identical across v1/v2 (the experimental control).
+        for key in ("dataset_split_identifier", "split_seed", "model_version"):
+            self.assertNotIn(key, entrypoint.CONFIG)
 
     def test_canonical_dimension_keys_match_evaluation_dimensions(self):
         self.assertEqual(entrypoint.CANONICAL_DIMENSION_KEYS, tuple(d.value for d in CANONICAL_DIMENSIONS))
 
-    def test_split_json_path_points_at_the_frozen_phase3_artifact(self):
-        self.assertTrue(entrypoint.SPLIT_JSON_PATH.replace("\\", "/").endswith(
+
+class TestExperimentSelector(unittest.TestCase):
+    def test_v1_and_v2_are_both_registered(self):
+        self.assertEqual(set(entrypoint.EXPERIMENTS), {"v1", "v2"})
+
+    def test_v1_config_matches_the_frozen_phase3_split(self):
+        cfg = entrypoint.EXPERIMENTS["v1"]
+        self.assertEqual(cfg["dataset_split_identifier"], "four_dim_experiment_v1")
+        self.assertEqual(cfg["split_seed"], "four_dim_experiment_v1_41")
+        self.assertEqual(cfg["expected_total"], 170)
+        self.assertEqual(cfg["expected_counts"], (128, 20, 22))
+        self.assertTrue(cfg["split_json_path"].replace("\\", "/").endswith(
             "artifacts/four_dim_experiment_v1/split.json"
         ))
 
-    def test_output_dir_is_distinct_from_the_frozen_split_artifact_dir(self):
-        # Must never write into (and thereby risk mutating) Phase 3's own
-        # frozen split.json / distribution_report.json directory.
-        self.assertNotEqual(entrypoint.ARTIFACTS_DIR, os.path.dirname(entrypoint.SPLIT_JSON_PATH))
+    def test_v2_config_matches_the_approved_phase5_split(self):
+        cfg = entrypoint.EXPERIMENTS["v2"]
+        self.assertEqual(cfg["dataset_split_identifier"], "four_dim_experiment_v2")
+        self.assertEqual(cfg["split_seed"], "four_dim_v2_split_348")
+        self.assertEqual(cfg["expected_total"], 220)
+        self.assertEqual(cfg["expected_counts"], (166, 27, 27))
+        self.assertTrue(cfg["split_json_path"].replace("\\", "/").endswith(
+            "artifacts/four_dim_experiment_v2/split.json"
+        ))
+
+    def test_v1_and_v2_output_dirs_are_distinct_and_never_overwrite_each_other(self):
+        v1_dir = entrypoint.EXPERIMENTS["v1"]["artifacts_dir"]
+        v2_dir = entrypoint.EXPERIMENTS["v2"]["artifacts_dir"]
+        self.assertNotEqual(v1_dir, v2_dir)
+        self.assertTrue(v1_dir.replace("\\", "/").endswith("artifacts/four_dim_training_v1"))
+        self.assertTrue(v2_dir.replace("\\", "/").endswith("artifacts/four_dim_training_v2"))
+
+    def test_each_experiments_output_dir_is_distinct_from_its_own_split_artifact_dir(self):
+        # Must never write into (and thereby risk mutating) the frozen
+        # split.json / distribution_report.json directory for either experiment.
+        for name, cfg in entrypoint.EXPERIMENTS.items():
+            self.assertNotEqual(
+                cfg["artifacts_dir"], os.path.dirname(cfg["split_json_path"]),
+                f"{name}: output dir must differ from its split-artifact dir",
+            )
+
+    def test_v1_and_v2_share_the_identical_hyperparameter_config(self):
+        # The experimental control: only pool/split/output/model_version
+        # may differ between v1 and v2 -- CONFIG itself is shared, single,
+        # unparameterized by experiment.
+        for key in ("learning_rate", "batch_size", "num_epochs", "max_length", "random_seed", "weight_decay"):
+            self.assertIn(key, entrypoint.CONFIG)
+        self.assertEqual(entrypoint.CONFIG["learning_rate"], 2e-5)
+        self.assertEqual(entrypoint.CONFIG["batch_size"], 8)
+        self.assertEqual(entrypoint.CONFIG["num_epochs"], 8)
+        self.assertEqual(entrypoint.CONFIG["max_length"], 256)
+        self.assertEqual(entrypoint.CONFIG["random_seed"], 42)
+        self.assertEqual(entrypoint.CONFIG["weight_decay"], 0.01)
+
+    def test_unknown_experiment_name_is_rejected_by_main(self):
+        with mock.patch.object(sys, "argv", ["run_four_dim_training.py", "--dry-run", "v3"]):
+            exit_code = entrypoint.main()
+        self.assertEqual(exit_code, 2)
 
 
 class TestPerDimensionMetrics(unittest.TestCase):

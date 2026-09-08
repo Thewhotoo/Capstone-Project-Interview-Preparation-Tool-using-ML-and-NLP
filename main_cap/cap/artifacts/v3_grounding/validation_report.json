@@ -1,0 +1,243 @@
+{
+  "checks": {
+    "at_most_one_proposal_per_example": true,
+    "all_example_ids_valid": true,
+    "all_evidence_ids_valid": true,
+    "evidence_same_source_id": true,
+    "no_self_sourcing": true,
+    "no_misconception_evidence": true,
+    "no_unsupported_ownership_evidence": true,
+    "no_first_person_in_grounding": true,
+    "no_gold_label_leakage": true,
+    "no_exact_answer_copy": true,
+    "no_suspiciously_high_sbert_similarity": true,
+    "only_expected_concepts_changed_in_pool_files": true,
+    "pool_files_changed_example_ids": [
+      "hand50_v1_020",
+      "seed_v1_004",
+      "seed_v1_026",
+      "seed_v1_038",
+      "seed_v1_078",
+      "seed_v1_089",
+      "v2t50_v1_041"
+    ],
+    "exactly_the_approved_examples_changed": true,
+    "cloudscaler_held_examples_unchanged": true,
+    "v2_split_json_untouched": true,
+    "v2_split_json_status_clean": true,
+    "single_example_projects_unenriched": true
+  },
+  "all_checks_passed": true,
+  "failures": [],
+  "stats": {
+    "total_v2_pool_examples": 220,
+    "examples_with_grounding_proposal": 42,
+    "examples_left_unchanged": 178,
+    "confidence_breakdown": {
+      "HIGH": 19,
+      "MEDIUM": 23,
+      "LOW": 0
+    },
+    "multi_example_projects_total": 46,
+    "multi_example_projects_with_zero_safe_grounding": 23,
+    "multi_example_projects_with_zero_safe_grounding_list": [
+      "APIGuard",
+      "ChurnPredictor",
+      "ComplyTrack",
+      "DeployPilot",
+      "DocDigest",
+      "FirmwareLink",
+      "FraudScore",
+      "GeoPulse",
+      "LedgerCore",
+      "LedgerVault",
+      "NotifyHub",
+      "PacketWatch",
+      "PipelineForge",
+      "PixelBoard",
+      "RaftKeeper",
+      "RiskScope",
+      "SentinelAuth",
+      "SessionForge",
+      "ShardKeeper",
+      "StreamPipe",
+      "SupportBot",
+      "TrailRunner",
+      "VisionSort"
+    ],
+    "single_example_projects_total": 18,
+    "single_example_projects_enriched": 0
+  },
+  "low_confidence_evidence_chains": [],
+  "sbert_check_ran": true,
+  "sbert_similarity_report": [
+    {
+      "example_id": "v2t50_v1_035",
+      "cosine_similarity_to_own_answer": 0.87
+    },
+    {
+      "example_id": "v2t50_v1_019",
+      "cosine_similarity_to_own_answer": 0.799
+    },
+    {
+      "example_id": "v2t50_v1_041",
+      "cosine_similarity_to_own_answer": 0.8134
+    },
+    {
+      "example_id": "gap20_v1_016",
+      "cosine_similarity_to_own_answer": 0.5026
+    },
+    {
+      "example_id": "hand50_v1_047",
+      "cosine_similarity_to_own_answer": 0.5283
+    },
+    {
+      "example_id": "seed_v1_006",
+      "cosine_similarity_to_own_answer": 0.7703
+    },
+    {
+      "example_id": "seed_v1_031",
+      "cosine_similarity_to_own_answer": 0.7388
+    },
+    {
+      "example_id": "seed_v1_067",
+      "cosine_similarity_to_own_answer": 0.5232
+    },
+    {
+      "example_id": "seed_v1_099",
+      "cosine_similarity_to_own_answer": 0.4954
+    },
+    {
+      "example_id": "seed_v1_021",
+      "cosine_similarity_to_own_answer": 0.4789
+    },
+    {
+      "example_id": "seed_v1_079",
+      "cosine_similarity_to_own_answer": 0.6498
+    },
+    {
+      "example_id": "gap20_v1_018",
+      "cosine_similarity_to_own_answer": 0.5631
+    },
+    {
+      "example_id": "seed_v1_070",
+      "cosine_similarity_to_own_answer": 0.4151
+    },
+    {
+      "example_id": "gap20_v1_014",
+      "cosine_similarity_to_own_answer": 0.2824
+    },
+    {
+      "example_id": "v2t50_v1_033",
+      "cosine_similarity_to_own_answer": 0.508
+    },
+    {
+      "example_id": "seed_v1_043",
+      "cosine_similarity_to_own_answer": 0.439
+    },
+    {
+      "example_id": "seed_v1_022",
+      "cosine_similarity_to_own_answer": 0.4967
+    },
+    {
+      "example_id": "seed_v1_094",
+      "cosine_similarity_to_own_answer": 0.6337
+    },
+    {
+      "example_id": "hand50_v1_027",
+      "cosine_similarity_to_own_answer": 0.5942
+    },
+    {
+      "example_id": "v2t50_v1_046",
+      "cosine_similarity_to_own_answer": 0.3428
+    },
+    {
+      "example_id": "seed_v1_042",
+      "cosine_similarity_to_own_answer": 0.7705
+    },
+    {
+      "example_id": "seed_v1_020",
+      "cosine_similarity_to_own_answer": 0.3469
+    },
+    {
+      "example_id": "seed_v1_029",
+      "cosine_similarity_to_own_answer": 0.6551
+    },
+    {
+      "example_id": "seed_v1_088",
+      "cosine_similarity_to_own_answer": 0.6325
+    },
+    {
+      "example_id": "seed_v1_009",
+      "cosine_similarity_to_own_answer": 0.4811
+    },
+    {
+      "example_id": "seed_v1_025",
+      "cosine_similarity_to_own_answer": 0.7494
+    },
+    {
+      "example_id": "v2t50_v1_032",
+      "cosine_similarity_to_own_answer": 0.5621
+    },
+    {
+      "example_id": "v2t50_v1_043",
+      "cosine_similarity_to_own_answer": 0.4343
+    },
+    {
+      "example_id": "v2t50_v1_044",
+      "cosine_similarity_to_own_answer": 0.534
+    },
+    {
+      "example_id": "seed_v1_005",
+      "cosine_similarity_to_own_answer": 0.7288
+    },
+    {
+      "example_id": "seed_v1_044",
+      "cosine_similarity_to_own_answer": 0.8271
+    },
+    {
+      "example_id": "seed_v1_092",
+      "cosine_similarity_to_own_answer": 0.5412
+    },
+    {
+      "example_id": "seed_v1_027",
+      "cosine_similarity_to_own_answer": 0.6809
+    },
+    {
+      "example_id": "seed_v1_017",
+      "cosine_similarity_to_own_answer": 0.6913
+    },
+    {
+      "example_id": "seed_v1_023",
+      "cosine_similarity_to_own_answer": 0.5225
+    },
+    {
+      "example_id": "seed_v1_045",
+      "cosine_similarity_to_own_answer": 0.8366
+    },
+    {
+      "example_id": "seed_v1_024",
+      "cosine_similarity_to_own_answer": 0.7241
+    },
+    {
+      "example_id": "v2t50_v1_040",
+      "cosine_similarity_to_own_answer": 0.8521
+    },
+    {
+      "example_id": "seed_v1_008",
+      "cosine_similarity_to_own_answer": 0.6468
+    },
+    {
+      "example_id": "seed_v1_014",
+      "cosine_similarity_to_own_answer": 0.7132
+    },
+    {
+      "example_id": "seed_v1_041",
+      "cosine_similarity_to_own_answer": 0.8201
+    },
+    {
+      "example_id": "v2t50_v1_034",
+      "cosine_similarity_to_own_answer": 0.7528
+    }
+  ]
+}

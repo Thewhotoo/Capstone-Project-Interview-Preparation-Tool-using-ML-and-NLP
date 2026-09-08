@@ -1,0 +1,1343 @@
+{
+  "total_examples": 220,
+  "before_wiring": {
+    "min": 49,
+    "max": 267,
+    "mean": 114.07,
+    "exceeding_256": [
+      "gap20_v1_017"
+    ]
+  },
+  "after_wiring": {
+    "min": 49,
+    "max": 267,
+    "mean": 122.39,
+    "exceeding_256": [
+      "gap20_v1_017"
+    ]
+  },
+  "newly_exceeding_256_due_to_grounding": [],
+  "note_2026_09_09_truncation_fix": "gap20_v1_014 and gap20_v1_016 grounding fragments were tightened (verbosity only, no evidence removed) to bring both back under the 256-token limit -- see expected_concepts_repairs.json sibling doc / build_grounding_proposals.py inline comments for the before/after text and rationale.",
+  "rows": [
+    {
+      "example_id": "seed_v1_000",
+      "before": 97,
+      "after": 97,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_001",
+      "before": 92,
+      "after": 92,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_002",
+      "before": 99,
+      "after": 99,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_003",
+      "before": 90,
+      "after": 90,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_004",
+      "before": 194,
+      "after": 194,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_005",
+      "before": 166,
+      "after": 231,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_006",
+      "before": 166,
+      "after": 207,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_007",
+      "before": 164,
+      "after": 164,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_008",
+      "before": 125,
+      "after": 185,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_009",
+      "before": 128,
+      "after": 190,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_010",
+      "before": 130,
+      "after": 130,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_011",
+      "before": 125,
+      "after": 125,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_012",
+      "before": 112,
+      "after": 112,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_013",
+      "before": 117,
+      "after": 117,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_014",
+      "before": 105,
+      "after": 132,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_015",
+      "before": 113,
+      "after": 113,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_016",
+      "before": 136,
+      "after": 136,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_017",
+      "before": 129,
+      "after": 148,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_018",
+      "before": 134,
+      "after": 134,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_019",
+      "before": 114,
+      "after": 114,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_020",
+      "before": 148,
+      "after": 180,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_021",
+      "before": 127,
+      "after": 168,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_022",
+      "before": 117,
+      "after": 150,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_023",
+      "before": 130,
+      "after": 172,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_024",
+      "before": 134,
+      "after": 164,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_025",
+      "before": 120,
+      "after": 163,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_026",
+      "before": 137,
+      "after": 137,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_027",
+      "before": 115,
+      "after": 134,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_028",
+      "before": 188,
+      "after": 188,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_029",
+      "before": 154,
+      "after": 216,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_030",
+      "before": 171,
+      "after": 171,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_031",
+      "before": 154,
+      "after": 195,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_032",
+      "before": 108,
+      "after": 108,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_033",
+      "before": 102,
+      "after": 102,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_034",
+      "before": 102,
+      "after": 102,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_035",
+      "before": 92,
+      "after": 92,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_036",
+      "before": 106,
+      "after": 106,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_037",
+      "before": 102,
+      "after": 102,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_038",
+      "before": 83,
+      "after": 83,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_039",
+      "before": 85,
+      "after": 85,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_040",
+      "before": 85,
+      "after": 85,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_041",
+      "before": 86,
+      "after": 113,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_042",
+      "before": 83,
+      "after": 115,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_043",
+      "before": 78,
+      "after": 111,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_044",
+      "before": 151,
+      "after": 216,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_045",
+      "before": 131,
+      "after": 183,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_046",
+      "before": 152,
+      "after": 152,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_047",
+      "before": 134,
+      "after": 134,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_048",
+      "before": 65,
+      "after": 65,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_049",
+      "before": 57,
+      "after": 57,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_050",
+      "before": 60,
+      "after": 60,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_051",
+      "before": 58,
+      "after": 58,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_052",
+      "before": 61,
+      "after": 61,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_053",
+      "before": 56,
+      "after": 56,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_054",
+      "before": 58,
+      "after": 58,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_055",
+      "before": 62,
+      "after": 62,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_056",
+      "before": 54,
+      "after": 54,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_057",
+      "before": 64,
+      "after": 64,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_058",
+      "before": 104,
+      "after": 104,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_059",
+      "before": 73,
+      "after": 73,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_060",
+      "before": 65,
+      "after": 65,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_061",
+      "before": 56,
+      "after": 56,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_062",
+      "before": 67,
+      "after": 67,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_063",
+      "before": 57,
+      "after": 57,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_064",
+      "before": 51,
+      "after": 51,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_065",
+      "before": 49,
+      "after": 49,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_066",
+      "before": 64,
+      "after": 64,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_067",
+      "before": 55,
+      "after": 96,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_068",
+      "before": 80,
+      "after": 80,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_069",
+      "before": 91,
+      "after": 91,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_070",
+      "before": 69,
+      "after": 125,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_071",
+      "before": 88,
+      "after": 88,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_072",
+      "before": 94,
+      "after": 94,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_073",
+      "before": 83,
+      "after": 83,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_074",
+      "before": 94,
+      "after": 94,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_075",
+      "before": 85,
+      "after": 85,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_076",
+      "before": 63,
+      "after": 63,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_077",
+      "before": 79,
+      "after": 79,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_078",
+      "before": 132,
+      "after": 132,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_079",
+      "before": 119,
+      "after": 155,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_080",
+      "before": 103,
+      "after": 103,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_081",
+      "before": 102,
+      "after": 102,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_082",
+      "before": 101,
+      "after": 101,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_083",
+      "before": 116,
+      "after": 116,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_084",
+      "before": 119,
+      "after": 119,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_085",
+      "before": 79,
+      "after": 79,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_086",
+      "before": 118,
+      "after": 118,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_087",
+      "before": 92,
+      "after": 92,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_088",
+      "before": 135,
+      "after": 197,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_089",
+      "before": 177,
+      "after": 177,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_090",
+      "before": 128,
+      "after": 128,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_091",
+      "before": 128,
+      "after": 128,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_092",
+      "before": 148,
+      "after": 213,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_093",
+      "before": 131,
+      "after": 131,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_094",
+      "before": 138,
+      "after": 178,
+      "enriched": true
+    },
+    {
+      "example_id": "seed_v1_095",
+      "before": 140,
+      "after": 140,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_096",
+      "before": 144,
+      "after": 144,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_097",
+      "before": 135,
+      "after": 135,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_098",
+      "before": 106,
+      "after": 106,
+      "enriched": false
+    },
+    {
+      "example_id": "seed_v1_099",
+      "before": 66,
+      "after": 107,
+      "enriched": true
+    },
+    {
+      "example_id": "hand50_v1_000",
+      "before": 113,
+      "after": 113,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_001",
+      "before": 73,
+      "after": 73,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_002",
+      "before": 151,
+      "after": 151,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_003",
+      "before": 60,
+      "after": 60,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_004",
+      "before": 154,
+      "after": 154,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_005",
+      "before": 139,
+      "after": 139,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_006",
+      "before": 126,
+      "after": 126,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_007",
+      "before": 69,
+      "after": 69,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_008",
+      "before": 72,
+      "after": 72,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_009",
+      "before": 155,
+      "after": 155,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_010",
+      "before": 140,
+      "after": 140,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_011",
+      "before": 92,
+      "after": 92,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_012",
+      "before": 104,
+      "after": 104,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_013",
+      "before": 115,
+      "after": 115,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_014",
+      "before": 75,
+      "after": 75,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_015",
+      "before": 81,
+      "after": 81,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_016",
+      "before": 172,
+      "after": 172,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_017",
+      "before": 101,
+      "after": 101,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_018",
+      "before": 64,
+      "after": 64,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_019",
+      "before": 96,
+      "after": 96,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_020",
+      "before": 192,
+      "after": 192,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_021",
+      "before": 134,
+      "after": 134,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_022",
+      "before": 56,
+      "after": 56,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_023",
+      "before": 104,
+      "after": 104,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_024",
+      "before": 130,
+      "after": 130,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_025",
+      "before": 148,
+      "after": 148,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_026",
+      "before": 99,
+      "after": 99,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_027",
+      "before": 73,
+      "after": 125,
+      "enriched": true
+    },
+    {
+      "example_id": "hand50_v1_028",
+      "before": 164,
+      "after": 164,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_029",
+      "before": 136,
+      "after": 136,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_030",
+      "before": 135,
+      "after": 135,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_031",
+      "before": 129,
+      "after": 129,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_032",
+      "before": 67,
+      "after": 67,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_033",
+      "before": 132,
+      "after": 132,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_034",
+      "before": 133,
+      "after": 133,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_035",
+      "before": 69,
+      "after": 69,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_036",
+      "before": 154,
+      "after": 154,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_037",
+      "before": 98,
+      "after": 98,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_038",
+      "before": 132,
+      "after": 132,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_039",
+      "before": 117,
+      "after": 117,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_040",
+      "before": 88,
+      "after": 88,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_041",
+      "before": 88,
+      "after": 88,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_042",
+      "before": 133,
+      "after": 133,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_043",
+      "before": 60,
+      "after": 60,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_044",
+      "before": 88,
+      "after": 88,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_045",
+      "before": 170,
+      "after": 170,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_046",
+      "before": 115,
+      "after": 115,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_047",
+      "before": 62,
+      "after": 112,
+      "enriched": true
+    },
+    {
+      "example_id": "hand50_v1_048",
+      "before": 132,
+      "after": 132,
+      "enriched": false
+    },
+    {
+      "example_id": "hand50_v1_049",
+      "before": 122,
+      "after": 122,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_000",
+      "before": 236,
+      "after": 236,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_001",
+      "before": 226,
+      "after": 226,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_002",
+      "before": 203,
+      "after": 203,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_003",
+      "before": 205,
+      "after": 205,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_004",
+      "before": 217,
+      "after": 217,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_005",
+      "before": 174,
+      "after": 174,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_006",
+      "before": 169,
+      "after": 169,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_007",
+      "before": 152,
+      "after": 152,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_008",
+      "before": 167,
+      "after": 167,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_009",
+      "before": 162,
+      "after": 162,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_010",
+      "before": 197,
+      "after": 197,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_011",
+      "before": 172,
+      "after": 172,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_012",
+      "before": 137,
+      "after": 137,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_013",
+      "before": 151,
+      "after": 151,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_014",
+      "before": 220,
+      "after": 255,
+      "enriched": true
+    },
+    {
+      "example_id": "gap20_v1_015",
+      "before": 249,
+      "after": 249,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_016",
+      "before": 211,
+      "after": 251,
+      "enriched": true
+    },
+    {
+      "example_id": "gap20_v1_017",
+      "before": 267,
+      "after": 267,
+      "enriched": false
+    },
+    {
+      "example_id": "gap20_v1_018",
+      "before": 183,
+      "after": 227,
+      "enriched": true
+    },
+    {
+      "example_id": "gap20_v1_019",
+      "before": 191,
+      "after": 191,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_000",
+      "before": 103,
+      "after": 103,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_001",
+      "before": 69,
+      "after": 69,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_002",
+      "before": 87,
+      "after": 87,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_003",
+      "before": 89,
+      "after": 89,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_004",
+      "before": 68,
+      "after": 68,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_005",
+      "before": 77,
+      "after": 77,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_006",
+      "before": 80,
+      "after": 80,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_007",
+      "before": 93,
+      "after": 93,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_008",
+      "before": 89,
+      "after": 89,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_009",
+      "before": 79,
+      "after": 79,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_010",
+      "before": 64,
+      "after": 64,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_011",
+      "before": 73,
+      "after": 73,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_012",
+      "before": 82,
+      "after": 82,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_013",
+      "before": 79,
+      "after": 79,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_014",
+      "before": 76,
+      "after": 76,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_015",
+      "before": 80,
+      "after": 80,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_016",
+      "before": 164,
+      "after": 164,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_017",
+      "before": 139,
+      "after": 139,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_018",
+      "before": 150,
+      "after": 150,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_019",
+      "before": 163,
+      "after": 212,
+      "enriched": true
+    },
+    {
+      "example_id": "v2t50_v1_020",
+      "before": 135,
+      "after": 135,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_021",
+      "before": 167,
+      "after": 167,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_022",
+      "before": 131,
+      "after": 131,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_023",
+      "before": 81,
+      "after": 81,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_024",
+      "before": 87,
+      "after": 87,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_025",
+      "before": 146,
+      "after": 146,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_026",
+      "before": 101,
+      "after": 101,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_027",
+      "before": 91,
+      "after": 91,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_028",
+      "before": 108,
+      "after": 108,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_029",
+      "before": 122,
+      "after": 122,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_030",
+      "before": 96,
+      "after": 96,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_031",
+      "before": 89,
+      "after": 89,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_032",
+      "before": 76,
+      "after": 114,
+      "enriched": true
+    },
+    {
+      "example_id": "v2t50_v1_033",
+      "before": 89,
+      "after": 143,
+      "enriched": true
+    },
+    {
+      "example_id": "v2t50_v1_034",
+      "before": 77,
+      "after": 108,
+      "enriched": true
+    },
+    {
+      "example_id": "v2t50_v1_035",
+      "before": 76,
+      "after": 107,
+      "enriched": true
+    },
+    {
+      "example_id": "v2t50_v1_036",
+      "before": 98,
+      "after": 98,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_037",
+      "before": 112,
+      "after": 112,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_038",
+      "before": 96,
+      "after": 96,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_039",
+      "before": 128,
+      "after": 128,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_040",
+      "before": 97,
+      "after": 156,
+      "enriched": true
+    },
+    {
+      "example_id": "v2t50_v1_041",
+      "before": 166,
+      "after": 215,
+      "enriched": true
+    },
+    {
+      "example_id": "v2t50_v1_042",
+      "before": 61,
+      "after": 61,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_043",
+      "before": 58,
+      "after": 109,
+      "enriched": true
+    },
+    {
+      "example_id": "v2t50_v1_044",
+      "before": 81,
+      "after": 119,
+      "enriched": true
+    },
+    {
+      "example_id": "v2t50_v1_045",
+      "before": 134,
+      "after": 134,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_046",
+      "before": 72,
+      "after": 113,
+      "enriched": true
+    },
+    {
+      "example_id": "v2t50_v1_047",
+      "before": 67,
+      "after": 67,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_048",
+      "before": 88,
+      "after": 88,
+      "enriched": false
+    },
+    {
+      "example_id": "v2t50_v1_049",
+      "before": 131,
+      "after": 131,
+      "enriched": false
+    }
+  ]
+}

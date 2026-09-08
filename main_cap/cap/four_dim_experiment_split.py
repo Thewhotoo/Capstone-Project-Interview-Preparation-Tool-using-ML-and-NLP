@@ -33,6 +33,7 @@ import os
 from typing import Iterable
 
 from evaluation_dimensions import all_keys as canonical_dimension_keys
+from grounding_lookup import grounding_summary_for
 from question_families import ReasoningType
 from question_specification import Grounding, ProjectGrounding, QuestionCategory, QuestionSpecification, SourceType
 from training_example import (
@@ -86,6 +87,16 @@ def _to_training_example(raw: dict, judged: dict, batch: str) -> TrainingExample
         id=raw["example_id"], category=QuestionCategory(raw["category"]), text_seed=raw["title"],
         grounding=Grounding(project=ProjectGrounding(
             title=raw["title"], technologies=tuple(raw["technologies"]), concepts=(),
+            # V3 wiring: `summary` is populated ONLY when the example_id has a
+            # validated proposal in artifacts/v3_grounding/grounding_proposals.jsonl
+            # (grounding_lookup.grounding_summary_for returns "" otherwise -- the
+            # exact pre-V3 baseline, no fallback invented). This is the single
+            # place grounding is attached to an example_id; the inference path
+            # (model_evaluator.TrainedEvaluator.evaluate) reuses this SAME
+            # QuestionSpecification object (see run_four_dim_training.py's
+            # EvaluationRequest construction from example.inputs.specification),
+            # so training and inference can never see different grounding text.
+            summary=grounding_summary_for(raw["example_id"]),
         )),
         source_type=SourceType.PROJECT, source_id=raw["source_id"],
         source_field="interview_seeds", reason="curated_core_pool",

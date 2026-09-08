@@ -93,8 +93,8 @@ class TestConfigSanity(unittest.TestCase):
 
 
 class TestExperimentSelector(unittest.TestCase):
-    def test_v1_and_v2_are_both_registered(self):
-        self.assertEqual(set(entrypoint.EXPERIMENTS), {"v1", "v2"})
+    def test_v1_v2_v3_are_all_registered(self):
+        self.assertEqual(set(entrypoint.EXPERIMENTS), {"v1", "v2", "v3"})
 
     def test_v1_config_matches_the_frozen_phase3_split(self):
         cfg = entrypoint.EXPERIMENTS["v1"]
@@ -116,12 +116,26 @@ class TestExperimentSelector(unittest.TestCase):
             "artifacts/four_dim_experiment_v2/split.json"
         ))
 
-    def test_v1_and_v2_output_dirs_are_distinct_and_never_overwrite_each_other(self):
-        v1_dir = entrypoint.EXPERIMENTS["v1"]["artifacts_dir"]
-        v2_dir = entrypoint.EXPERIMENTS["v2"]["artifacts_dir"]
-        self.assertNotEqual(v1_dir, v2_dir)
-        self.assertTrue(v1_dir.replace("\\", "/").endswith("artifacts/four_dim_training_v1"))
-        self.assertTrue(v2_dir.replace("\\", "/").endswith("artifacts/four_dim_training_v2"))
+    def test_v3_config_reuses_the_v2_pool_and_split_but_has_its_own_output_dir(self):
+        cfg = entrypoint.EXPERIMENTS["v3"]
+        # V3 is a controlled-experiment pair with v2: SAME pool loader,
+        # SAME split (never regenerated) -- the only differences are the
+        # output directory and model_version.
+        self.assertIs(cfg["load_pool"], entrypoint.EXPERIMENTS["v2"]["load_pool"])
+        self.assertEqual(cfg["split_json_path"], entrypoint.EXPERIMENTS["v2"]["split_json_path"])
+        self.assertEqual(cfg["dataset_split_identifier"], "four_dim_experiment_v2")
+        self.assertEqual(cfg["split_seed"], "four_dim_v2_split_348")
+        self.assertEqual(cfg["expected_total"], 220)
+        self.assertEqual(cfg["expected_counts"], (166, 27, 27))
+        self.assertTrue(cfg["artifacts_dir"].replace("\\", "/").endswith("artifacts/four_dim_training_v3"))
+        self.assertNotEqual(cfg["model_version"], entrypoint.EXPERIMENTS["v2"]["model_version"])
+
+    def test_v1_v2_v3_output_dirs_are_all_distinct_and_never_overwrite_each_other(self):
+        dirs = {name: cfg["artifacts_dir"] for name, cfg in entrypoint.EXPERIMENTS.items()}
+        self.assertEqual(len(set(dirs.values())), len(dirs), f"output dirs collide: {dirs}")
+        self.assertTrue(dirs["v1"].replace("\\", "/").endswith("artifacts/four_dim_training_v1"))
+        self.assertTrue(dirs["v2"].replace("\\", "/").endswith("artifacts/four_dim_training_v2"))
+        self.assertTrue(dirs["v3"].replace("\\", "/").endswith("artifacts/four_dim_training_v3"))
 
     def test_each_experiments_output_dir_is_distinct_from_its_own_split_artifact_dir(self):
         # Must never write into (and thereby risk mutating) the frozen
@@ -132,23 +146,83 @@ class TestExperimentSelector(unittest.TestCase):
                 f"{name}: output dir must differ from its split-artifact dir",
             )
 
-    def test_v1_and_v2_share_the_identical_hyperparameter_config(self):
+    def test_v1_v2_v3_share_the_identical_hyperparameter_config(self):
         # The experimental control: only pool/split/output/model_version
-        # may differ between v1 and v2 -- CONFIG itself is shared, single,
+        # may differ between v1/v2/v3 -- CONFIG itself is shared, single,
         # unparameterized by experiment.
         for key in ("learning_rate", "batch_size", "num_epochs", "max_length", "random_seed", "weight_decay"):
             self.assertIn(key, entrypoint.CONFIG)
         self.assertEqual(entrypoint.CONFIG["learning_rate"], 2e-5)
         self.assertEqual(entrypoint.CONFIG["batch_size"], 8)
+        self.assertEqual(entrypoint.CONFIG["gradient_accumulation_steps"], 1)
         self.assertEqual(entrypoint.CONFIG["num_epochs"], 8)
         self.assertEqual(entrypoint.CONFIG["max_length"], 256)
         self.assertEqual(entrypoint.CONFIG["random_seed"], 42)
         self.assertEqual(entrypoint.CONFIG["weight_decay"], 0.01)
+        self.assertEqual(entrypoint.CONFIG["warmup_steps"], 0)
+        self.assertEqual(entrypoint.CONFIG["base_model"], "microsoft/deberta-v3-base")
+        self.assertTrue(entrypoint.CONFIG["fresh_initialization"])
 
     def test_unknown_experiment_name_is_rejected_by_main(self):
-        with mock.patch.object(sys, "argv", ["run_four_dim_training.py", "--dry-run", "v3"]):
+        with mock.patch.object(sys, "argv", ["run_four_dim_training.py", "--dry-run", "v4"]):
             exit_code = entrypoint.main()
         self.assertEqual(exit_code, 2)
+
+
+class TestV3DataIntegrityGate(unittest.TestCase):
+    """The additional pre-training checks V3 gets on top of the generic
+    pool/split/leakage checks every experiment already has."""
+
+    def test_dry_run_v3_passes_all_integrity_checks_on_the_real_pool(self):
+        # No mocking -- exercises the real 220-example pool + real artifact,
+        # same discipline as the existing dry-run tests.
+        self.assertEqual(entrypoint.dry_run("v3"), 0)
+
+    def test_v3_data_integrity_confirms_exactly_42_enriched_examples(self):
+        from four_dim_experiment_v2_split import load_v2_pool
+        examples = load_v2_pool()
+        entrypoint._assert_v3_data_integrity(examples)  # must not raise
+        enriched = [e for e in examples if e.inputs.specification.grounding.project.summary]
+        self.assertEqual(len(enriched), 42)
+
+    def test_v3_data_integrity_rejects_wrong_enriched_count(self):
+        from four_dim_experiment_v2_split import load_v2_pool
+        examples = list(load_v2_pool())
+        # Simulate grounding wiring being silently missing/broken by
+        # blanking out every summary -- must be caught, not silently pass.
+        broken = []
+        for e in examples:
+            proj = e.inputs.specification.grounding.project
+            if proj.summary:
+                new_proj = proj.model_copy(update={"summary": ""})
+                new_grounding = e.inputs.specification.grounding.model_copy(update={"project": new_proj})
+                new_spec = e.inputs.specification.model_copy(update={"grounding": new_grounding})
+                new_inputs = e.inputs.model_copy(update={"specification": new_spec})
+                e = e.model_copy(update={"inputs": new_inputs})
+            broken.append(e)
+        with self.assertRaises(SystemExit):
+            entrypoint._assert_v3_data_integrity(broken)
+
+    def test_v3_data_integrity_rejects_a_changed_cloudscaler_expected_concepts(self):
+        # The CloudScaler-hold check reads the RAW on-disk pool files (the
+        # actual source of truth for expected_concepts), not the in-memory
+        # TrainingExample -- so simulate the failure by monkeypatching the
+        # raw-record reader rather than the loaded example.
+        from four_dim_experiment_v2_split import load_v2_pool
+        examples = load_v2_pool()
+
+        real_reader = entrypoint._read_raw_pool_records
+
+        def _tampered_reader():
+            records = real_reader()
+            records = dict(records)
+            records["seed_v1_006"] = dict(records["seed_v1_006"])
+            records["seed_v1_006"]["expected_concepts"] = ["reactive metric-based autoscaling"]
+            return records
+
+        with mock.patch.object(entrypoint, "_read_raw_pool_records", _tampered_reader):
+            with self.assertRaises(SystemExit):
+                entrypoint._assert_v3_data_integrity(examples)
 
 
 class TestPerDimensionMetrics(unittest.TestCase):

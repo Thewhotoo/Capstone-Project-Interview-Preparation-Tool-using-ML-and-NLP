@@ -1,0 +1,91 @@
+{
+  "applied": [
+    {
+      "example_id": "hand50_v1_020",
+      "source_id": "LedgerCore",
+      "file": "artifacts/hand_authored_50/hand_authored_50_v1.jsonl",
+      "before": [],
+      "after": [
+        "double-entry ledger modeling (debit/credit entry pairs)",
+        "single-entry as a special case (adjustment-account posting)"
+      ],
+      "status": "applied"
+    },
+    {
+      "example_id": "v2t50_v1_041",
+      "source_id": "AuthEdge",
+      "file": "artifacts/v2_targeted_50/v2_targeted_50_v1.jsonl",
+      "before": [],
+      "after": [
+        "httpOnly cookies to close the XSS token-theft vector",
+        "SameSite/CSRF-token mitigation for cookie-based CSRF"
+      ],
+      "status": "applied"
+    },
+    {
+      "example_id": "seed_v1_089",
+      "source_id": "InvoiceCore",
+      "file": "artifacts/seed_dataset_v1/seed_v1_3_repaired.jsonl",
+      "before": [],
+      "after": [
+        "incident diagnosis via the raw payment-provider ledger",
+        "recovery/remediation of affected records",
+        "preventive nightly reconciliation check"
+      ],
+      "status": "applied"
+    },
+    {
+      "example_id": "seed_v1_038",
+      "source_id": "MeshRouter",
+      "file": "artifacts/seed_dataset_v1/seed_v1_3_repaired.jsonl",
+      "before": ["Circuit Breaking"],
+      "after": [],
+      "confidence": "HIGH",
+      "status": "applied"
+    },
+    {
+      "example_id": "seed_v1_078",
+      "source_id": "InvoiceCore",
+      "file": "artifacts/seed_dataset_v1/seed_v1_3_repaired.jsonl",
+      "before": ["Idempotent Billing"],
+      "after": ["invoice state machine design (draft/sent/paid/overdue/void transitions)"],
+      "confidence": "HIGH",
+      "status": "applied"
+    },
+    {
+      "example_id": "seed_v1_004",
+      "source_id": "ChurnPredictor",
+      "file": "artifacts/seed_dataset_v1/seed_v1_3_repaired.jsonl",
+      "before": ["Feature Engineering", "Model Drift"],
+      "after": ["Feature Engineering"],
+      "confidence": "MEDIUM",
+      "status": "applied"
+    },
+    {
+      "example_id": "seed_v1_026",
+      "source_id": "ChurnPredictor",
+      "file": "artifacts/seed_dataset_v1/seed_v1_3_repaired.jsonl",
+      "before": ["Model Drift"],
+      "after": ["overfitting validation methodology"],
+      "confidence": "MEDIUM",
+      "status": "applied"
+    }
+  ],
+  "explicitly_not_changed_per_instruction": [
+    "gap20_v1_008",
+    "seed_v1_057",
+    "gap20_v1_005"
+  ],
+  "mismatch_audit_still_pending_approval": [
+    {
+      "example_id": "seed_v1_006,seed_v1_021,seed_v1_031,seed_v1_039,seed_v1_079",
+      "source_id": "CloudScaler",
+      "current": ["Predictive Autoscaling"],
+      "question": "(all 5 CloudScaler scale-out/provisioning questions)",
+      "recommended_replacement": ["reactive metric-based autoscaling"],
+      "confidence": "MEDIUM",
+      "status": "explicitly_held_do_not_apply",
+      "note": "project-wide label, not a single-example copy error; affects 5 examples at once, held per explicit instruction not to apply yet"
+    }
+  ]
+}

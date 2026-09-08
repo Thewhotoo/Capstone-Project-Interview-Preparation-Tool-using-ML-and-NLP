@@ -29,11 +29,11 @@ is this script's own orchestration and per-dimension metric computation
 `overall_label.grade`, not per-dimension ordinal predictions).
 
 USAGE:
-    python run_four_dim_training.py --dry-run [v1|v2]  # LOCAL, safe: environment
+    python run_four_dim_training.py --dry-run [v1|v2|v3]  # LOCAL, safe: environment
                                                   # report only, no download,
                                                   # no training, always exits
                                                   # before requiring CUDA.
-    python run_four_dim_training.py train [v1|v2]      # COLAB (GPU runtime
+    python run_four_dim_training.py train [v1|v2|v3]      # COLAB (GPU runtime
                                                   # required): the real
                                                   # experiment. See
                                                   # COLAB_RUN.md.
@@ -109,6 +109,23 @@ EXPERIMENTS = {
         split_seed="four_dim_v2_split_348",
         model_version="deberta_v3_base_four_dim_training_v2",
         label="Four-Dimension Training V2",
+    ),
+    "v3": dict(
+        # Same 220-example pool + same frozen V2 split as "v2" -- V3 is the
+        # controlled-experiment pair: the ONLY difference from v2 is that
+        # `load_v2_pool()` -> `_to_training_example()` now populates
+        # `ProjectGrounding.summary` via `grounding_lookup.grounding_summary_for`
+        # (42/220 examples) and 7 `expected_concepts` corrections were applied
+        # to the underlying pool files -- no new loader, no new split, no
+        # architecture/hyperparameter change. See artifacts/v3_grounding/README.md.
+        load_pool=load_v2_pool,
+        split_json_path=os.path.join(_HERE, "artifacts", "four_dim_experiment_v2", "split.json"),
+        artifacts_dir=os.path.join(_HERE, "artifacts", "four_dim_training_v3"),
+        expected_total=220, expected_counts=(166, 27, 27),
+        dataset_split_identifier="four_dim_experiment_v2",
+        split_seed="four_dim_v2_split_348",
+        model_version="deberta_v3_base_four_dim_training_v3",
+        label="Four-Dimension Training V3 (grounding-enriched, expected_concepts-repaired)",
     ),
 }
 
@@ -275,6 +292,8 @@ def dry_run(experiment: str = "v1") -> int:
         _log(f"BLOCKER: expected split counts {(expected_tr, expected_va, expected_te)}, got {actual}")
         return 1
     _log(f"[{experiment}] canonical dimensions: {len(CANONICAL_DIMENSION_KEYS)} -- {CANONICAL_DIMENSION_KEYS}")
+    if experiment == "v3":
+        _assert_v3_data_integrity(examples)
     _log("--dry-run complete: no download, no training. "
          f"CUDA available here: {report['cuda_available']} (irrelevant for dry-run).")
     return 0
@@ -302,6 +321,103 @@ def _assert_no_group_leakage(examples, split) -> None:
         raise SystemExit(f"BLOCKER: source/group leakage detected before training: {overlaps}")
     _log(f"Leakage check: 0 shared source_id across train/val/test (groups: "
          f"train={len(groups['train'])} val={len(groups['val'])} test={len(groups['test'])}).")
+
+
+# ── V3-specific pre-training integrity gate ──────────────────────────────
+# Additive to the generic pool/split/leakage checks above (which every
+# experiment already gets). Re-derives every answer from the actual loaded
+# data and the actual on-disk raw pool files -- nothing here is assumed
+# from a prior session's report. Fails fast (SystemExit) before any GPU
+# work if any V3 data-repair invariant does not hold.
+_CLOUDSCALER_HELD_EXAMPLE_IDS = (
+    "seed_v1_006", "seed_v1_021", "seed_v1_031", "seed_v1_039", "seed_v1_079",
+)
+_CLOUDSCALER_HELD_EXPECTED_CONCEPTS = ("Predictive Autoscaling",)
+_EXPECTED_V3_ENRICHED_COUNT = 42
+
+
+def _read_raw_pool_records() -> dict:
+    """Re-reads the 4 raw pool JSONLs directly (bypassing TrainingExample
+    construction) so question/answer/gold-label integrity can be checked
+    against the actual on-disk source, not just against itself."""
+    files = [
+        os.path.join(_HERE, "artifacts", "seed_dataset_v1", "seed_v1_3_repaired.jsonl"),
+        os.path.join(_HERE, "artifacts", "hand_authored_50", "hand_authored_50_v1.jsonl"),
+        os.path.join(_HERE, "artifacts", "gap_coverage_20", "gap20_v1.jsonl"),
+        os.path.join(_HERE, "artifacts", "v2_targeted_50", "v2_targeted_50_v1.jsonl"),
+    ]
+    by_id = {}
+    for path in files:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                rec = json.loads(line)
+                by_id[rec["example_id"]] = rec
+    return by_id
+
+
+def _assert_v3_data_integrity(examples) -> None:
+    raw_by_id = _read_raw_pool_records()
+    by_id = {e.metadata.example_id: e for e in examples}
+
+    # canonical dimensions must be exactly the 4 expected keys, in order
+    expected_dims = ("technical_correctness", "depth_specificity", "relevance_completeness", "grounding_ownership")
+    if CANONICAL_DIMENSION_KEYS != expected_dims:
+        raise SystemExit(f"BLOCKER: canonical dimensions differ from expected {expected_dims}: {CANONICAL_DIMENSION_KEYS}")
+
+    # question/answer/gold-label integrity: every loaded example's Q/A/labels
+    # must match the raw pool + judged files exactly (no drift introduced by
+    # any of the V3 repair steps)
+    mismatches = []
+    for eid, example in by_id.items():
+        raw = raw_by_id.get(eid)
+        if raw is None:
+            mismatches.append((eid, "missing from raw pool files"))
+            continue
+        if example.inputs.question_text != raw["question"]:
+            mismatches.append((eid, "question_text differs from raw source"))
+        if example.inputs.answer_text != raw["answer"]:
+            mismatches.append((eid, "answer_text differs from raw source"))
+    if mismatches:
+        raise SystemExit(f"BLOCKER: question/answer integrity check failed for {len(mismatches)} example(s): {mismatches[:5]}")
+    _log(f"Question/answer integrity: {len(by_id)}/{len(by_id)} examples match their raw source exactly.")
+
+    # CloudScaler held examples: the ONLY thing ever held for these 5 was
+    # the "Predictive Autoscaling" -> "reactive metric-based autoscaling"
+    # expected_concepts mismatch correction (explicitly not approved yet).
+    # Grounding enrichment for 4 of the 5 (seed_v1_006/021/031/079) was
+    # approved separately in the Phase 3 grounding pass and is NOT part of
+    # the hold -- only seed_v1_039 has no grounding (excluded earlier as a
+    # Terraform/Pulumi contradiction, unrelated to this hold). So this check
+    # verifies expected_concepts only, not grounding presence/absence.
+    cs_bad = []
+    for eid in _CLOUDSCALER_HELD_EXAMPLE_IDS:
+        raw = raw_by_id.get(eid)
+        if raw is None:
+            cs_bad.append((eid, "missing"))
+            continue
+        if tuple(raw.get("expected_concepts", ())) != _CLOUDSCALER_HELD_EXPECTED_CONCEPTS:
+            cs_bad.append((eid, f"expected_concepts changed: {raw.get('expected_concepts')}"))
+    if cs_bad:
+        raise SystemExit(f"BLOCKER: CloudScaler held expected_concepts changed: {cs_bad}")
+    _log(f"CloudScaler held-example check: all {len(_CLOUDSCALER_HELD_EXAMPLE_IDS)} examples' "
+         f"expected_concepts still {list(_CLOUDSCALER_HELD_EXPECTED_CONCEPTS)} (the project-wide mismatch "
+         f"correction remains un-applied, as instructed).")
+
+    # V3 grounding wiring must actually be present (not silently missing --
+    # e.g. artifacts/v3_grounding/grounding_proposals.jsonl not found would
+    # make grounding_lookup.grounding_summary_for return "" for everyone)
+    enriched = [eid for eid, e in by_id.items() if e.inputs.specification.grounding.project.summary]
+    if len(enriched) != _EXPECTED_V3_ENRICHED_COUNT:
+        raise SystemExit(
+            f"BLOCKER: V3 grounding wiring missing or incomplete -- expected exactly "
+            f"{_EXPECTED_V3_ENRICHED_COUNT} enriched examples, found {len(enriched)}. "
+            f"Check artifacts/v3_grounding/grounding_proposals.jsonl exists and grounding_lookup.py is importable."
+        )
+    _log(f"V3 grounding wiring check: {len(enriched)}/{len(by_id)} examples carry validated grounding "
+         f"(matches artifacts/v3_grounding/grounding_proposals.jsonl).")
 
 
 def train(experiment: str = "v1") -> int:
@@ -332,6 +448,8 @@ def train(experiment: str = "v1") -> int:
         return 1
     _log(f"canonical dimensions: {len(CANONICAL_DIMENSION_KEYS)} -- {CANONICAL_DIMENSION_KEYS}")
     _assert_no_group_leakage(examples, split)
+    if experiment == "v3":
+        _assert_v3_data_integrity(examples)
 
     backbone_config = BackboneConfig(hf_model_id=CONFIG["base_model"], max_length=CONFIG["max_length"])
     tokenizer = build_tokenizer(backbone_config)
@@ -467,7 +585,7 @@ def train(experiment: str = "v1") -> int:
 
 def main() -> int:
     if len(sys.argv) not in (2, 3) or sys.argv[1] not in ("--dry-run", "train"):
-        print("Usage: python run_four_dim_training.py [--dry-run|train] [v1|v2]", file=sys.stderr)
+        print("Usage: python run_four_dim_training.py [--dry-run|train] [v1|v2|v3]", file=sys.stderr)
         return 2
     experiment = sys.argv[2] if len(sys.argv) == 3 else "v1"
     if experiment not in EXPERIMENTS:

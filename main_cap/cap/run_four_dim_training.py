@@ -74,6 +74,7 @@ from four_dim_experiment_split import load_core_pool
 from four_dim_experiment_v2_split import load_v2_pool
 from model_backbone import BackboneConfig, build_tokenizer
 from model_checkpoint_io import load_checkpoint_artifact, save_checkpoint_artifact
+from loss_weighting import compute_dimension_pos_weights
 from model_dataset import build_dataloaders
 from model_evaluator import TrainedEvaluator
 from model_heads import coral_predict, train_model
@@ -126,6 +127,52 @@ EXPERIMENTS = {
         split_seed="four_dim_v2_split_348",
         model_version="deberta_v3_base_four_dim_training_v3",
         label="Four-Dimension Training V3 (grounding-enriched, expected_concepts-repaired)",
+    ),
+    # ── Experiment A (V5 Ablation Design Review, H1: loss/calibration) ──────
+    # Same 220-example pool + same frozen V2 split + same architecture/
+    # hyperparameters as "v3" -- the ONLY variable is loss weighting. Two
+    # entries so A0 (unweighted control) and A1 (weighted) are each a real,
+    # runnable, separately-namespaced configuration rather than one config
+    # with a flag flipped by hand -- neither ever touches `four_dim_training_v3/`.
+    # `loss_weighting`/`weighted_dimensions`/`loss_weight_clip` are read by
+    # `train()` below (absent on v1/v2/v3 -- `.get(...)` defaults there
+    # reproduce today's exact unweighted behavior for those three, unchanged).
+    "v3_expA0": dict(
+        # Unweighted CONTROL, re-run under the Experiment-A umbrella so A0
+        # and A1 are directly comparable runs of the same script/config
+        # shape, differing ONLY in loss_weighting -- not a new baseline,
+        # just "v3" with an isolated artifacts_dir and the weighting flag
+        # explicit rather than absent.
+        load_pool=load_v2_pool,
+        split_json_path=os.path.join(_HERE, "artifacts", "four_dim_experiment_v2", "split.json"),
+        artifacts_dir=os.path.join(_HERE, "artifacts", "four_dim_training_v3_expA0"),
+        expected_total=220, expected_counts=(166, 27, 27),
+        dataset_split_identifier="four_dim_experiment_v2",
+        split_seed="four_dim_v2_split_348",
+        model_version="deberta_v3_base_four_dim_training_v3_expA0",
+        label="Four-Dimension Training V3 Experiment A0 (unweighted control, loss-weighting OFF)",
+        loss_weighting="none",
+        weighted_dimensions=(),
+        loss_weight_clip=None,
+    ),
+    "v3_expA1": dict(
+        # Weighted variant: identical to v3_expA0 except `loss_weighting`
+        # turns on `loss_weighting.compute_dimension_pos_weights`, applied
+        # ONLY to technical_correctness/relevance_completeness (the two
+        # dimensions the V4 diagnostic flagged) -- depth_specificity/
+        # grounding_ownership stay unweighted (None), per the design
+        # review's "don't over-engineer weighting for grounding" guidance.
+        load_pool=load_v2_pool,
+        split_json_path=os.path.join(_HERE, "artifacts", "four_dim_experiment_v2", "split.json"),
+        artifacts_dir=os.path.join(_HERE, "artifacts", "four_dim_training_v3_expA1"),
+        expected_total=220, expected_counts=(166, 27, 27),
+        dataset_split_identifier="four_dim_experiment_v2",
+        split_seed="four_dim_v2_split_348",
+        model_version="deberta_v3_base_four_dim_training_v3_expA1",
+        label="Four-Dimension Training V3 Experiment A1 (train-derived pos_weight on TC + relevance)",
+        loss_weighting="train_derived_pos_weight",
+        weighted_dimensions=("technical_correctness", "relevance_completeness"),
+        loss_weight_clip=(1.0 / 3.0, 3.0),
     ),
 }
 
@@ -451,6 +498,26 @@ def train(experiment: str = "v1") -> int:
     if experiment == "v3":
         _assert_v3_data_integrity(examples)
 
+    # ── Experiment A (V5 Ablation Design Review, H1) loss weighting ─────────
+    # Computed from TRAIN-SPLIT-ONLY examples (`split.train_ids`), never
+    # val_ids/test_ids, and never any held-out diagnostic artifact --
+    # `loss_weighting.py` has no import path to reach either. `cfg.get(...)`
+    # defaults reproduce today's exact behavior (`dimension_pos_weights=None`,
+    # byte-identical unweighted CORAL loss) for every experiment that doesn't
+    # explicitly set `loss_weighting` (v1, v2, v3, v3_expA0).
+    dimension_pos_weights = None
+    if cfg.get("loss_weighting") == "train_derived_pos_weight":
+        train_only_examples = [e for e in examples if e.metadata.example_id in set(split.train_ids)]
+        dimension_pos_weights = compute_dimension_pos_weights(
+            train_only_examples, CANONICAL_DIMENSION_KEYS,
+            weighted_dimensions=cfg.get("weighted_dimensions", ()),
+            clip=cfg.get("loss_weight_clip") or (1.0 / 3.0, 3.0),
+        )
+        _log(f"Experiment A loss weighting ENABLED. weighted_dimensions={cfg.get('weighted_dimensions')} "
+             f"clip={cfg.get('loss_weight_clip')} train_n={len(train_only_examples)}")
+        for name, pw in dimension_pos_weights.items():
+            _log(f"    pos_weight[{name}] = {pw}")
+
     backbone_config = BackboneConfig(hf_model_id=CONFIG["base_model"], max_length=CONFIG["max_length"])
     tokenizer = build_tokenizer(backbone_config)
     train_loader, val_loader, test_loader = build_dataloaders(
@@ -471,6 +538,10 @@ def train(experiment: str = "v1") -> int:
             **{k: (v if isinstance(v, (str, int, float, bool)) else str(v)) for k, v in CONFIG.items()},
             "split_seed": cfg["split_seed"], "experiment": experiment,
             "environment": json.dumps(report),
+            "loss_weighting": cfg.get("loss_weighting", "none"),
+            "weighted_dimensions": str(cfg.get("weighted_dimensions", ())),
+            "loss_weight_clip": str(cfg.get("loss_weight_clip")),
+            "dimension_pos_weights": json.dumps(dimension_pos_weights) if dimension_pos_weights else "null",
         },
     )
 
@@ -505,6 +576,7 @@ def train(experiment: str = "v1") -> int:
         learning_rate=CONFIG["learning_rate"], weight_decay=CONFIG["weight_decay"],
         device=device, random_seed=CONFIG["random_seed"], on_epoch_end=on_epoch_end,
         dimension_names=CANONICAL_DIMENSION_KEYS,
+        dimension_pos_weights=dimension_pos_weights,
     )
     duration_s = time.time() - t0
     _log(f"Training complete in {duration_s:.1f}s ({duration_s/60:.1f} min).")
@@ -585,7 +657,7 @@ def train(experiment: str = "v1") -> int:
 
 def main() -> int:
     if len(sys.argv) not in (2, 3) or sys.argv[1] not in ("--dry-run", "train"):
-        print("Usage: python run_four_dim_training.py [--dry-run|train] [v1|v2|v3]", file=sys.stderr)
+        print(f"Usage: python run_four_dim_training.py [--dry-run|train] [{'|'.join(sorted(EXPERIMENTS))}]", file=sys.stderr)
         return 2
     experiment = sys.argv[2] if len(sys.argv) == 3 else "v1"
     if experiment not in EXPERIMENTS:

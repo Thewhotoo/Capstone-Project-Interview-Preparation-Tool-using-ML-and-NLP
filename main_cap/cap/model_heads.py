@@ -107,11 +107,30 @@ def coral_targets(y: torch.Tensor, num_classes: int) -> torch.Tensor:
     return (y.unsqueeze(1) > thresholds).float()
 
 
-def coral_loss(logits: torch.Tensor, y: torch.Tensor, num_classes: int) -> torch.Tensor:
+def coral_loss(
+    logits: torch.Tensor, y: torch.Tensor, num_classes: int,
+    pos_weight: Optional[torch.Tensor] = None,
+) -> torch.Tensor:
     """Rank-consistent binary cross-entropy across all thresholds, averaged
-    over the batch and thresholds."""
+    over the batch and thresholds.
+
+    `pos_weight` (Experiment A, V5 Ablation Design Review, additive):
+    optional `(num_classes - 1,)` tensor, one weight per CORAL threshold,
+    forwarded unchanged to `F.binary_cross_entropy_with_logits`'s own
+    `pos_weight` argument (broadcasts over the threshold dimension, exactly
+    matching PyTorch's standard imbalanced-BCE convention). `pos_weight=None`
+    (the default, every existing call site) is BYTE-IDENTICAL to this
+    function's behavior before this parameter existed -- `F.binary_cross_
+    entropy_with_logits(logits, targets, pos_weight=None)` is defined to be
+    exactly `F.binary_cross_entropy_with_logits(logits, targets)`. Does NOT
+    touch `coral_targets`, `coral_predict`, `coral_confidence`, or
+    `CoralOrdinalHead`'s monotonic bias structure -- the ordinal rank-
+    consistency guarantee is architectural (lives in the head), not a
+    property of the loss weighting, so it is unaffected either way. See
+    `loss_weighting.py` for how `pos_weight` is derived from train-only tier
+    statistics."""
     targets = coral_targets(y, num_classes)
-    return F.binary_cross_entropy_with_logits(logits, targets)
+    return F.binary_cross_entropy_with_logits(logits, targets, pos_weight=pos_weight)
 
 
 def coral_predict(logits: torch.Tensor) -> torch.Tensor:
@@ -261,10 +280,23 @@ class MultiTaskModel(nn.Module):
 # ═════════════════════════════════════════════════════════════════════════════
 
 
-def compute_batch_loss(model: MultiTaskModel, batch: dict, device: str = "cpu") -> torch.Tensor:
+def compute_batch_loss(
+    model: MultiTaskModel, batch: dict, device: str = "cpu",
+    dimension_pos_weights: Optional[dict[str, Optional[list]]] = None,
+) -> torch.Tensor:
     """Sums per-dimension CORAL loss (masked to relevant+labeled dimensions
     only), missing-reasoning loss, and concept-observation loss (skipped for
-    a batch with no concept pairs at all)."""
+    a batch with no concept pairs at all).
+
+    `dimension_pos_weights` (Experiment A, V5 Ablation Design Review,
+    additive): optional `{dimension_name: [pos_weight, ...] | None}` map,
+    e.g. `loss_weighting.compute_dimension_pos_weights(...)`'s output.
+    `dimension_pos_weights=None` (the default, every existing call site) is
+    BYTE-IDENTICAL to this function's behavior before this parameter
+    existed -- every dimension's `coral_loss` call gets `pos_weight=None`,
+    same as always. A dimension absent from the map, or explicitly mapped
+    to `None`, also gets plain unweighted loss -- only dimensions with a
+    real weight list get `pos_weight` applied."""
     main_ids = batch["main_input_ids"].to(device)
     main_mask = batch["main_attention_mask"].to(device)
     outputs = model.forward_dimensions(main_ids, main_mask)
@@ -277,7 +309,10 @@ def compute_batch_loss(model: MultiTaskModel, batch: dict, device: str = "cpu") 
         if valid.any():
             logits = outputs["dimension_logits"][name][valid]
             targets = dim_targets[valid, j].clamp(min=0)
-            total_loss = total_loss + coral_loss(logits, targets, model.num_ordinal_classes)
+            pw = None
+            if dimension_pos_weights is not None and dimension_pos_weights.get(name) is not None:
+                pw = torch.tensor(dimension_pos_weights[name], dtype=logits.dtype, device=device)
+            total_loss = total_loss + coral_loss(logits, targets, model.num_ordinal_classes, pos_weight=pw)
 
     total_loss = total_loss + missing_reasoning_loss(
         outputs["presence_logits"], outputs["severity_pred"],
@@ -323,6 +358,7 @@ def train_model(
     weight_decay: float = 0.01,
     num_warmup_steps: int = 0,
     use_lr_decay: bool = False,
+    dimension_pos_weights: Optional[dict[str, Optional[list]]] = None,
 ) -> MultiTaskModel:
     """
     Minimal, reference end-to-end trainer (approved clarification #1) —
@@ -376,6 +412,17 @@ def train_model(
     alone guarantees on CPU. Honest limitation, not something this function
     can fully close.
 
+    LOSS WEIGHTING (Experiment A, V5 Ablation Design Review, additive):
+    `dimension_pos_weights=None` (the default, every existing call site) is
+    BYTE-IDENTICAL to this function's behavior before this parameter
+    existed -- `compute_batch_loss` is called with `dimension_pos_weights=
+    None` throughout, same as before. Passing a real map (see
+    `loss_weighting.compute_dimension_pos_weights`) applies per-dimension,
+    per-CORAL-threshold `pos_weight` to the training loss only -- val-loss
+    computation below also receives it (so `avg_val_loss` reflects the same
+    objective actually being optimized), but no architecture, decoding, or
+    label encoding changes either way.
+
     PER-EPOCH CHECKPOINTING (Experiment 1, session 10): if `on_epoch_end` is
     given, it is called once BEFORE training starts — `on_epoch_end(0,
     model, None, None)`, the untrained model — and once after each of the
@@ -421,7 +468,7 @@ def train_model(
         train_batch_count = 0
         for batch in train_loader:
             optimizer.zero_grad()
-            loss = compute_batch_loss(model, batch, device)
+            loss = compute_batch_loss(model, batch, device, dimension_pos_weights)
             loss.backward()
             optimizer.step()
             if scheduler is not None:
@@ -437,7 +484,7 @@ def train_model(
             val_batch_count = 0
             with torch.no_grad():
                 for batch in val_loader:
-                    loss = compute_batch_loss(model, batch, device)
+                    loss = compute_batch_loss(model, batch, device, dimension_pos_weights)
                     val_loss_total += loss.item()
                     val_batch_count += 1
             avg_val_loss = (val_loss_total / val_batch_count) if val_batch_count else None

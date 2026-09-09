@@ -94,7 +94,11 @@ class TestConfigSanity(unittest.TestCase):
 
 class TestExperimentSelector(unittest.TestCase):
     def test_v1_v2_v3_are_all_registered(self):
-        self.assertEqual(set(entrypoint.EXPERIMENTS), {"v1", "v2", "v3"})
+        # Experiment A (V5 Ablation Design Review) added "v3_expA0"/
+        # "v3_expA1" -- additive, isolated-artifacts-dir configurations
+        # (see test_loss_weighting.py::TestA0A1ConfigurationsDistinguishable)
+        # that reuse v3's exact pool/split and only vary loss weighting.
+        self.assertEqual(set(entrypoint.EXPERIMENTS), {"v1", "v2", "v3", "v3_expA0", "v3_expA1"})
 
     def test_v1_config_matches_the_frozen_phase3_split(self):
         cfg = entrypoint.EXPERIMENTS["v1"]

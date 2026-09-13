@@ -49,9 +49,13 @@ def _write_fixture_deployment(deploy_dir: str, approved: bool) -> None:
     open(os.path.join(deploy_dir, "best_checkpoint_weights.pt"), "wb").close()
 
 
-def _tiny_model_loader(path, backbone_config):
-    """Stand-in for model_checkpoint_io.load_checkpoint_artifact -- same
-    signature, ignores both arguments, returns a fresh tiny-random
+def _tiny_model_loader(path, backbone_config, **kwargs):
+    """Stand-in for model_checkpoint_io.load_checkpoint_artifact -- ignores
+    every argument (including the A2 cutover's `dimension_names=
+    CANONICAL_DIMENSION_KEYS`/`use_private_mlp`/`mlp_hidden_dim`/
+    `mlp_dropout` kwargs deployment_evaluator.py now passes at its call
+    site -- accepted here via **kwargs purely so this stand-in stays
+    call-compatible, not exercised), returns a fresh tiny-random
     MultiTaskModel so the bootstrap control-flow under test never touches
     the real pretrained deberta-v3-base backbone."""
     backbone = build_tiny_random_encoder(_TOKENIZER, hidden_size=16)

@@ -3115,6 +3115,20 @@
             return `<div><div class="rd-timeline-metric-label">${esc(label)}</div><div class="rd-timeline-metric-value">${(value * 100).toFixed(0)}%</div></div>`;
         }
 
+        // CANONICAL (A2) detection for the per-turn detail grid: true when
+        // ANY of A2's four canonical dimensions was actually scored on this
+        // turn (rdDimScore returns null when a name wasn't produced this
+        // turn, e.g. a legacy-scored session, or -- even for a canonical
+        // session -- a reasoning_type where TrainedEvaluator's own logic
+        // masks a dimension out; see model_evaluator.py). Used to choose
+        // canonical vs. legacy box labels below WITHOUT inventing a mapping
+        // between the two families -- each family renders only its own
+        // real scores, under its own real labels.
+        function rdHasCanonicalDims(item) {
+            return item.technical_correctness !== null || item.depth_specificity !== null
+                || item.relevance_completeness !== null || item.grounding_ownership !== null;
+        }
+
         function rdAvgDimensionPct(evaluations, name) {
             const scored = evaluations.map(e => rdDimScore(e, name)).filter(v => v !== null);
             if (!scored.length) return 0;
@@ -3143,6 +3157,17 @@
         // phrase is always real (which dimension scored how, on which
         // topic); only the wording is authored here, same principle as
         // buildAiSummaryText/buildStrategyText on the Briefing screen. ──
+        // LEGACY dimension taxonomy (heuristic_evaluator.py's 12-dimension
+        // set, minus "authenticity" which rdAllDimensionAverages already
+        // excludes) -- kept exactly as-is, unremoved, so a session scored by
+        // the legacy HeuristicEvaluator (or a future rollback to the legacy
+        // deployed_model/ checkpoint) still renders correctly. See the
+        // CANONICAL block immediately below for A2's four dimensions --
+        // added alongside, not merged into, this legacy set: A2's dimension
+        // names (technical_correctness/depth_specificity/
+        // relevance_completeness/grounding_ownership) are NEW, DISTINCT
+        // keys, never legacy names renamed (see evaluation_dimensions.py's
+        // own module docstring -- "these are NOT the legacy 12 renamed").
         const RD_DIM_STRONG = {
             technical_accuracy: "your technical explanations held up well",
             technical_depth: "you went genuinely deep on the technical details",
@@ -3155,6 +3180,14 @@
             debugging: "you walked through your debugging process well",
             testing: "you spoke confidently about how you tested things",
             scalability: "you'd clearly thought about how it would scale",
+            // CANONICAL (A2, four-dimension evaluator) -- phrasing authored
+            // directly from each dimension's real rubric definition in
+            // evaluation_dimensions.py, not mapped/aliased from any legacy
+            // phrase above.
+            technical_correctness: "your technical claims held up as factually sound",
+            depth_specificity: "you explained the concrete mechanisms and reasoning behind your choices, not just the surface",
+            relevance_completeness: "you directly addressed what was actually asked, covering the parts that mattered",
+            grounding_ownership: "it was clear this was grounded in work you personally did on your own project",
         };
         const RD_DIM_WEAK_SENTENCE = {
             technical_accuracy: "A few technical details didn't quite hold up.",
@@ -3168,14 +3201,26 @@
             debugging: "There wasn't much on how you actually debugged issues.",
             testing: "Testing didn't really come up.",
             scalability: "Scalability wasn't addressed.",
+            // CANONICAL (A2) -- same rubric-derived authoring as RD_DIM_STRONG above.
+            technical_correctness: "A few technical claims didn't hold up as accurate.",
+            depth_specificity: "Answers stayed fairly generic rather than explaining the actual mechanism.",
+            relevance_completeness: "The answer didn't fully address what the question actually asked.",
+            grounding_ownership: "It wasn't always clear this was your own, personally-owned work.",
         };
-        // Canonical dimension display order/labels -- the same closed set
-        // RD_DIM_STRONG/RD_DIM_WEAK_SENTENCE above already enumerate
-        // (heuristic_evaluator.py's full dimension taxonomy, minus
-        // "authenticity" which rdAllDimensionAverages already excludes).
-        // Reused by rdBuildSnapshot below so the Performance Snapshot
-        // shows every dimension actually evaluated this session -- not a
+        // Canonical (in the "closed enumerated set" sense, not to be
+        // confused with A2's "canonical four dimensions") dimension display
+        // order/labels -- the union of the LEGACY set and A2's CANONICAL
+        // four, both enumerated by RD_DIM_STRONG/RD_DIM_WEAK_SENTENCE above.
+        // Reused by rdBuildSnapshot below so the Performance Snapshot shows
+        // every dimension actually evaluated this session -- not a
         // hardcoded subset -- without needing a second list kept in sync.
+        // In practice only one family (legacy OR A2-canonical) is ever
+        // present in a given session's evaluations, since a session is
+        // scored by exactly one pinned evaluator for its whole duration
+        // (evaluator_registry.py's own per-session-pinning contract) --
+        // rdAllDimensionAverages/rdBuildSnapshot already only render rows
+        // for dimension names that actually appeared, so the other family's
+        // entries here simply never match and are silently skipped.
         const RD_DIM_ORDER = Object.keys(RD_DIM_STRONG);
         const RD_DIM_LABELS = {
             technical_accuracy: "Technical Accuracy",
@@ -3189,6 +3234,12 @@
             debugging: "Debugging",
             testing: "Testing",
             scalability: "Scalability",
+            // CANONICAL (A2) -- evaluation_dimensions.py's own display_name
+            // for each rubric, used verbatim.
+            technical_correctness: "Technical Correctness",
+            depth_specificity: "Depth & Specificity",
+            relevance_completeness: "Relevance & Completeness",
+            grounding_ownership: "Grounding & Ownership",
         };
         // Same gap taxonomy strong_answer.py uses for the Improved Answer,
         // reworded here in second person for the interviewer's voice.
@@ -3492,6 +3543,17 @@
                 technical_depth: rdDimScore(t.evaluation, "technical_depth"),
                 completeness: rdDimScore(t.evaluation, "completeness"),
                 communication: rdDimScore(t.evaluation, "communication"),
+                // CANONICAL (A2, four-dimension evaluator) -- added
+                // alongside the legacy fields above, never replacing them.
+                // Only one family is ever non-null for a given turn (a
+                // session is scored by exactly one pinned evaluator for its
+                // whole duration), so these are simply null/undefined for
+                // any legacy-scored turn -- see rdMetricBoxHtml's own
+                // null-is-"not applicable" handling below.
+                technical_correctness: rdDimScore(t.evaluation, "technical_correctness"),
+                depth_specificity: rdDimScore(t.evaluation, "depth_specificity"),
+                relevance_completeness: rdDimScore(t.evaluation, "relevance_completeness"),
+                grounding_ownership: rdDimScore(t.evaluation, "grounding_ownership"),
                 // EvaluationResult.strengths/weaknesses (evaluator.py) are
                 // plain strings, not {claim} objects -- ".claim" on a string
                 // is undefined, which nonEmptyStrings() then silently
@@ -3626,10 +3688,17 @@
 
                         <div class="rd-timeline-detail">
                             <div class="rd-timeline-detail-grid">
+                                ${rdHasCanonicalDims(item) ? `
+                                ${rdMetricBoxHtml("Technical Correctness", item.technical_correctness)}
+                                ${rdMetricBoxHtml("Depth & Specificity", item.depth_specificity)}
+                                ${rdMetricBoxHtml("Relevance & Completeness", item.relevance_completeness)}
+                                ${rdMetricBoxHtml("Grounding & Ownership", item.grounding_ownership)}
+                                ` : `
                                 ${rdMetricBoxHtml("Correctness", item.correctness)}
                                 ${rdMetricBoxHtml("Technical Depth", item.technical_depth)}
                                 ${rdMetricBoxHtml("Completeness", item.completeness)}
                                 ${rdMetricBoxHtml("Communication", item.communication)}
+                                `}
                             </div>
                             ${strengthsListHtml ? `<div class="rd-timeline-metric-label">Strengths</div><ul class="rd-timeline-list">${strengthsListHtml}</ul>` : ""}
                             ${weaknessesListHtml ? `<div class="rd-timeline-metric-label">To improve</div><ul class="rd-timeline-list">${weaknessesListHtml}</ul>` : ""}

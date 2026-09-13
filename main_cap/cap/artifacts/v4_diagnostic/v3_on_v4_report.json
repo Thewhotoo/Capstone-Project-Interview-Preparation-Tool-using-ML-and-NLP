@@ -1,0 +1,1729 @@
+{
+  "n_examples_evaluated": 58,
+  "aggregate_metrics": {
+    "technical_correctness": {
+      "n": 58,
+      "accuracy": 0.6207,
+      "mae": 0.5517,
+      "within_1_accuracy": 0.8966,
+      "qwk": 0.3198,
+      "mean_true": 3.4138,
+      "mean_pred": 3.6207,
+      "bias": 0.2069
+    },
+    "depth_specificity": {
+      "n": 58,
+      "accuracy": 0.4138,
+      "mae": 0.7586,
+      "within_1_accuracy": 0.8621,
+      "qwk": 0.5849,
+      "mean_true": 2.6034,
+      "mean_pred": 2.431,
+      "bias": -0.1724
+    },
+    "relevance_completeness": {
+      "n": 58,
+      "accuracy": 0.6034,
+      "mae": 0.8793,
+      "within_1_accuracy": 0.7586,
+      "qwk": 0.1483,
+      "mean_true": 3.0345,
+      "mean_pred": 3.7759,
+      "bias": 0.7414
+    },
+    "grounding_ownership": {
+      "n": 58,
+      "accuracy": 0.2414,
+      "mae": 1.1724,
+      "within_1_accuracy": 0.6897,
+      "qwk": 0.39,
+      "mean_true": 2.1552,
+      "mean_pred": 1.1207,
+      "bias": -1.0345
+    }
+  },
+  "category_metrics": {
+    "relevance_alignment": {
+      "n_examples": 16,
+      "per_dimension": {
+        "technical_correctness": {
+          "n": 16,
+          "accuracy": 0.6875,
+          "mae": 0.3125,
+          "within_1_accuracy": 1.0,
+          "qwk": 0.2,
+          "mean_true": 3.9375,
+          "mean_pred": 3.625,
+          "bias": -0.3125
+        },
+        "depth_specificity": {
+          "n": 16,
+          "accuracy": 0.375,
+          "mae": 0.8125,
+          "within_1_accuracy": 0.8125,
+          "qwk": 0.1059,
+          "mean_true": 2.875,
+          "mean_pred": 2.5625,
+          "bias": -0.3125
+        },
+        "relevance_completeness": {
+          "n": 16,
+          "accuracy": 0.5,
+          "mae": 1.6875,
+          "within_1_accuracy": 0.5,
+          "qwk": 0.0,
+          "mean_true": 2.3125,
+          "mean_pred": 4.0,
+          "bias": 1.6875
+        },
+        "grounding_ownership": {
+          "n": 16,
+          "accuracy": 0.125,
+          "mae": 1.25,
+          "within_1_accuracy": 0.6875,
+          "qwk": 0.1053,
+          "mean_true": 2.0,
+          "mean_pred": 1.0,
+          "bias": -1.0
+        }
+      }
+    },
+    "multipart_completeness": {
+      "n_examples": 9,
+      "per_dimension": {
+        "technical_correctness": {
+          "n": 9,
+          "accuracy": 0.4444,
+          "mae": 0.6667,
+          "within_1_accuracy": 0.8889,
+          "qwk": 0.1429,
+          "mean_true": 3.2222,
+          "mean_pred": 3.6667,
+          "bias": 0.4444
+        },
+        "depth_specificity": {
+          "n": 9,
+          "accuracy": 0.2222,
+          "mae": 1.0,
+          "within_1_accuracy": 0.7778,
+          "qwk": 0.6667,
+          "mean_true": 2.0,
+          "mean_pred": 2.5556,
+          "bias": 0.5556
+        },
+        "relevance_completeness": {
+          "n": 9,
+          "accuracy": 0.4444,
+          "mae": 1.2222,
+          "within_1_accuracy": 0.5556,
+          "qwk": 0.3359,
+          "mean_true": 2.3333,
+          "mean_pred": 3.5556,
+          "bias": 1.2222
+        },
+        "grounding_ownership": {
+          "n": 9,
+          "accuracy": 0.5556,
+          "mae": 0.6667,
+          "within_1_accuracy": 0.7778,
+          "qwk": 0.7097,
+          "mean_true": 1.7778,
+          "mean_pred": 1.1111,
+          "bias": -0.6667
+        }
+      }
+    },
+    "technical_correctness": {
+      "n_examples": 12,
+      "per_dimension": {
+        "technical_correctness": {
+          "n": 12,
+          "accuracy": 0.3333,
+          "mae": 1.4167,
+          "within_1_accuracy": 0.5833,
+          "qwk": 0.1988,
+          "mean_true": 2.3333,
+          "mean_pred": 3.4167,
+          "bias": 1.0833
+        },
+        "depth_specificity": {
+          "n": 12,
+          "accuracy": 0.5833,
+          "mae": 0.5833,
+          "within_1_accuracy": 0.9167,
+          "qwk": 0.5667,
+          "mean_true": 2.8333,
+          "mean_pred": 2.25,
+          "bias": -0.5833
+        },
+        "relevance_completeness": {
+          "n": 12,
+          "accuracy": 0.75,
+          "mae": 0.25,
+          "within_1_accuracy": 1.0,
+          "qwk": -0.125,
+          "mean_true": 3.9167,
+          "mean_pred": 3.8333,
+          "bias": -0.0833
+        },
+        "grounding_ownership": {
+          "n": 12,
+          "accuracy": 0.1667,
+          "mae": 1.5,
+          "within_1_accuracy": 0.5,
+          "qwk": 0.1128,
+          "mean_true": 2.4167,
+          "mean_pred": 0.9167,
+          "bias": -1.5
+        }
+      }
+    },
+    "depth_control": {
+      "n_examples": 6,
+      "per_dimension": {
+        "technical_correctness": {
+          "n": 6,
+          "accuracy": 1.0,
+          "mae": 0.0,
+          "within_1_accuracy": 1.0,
+          "qwk": 1.0,
+          "mean_true": 3.6667,
+          "mean_pred": 3.6667,
+          "bias": 0.0
+        },
+        "depth_specificity": {
+          "n": 6,
+          "accuracy": 0.5,
+          "mae": 0.6667,
+          "within_1_accuracy": 0.8333,
+          "qwk": 0.76,
+          "mean_true": 2.5,
+          "mean_pred": 2.5,
+          "bias": 0.0
+        },
+        "relevance_completeness": {
+          "n": 6,
+          "accuracy": 0.6667,
+          "mae": 0.3333,
+          "within_1_accuracy": 1.0,
+          "qwk": 0.5714,
+          "mean_true": 3.6667,
+          "mean_pred": 3.6667,
+          "bias": 0.0
+        },
+        "grounding_ownership": {
+          "n": 6,
+          "accuracy": 0.5,
+          "mae": 0.8333,
+          "within_1_accuracy": 0.8333,
+          "qwk": 0.2667,
+          "mean_true": 2.0,
+          "mean_pred": 1.5,
+          "bias": -0.5
+        }
+      }
+    },
+    "grounding_ownership": {
+      "n_examples": 9,
+      "per_dimension": {
+        "technical_correctness": {
+          "n": 9,
+          "accuracy": 0.5556,
+          "mae": 0.4444,
+          "within_1_accuracy": 1.0,
+          "qwk": 0.5263,
+          "mean_true": 3.5556,
+          "mean_pred": 3.5556,
+          "bias": 0.0
+        },
+        "depth_specificity": {
+          "n": 9,
+          "accuracy": 0.5556,
+          "mae": 0.6667,
+          "within_1_accuracy": 0.8889,
+          "qwk": 0.7273,
+          "mean_true": 2.4444,
+          "mean_pred": 2.0,
+          "bias": -0.4444
+        },
+        "relevance_completeness": {
+          "n": 9,
+          "accuracy": 0.6667,
+          "mae": 0.3333,
+          "within_1_accuracy": 1.0,
+          "qwk": 0.7907,
+          "mean_true": 3.3333,
+          "mean_pred": 3.4444,
+          "bias": 0.1111
+        },
+        "grounding_ownership": {
+          "n": 9,
+          "accuracy": 0.1111,
+          "mae": 0.8889,
+          "within_1_accuracy": 1.0,
+          "qwk": 0.8,
+          "mean_true": 2.0,
+          "mean_pred": 1.3333,
+          "bias": -0.6667
+        }
+      }
+    },
+    "cross_dimension": {
+      "n_examples": 6,
+      "per_dimension": {
+        "technical_correctness": {
+          "n": 6,
+          "accuracy": 1.0,
+          "mae": 0.0,
+          "within_1_accuracy": 1.0,
+          "qwk": 1.0,
+          "mean_true": 4.0,
+          "mean_pred": 4.0,
+          "bias": 0.0
+        },
+        "depth_specificity": {
+          "n": 6,
+          "accuracy": 0.1667,
+          "mae": 0.8333,
+          "within_1_accuracy": 1.0,
+          "qwk": -0.1538,
+          "mean_true": 2.6667,
+          "mean_pred": 2.8333,
+          "bias": 0.1667
+        },
+        "relevance_completeness": {
+          "n": 6,
+          "accuracy": 0.6667,
+          "mae": 0.8333,
+          "within_1_accuracy": 0.6667,
+          "qwk": 0.0,
+          "mean_true": 3.1667,
+          "mean_pred": 4.0,
+          "bias": 0.8333
+        },
+        "grounding_ownership": {
+          "n": 6,
+          "accuracy": 0.1667,
+          "mae": 1.8333,
+          "within_1_accuracy": 0.3333,
+          "qwk": 0.3415,
+          "mean_true": 3.0,
+          "mean_pred": 1.1667,
+          "bias": -1.8333
+        }
+      }
+    }
+  },
+  "pair_summary": {
+    "total_groups": 20,
+    "correctly_separated": 2,
+    "partially_separated": 7,
+    "tied": 10,
+    "incorrectly_ordered": 1,
+    "separation_rate": 0.1,
+    "separation_rate_including_partial": 0.45
+  },
+  "pair_results": [
+    {
+      "pair_group_id": "DEP-1",
+      "category": "depth_control",
+      "n_examples": 3,
+      "intended_dimension": "depth_specificity",
+      "gold_ordering": [
+        "v4_diag_dep1_a",
+        "v4_diag_dep1_b",
+        "v4_diag_dep1_c"
+      ],
+      "gold_values": {
+        "v4_diag_dep1_a": 0,
+        "v4_diag_dep1_b": 3,
+        "v4_diag_dep1_c": 4
+      },
+      "predicted_ordering": [
+        "v4_diag_dep1_a",
+        "v4_diag_dep1_b",
+        "v4_diag_dep1_c"
+      ],
+      "predicted_values": {
+        "v4_diag_dep1_a": 2,
+        "v4_diag_dep1_b": 2,
+        "v4_diag_dep1_c": 4
+      },
+      "status": "PARTIALLY_SEPARATED",
+      "concordant_pairs": 2,
+      "discordant_pairs": 0,
+      "tied_pairs": 1,
+      "pair_detail": [
+        {
+          "a": "v4_diag_dep1_a",
+          "b": "v4_diag_dep1_b",
+          "gold_diff": -3,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_dep1_a",
+          "b": "v4_diag_dep1_c",
+          "gold_diff": -4,
+          "pred_diff": -2,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_dep1_b",
+          "b": "v4_diag_dep1_c",
+          "gold_diff": -1,
+          "pred_diff": -2,
+          "verdict": "concordant"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "DEP-2",
+      "category": "depth_control",
+      "n_examples": 3,
+      "intended_dimension": "depth_specificity",
+      "gold_ordering": [
+        "v4_diag_dep2_a",
+        "v4_diag_dep2_b",
+        "v4_diag_dep2_c"
+      ],
+      "gold_values": {
+        "v4_diag_dep2_a": 1,
+        "v4_diag_dep2_b": 3,
+        "v4_diag_dep2_c": 4
+      },
+      "predicted_ordering": [
+        "v4_diag_dep2_a",
+        "v4_diag_dep2_b",
+        "v4_diag_dep2_c"
+      ],
+      "predicted_values": {
+        "v4_diag_dep2_a": 0,
+        "v4_diag_dep2_b": 3,
+        "v4_diag_dep2_c": 4
+      },
+      "status": "CORRECTLY_SEPARATED",
+      "concordant_pairs": 3,
+      "discordant_pairs": 0,
+      "tied_pairs": 0,
+      "pair_detail": [
+        {
+          "a": "v4_diag_dep2_a",
+          "b": "v4_diag_dep2_b",
+          "gold_diff": -2,
+          "pred_diff": -3,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_dep2_a",
+          "b": "v4_diag_dep2_c",
+          "gold_diff": -3,
+          "pred_diff": -4,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_dep2_b",
+          "b": "v4_diag_dep2_c",
+          "gold_diff": -1,
+          "pred_diff": -1,
+          "verdict": "concordant"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "GRD-1",
+      "category": "grounding_ownership",
+      "n_examples": 5,
+      "intended_dimension": "grounding_ownership",
+      "gold_ordering": [
+        "v4_diag_grd1_a",
+        "v4_diag_grd1_d",
+        "v4_diag_grd1_b",
+        "v4_diag_grd1_c",
+        "v4_diag_grd1_e"
+      ],
+      "gold_values": {
+        "v4_diag_grd1_a": 0,
+        "v4_diag_grd1_b": 2,
+        "v4_diag_grd1_c": 4,
+        "v4_diag_grd1_d": 1,
+        "v4_diag_grd1_e": 4
+      },
+      "predicted_ordering": [
+        "v4_diag_grd1_a",
+        "v4_diag_grd1_d",
+        "v4_diag_grd1_b",
+        "v4_diag_grd1_c",
+        "v4_diag_grd1_e"
+      ],
+      "predicted_values": {
+        "v4_diag_grd1_a": 0,
+        "v4_diag_grd1_b": 1,
+        "v4_diag_grd1_c": 3,
+        "v4_diag_grd1_d": 0,
+        "v4_diag_grd1_e": 3
+      },
+      "status": "PARTIALLY_SEPARATED",
+      "concordant_pairs": 8,
+      "discordant_pairs": 0,
+      "tied_pairs": 1,
+      "pair_detail": [
+        {
+          "a": "v4_diag_grd1_a",
+          "b": "v4_diag_grd1_b",
+          "gold_diff": -2,
+          "pred_diff": -1,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_grd1_a",
+          "b": "v4_diag_grd1_c",
+          "gold_diff": -4,
+          "pred_diff": -3,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_grd1_a",
+          "b": "v4_diag_grd1_d",
+          "gold_diff": -1,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_grd1_a",
+          "b": "v4_diag_grd1_e",
+          "gold_diff": -4,
+          "pred_diff": -3,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_grd1_b",
+          "b": "v4_diag_grd1_c",
+          "gold_diff": -2,
+          "pred_diff": -2,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_grd1_b",
+          "b": "v4_diag_grd1_d",
+          "gold_diff": 1,
+          "pred_diff": 1,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_grd1_b",
+          "b": "v4_diag_grd1_e",
+          "gold_diff": -2,
+          "pred_diff": -2,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_grd1_c",
+          "b": "v4_diag_grd1_d",
+          "gold_diff": 3,
+          "pred_diff": 3,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_grd1_d",
+          "b": "v4_diag_grd1_e",
+          "gold_diff": -3,
+          "pred_diff": -3,
+          "verdict": "concordant"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "GRD-2",
+      "category": "grounding_ownership",
+      "n_examples": 4,
+      "intended_dimension": "grounding_ownership",
+      "gold_ordering": [
+        "v4_diag_grd2_a",
+        "v4_diag_grd2_d",
+        "v4_diag_grd2_b",
+        "v4_diag_grd2_c"
+      ],
+      "gold_values": {
+        "v4_diag_grd2_a": 0,
+        "v4_diag_grd2_b": 2,
+        "v4_diag_grd2_c": 4,
+        "v4_diag_grd2_d": 1
+      },
+      "predicted_ordering": [
+        "v4_diag_grd2_d",
+        "v4_diag_grd2_a",
+        "v4_diag_grd2_b",
+        "v4_diag_grd2_c"
+      ],
+      "predicted_values": {
+        "v4_diag_grd2_a": 1,
+        "v4_diag_grd2_b": 1,
+        "v4_diag_grd2_c": 3,
+        "v4_diag_grd2_d": 0
+      },
+      "status": "INCORRECTLY_ORDERED",
+      "concordant_pairs": 4,
+      "discordant_pairs": 1,
+      "tied_pairs": 1,
+      "pair_detail": [
+        {
+          "a": "v4_diag_grd2_a",
+          "b": "v4_diag_grd2_b",
+          "gold_diff": -2,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_grd2_a",
+          "b": "v4_diag_grd2_c",
+          "gold_diff": -4,
+          "pred_diff": -2,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_grd2_a",
+          "b": "v4_diag_grd2_d",
+          "gold_diff": -1,
+          "pred_diff": 1,
+          "verdict": "discordant"
+        },
+        {
+          "a": "v4_diag_grd2_b",
+          "b": "v4_diag_grd2_c",
+          "gold_diff": -2,
+          "pred_diff": -2,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_grd2_b",
+          "b": "v4_diag_grd2_d",
+          "gold_diff": 1,
+          "pred_diff": 1,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_grd2_c",
+          "b": "v4_diag_grd2_d",
+          "gold_diff": 3,
+          "pred_diff": 3,
+          "verdict": "concordant"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "MP-1",
+      "category": "multipart_completeness",
+      "n_examples": 3,
+      "intended_dimension": "relevance_completeness",
+      "gold_ordering": [
+        "v4_diag_mp1_c",
+        "v4_diag_mp1_b",
+        "v4_diag_mp1_a"
+      ],
+      "gold_values": {
+        "v4_diag_mp1_a": 4,
+        "v4_diag_mp1_b": 2,
+        "v4_diag_mp1_c": 0
+      },
+      "predicted_ordering": [
+        "v4_diag_mp1_a",
+        "v4_diag_mp1_b",
+        "v4_diag_mp1_c"
+      ],
+      "predicted_values": {
+        "v4_diag_mp1_a": 4,
+        "v4_diag_mp1_b": 4,
+        "v4_diag_mp1_c": 4
+      },
+      "status": "TIED",
+      "concordant_pairs": 0,
+      "discordant_pairs": 0,
+      "tied_pairs": 3,
+      "pair_detail": [
+        {
+          "a": "v4_diag_mp1_a",
+          "b": "v4_diag_mp1_b",
+          "gold_diff": 2,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_mp1_a",
+          "b": "v4_diag_mp1_c",
+          "gold_diff": 4,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_mp1_b",
+          "b": "v4_diag_mp1_c",
+          "gold_diff": 2,
+          "pred_diff": 0,
+          "verdict": "tied"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "MP-2",
+      "category": "multipart_completeness",
+      "n_examples": 3,
+      "intended_dimension": "relevance_completeness",
+      "gold_ordering": [
+        "v4_diag_mp2_c",
+        "v4_diag_mp2_b",
+        "v4_diag_mp2_a"
+      ],
+      "gold_values": {
+        "v4_diag_mp2_a": 4,
+        "v4_diag_mp2_b": 2,
+        "v4_diag_mp2_c": 0
+      },
+      "predicted_ordering": [
+        "v4_diag_mp2_c",
+        "v4_diag_mp2_a",
+        "v4_diag_mp2_b"
+      ],
+      "predicted_values": {
+        "v4_diag_mp2_a": 4,
+        "v4_diag_mp2_b": 4,
+        "v4_diag_mp2_c": 2
+      },
+      "status": "PARTIALLY_SEPARATED",
+      "concordant_pairs": 2,
+      "discordant_pairs": 0,
+      "tied_pairs": 1,
+      "pair_detail": [
+        {
+          "a": "v4_diag_mp2_a",
+          "b": "v4_diag_mp2_b",
+          "gold_diff": 2,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_mp2_a",
+          "b": "v4_diag_mp2_c",
+          "gold_diff": 4,
+          "pred_diff": 2,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_mp2_b",
+          "b": "v4_diag_mp2_c",
+          "gold_diff": 2,
+          "pred_diff": 2,
+          "verdict": "concordant"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "MP-3",
+      "category": "multipart_completeness",
+      "n_examples": 3,
+      "intended_dimension": "relevance_completeness",
+      "gold_ordering": [
+        "v4_diag_mp3_c",
+        "v4_diag_mp3_a",
+        "v4_diag_mp3_b"
+      ],
+      "gold_values": {
+        "v4_diag_mp3_a": 4,
+        "v4_diag_mp3_b": 4,
+        "v4_diag_mp3_c": 1
+      },
+      "predicted_ordering": [
+        "v4_diag_mp3_c",
+        "v4_diag_mp3_a",
+        "v4_diag_mp3_b"
+      ],
+      "predicted_values": {
+        "v4_diag_mp3_a": 4,
+        "v4_diag_mp3_b": 4,
+        "v4_diag_mp3_c": 2
+      },
+      "status": "CORRECTLY_SEPARATED",
+      "concordant_pairs": 2,
+      "discordant_pairs": 0,
+      "tied_pairs": 0,
+      "pair_detail": [
+        {
+          "a": "v4_diag_mp3_a",
+          "b": "v4_diag_mp3_c",
+          "gold_diff": 3,
+          "pred_diff": 2,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_mp3_b",
+          "b": "v4_diag_mp3_c",
+          "gold_diff": 3,
+          "pred_diff": 2,
+          "verdict": "concordant"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "REL-1",
+      "category": "relevance_alignment",
+      "n_examples": 2,
+      "intended_dimension": "relevance_completeness",
+      "gold_ordering": [
+        "v4_diag_rel1_a",
+        "v4_diag_rel1_b"
+      ],
+      "gold_values": {
+        "v4_diag_rel1_a": 0,
+        "v4_diag_rel1_b": 4
+      },
+      "predicted_ordering": [
+        "v4_diag_rel1_a",
+        "v4_diag_rel1_b"
+      ],
+      "predicted_values": {
+        "v4_diag_rel1_a": 4,
+        "v4_diag_rel1_b": 4
+      },
+      "status": "TIED",
+      "concordant_pairs": 0,
+      "discordant_pairs": 0,
+      "tied_pairs": 1,
+      "pair_detail": [
+        {
+          "a": "v4_diag_rel1_a",
+          "b": "v4_diag_rel1_b",
+          "gold_diff": -4,
+          "pred_diff": 0,
+          "verdict": "tied"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "REL-2",
+      "category": "relevance_alignment",
+      "n_examples": 2,
+      "intended_dimension": "relevance_completeness",
+      "gold_ordering": [
+        "v4_diag_rel2_a",
+        "v4_diag_rel2_b"
+      ],
+      "gold_values": {
+        "v4_diag_rel2_a": 0,
+        "v4_diag_rel2_b": 4
+      },
+      "predicted_ordering": [
+        "v4_diag_rel2_a",
+        "v4_diag_rel2_b"
+      ],
+      "predicted_values": {
+        "v4_diag_rel2_a": 4,
+        "v4_diag_rel2_b": 4
+      },
+      "status": "TIED",
+      "concordant_pairs": 0,
+      "discordant_pairs": 0,
+      "tied_pairs": 1,
+      "pair_detail": [
+        {
+          "a": "v4_diag_rel2_a",
+          "b": "v4_diag_rel2_b",
+          "gold_diff": -4,
+          "pred_diff": 0,
+          "verdict": "tied"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "REL-3",
+      "category": "relevance_alignment",
+      "n_examples": 2,
+      "intended_dimension": "relevance_completeness",
+      "gold_ordering": [
+        "v4_diag_rel3_a",
+        "v4_diag_rel3_b"
+      ],
+      "gold_values": {
+        "v4_diag_rel3_a": 0,
+        "v4_diag_rel3_b": 4
+      },
+      "predicted_ordering": [
+        "v4_diag_rel3_a",
+        "v4_diag_rel3_b"
+      ],
+      "predicted_values": {
+        "v4_diag_rel3_a": 4,
+        "v4_diag_rel3_b": 4
+      },
+      "status": "TIED",
+      "concordant_pairs": 0,
+      "discordant_pairs": 0,
+      "tied_pairs": 1,
+      "pair_detail": [
+        {
+          "a": "v4_diag_rel3_a",
+          "b": "v4_diag_rel3_b",
+          "gold_diff": -4,
+          "pred_diff": 0,
+          "verdict": "tied"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "REL-4",
+      "category": "relevance_alignment",
+      "n_examples": 2,
+      "intended_dimension": "relevance_completeness",
+      "gold_ordering": [
+        "v4_diag_rel4_a",
+        "v4_diag_rel4_b"
+      ],
+      "gold_values": {
+        "v4_diag_rel4_a": 1,
+        "v4_diag_rel4_b": 4
+      },
+      "predicted_ordering": [
+        "v4_diag_rel4_a",
+        "v4_diag_rel4_b"
+      ],
+      "predicted_values": {
+        "v4_diag_rel4_a": 4,
+        "v4_diag_rel4_b": 4
+      },
+      "status": "TIED",
+      "concordant_pairs": 0,
+      "discordant_pairs": 0,
+      "tied_pairs": 1,
+      "pair_detail": [
+        {
+          "a": "v4_diag_rel4_a",
+          "b": "v4_diag_rel4_b",
+          "gold_diff": -3,
+          "pred_diff": 0,
+          "verdict": "tied"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "REL-5",
+      "category": "relevance_alignment",
+      "n_examples": 2,
+      "intended_dimension": "relevance_completeness",
+      "gold_ordering": [
+        "v4_diag_rel5_a",
+        "v4_diag_rel5_b"
+      ],
+      "gold_values": {
+        "v4_diag_rel5_a": 1,
+        "v4_diag_rel5_b": 4
+      },
+      "predicted_ordering": [
+        "v4_diag_rel5_a",
+        "v4_diag_rel5_b"
+      ],
+      "predicted_values": {
+        "v4_diag_rel5_a": 4,
+        "v4_diag_rel5_b": 4
+      },
+      "status": "TIED",
+      "concordant_pairs": 0,
+      "discordant_pairs": 0,
+      "tied_pairs": 1,
+      "pair_detail": [
+        {
+          "a": "v4_diag_rel5_a",
+          "b": "v4_diag_rel5_b",
+          "gold_diff": -3,
+          "pred_diff": 0,
+          "verdict": "tied"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "REL-6",
+      "category": "relevance_alignment",
+      "n_examples": 2,
+      "intended_dimension": "relevance_completeness",
+      "gold_ordering": [
+        "v4_diag_rel6_a",
+        "v4_diag_rel6_b"
+      ],
+      "gold_values": {
+        "v4_diag_rel6_a": 1,
+        "v4_diag_rel6_b": 4
+      },
+      "predicted_ordering": [
+        "v4_diag_rel6_a",
+        "v4_diag_rel6_b"
+      ],
+      "predicted_values": {
+        "v4_diag_rel6_a": 4,
+        "v4_diag_rel6_b": 4
+      },
+      "status": "TIED",
+      "concordant_pairs": 0,
+      "discordant_pairs": 0,
+      "tied_pairs": 1,
+      "pair_detail": [
+        {
+          "a": "v4_diag_rel6_a",
+          "b": "v4_diag_rel6_b",
+          "gold_diff": -3,
+          "pred_diff": 0,
+          "verdict": "tied"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "REL-7",
+      "category": "relevance_alignment",
+      "n_examples": 2,
+      "intended_dimension": "relevance_completeness",
+      "gold_ordering": [
+        "v4_diag_rel7_a",
+        "v4_diag_rel7_b"
+      ],
+      "gold_values": {
+        "v4_diag_rel7_a": 1,
+        "v4_diag_rel7_b": 4
+      },
+      "predicted_ordering": [
+        "v4_diag_rel7_a",
+        "v4_diag_rel7_b"
+      ],
+      "predicted_values": {
+        "v4_diag_rel7_a": 4,
+        "v4_diag_rel7_b": 4
+      },
+      "status": "TIED",
+      "concordant_pairs": 0,
+      "discordant_pairs": 0,
+      "tied_pairs": 1,
+      "pair_detail": [
+        {
+          "a": "v4_diag_rel7_a",
+          "b": "v4_diag_rel7_b",
+          "gold_diff": -3,
+          "pred_diff": 0,
+          "verdict": "tied"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "REL-8",
+      "category": "relevance_alignment",
+      "n_examples": 2,
+      "intended_dimension": "relevance_completeness",
+      "gold_ordering": [
+        "v4_diag_rel8_a",
+        "v4_diag_rel8_b"
+      ],
+      "gold_values": {
+        "v4_diag_rel8_a": 1,
+        "v4_diag_rel8_b": 4
+      },
+      "predicted_ordering": [
+        "v4_diag_rel8_a",
+        "v4_diag_rel8_b"
+      ],
+      "predicted_values": {
+        "v4_diag_rel8_a": 4,
+        "v4_diag_rel8_b": 4
+      },
+      "status": "TIED",
+      "concordant_pairs": 0,
+      "discordant_pairs": 0,
+      "tied_pairs": 1,
+      "pair_detail": [
+        {
+          "a": "v4_diag_rel8_a",
+          "b": "v4_diag_rel8_b",
+          "gold_diff": -3,
+          "pred_diff": 0,
+          "verdict": "tied"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "TC-1",
+      "category": "technical_correctness",
+      "n_examples": 4,
+      "intended_dimension": "technical_correctness",
+      "gold_ordering": [
+        "v4_diag_tc1_d",
+        "v4_diag_tc1_c",
+        "v4_diag_tc1_a",
+        "v4_diag_tc1_b"
+      ],
+      "gold_values": {
+        "v4_diag_tc1_a": 4,
+        "v4_diag_tc1_b": 4,
+        "v4_diag_tc1_c": 1,
+        "v4_diag_tc1_d": 0
+      },
+      "predicted_ordering": [
+        "v4_diag_tc1_d",
+        "v4_diag_tc1_a",
+        "v4_diag_tc1_b",
+        "v4_diag_tc1_c"
+      ],
+      "predicted_values": {
+        "v4_diag_tc1_a": 4,
+        "v4_diag_tc1_b": 4,
+        "v4_diag_tc1_c": 4,
+        "v4_diag_tc1_d": 3
+      },
+      "status": "PARTIALLY_SEPARATED",
+      "concordant_pairs": 3,
+      "discordant_pairs": 0,
+      "tied_pairs": 2,
+      "pair_detail": [
+        {
+          "a": "v4_diag_tc1_a",
+          "b": "v4_diag_tc1_c",
+          "gold_diff": 3,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_tc1_a",
+          "b": "v4_diag_tc1_d",
+          "gold_diff": 4,
+          "pred_diff": 1,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_tc1_b",
+          "b": "v4_diag_tc1_c",
+          "gold_diff": 3,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_tc1_b",
+          "b": "v4_diag_tc1_d",
+          "gold_diff": 4,
+          "pred_diff": 1,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_tc1_c",
+          "b": "v4_diag_tc1_d",
+          "gold_diff": 1,
+          "pred_diff": 1,
+          "verdict": "concordant"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "TC-2",
+      "category": "technical_correctness",
+      "n_examples": 4,
+      "intended_dimension": "technical_correctness",
+      "gold_ordering": [
+        "v4_diag_tc2_d",
+        "v4_diag_tc2_c",
+        "v4_diag_tc2_a",
+        "v4_diag_tc2_b"
+      ],
+      "gold_values": {
+        "v4_diag_tc2_a": 4,
+        "v4_diag_tc2_b": 4,
+        "v4_diag_tc2_c": 1,
+        "v4_diag_tc2_d": 0
+      },
+      "predicted_ordering": [
+        "v4_diag_tc2_a",
+        "v4_diag_tc2_c",
+        "v4_diag_tc2_d",
+        "v4_diag_tc2_b"
+      ],
+      "predicted_values": {
+        "v4_diag_tc2_a": 3,
+        "v4_diag_tc2_b": 4,
+        "v4_diag_tc2_c": 3,
+        "v4_diag_tc2_d": 3
+      },
+      "status": "PARTIALLY_SEPARATED",
+      "concordant_pairs": 2,
+      "discordant_pairs": 0,
+      "tied_pairs": 3,
+      "pair_detail": [
+        {
+          "a": "v4_diag_tc2_a",
+          "b": "v4_diag_tc2_c",
+          "gold_diff": 3,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_tc2_a",
+          "b": "v4_diag_tc2_d",
+          "gold_diff": 4,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_tc2_b",
+          "b": "v4_diag_tc2_c",
+          "gold_diff": 3,
+          "pred_diff": 1,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_tc2_b",
+          "b": "v4_diag_tc2_d",
+          "gold_diff": 4,
+          "pred_diff": 1,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_tc2_c",
+          "b": "v4_diag_tc2_d",
+          "gold_diff": 1,
+          "pred_diff": 0,
+          "verdict": "tied"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "TC-3",
+      "category": "technical_correctness",
+      "n_examples": 4,
+      "intended_dimension": "technical_correctness",
+      "gold_ordering": [
+        "v4_diag_tc3_d",
+        "v4_diag_tc3_c",
+        "v4_diag_tc3_a",
+        "v4_diag_tc3_b"
+      ],
+      "gold_values": {
+        "v4_diag_tc3_a": 4,
+        "v4_diag_tc3_b": 4,
+        "v4_diag_tc3_c": 2,
+        "v4_diag_tc3_d": 0
+      },
+      "predicted_ordering": [
+        "v4_diag_tc3_a",
+        "v4_diag_tc3_c",
+        "v4_diag_tc3_d",
+        "v4_diag_tc3_b"
+      ],
+      "predicted_values": {
+        "v4_diag_tc3_a": 3,
+        "v4_diag_tc3_b": 4,
+        "v4_diag_tc3_c": 3,
+        "v4_diag_tc3_d": 3
+      },
+      "status": "PARTIALLY_SEPARATED",
+      "concordant_pairs": 2,
+      "discordant_pairs": 0,
+      "tied_pairs": 3,
+      "pair_detail": [
+        {
+          "a": "v4_diag_tc3_a",
+          "b": "v4_diag_tc3_c",
+          "gold_diff": 2,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_tc3_a",
+          "b": "v4_diag_tc3_d",
+          "gold_diff": 4,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_tc3_b",
+          "b": "v4_diag_tc3_c",
+          "gold_diff": 2,
+          "pred_diff": 1,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_tc3_b",
+          "b": "v4_diag_tc3_d",
+          "gold_diff": 4,
+          "pred_diff": 1,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_tc3_c",
+          "b": "v4_diag_tc3_d",
+          "gold_diff": 2,
+          "pred_diff": 0,
+          "verdict": "tied"
+        }
+      ]
+    },
+    {
+      "pair_group_id": "XD-1",
+      "category": "cross_dimension",
+      "n_examples": 3,
+      "intended_dimension": "grounding_ownership",
+      "gold_ordering": [
+        "v4_diag_xd1_a",
+        "v4_diag_xd1_b",
+        "v4_diag_xd1_c"
+      ],
+      "gold_values": {
+        "v4_diag_xd1_a": 0,
+        "v4_diag_xd1_b": 2,
+        "v4_diag_xd1_c": 4
+      },
+      "predicted_ordering": [
+        "v4_diag_xd1_a",
+        "v4_diag_xd1_b",
+        "v4_diag_xd1_c"
+      ],
+      "predicted_values": {
+        "v4_diag_xd1_a": 0,
+        "v4_diag_xd1_b": 0,
+        "v4_diag_xd1_c": 1
+      },
+      "status": "PARTIALLY_SEPARATED",
+      "concordant_pairs": 2,
+      "discordant_pairs": 0,
+      "tied_pairs": 1,
+      "pair_detail": [
+        {
+          "a": "v4_diag_xd1_a",
+          "b": "v4_diag_xd1_b",
+          "gold_diff": -2,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_xd1_a",
+          "b": "v4_diag_xd1_c",
+          "gold_diff": -4,
+          "pred_diff": -1,
+          "verdict": "concordant"
+        },
+        {
+          "a": "v4_diag_xd1_b",
+          "b": "v4_diag_xd1_c",
+          "gold_diff": -2,
+          "pred_diff": -1,
+          "verdict": "concordant"
+        }
+      ],
+      "held_constant_check": {
+        "technical_correctness": {
+          "pred_values": [
+            4,
+            4,
+            4
+          ],
+          "range": 0
+        },
+        "depth_specificity": {
+          "pred_values": [
+            2,
+            2,
+            3
+          ],
+          "range": 1
+        },
+        "relevance_completeness": {
+          "pred_values": [
+            4,
+            4,
+            4
+          ],
+          "range": 0
+        }
+      }
+    },
+    {
+      "pair_group_id": "XD-2",
+      "category": "cross_dimension",
+      "n_examples": 3,
+      "intended_dimension": "relevance_completeness",
+      "gold_ordering": [
+        "v4_diag_xd2_b",
+        "v4_diag_xd2_c",
+        "v4_diag_xd2_a"
+      ],
+      "gold_values": {
+        "v4_diag_xd2_a": 4,
+        "v4_diag_xd2_b": 1,
+        "v4_diag_xd2_c": 2
+      },
+      "predicted_ordering": [
+        "v4_diag_xd2_a",
+        "v4_diag_xd2_b",
+        "v4_diag_xd2_c"
+      ],
+      "predicted_values": {
+        "v4_diag_xd2_a": 4,
+        "v4_diag_xd2_b": 4,
+        "v4_diag_xd2_c": 4
+      },
+      "status": "TIED",
+      "concordant_pairs": 0,
+      "discordant_pairs": 0,
+      "tied_pairs": 3,
+      "pair_detail": [
+        {
+          "a": "v4_diag_xd2_a",
+          "b": "v4_diag_xd2_b",
+          "gold_diff": 3,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_xd2_a",
+          "b": "v4_diag_xd2_c",
+          "gold_diff": 2,
+          "pred_diff": 0,
+          "verdict": "tied"
+        },
+        {
+          "a": "v4_diag_xd2_b",
+          "b": "v4_diag_xd2_c",
+          "gold_diff": -1,
+          "pred_diff": 0,
+          "verdict": "tied"
+        }
+      ],
+      "held_constant_check": {
+        "technical_correctness": {
+          "pred_values": [
+            4,
+            4,
+            4
+          ],
+          "range": 0
+        },
+        "grounding_ownership": {
+          "pred_values": [
+            3,
+            1,
+            2
+          ],
+          "range": 2
+        }
+      }
+    }
+  ],
+  "critical_failure_checks": {
+    "1_detailed_irrelevant_scored_high_relevance": {
+      "n_candidates": 8,
+      "n_scored_relevance_4": 8,
+      "n_scored_relevance_3plus": 8,
+      "examples": [
+        {
+          "example_id": "v4_diag_rel1_a",
+          "relevance_true": 0,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel2_a",
+          "relevance_true": 0,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel3_a",
+          "relevance_true": 0,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel4_a",
+          "relevance_true": 1,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel5_a",
+          "relevance_true": 1,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel6_a",
+          "relevance_true": 1,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel7_a",
+          "relevance_true": 1,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel8_a",
+          "relevance_true": 1,
+          "relevance_pred": 4
+        }
+      ]
+    },
+    "2_concise_relevant_scored_low": {
+      "n_candidates": 8,
+      "n_scored_relevance_le2": 0,
+      "examples": [
+        {
+          "example_id": "v4_diag_rel1_b",
+          "relevance_true": 4,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel2_b",
+          "relevance_true": 4,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel3_b",
+          "relevance_true": 4,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel4_b",
+          "relevance_true": 4,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel5_b",
+          "relevance_true": 4,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel6_b",
+          "relevance_true": 4,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel7_b",
+          "relevance_true": 4,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel8_b",
+          "relevance_true": 4,
+          "relevance_pred": 4
+        }
+      ]
+    },
+    "3_fluent_misconception_scored_high_TC": {
+      "n_candidates": 5,
+      "n_scored_TC_4": 1,
+      "n_scored_TC_3plus": 5,
+      "examples": [
+        {
+          "example_id": "v4_diag_tc1_c",
+          "TC_true": 1,
+          "TC_pred": 4
+        },
+        {
+          "example_id": "v4_diag_tc1_d",
+          "TC_true": 0,
+          "TC_pred": 3
+        },
+        {
+          "example_id": "v4_diag_tc2_c",
+          "TC_true": 1,
+          "TC_pred": 3
+        },
+        {
+          "example_id": "v4_diag_tc2_d",
+          "TC_true": 0,
+          "TC_pred": 3
+        },
+        {
+          "example_id": "v4_diag_tc3_d",
+          "TC_true": 0,
+          "TC_pred": 3
+        }
+      ]
+    },
+    "4_correct_but_shallow_scored_high_depth": {
+      "n_candidates": 2,
+      "n_scored_depth_4": 0,
+      "n_scored_depth_3plus": 0,
+      "examples": [
+        {
+          "example_id": "v4_diag_dep1_a",
+          "depth_true": 0,
+          "depth_pred": 2
+        },
+        {
+          "example_id": "v4_diag_dep2_a",
+          "depth_true": 1,
+          "depth_pred": 0
+        }
+      ]
+    },
+    "5_unsupported_ownership_scored_high_grounding": {
+      "n_candidates": 2,
+      "n_scored_grounding_3plus": 0,
+      "examples": [
+        {
+          "example_id": "v4_diag_grd1_d",
+          "grounding_true": 1,
+          "grounding_pred": 0
+        },
+        {
+          "example_id": "v4_diag_grd2_d",
+          "grounding_true": 1,
+          "grounding_pred": 0
+        }
+      ]
+    },
+    "6_genuine_ownership_scored_low_grounding": {
+      "n_candidates": 3,
+      "n_scored_grounding_le1": 0,
+      "examples": [
+        {
+          "example_id": "v4_diag_grd1_c",
+          "grounding_true": 4,
+          "grounding_pred": 3
+        },
+        {
+          "example_id": "v4_diag_grd1_e",
+          "grounding_true": 4,
+          "grounding_pred": 3
+        },
+        {
+          "example_id": "v4_diag_grd2_c",
+          "grounding_true": 4,
+          "grounding_pred": 3
+        }
+      ]
+    },
+    "7_partial_multipart_scored_relevance_4": {
+      "n_candidates": 5,
+      "n_scored_relevance_4": 3,
+      "n_scored_relevance_3plus": 3,
+      "examples": [
+        {
+          "example_id": "v4_diag_mp1_b",
+          "relevance_true": 2,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_mp1_c",
+          "relevance_true": 0,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_mp2_b",
+          "relevance_true": 2,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_mp2_c",
+          "relevance_true": 0,
+          "relevance_pred": 2
+        },
+        {
+          "example_id": "v4_diag_mp3_c",
+          "relevance_true": 1,
+          "relevance_pred": 2
+        }
+      ]
+    },
+    "8_offtopic_but_correct_scored_relevance_4": {
+      "n_candidates": 8,
+      "n_scored_relevance_4": 8,
+      "examples": [
+        {
+          "example_id": "v4_diag_rel1_a",
+          "TC_true": 4,
+          "relevance_true": 0,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel2_a",
+          "TC_true": 4,
+          "relevance_true": 0,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel3_a",
+          "TC_true": 4,
+          "relevance_true": 0,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel4_a",
+          "TC_true": 3,
+          "relevance_true": 1,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel5_a",
+          "TC_true": 4,
+          "relevance_true": 1,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel6_a",
+          "TC_true": 4,
+          "relevance_true": 1,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel7_a",
+          "TC_true": 4,
+          "relevance_true": 1,
+          "relevance_pred": 4
+        },
+        {
+          "example_id": "v4_diag_rel8_a",
+          "TC_true": 4,
+          "relevance_true": 1,
+          "relevance_pred": 4
+        }
+      ]
+    }
+  },
+  "cross_dimension_analysis": {
+    "XD-1": {
+      "target_dimension": "grounding_ownership",
+      "target_dimension_pred_range": 1,
+      "held_constant_dims": [
+        "technical_correctness",
+        "depth_specificity",
+        "relevance_completeness"
+      ],
+      "held_constant_pred_ranges": {
+        "technical_correctness": 0,
+        "depth_specificity": 1,
+        "relevance_completeness": 0
+      },
+      "unwanted_movement": {
+        "depth_specificity": 1
+      }
+    },
+    "XD-2": {
+      "target_dimension": "relevance_completeness",
+      "target_dimension_pred_range": 0,
+      "held_constant_dims": [
+        "technical_correctness",
+        "grounding_ownership"
+      ],
+      "held_constant_pred_ranges": {
+        "technical_correctness": 0,
+        "grounding_ownership": 2
+      },
+      "unwanted_movement": {
+        "grounding_ownership": 2
+      }
+    }
+  },
+  "comovement_flags_general": [
+    {
+      "pair_group_id": "REL-1",
+      "dimension_that_moved_unexpectedly": "grounding_ownership",
+      "gold_diff": 1,
+      "pred_diff": 2,
+      "a": "v4_diag_rel1_a",
+      "b": "v4_diag_rel1_b"
+    },
+    {
+      "pair_group_id": "REL-8",
+      "dimension_that_moved_unexpectedly": "depth_specificity",
+      "gold_diff": 0,
+      "pred_diff": 2,
+      "a": "v4_diag_rel8_a",
+      "b": "v4_diag_rel8_b"
+    }
+  ]
+}

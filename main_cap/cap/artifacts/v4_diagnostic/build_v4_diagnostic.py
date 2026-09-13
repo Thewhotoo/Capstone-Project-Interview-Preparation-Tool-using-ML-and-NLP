@@ -1,0 +1,1195 @@
+"""
+V4 Diagnostic Dataset Builder — READ-ONLY diagnostic benchmark, NOT a
+training-pipeline artifact.
+
+Builds `v4_diagnostic_58.jsonl`: 58 hand-authored, paired/contrastive
+examples designed per
+`docs/architecture/V3_Forensic_Analysis_and_V4_Diagnostic_Design.md` to test
+whether the V3 four-dimension evaluator can distinguish:
+
+  1. detailed ≠ relevant
+  2. technical vocabulary ≠ technically correct
+  3. relevant ≠ complete
+  4. shallow ≠ incomplete
+  5. technically correct ≠ personally grounded
+  6. project-specific ≠ personally owned
+
+ISOLATION (by construction, not just convention):
+- Every `source_id` is prefixed `v4h_` (V4-Hypothetical) and does not match
+  any `source_id` in the frozen 170/220-example V1/V2/V3 pools
+  (`seed_dataset_v1`, `hand_authored_50`, `gap_coverage_20`,
+  `v2_targeted_50` — see the source-id-collision check in
+  `validate_v4_diagnostic.py`).
+- This module is never imported by `four_dim_experiment_split.py`,
+  `four_dim_experiment_v2_split.py`, `CORE_POOLS`, or
+  `run_four_dim_training.py`. There is no code path connecting V4 to any
+  training split. This script only reads the below in-file literal data and
+  writes `v4_diagnostic_58.jsonl` + `manifest.json`; it never touches any
+  file under `seed_dataset_v1/`, `hand_authored_50/`, `gap_coverage_20/`,
+  `v2_targeted_50/`, `v3_grounding/`, `four_dim_experiment_v1/`, or
+  `four_dim_experiment_v2/`.
+- `grounding.summary` is always `""` for every V4 example (no enrichment
+  wiring) — the only grounding text a V4 example carries is `title` +
+  `technologies`, both plain factual/hypothetical, never first-person, never
+  a copy of the answer, never a label/tier/rubric word.
+
+RATIONALE FIELD: every example carries a `rationale` object (one string per
+dimension) explaining *why* that gold label was assigned. This is internal
+review metadata only. `v4_input_builder.build_v4_model_input` (used by
+`validate_v4_diagnostic.py`'s leakage check and by any future inference
+script) is the ONLY sanctioned way to build model input text from a V4
+record, and it deliberately reads only
+`question` / `grounding.title` / `grounding.technologies` /
+`grounding.summary` / `expected_concepts` / `answer` — never `rationale`,
+never `gold_labels`, never `diagnostic_category`.
+"""
+from __future__ import annotations
+
+import json
+import os
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+OUTPUT_PATH = os.path.join(_HERE, "v4_diagnostic_58.jsonl")
+MANIFEST_PATH = os.path.join(_HERE, "manifest.json")
+
+
+def _ex(
+    example_id, source_id, pair_group_id, diagnostic_category,
+    title, domain, technologies, category, reasoning_type,
+    question, answer, expected_concepts,
+    tc, depth, rel, grnd,
+    rationale,
+):
+    return {
+        "example_id": example_id,
+        "source_id": source_id,
+        "pair_group_id": pair_group_id,
+        "diagnostic_category": diagnostic_category,
+        "title": title,
+        "domain": domain,
+        "technologies": technologies,
+        "category": category,
+        "reasoning_type": reasoning_type,
+        "question": question,
+        "answer": answer,
+        "expected_concepts": expected_concepts,
+        "grounding": {"title": title, "technologies": technologies, "summary": ""},
+        "gold_labels": {
+            "technical_correctness": tc,
+            "depth_specificity": depth,
+            "relevance_completeness": rel,
+            "grounding_ownership": grnd,
+        },
+        "rationale": rationale,
+        "hypothetical_source": True,
+        "isolation_note": (
+            "Hypothetical V4 diagnostic project/answer. Not derived from, "
+            "and does not describe, any real candidate or frozen-pool "
+            "project. Not for use as training data without explicit review."
+        ),
+    }
+
+
+EXAMPLES: list[dict] = []
+
+# ═══════════════════════════════════════════════════════════════════════
+# 1. RELEVANCE / ALIGNMENT — 16 examples, 8 groups of 2 (fails / passes)
+# ═══════════════════════════════════════════════════════════════════════
+
+EXAMPLES += [
+    _ex(
+        "v4_diag_rel1_a", "v4h_SentryFlag", "REL-1", "relevance_alignment",
+        "SentryFlag (fraud review tool)", "fraud_detection", ["Python", "XGBoost", "Kafka"],
+        "project_deep_dive", "explanation",
+        "How does SentryFlag explain to a human reviewer why a transaction was flagged?",
+        "Every couple of months we refresh the scoring model against the latest labeled "
+        "batch, and we settled on a boosted-tree ensemble early on since it dealt with "
+        "our messy mix of numeric and categorical signals more gracefully than the "
+        "recurrent architecture we first prototyped, and its per-feature importances "
+        "were useful while we were still tuning things.",
+        ["reviewer-facing explanation", "flag reason surfaced to human"],
+        4, 3, 0, 3,
+        {
+            "technical_correctness": "Everything stated (weekly retrain, GBT choice, feature importances) is internally plausible and correct as engineering description.",
+            "depth_specificity": "Concrete cadence, concrete model-choice reasoning — genuinely detailed, not vague.",
+            "relevance_completeness": "Answers 'why GBT / how retrained', not 'how is the flag reason explained to a reviewer' — the actual question is not addressed at all.",
+            "grounding_ownership": "First-person plural, project-specific claims (early experiments comparing to a neural net) — genuine-sounding ownership of the (wrong) topic.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel1_b", "v4h_SentryFlag", "REL-1", "relevance_alignment",
+        "SentryFlag (fraud review tool)", "fraud_detection", ["Python", "XGBoost", "Kafka"],
+        "project_deep_dive", "explanation",
+        "How does SentryFlag explain to a human reviewer why a transaction was flagged?",
+        "Each flagged transaction is shown with its top contributing features ranked by "
+        "SHAP value, so a reviewer sees, for example, that the flag was driven mostly by "
+        "an unusual transaction amount and a new device fingerprint rather than just a "
+        "single opaque score.",
+        ["reviewer-facing explanation", "flag reason surfaced to human"],
+        4, 3, 4, 2,
+        {
+            "technical_correctness": "SHAP-based per-feature explanation surfaced to a reviewer is a standard, correct approach.",
+            "depth_specificity": "Names the specific mechanism (SHAP ranking) and gives a concrete example of what a reviewer would see.",
+            "relevance_completeness": "Directly answers the actual question: how the flag reason is explained to a human.",
+            "grounding_ownership": "Plausible and specific but no explicit first-person implementation claim — kept at 2, not 4, since it reads as a system description rather than an owned decision.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel2_a", "v4h_PulseETL", "REL-2", "relevance_alignment",
+        "PulseETL (streaming ingestion pipeline)", "data_engineering", ["Kafka", "Avro", "Flink"],
+        "project_deep_dive", "explanation",
+        "How did PulseETL deduplicate late-arriving events in the pipeline?",
+        "We version every event schema in Avro and use a schema registry with backward "
+        "compatibility checks, so producers can add optional fields without breaking "
+        "existing consumers, and consumers can read old and new records with the same "
+        "reader schema.",
+        ["deduplication mechanism", "late-arrival handling"],
+        4, 3, 0, 2,
+        {
+            "technical_correctness": "Accurate description of Avro schema evolution and registry compatibility — correct, just not about deduplication.",
+            "depth_specificity": "Specific and mechanistic about schema evolution.",
+            "relevance_completeness": "Schema evolution has nothing to do with deduplicating late-arriving events; the actual question is unanswered.",
+            "grounding_ownership": "Project-specific plural framing ('we version...') but about the wrong topic.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel2_b", "v4h_PulseETL", "REL-2", "relevance_alignment",
+        "PulseETL (streaming ingestion pipeline)", "data_engineering", ["Kafka", "Avro", "Flink"],
+        "project_deep_dive", "explanation",
+        "How did PulseETL deduplicate late-arriving events in the pipeline?",
+        "Every event carries a stable idempotency key, and a watermark-based window lets "
+        "late arrivals still be matched against keys already seen in the current window "
+        "before being written, so a re-delivered or delayed duplicate never produces a "
+        "second record.",
+        ["deduplication mechanism", "late-arrival handling"],
+        4, 3, 4, 2,
+        {
+            "technical_correctness": "Idempotency-key plus watermark-window deduplication is a standard, correct streaming pattern.",
+            "depth_specificity": "Names the specific mechanism (idempotency key + watermark window) and explains why it prevents duplicates.",
+            "relevance_completeness": "Directly answers how late-arriving events are deduplicated.",
+            "grounding_ownership": "Plausible mechanism but third-person/system-level phrasing, no explicit personal claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel3_a", "v4h_TrailMetrics", "REL-3", "relevance_alignment",
+        "TrailMetrics (running tracker app)", "mobile_fitness", ["Kotlin", "GPS", "Kalman filter"],
+        "project_deep_dive", "explanation",
+        "How does TrailMetrics calculate calories burned during a run?",
+        "Raw GPS fixes are noisy, so we run them through a Kalman filter that combines "
+        "the GPS signal with accelerometer data to smooth the estimated position and "
+        "reduce the jitter you'd otherwise see in the recorded route on hilly terrain.",
+        ["calorie estimation formula", "inputs used for the estimate"],
+        4, 4, 0, 3,
+        {
+            "technical_correctness": "Accurate description of GPS/accelerometer sensor fusion via a Kalman filter.",
+            "depth_specificity": "Mechanistic and specific about the filtering approach.",
+            "relevance_completeness": "Route-smoothing has nothing to do with calorie calculation; the actual question is unanswered.",
+            "grounding_ownership": "Specific, first-person-plural, plausible implementation detail — genuine ownership of the (wrong) topic.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel3_b", "v4h_TrailMetrics", "REL-3", "relevance_alignment",
+        "TrailMetrics (running tracker app)", "mobile_fitness", ["Kotlin", "GPS", "Kalman filter"],
+        "project_deep_dive", "explanation",
+        "How does TrailMetrics calculate calories burned during a run?",
+        "We estimate calories from a MET-based formula using the runner's pace and body "
+        "weight, adjusted by live heart-rate data when a paired wearable is available, "
+        "which gives a closer estimate than pace alone on inclines.",
+        ["calorie estimation formula", "inputs used for the estimate"],
+        4, 3, 4, 2,
+        {
+            "technical_correctness": "MET-formula plus heart-rate adjustment is a standard, correct calorie-estimation approach.",
+            "depth_specificity": "Names the specific formula family and the heart-rate adjustment mechanism.",
+            "relevance_completeness": "Directly answers the actual question asked.",
+            "grounding_ownership": "Plausible and specific, first-person-plural, but no distinguishing personal-implementation detail beyond system description.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel4_a", "v4h_RowIndexer", "REL-4", "relevance_alignment",
+        "RowIndexer (internal reporting service)", "databases", ["PostgreSQL"],
+        "project_deep_dive", "trade_off_analysis",
+        "Why did RowIndexer's report query specifically benefit from a composite index rather than two separate single-column indexes?",
+        "Adding an index to a table is usually a quick win for read performance, since "
+        "the database can look rows up directly instead of checking every row one at a "
+        "time, and that matters even more once a table grows past a few hundred "
+        "thousand rows.",
+        ["composite index mechanism", "why single-column indexes underperform here"],
+        3, 1, 1, 0,
+        {
+            "technical_correctness": "Not wrong, just so general it doesn't engage the actual mechanism asked about.",
+            "depth_specificity": "Textbook-level 'indexes are faster' statement, no mechanism.",
+            "relevance_completeness": "Never explains why a composite index specifically beats two single-column indexes — the actual question.",
+            "grounding_ownership": "No project-specific detail at all — could be said about any database.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel4_b", "v4h_RowIndexer", "REL-4", "relevance_alignment",
+        "RowIndexer (internal reporting service)", "databases", ["PostgreSQL"],
+        "project_deep_dive", "trade_off_analysis",
+        "Why did RowIndexer's report query specifically benefit from a composite index rather than two separate single-column indexes?",
+        "The report query filters on account_id and then sorts by created_at, and a "
+        "composite index on (account_id, created_at) lets Postgres satisfy both the "
+        "filter and the sort directly from the index in one pass, whereas two separate "
+        "single-column indexes would only help the filter and still require a separate "
+        "sort step afterward.",
+        ["composite index mechanism", "why single-column indexes underperform here"],
+        4, 3, 4, 2,
+        {
+            "technical_correctness": "Correct: a composite index matching filter+sort order avoids a separate sort step; two single-column indexes cannot both be used this way.",
+            "depth_specificity": "Names the actual columns and the specific mechanism (filter+sort satisfied from one index).",
+            "relevance_completeness": "Directly answers 'why composite specifically' with the real mechanism.",
+            "grounding_ownership": "Project-specific column names given, but phrased system-descriptively rather than as a personal claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel5_a", "v4h_MeshLink", "REL-5", "relevance_alignment",
+        "MeshLink (internal service mesh)", "distributed_systems", ["Envoy", "gRPC", "REST"],
+        "project_deep_dive", "decision_making",
+        "Why did MeshLink choose REST over gRPC for the internal service mesh?",
+        "We put an Envoy sidecar in front of every service so all traffic goes through a "
+        "consistent proxy layer, which gave us uniform retries, timeouts, and mTLS "
+        "without every service team having to implement those individually.",
+        ["REST vs gRPC comparison", "reason for choosing REST"],
+        4, 3, 1, 2,
+        {
+            "technical_correctness": "Accurate description of what a sidecar proxy provides.",
+            "depth_specificity": "Specific about what the sidecar layer standardizes.",
+            "relevance_completeness": "Describes the proxy layer, not the REST-vs-gRPC choice the question actually asks about — off by one topic.",
+            "grounding_ownership": "Project-specific and plural-owned, but about an adjacent decision.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel5_b", "v4h_MeshLink", "REL-5", "relevance_alignment",
+        "MeshLink (internal service mesh)", "distributed_systems", ["Envoy", "gRPC", "REST"],
+        "project_deep_dive", "decision_making",
+        "Why did MeshLink choose REST over gRPC for the internal service mesh?",
+        "REST won because most of our consuming teams were already comfortable "
+        "debugging plain HTTP/JSON with curl and browser tools, and we didn't have a "
+        "strong enough latency requirement to justify the extra tooling and protobuf "
+        "schema management that gRPC would have required.",
+        ["REST vs gRPC comparison", "reason for choosing REST"],
+        4, 3, 4, 2,
+        {
+            "technical_correctness": "Accurate, realistic tradeoff reasoning between REST and gRPC.",
+            "depth_specificity": "Gives concrete reasons (debuggability, latency requirement, tooling cost), not just a label.",
+            "relevance_completeness": "Directly answers the REST-vs-gRPC question asked.",
+            "grounding_ownership": "Plural/system-level framing, plausible but not an explicit individual claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel6_a", "v4h_CacheFront", "REL-6", "relevance_alignment",
+        "CacheFront (edge caching layer)", "caching", ["Redis", "Nginx"],
+        "project_deep_dive", "debugging",
+        "Why did CacheFront's cache stampede after deploy?",
+        "We tuned the eviction policy to LFU instead of LRU after noticing that "
+        "infrequently-used-but-recently-touched keys were getting evicted too "
+        "aggressively, which improved our overall hit rate by a few percent.",
+        ["stampede cause", "concurrency/locking mechanism involved"],
+        4, 3, 1, 2,
+        {
+            "technical_correctness": "Accurate description of an eviction-policy change and its effect.",
+            "depth_specificity": "Specific about the policy change and measured effect.",
+            "relevance_completeness": "Eviction-policy tuning doesn't explain a stampede (mass simultaneous cache-miss regeneration) — different mechanism from what was asked.",
+            "grounding_ownership": "Specific and owned, but about an adjacent topic.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel6_b", "v4h_CacheFront", "REL-6", "relevance_alignment",
+        "CacheFront (edge caching layer)", "caching", ["Redis", "Nginx"],
+        "project_deep_dive", "debugging",
+        "Why did CacheFront's cache stampede after deploy?",
+        "The deploy reset the cache, so every instance's TTLs expired at the same time; "
+        "with no request coalescing or locking in place, hundreds of concurrent misses "
+        "for the same hot keys all hit the origin database at once instead of one "
+        "request regenerating the value while the others waited.",
+        ["stampede cause", "concurrency/locking mechanism involved"],
+        4, 3, 4, 2,
+        {
+            "technical_correctness": "Correct description of thundering-herd/stampede mechanics and the missing coalescing/locking fix.",
+            "depth_specificity": "Names the actual cause (synchronized TTL expiry) and the missing mechanism (request coalescing).",
+            "relevance_completeness": "Directly answers why the stampede happened.",
+            "grounding_ownership": "System-descriptive, plausible, but no explicit personal claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel7_a", "v4h_VaultPipe", "REL-7", "relevance_alignment",
+        "VaultPipe (analytics pipeline)", "security", ["Airflow", "S3", "Snowflake"],
+        "project_deep_dive", "explanation",
+        "How does VaultPipe handle PII in the analytics pipeline?",
+        "Access to the analytics warehouse is controlled through role-based permissions, "
+        "so only specific teams can query specific schemas, and every access is logged "
+        "for audit purposes.",
+        ["PII handling mechanism", "point in the pipeline where it is applied"],
+        4, 2, 1, 2,
+        {
+            "technical_correctness": "Accurate description of RBAC and audit logging.",
+            "depth_specificity": "Reasonably specific about the access-control mechanism.",
+            "relevance_completeness": "Access control who can query is a different concern from how PII itself is handled (masked/tokenized/redacted) — misses the actual ask.",
+            "grounding_ownership": "System-specific but about an adjacent concern.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel7_b", "v4h_VaultPipe", "REL-7", "relevance_alignment",
+        "VaultPipe (analytics pipeline)", "security", ["Airflow", "S3", "Snowflake"],
+        "project_deep_dive", "explanation",
+        "How does VaultPipe handle PII in the analytics pipeline?",
+        "PII fields are tokenized at ingest, before anything lands in S3, so raw values "
+        "never reach the warehouse; a separate, tightly restricted lookup service can "
+        "reverse a token back to the original value only for the handful of jobs that "
+        "are explicitly authorized to do so.",
+        ["PII handling mechanism", "point in the pipeline where it is applied"],
+        4, 3, 4, 2,
+        {
+            "technical_correctness": "Tokenize-at-ingest with a restricted reversal service is a standard, correct PII-handling pattern.",
+            "depth_specificity": "Names the specific mechanism and where in the pipeline it applies.",
+            "relevance_completeness": "Directly answers how PII is handled.",
+            "grounding_ownership": "System-descriptive, plausible, no explicit personal claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel8_a", "v4h_SessionCache", "REL-8", "relevance_alignment",
+        "SessionCache (session store service)", "caching", ["Redis"],
+        "project_deep_dive", "decision_making",
+        "Why was Redis chosen over Memcached for SessionCache's session store?",
+        "Redis supports optional persistence to disk via RDB snapshots or an AOF log, "
+        "along with a rich set of data structures like sorted sets and hashes, and can "
+        "also be configured with replicas for read scaling.",
+        ["Redis vs Memcached comparison", "reason specific to session-store use case"],
+        4, 3, 1, 2,
+        {
+            "technical_correctness": "All statements about Redis are accurate.",
+            "depth_specificity": "Specific and technically dense about Redis features.",
+            "relevance_completeness": "Never actually compares against Memcached or explains why those features mattered for THIS use case — describes Redis in isolation.",
+            "grounding_ownership": "Plausible, specific to Redis generally, not clearly tied to a real project decision.",
+        },
+    ),
+    _ex(
+        "v4_diag_rel8_b", "v4h_SessionCache", "REL-8", "relevance_alignment",
+        "SessionCache (session store service)", "caching", ["Redis"],
+        "project_deep_dive", "decision_making",
+        "Why was Redis chosen over Memcached for SessionCache's session store?",
+        "We needed session data to survive a cache-node restart during deploys, which "
+        "Memcached's purely in-memory model can't do; Redis's optional AOF persistence "
+        "let a restarted node reload sessions instead of forcing every logged-in user "
+        "to re-authenticate.",
+        ["Redis vs Memcached comparison", "reason specific to session-store use case"],
+        4, 3, 4, 2,
+        {
+            "technical_correctness": "Correctly contrasts Redis persistence against Memcached's lack of it, and correctly ties it to the session-survival requirement.",
+            "depth_specificity": "Specific mechanism (AOF persistence) tied to a specific consequence (no forced re-auth).",
+            "relevance_completeness": "Directly answers why Redis specifically over Memcached for this use case.",
+            "grounding_ownership": "Plural/system framing, plausible, no explicit individual claim.",
+        },
+    ),
+]
+
+# ═══════════════════════════════════════════════════════════════════════
+# 2. MULTIPART COMPLETENESS — 9 examples, 3 groups of 3
+# ═══════════════════════════════════════════════════════════════════════
+
+EXAMPLES += [
+    _ex(
+        "v4_diag_mp1_a", "v4h_DefectVision", "MP-1", "multipart_completeness",
+        "DefectVision (visual defect inspection)", "computer_vision", ["PyTorch", "OpenCV"],
+        "project_deep_dive", "explanation",
+        "Explain both how you labeled the training data for DefectVision and how you handled class imbalance between defective and non-defective images.",
+        "I labeled the training images myself using a bounding-box tool, going through "
+        "about 4,000 frames from the production line over a few weeks and tagging each "
+        "visible defect type. For class imbalance, I oversampled the defective-image "
+        "class during training and applied a weighted loss so the rare defect classes "
+        "counted more than the abundant non-defective images.",
+        ["labeling process", "class imbalance handling"],
+        4, 3, 4, 4,
+        {
+            "technical_correctness": "Both the labeling process and the oversampling+weighted-loss imbalance handling are correct, standard techniques.",
+            "depth_specificity": "Concrete numbers and named techniques for both parts.",
+            "relevance_completeness": "Both requested components (labeling, imbalance handling) are directly and fully addressed.",
+            "grounding_ownership": "First-person, specific, verifiable-sounding detail throughout — genuine ownership.",
+        },
+    ),
+    _ex(
+        "v4_diag_mp1_b", "v4h_DefectVision", "MP-1", "multipart_completeness",
+        "DefectVision (visual defect inspection)", "computer_vision", ["PyTorch", "OpenCV"],
+        "project_deep_dive", "explanation",
+        "Explain both how you labeled the training data for DefectVision and how you handled class imbalance between defective and non-defective images.",
+        "I went through roughly 4,000 line-camera frames myself with a bounding-box "
+        "annotation tool, tagging each visible defect type by hand over the course of a "
+        "few weeks, mostly because I wanted one consistent labeling standard instead of "
+        "splitting the work across a few different annotators.",
+        ["labeling process", "class imbalance handling"],
+        3, 3, 2, 4,
+        {
+            "technical_correctness": "The labeling description itself is correct; no claim is made about imbalance handling to be wrong.",
+            "depth_specificity": "Labeling part is specific and concrete.",
+            "relevance_completeness": "Only the first requested component (labeling) is addressed; class imbalance is entirely omitted — half the question unanswered.",
+            "grounding_ownership": "First-person, specific, verifiable detail for the part that is answered.",
+        },
+    ),
+    _ex(
+        "v4_diag_mp1_c", "v4h_DefectVision", "MP-1", "multipart_completeness",
+        "DefectVision (visual defect inspection)", "computer_vision", ["PyTorch", "OpenCV"],
+        "project_deep_dive", "explanation",
+        "Explain both how you labeled the training data for DefectVision and how you handled class imbalance between defective and non-defective images.",
+        "We followed a fairly standard supervised learning workflow: collect data, "
+        "preprocess it, train a convolutional model, and validate against a held-out "
+        "set before deploying it to the production line.",
+        ["labeling process", "class imbalance handling"],
+        3, 0, 0, 0,
+        {
+            "technical_correctness": "Not wrong, but says nothing specific enough to be checked against either requested component.",
+            "depth_specificity": "Generic pipeline description with no mechanism for either labeling or imbalance handling.",
+            "relevance_completeness": "Neither requested component is addressed — a content-free restatement of 'we did ML'.",
+            "grounding_ownership": "No project-specific or personal detail at all.",
+        },
+    ),
+    _ex(
+        "v4_diag_mp2_a", "v4h_TrailMetrics", "MP-2", "multipart_completeness",
+        "TrailMetrics (running tracker app)", "mobile_fitness", ["Kotlin", "GPS"],
+        "project_deep_dive", "trade_off_analysis",
+        "How does TrailMetrics both track your route accurately in the background and preserve battery life over a long run?",
+        "We sample GPS at full resolution only while the screen is on or the pace "
+        "changes sharply; during a steady, straight-line stretch we drop to a lower "
+        "sampling rate and interpolate the path, and we batch GPS radio wake-ups instead "
+        "of polling continuously, which cut measured battery drain by about 30% on runs "
+        "over an hour without a noticeable accuracy loss.",
+        ["background route-tracking accuracy mechanism", "battery preservation technique"],
+        4, 3, 4, 2,
+        {
+            "technical_correctness": "Adaptive sampling and batched radio wake-ups are correct, standard mobile battery-saving techniques.",
+            "depth_specificity": "Concrete mechanism and a measured effect for both parts.",
+            "relevance_completeness": "Both requested components (accuracy mechanism, battery preservation) are directly addressed.",
+            "grounding_ownership": "Plural/system framing, plausible and specific, but no distinguishing individual claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_mp2_b", "v4h_TrailMetrics", "MP-2", "multipart_completeness",
+        "TrailMetrics (running tracker app)", "mobile_fitness", ["Kotlin", "GPS"],
+        "project_deep_dive", "trade_off_analysis",
+        "How does TrailMetrics both track your route accurately in the background and preserve battery life over a long run?",
+        "We batch GPS radio wake-ups instead of polling continuously and drop to a lower "
+        "sampling rate during steady, straight-line stretches, which cut measured battery "
+        "drain by about 30% on runs over an hour.",
+        ["background route-tracking accuracy mechanism", "battery preservation technique"],
+        4, 3, 2, 2,
+        {
+            "technical_correctness": "The battery-saving technique described is correct.",
+            "depth_specificity": "Specific and concrete for the part that is present.",
+            "relevance_completeness": "Only the battery-preservation half is addressed; how accuracy is preserved while doing this is not explained — half the question unanswered.",
+            "grounding_ownership": "Plausible system description, no distinguishing personal claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_mp2_c", "v4h_TrailMetrics", "MP-2", "multipart_completeness",
+        "TrailMetrics (running tracker app)", "mobile_fitness", ["Kotlin", "GPS"],
+        "project_deep_dive", "trade_off_analysis",
+        "How does TrailMetrics both track your route accurately in the background and preserve battery life over a long run?",
+        "The app is built with a modern reactive architecture so the UI stays responsive "
+        "even during long tracking sessions, which most users have said makes the app "
+        "feel snappier than similar tracking apps they've tried before.",
+        ["background route-tracking accuracy mechanism", "battery preservation technique"],
+        3, 1, 0, 0,
+        {
+            "technical_correctness": "Not a false claim, but irrelevant to either requested mechanism.",
+            "depth_specificity": "Vague ('modern reactive architecture', 'feels snappier') with no concrete mechanism.",
+            "relevance_completeness": "Neither accuracy-preservation nor battery-preservation is addressed.",
+            "grounding_ownership": "No specific, verifiable project detail.",
+        },
+    ),
+    _ex(
+        "v4_diag_mp3_a", "v4h_LedgerVault", "MP-3", "multipart_completeness",
+        "LedgerVault (financial ledger service)", "databases", ["PostgreSQL", "MySQL"],
+        "project_deep_dive", "decision_making",
+        "Why did LedgerVault choose Postgres for the ledger store, and how did you handle the migration from MySQL?",
+        "We chose Postgres for its stronger transactional guarantees around concurrent "
+        "writes, specifically serializable isolation, which MySQL's default isolation "
+        "level didn't give us for the ledger's balance-update path. For the migration, we "
+        "ran both databases in parallel for two weeks, double-writing every transaction "
+        "and comparing checksums nightly before cutting reads over.",
+        ["Postgres choice rationale", "MySQL migration approach"],
+        4, 3, 4, 2,
+        {
+            "technical_correctness": "Both the isolation-level rationale and the dual-write/checksum migration approach are correct and realistic.",
+            "depth_specificity": "Concrete, mechanistic detail for both parts.",
+            "relevance_completeness": "Both requested components (why Postgres, how migrated) are directly and fully addressed.",
+            "grounding_ownership": "Plural/system framing, plausible and specific, no distinguishing individual claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_mp3_b", "v4h_LedgerVault", "MP-3", "multipart_completeness",
+        "LedgerVault (financial ledger service)", "databases", ["PostgreSQL", "MySQL"],
+        "project_deep_dive", "decision_making",
+        "Why did LedgerVault choose Postgres for the ledger store, and how did you handle the migration from MySQL?",
+        "We chose Postgres for its stronger transactional guarantees around concurrent "
+        "writes, specifically serializable isolation, which MySQL's default isolation "
+        "level didn't give us for the ledger's balance-update path. The migration itself "
+        "was simple — we just exported the MySQL tables to CSV and imported them "
+        "straight into Postgres over a weekend, since the schemas were nearly identical "
+        "and downtime wasn't a concern for a low-traffic internal ledger.",
+        ["Postgres choice rationale", "MySQL migration approach"],
+        2, 2, 4, 2,
+        {
+            "technical_correctness": "The Postgres rationale is correct; the migration description is technically weak for a financial ledger — a CSV export/import with a downtime window silently drops the double-write/verification step needed to guarantee no in-flight transactions are lost, which is a real correctness gap for this domain, not just a style choice.",
+            "depth_specificity": "Concrete steps given for both parts, even though the migration mechanism itself is under-engineered for the stated use case.",
+            "relevance_completeness": "Both requested components ARE addressed (this is a completeness pass, not a correctness pass) — the question asked 'why' and 'how', and both get a direct answer.",
+            "grounding_ownership": "Plural/system framing, plausible, no distinguishing individual claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_mp3_c", "v4h_LedgerVault", "MP-3", "multipart_completeness",
+        "LedgerVault (financial ledger service)", "databases", ["PostgreSQL", "MySQL"],
+        "project_deep_dive", "decision_making",
+        "Why did LedgerVault choose Postgres for the ledger store, and how did you handle the migration from MySQL?",
+        "Postgres is a solid, widely-used relational database with a strong community "
+        "and good tooling support, which made it a safe choice for a service like this.",
+        ["Postgres choice rationale", "MySQL migration approach"],
+        2, 0, 1, 0,
+        {
+            "technical_correctness": "Not false, but too generic to actually justify the specific choice for this ledger's needs.",
+            "depth_specificity": "No mechanism at all — could be said about choosing Postgres for any project.",
+            "relevance_completeness": "The migration question is entirely unaddressed, and the 'why Postgres' part is answered only generically, not specifically.",
+            "grounding_ownership": "No project-specific or personal detail.",
+        },
+    ),
+]
+
+# ═══════════════════════════════════════════════════════════════════════
+# 3. TECHNICAL CORRECTNESS — 12 examples, 3 groups of 4
+#    (a) concise-correct  (b) detailed-correct+mechanism
+#    (c) detailed-but-subtly-incorrect  (d) confident misconception
+# ═══════════════════════════════════════════════════════════════════════
+
+EXAMPLES += [
+    _ex(
+        "v4_diag_tc1_a", "v4h_LoopGuard", "TC-1", "technical_correctness",
+        "LoopGuard (embedded control loop firmware)", "embedded_systems", ["C", "RTOS"],
+        "project_deep_dive", "optimization",
+        "How did you make LoopGuard's control loop more responsive?",
+        "I narrowed the critical section that guards the shared sensor buffer so the "
+        "interrupt handler holds the lock for a much shorter time, which cut worst-case "
+        "loop latency.",
+        ["mechanism for reducing loop latency", "concurrency-safety implication"],
+        4, 2, 4, 3,
+        {
+            "technical_correctness": "Narrowing a critical section is a correct, standard way to reduce interrupt/main-loop contention latency.",
+            "depth_specificity": "States the mechanism but briefly, no elaboration on how it was measured or by how much.",
+            "relevance_completeness": "Directly answers the question asked.",
+            "grounding_ownership": "First-person, specific to a real mechanism.",
+        },
+    ),
+    _ex(
+        "v4_diag_tc1_b", "v4h_LoopGuard", "TC-1", "technical_correctness",
+        "LoopGuard (embedded control loop firmware)", "embedded_systems", ["C", "RTOS"],
+        "project_deep_dive", "optimization",
+        "How did you make LoopGuard's control loop more responsive?",
+        "I narrowed the critical section that guards the shared sensor buffer so the "
+        "interrupt handler holds the lock for a much shorter time, and I also raised the "
+        "priority of the loop's RTOS task above the logging task so a burst of log "
+        "writes could no longer delay a control cycle through priority inversion.",
+        ["mechanism for reducing loop latency", "concurrency-safety implication"],
+        4, 4, 4, 3,
+        {
+            "technical_correctness": "Both the critical-section narrowing and the priority-inversion fix are correct, well-understood RTOS techniques.",
+            "depth_specificity": "Names two distinct mechanisms and explains the priority-inversion reasoning, deeper than the concise version.",
+            "relevance_completeness": "Directly and thoroughly answers the question.",
+            "grounding_ownership": "First-person, specific, mechanistically verifiable claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_tc1_c", "v4h_LoopGuard", "TC-1", "technical_correctness",
+        "LoopGuard (embedded control loop firmware)", "embedded_systems", ["C", "RTOS"],
+        "project_deep_dive", "optimization",
+        "How did you make LoopGuard's control loop more responsive?",
+        "I widened the lock around the shared sensor buffer to cover the whole read-"
+        "modify-write sequence instead of just the write, which made the loop more "
+        "responsive because the interrupt handler no longer had to retry as often when "
+        "it found the buffer already locked.",
+        ["mechanism for reducing loop latency", "concurrency-safety implication"],
+        1, 3, 4, 3,
+        {
+            "technical_correctness": "Widening a lock increases, not decreases, the time it is held — this would make the interrupt handler wait longer, not respond faster; the stated causal mechanism is backwards. One central technical error embedded in otherwise fluent, plausible-sounding reasoning.",
+            "depth_specificity": "Specific and mechanistic in its description, just specific about the wrong effect.",
+            "relevance_completeness": "On-topic and directly addresses the responsiveness question, just incorrectly.",
+            "grounding_ownership": "First-person, specific, sounds like real implementation experience.",
+        },
+    ),
+    _ex(
+        "v4_diag_tc1_d", "v4h_LoopGuard", "TC-1", "technical_correctness",
+        "LoopGuard (embedded control loop firmware)", "embedded_systems", ["C", "RTOS"],
+        "project_deep_dive", "optimization",
+        "How did you make LoopGuard's control loop more responsive?",
+        "I just removed the mutex around the shared sensor buffer entirely — without a "
+        "lock in the way, both the interrupt handler and the main loop could access the "
+        "buffer immediately whenever they needed to, so nothing ever had to wait.",
+        ["mechanism for reducing loop latency", "concurrency-safety implication"],
+        0, 3, 4, 4,
+        {
+            "technical_correctness": "Removing the mutex entirely introduces a data race on a buffer shared between an interrupt handler and the main loop — this is a genuine correctness/safety defect presented confidently as a fix, not a legitimate optimization.",
+            "depth_specificity": "Specific about what was done, describing a real (harmful) mechanism in confident detail.",
+            "relevance_completeness": "Directly on-topic for the responsiveness question.",
+            "grounding_ownership": "First-person, specific, concrete implementation claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_tc2_a", "v4h_TreeScore", "TC-2", "technical_correctness",
+        "TreeScore (fraud scoring model)", "ml", ["Python", "XGBoost"],
+        "project_deep_dive", "decision_making",
+        "Why did TreeScore use gradient boosted trees instead of a neural network for the fraud model?",
+        "Our features are a mix of categorical and numeric fields, and gradient boosted "
+        "trees handle that mix natively without needing the embedding or normalization "
+        "work a neural net would require.",
+        ["algorithm comparison", "reasoning tied to feature types"],
+        4, 2, 4, 2,
+        {
+            "technical_correctness": "Correct: tree ensembles handle mixed categorical/numeric features with less preprocessing than a typical neural net pipeline.",
+            "depth_specificity": "States the reasoning but briefly.",
+            "relevance_completeness": "Directly answers the question.",
+            "grounding_ownership": "Plural, plausible, no distinguishing personal claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_tc2_b", "v4h_TreeScore", "TC-2", "technical_correctness",
+        "TreeScore (fraud scoring model)", "ml", ["Python", "XGBoost"],
+        "project_deep_dive", "decision_making",
+        "Why did TreeScore use gradient boosted trees instead of a neural network for the fraud model?",
+        "Our features are a mix of categorical and numeric fields, and gradient boosted "
+        "trees handle that mix natively; on top of that, they gave us per-prediction "
+        "SHAP feature importances that our fraud reviewers could actually inspect, which "
+        "a neural net would have made much harder to produce with the same fidelity.",
+        ["algorithm comparison", "reasoning tied to feature types"],
+        4, 4, 4, 2,
+        {
+            "technical_correctness": "Both the feature-type reasoning and the interpretability (SHAP) reasoning are correct and realistic.",
+            "depth_specificity": "Two distinct, concrete reasons with a stated downstream consequence (reviewer inspection).",
+            "relevance_completeness": "Directly and thoroughly answers the question.",
+            "grounding_ownership": "Plural, plausible, ties to a concrete downstream user (reviewers).",
+        },
+    ),
+    _ex(
+        "v4_diag_tc2_c", "v4h_TreeScore", "TC-2", "technical_correctness",
+        "TreeScore (fraud scoring model)", "ml", ["Python", "XGBoost"],
+        "project_deep_dive", "decision_making",
+        "Why did TreeScore use gradient boosted trees instead of a neural network for the fraud model?",
+        "Neural networks basically can't handle categorical features at all, so a "
+        "gradient boosted tree model was really the only realistic option for a dataset "
+        "like ours that mixes categorical and numeric fields.",
+        ["algorithm comparison", "reasoning tied to feature types"],
+        1, 2, 4, 2,
+        {
+            "technical_correctness": "False as stated: neural networks handle categorical features routinely via embeddings or one-hot encoding — the central technical claim ('basically can't handle... at all') is a real misconception, not just an oversimplification, even though the surrounding reasoning sounds confident and fluent.",
+            "depth_specificity": "States a specific (wrong) claim rather than staying vague.",
+            "relevance_completeness": "On-topic and directly addresses the question.",
+            "grounding_ownership": "Plural, plausible-sounding, ties to the actual dataset.",
+        },
+    ),
+    _ex(
+        "v4_diag_tc2_d", "v4h_TreeScore", "TC-2", "technical_correctness",
+        "TreeScore (fraud scoring model)", "ml", ["Python", "XGBoost"],
+        "project_deep_dive", "decision_making",
+        "Why did TreeScore use gradient boosted trees instead of a neural network for the fraud model?",
+        "Gradient boosted trees were the safer choice because, unlike neural networks, "
+        "they simply can't overfit no matter how many boosting rounds you run, so we "
+        "didn't have to worry about the model memorizing the training data.",
+        ["algorithm comparison", "reasoning tied to feature types"],
+        0, 2, 3, 2,
+        {
+            "technical_correctness": "False: gradient boosted trees absolutely can and do overfit with too many rounds or too little regularization — this is a well-known failure mode, and the claim that they 'simply can't' is a confident, flatly wrong misconception, not a subtle one.",
+            "depth_specificity": "Fairly specific/confident in its (wrong) claim.",
+            "relevance_completeness": "On-topic for the algorithm-choice question, though it doesn't address the feature-type reasoning the question implies, hence not a full 4.",
+            "grounding_ownership": "Plural, plausible-sounding decision framing.",
+        },
+    ),
+    _ex(
+        "v4_diag_tc3_a", "v4h_VisionShift", "TC-3", "technical_correctness",
+        "VisionShift (defect classification model)", "ml", ["PyTorch"],
+        "project_deep_dive", "decision_making",
+        "Why did VisionShift use PyTorch instead of TensorFlow?",
+        "PyTorch's define-by-run execution made it much easier to step through the model "
+        "with a normal Python debugger while we were iterating on the architecture.",
+        ["framework comparison", "reasoning tied to development workflow"],
+        4, 2, 4, 2,
+        {
+            "technical_correctness": "Correct: PyTorch's eager/define-by-run execution is genuinely easier to debug with standard tools than a static-graph workflow.",
+            "depth_specificity": "States the reasoning but briefly.",
+            "relevance_completeness": "Directly answers the question.",
+            "grounding_ownership": "Plural, plausible, no distinguishing personal claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_tc3_b", "v4h_VisionShift", "TC-3", "technical_correctness",
+        "VisionShift (defect classification model)", "ml", ["PyTorch"],
+        "project_deep_dive", "decision_making",
+        "Why did VisionShift use PyTorch instead of TensorFlow?",
+        "PyTorch's define-by-run execution builds the computation graph as the code "
+        "actually runs, so we could set a normal Python breakpoint anywhere inside the "
+        "forward pass and inspect real tensor values, which made debugging our custom "
+        "loss function much faster than the static-graph workflow we'd used before.",
+        ["framework comparison", "reasoning tied to development workflow"],
+        4, 4, 4, 2,
+        {
+            "technical_correctness": "Correct and more precisely explained (why define-by-run enables normal breakpoints) than the concise version.",
+            "depth_specificity": "Names the specific mechanism and a concrete consequence (debugging a custom loss function).",
+            "relevance_completeness": "Directly and thoroughly answers the question.",
+            "grounding_ownership": "Plural, plausible, ties to a specific past comparison.",
+        },
+    ),
+    _ex(
+        "v4_diag_tc3_c", "v4h_VisionShift", "TC-3", "technical_correctness",
+        "VisionShift (defect classification model)", "ml", ["PyTorch"],
+        "project_deep_dive", "decision_making",
+        "Why did VisionShift use PyTorch instead of TensorFlow?",
+        "TensorFlow's eager mode is really only meant for quick prototyping and gets "
+        "very limited once you move past a toy example, so for real debugging during "
+        "development we felt PyTorch's approach worked much better throughout the "
+        "project.",
+        ["framework comparison", "reasoning tied to development workflow"],
+        2, 3, 4, 2,
+        {
+            "technical_correctness": "Overstated and misleading: TensorFlow's eager mode is a fully supported, general execution mode, not a toy-only feature — a real but milder mischaracterization than an outright false claim, hence tier 2 rather than 0/1.",
+            "depth_specificity": "Specific in its (overstated) claim rather than vague.",
+            "relevance_completeness": "On-topic and directly addresses the question.",
+            "grounding_ownership": "Plural, plausible-sounding project framing.",
+        },
+    ),
+    _ex(
+        "v4_diag_tc3_d", "v4h_VisionShift", "TC-3", "technical_correctness",
+        "VisionShift (defect classification model)", "ml", ["PyTorch"],
+        "project_deep_dive", "decision_making",
+        "Why did VisionShift use PyTorch instead of TensorFlow?",
+        "TensorFlow can't actually run in eager or debug mode once a model is deployed — "
+        "it has to be compiled into a static graph at that point — so for a project "
+        "where we needed to keep debugging in something close to a production-like "
+        "setting, PyTorch was really the only option.",
+        ["framework comparison", "reasoning tied to development workflow"],
+        0, 3, 4, 2,
+        {
+            "technical_correctness": "False: this conflates deployment-time graph compilation (optional, via tools like TF's SavedModel/XLA) with an absolute inability to use eager mode at all — TensorFlow supports eager execution throughout, deployed or not. Confidently stated as if it were a hard constraint.",
+            "depth_specificity": "Specific and confident about the (wrong) claim.",
+            "relevance_completeness": "On-topic and directly addresses the framework-choice question.",
+            "grounding_ownership": "Plural, plausible-sounding project framing.",
+        },
+    ),
+]
+
+# ═══════════════════════════════════════════════════════════════════════
+# 4. DEPTH CONTROLS — 6 examples, 2 groups of 3 (kept deliberately small —
+#    depth already performs relatively well; this is a sanity baseline).
+# ═══════════════════════════════════════════════════════════════════════
+
+EXAMPLES += [
+    _ex(
+        "v4_diag_dep1_a", "v4h_BudgetLens", "DEP-1", "depth_control",
+        "BudgetLens (cloud cost optimization tool)", "cloud_finops", ["AWS", "Python"],
+        "project_deep_dive", "explanation",
+        "How does BudgetLens identify underutilized cloud resources?",
+        "It scans through the usage data in your account and picks out anything that "
+        "seems wasteful, then puts it on a list so you can decide whether to resize or "
+        "remove it.",
+        ["utilization signal used", "flagging threshold/mechanism"],
+        3, 0, 3, 0,
+        {
+            "technical_correctness": "Not wrong, just too vague to check against any specific mechanism.",
+            "depth_specificity": "No named metric, no threshold, no mechanism — 'usage metrics' and 'not efficiently' are undefined.",
+            "relevance_completeness": "On-topic for the question, generically.",
+            "grounding_ownership": "Generic third-person description, no project-specific detail.",
+        },
+    ),
+    _ex(
+        "v4_diag_dep1_b", "v4h_BudgetLens", "DEP-1", "depth_control",
+        "BudgetLens (cloud cost optimization tool)", "cloud_finops", ["AWS", "Python"],
+        "project_deep_dive", "explanation",
+        "How does BudgetLens identify underutilized cloud resources?",
+        "It pulls CPU and memory utilization from CloudWatch over a 14-day lookback "
+        "window and flags any instance whose average utilization stays below 10% for "
+        "that entire period.",
+        ["utilization signal used", "flagging threshold/mechanism"],
+        4, 3, 4, 1,
+        {
+            "technical_correctness": "A concrete, correct approach — named metrics, source, window, and threshold.",
+            "depth_specificity": "Specific metric (CPU/memory), specific window (14 days), specific threshold (10%) — real mechanism.",
+            "relevance_completeness": "Directly and specifically answers the question.",
+            "grounding_ownership": "Third-person/system framing, plausible but no personal claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_dep1_c", "v4h_BudgetLens", "DEP-1", "depth_control",
+        "BudgetLens (cloud cost optimization tool)", "cloud_finops", ["AWS", "Python"],
+        "project_deep_dive", "explanation",
+        "How does BudgetLens identify underutilized cloud resources?",
+        "It pulls CPU and memory utilization from CloudWatch over a 14-day lookback "
+        "window and flags any instance whose average utilization stays below 10% for "
+        "that entire period. We deliberately kept the threshold conservative rather than "
+        "flagging more aggressively, because early feedback showed a higher false-"
+        "positive rate was costing users more trust in the tool than the extra savings "
+        "from catching a few more borderline instances was worth.",
+        ["utilization signal used", "flagging threshold/mechanism"],
+        4, 4, 4, 2,
+        {
+            "technical_correctness": "Same correct mechanism as the mechanism-only version, plus a coherent, realistic tradeoff rationale.",
+            "depth_specificity": "Adds the tradeoff dimension (false-positive rate vs. recall) on top of the mechanism — the deepest of the three.",
+            "relevance_completeness": "Directly and specifically answers the question, with added justification.",
+            "grounding_ownership": "Plural framing, ties to a specific past decision (user feedback driving the threshold), still no explicit individual claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_dep2_a", "v4h_QueryFlow", "DEP-2", "depth_control",
+        "QueryFlow (internal reporting dashboard)", "databases", ["PostgreSQL"],
+        "project_deep_dive", "optimization",
+        "How did you speed up QueryFlow's slowest dashboard query?",
+        "I added an index, which helped a lot.",
+        ["specific optimization applied", "mechanism for the speedup"],
+        3, 1, 3, 3,
+        {
+            "technical_correctness": "Not wrong, just unverifiable at this level of detail.",
+            "depth_specificity": "No column, no index type, no mechanism — the shallowest possible correct answer.",
+            "relevance_completeness": "On-topic, minimally.",
+            "grounding_ownership": "First-person but no verifiable specifics.",
+        },
+    ),
+    _ex(
+        "v4_diag_dep2_b", "v4h_QueryFlow", "DEP-2", "depth_control",
+        "QueryFlow (internal reporting dashboard)", "databases", ["PostgreSQL"],
+        "project_deep_dive", "optimization",
+        "How did you speed up QueryFlow's slowest dashboard query?",
+        "I built a composite index across the filter column and the sort column "
+        "together, so Postgres could pull the matching rows already in sorted order "
+        "straight from the index rather than filtering first and then running a "
+        "separate sort pass afterward.",
+        ["specific optimization applied", "mechanism for the speedup"],
+        4, 3, 4, 3,
+        {
+            "technical_correctness": "Correct mechanism, correctly explained.",
+            "depth_specificity": "Names the specific index shape and the mechanism it avoids (separate sort).",
+            "relevance_completeness": "Directly answers the question.",
+            "grounding_ownership": "First-person, specific, verifiable.",
+        },
+    ),
+    _ex(
+        "v4_diag_dep2_c", "v4h_QueryFlow", "DEP-2", "depth_control",
+        "QueryFlow (internal reporting dashboard)", "databases", ["PostgreSQL"],
+        "project_deep_dive", "optimization",
+        "How did you speed up QueryFlow's slowest dashboard query?",
+        "I built a composite index across the filter column and the sort column "
+        "together, so Postgres could pull the matching rows already in sorted order "
+        "straight from the index rather than filtering first and then running a "
+        "separate sort pass afterward. That does slow down writes to the table a bit, "
+        "so I only added it on the one table where the dashboard's read traffic clearly "
+        "outweighed the extra write cost.",
+        ["specific optimization applied", "mechanism for the speedup"],
+        4, 4, 4, 3,
+        {
+            "technical_correctness": "Same correct mechanism, plus a correct acknowledgment of the write-amplification tradeoff.",
+            "depth_specificity": "Adds the tradeoff dimension on top of the mechanism — deepest of the three.",
+            "relevance_completeness": "Directly answers the question, with added justification for scope.",
+            "grounding_ownership": "First-person, specific, ties to a deliberate scoping decision.",
+        },
+    ),
+]
+
+# ═══════════════════════════════════════════════════════════════════════
+# 5. GROUNDING / OWNERSHIP — 9 examples, 2 groups (5 + 4)
+# ═══════════════════════════════════════════════════════════════════════
+
+EXAMPLES += [
+    _ex(
+        "v4_diag_grd1_a", "v4h_CoinLedger", "GRD-1", "grounding_ownership",
+        "CoinLedger (financial ledger service)", "databases", ["PostgreSQL", "MongoDB"],
+        "project_deep_dive", "decision_making",
+        "What database did you choose for CoinLedger's ledger store and why?",
+        "Relational databases like Postgres offer strong ACID guarantees and mature "
+        "tooling, while document stores like MongoDB offer more schema flexibility and "
+        "can scale horizontally more easily; the right choice generally depends on "
+        "whether your data is more relational or more document-shaped.",
+        ["database chosen", "reason tied to the specific ledger use case"],
+        4, 3, 3, 0,
+        {
+            "technical_correctness": "Accurate, textbook-correct comparison of relational vs. document databases.",
+            "depth_specificity": "Reasonably specific about the general tradeoffs.",
+            "relevance_completeness": "Never actually states which database CoinLedger chose or why for this specific use case — stays fully general, so completeness suffers too.",
+            "grounding_ownership": "Zero project-specific or personal content — could be said about any project.",
+        },
+    ),
+    _ex(
+        "v4_diag_grd1_b", "v4h_CoinLedger", "GRD-1", "grounding_ownership",
+        "CoinLedger (financial ledger service)", "databases", ["PostgreSQL", "MongoDB"],
+        "project_deep_dive", "decision_making",
+        "What database did you choose for CoinLedger's ledger store and why?",
+        "The team chose Postgres for CoinLedger because the ledger's balance-update path "
+        "needed strict transactional guarantees that a document store couldn't provide "
+        "as easily.",
+        ["database chosen", "reason tied to the specific ledger use case"],
+        4, 2, 4, 2,
+        {
+            "technical_correctness": "Correct reasoning tied to transactional guarantees.",
+            "depth_specificity": "Names the specific use case (balance-update path) but doesn't elaborate on the mechanism (e.g., isolation level).",
+            "relevance_completeness": "Directly answers both what was chosen and a project-specific reason.",
+            "grounding_ownership": "Project-specific (names CoinLedger's actual use case) but explicitly third-person ('the team') — no personal ownership claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_grd1_c", "v4h_CoinLedger", "GRD-1", "grounding_ownership",
+        "CoinLedger (financial ledger service)", "databases", ["PostgreSQL", "MongoDB"],
+        "project_deep_dive", "decision_making",
+        "What database did you choose for CoinLedger's ledger store and why?",
+        "I benchmarked write latency under concurrent load on both Postgres and MongoDB "
+        "against CoinLedger's actual balance-update pattern, and pushed for Postgres "
+        "once the numbers showed MongoDB's default write concern needed to be "
+        "strengthened to match Postgres's guarantees, at a real latency cost.",
+        ["database chosen", "reason tied to the specific ledger use case"],
+        4, 4, 4, 4,
+        {
+            "technical_correctness": "Correct, specific technical reasoning about write concern levels and their latency cost.",
+            "depth_specificity": "Names the specific benchmark, the specific mechanism (write concern), and a measured tradeoff.",
+            "relevance_completeness": "Directly and thoroughly answers both what was chosen and why.",
+            "grounding_ownership": "First-person, project-specific, verifiable, active-decision-making claim — clean genuine ownership.",
+        },
+    ),
+    _ex(
+        "v4_diag_grd1_d", "v4h_CoinLedger", "GRD-1", "grounding_ownership",
+        "CoinLedger (financial ledger service)", "databases", ["PostgreSQL", "MongoDB"],
+        "project_deep_dive", "decision_making",
+        "What database did you choose for CoinLedger's ledger store and why?",
+        "I decided to use Postgres for CoinLedger because it's just the best database "
+        "for this kind of thing and I felt confident it would work well.",
+        ["database chosen", "reason tied to the specific ledger use case"],
+        2, 0, 3, 1,
+        {
+            "technical_correctness": "Not false, but 'best database for this kind of thing' asserts nothing checkable.",
+            "depth_specificity": "No mechanism, no comparison, no specific reasoning at all.",
+            "relevance_completeness": "States what was chosen but the 'why' is unsupported filler, not a real reason — partial completeness.",
+            "grounding_ownership": "First-person language is present ('I decided', 'I felt confident'), but the underlying claim is generic and unverifiable — first-person wording alone does not establish real ownership evidence, so this stays low rather than being rewarded for pronoun choice.",
+        },
+    ),
+    _ex(
+        "v4_diag_grd1_e", "v4h_CoinLedger", "GRD-1", "grounding_ownership",
+        "CoinLedger (financial ledger service)", "databases", ["PostgreSQL", "MongoDB"],
+        "project_deep_dive", "decision_making",
+        "What database did you choose for CoinLedger's ledger store and why?",
+        "I benchmarked write latency under concurrent load on both Postgres and MongoDB "
+        "against CoinLedger's actual balance-update pattern and pushed for Postgres once "
+        "the numbers showed the difference. That did mean giving up MongoDB's easier "
+        "horizontal scaling, so we planned to shard the ledger by account range if write "
+        "volume ever outgrew a single Postgres primary.",
+        ["database chosen", "reason tied to the specific ledger use case"],
+        4, 4, 4, 4,
+        {
+            "technical_correctness": "Correct reasoning, plus a correct and realistic forward-looking mitigation for the tradeoff being accepted.",
+            "depth_specificity": "Adds an explicit tradeoff (giving up horizontal scaling) and a mitigation plan (sharding) on top of the benchmark — the deepest of the group.",
+            "relevance_completeness": "Directly and thoroughly answers both what and why, plus anticipates a real consequence.",
+            "grounding_ownership": "First-person, specific, verifiable, and additionally acknowledges a real cost of the decision — same tier as (c) but included to test whether the model's grounding score stays stable when depth increases further, rather than depth 'leaking' into the grounding score.",
+        },
+    ),
+    _ex(
+        "v4_diag_grd2_a", "v4h_IntentRouter", "GRD-2", "grounding_ownership",
+        "IntentRouter (chatbot intent classifier)", "nlp", ["Python", "regex"],
+        "project_deep_dive", "explanation",
+        "How does IntentRouter classify user intents?",
+        "A rule-based classifier matches user input against a set of predefined "
+        "patterns or keywords associated with each intent category, choosing whichever "
+        "intent's patterns match, and falling back to a default intent when nothing "
+        "matches.",
+        ["classification mechanism", "fallback behavior"],
+        4, 3, 3, 0,
+        {
+            "technical_correctness": "Accurate, textbook-correct description of rule-based intent classification.",
+            "depth_specificity": "Reasonably specific about the general mechanism.",
+            "relevance_completeness": "Answers the general mechanism and fallback behavior, generically.",
+            "grounding_ownership": "Zero project-specific content — a generic description that could describe any rule-based classifier.",
+        },
+    ),
+    _ex(
+        "v4_diag_grd2_b", "v4h_IntentRouter", "GRD-2", "grounding_ownership",
+        "IntentRouter (chatbot intent classifier)", "nlp", ["Python", "regex"],
+        "project_deep_dive", "explanation",
+        "How does IntentRouter classify user intents?",
+        "IntentRouter keeps a table of regex patterns per intent, checked in a fixed "
+        "priority order, and falls back to the 'unknown' intent when no pattern in the "
+        "table matches the input.",
+        ["classification mechanism", "fallback behavior"],
+        4, 3, 4, 2,
+        {
+            "technical_correctness": "Correct, specific description of the actual mechanism.",
+            "depth_specificity": "Names the specific structure (priority-ordered regex table) and fallback intent.",
+            "relevance_completeness": "Directly and specifically answers both parts of the question.",
+            "grounding_ownership": "Project-specific (names the actual mechanism and fallback intent used) but third-person system framing — no personal claim.",
+        },
+    ),
+    _ex(
+        "v4_diag_grd2_c", "v4h_IntentRouter", "GRD-2", "grounding_ownership",
+        "IntentRouter (chatbot intent classifier)", "nlp", ["Python", "regex"],
+        "project_deep_dive", "explanation",
+        "How does IntentRouter classify user intents?",
+        "I built the classifier as a priority-ordered table of regex patterns per "
+        "intent; when a new intent kept colliding with an existing pattern during "
+        "testing, I reordered the table so the more specific pattern was checked first, "
+        "and added an 'unknown' fallback for anything that still didn't match.",
+        ["classification mechanism", "fallback behavior"],
+        4, 3, 4, 4,
+        {
+            "technical_correctness": "Correct mechanism and a correct, realistic description of resolving a genuine ordering conflict.",
+            "depth_specificity": "Names the mechanism and a concrete debugging/refinement episode.",
+            "relevance_completeness": "Directly and specifically answers both parts of the question.",
+            "grounding_ownership": "First-person, specific, verifiable, ties to an actual build/debug decision — clean genuine ownership.",
+        },
+    ),
+    _ex(
+        "v4_diag_grd2_d", "v4h_IntentRouter", "GRD-2", "grounding_ownership",
+        "IntentRouter (chatbot intent classifier)", "nlp", ["Python", "regex"],
+        "project_deep_dive", "explanation",
+        "How does IntentRouter classify user intents?",
+        "I built the whole classification system myself and made sure it worked really "
+        "well across all the intents we needed to support.",
+        ["classification mechanism", "fallback behavior"],
+        2, 0, 1, 1,
+        {
+            "technical_correctness": "Not false, but asserts nothing checkable about how classification actually works.",
+            "depth_specificity": "No mechanism named at all.",
+            "relevance_completeness": "Neither the classification mechanism nor the fallback behavior is actually described.",
+            "grounding_ownership": "First-person language ('I built... myself') is present, but with no verifiable mechanism behind it — an unsupported ownership claim, not evidence of real ownership; pronoun choice alone should not raise this score.",
+        },
+    ),
+]
+
+# ═══════════════════════════════════════════════════════════════════════
+# 6. CROSS-DIMENSION DISENTANGLEMENT — 6 examples, 2 groups of 3
+# ═══════════════════════════════════════════════════════════════════════
+
+EXAMPLES += [
+    _ex(
+        "v4_diag_xd1_a", "v4h_MetricSync", "XD-1", "cross_dimension",
+        "MetricSync (metrics ingestion pipeline)", "distributed_systems", ["Kafka", "Python"],
+        "project_deep_dive", "design",
+        "How did you implement the retry logic in MetricSync's ingestion pipeline?",
+        "The system uses exponential backoff with jitter for retries, capping the retry "
+        "count at five attempts before routing the message to a dead-letter queue for "
+        "manual inspection.",
+        ["retry mechanism", "failure escalation path"],
+        4, 3, 4, 0,
+        {
+            "technical_correctness": "Correct, standard retry pattern.",
+            "depth_specificity": "Specific mechanism (backoff+jitter), specific cap, specific escalation path — held constant across the XD-1 group.",
+            "relevance_completeness": "Directly answers the question — held constant across the XD-1 group.",
+            "grounding_ownership": "Fully impersonal, textbook system description — no project-specific or personal framing at all. This is the ONLY dimension intended to differ across XD-1.",
+        },
+    ),
+    _ex(
+        "v4_diag_xd1_b", "v4h_MetricSync", "XD-1", "cross_dimension",
+        "MetricSync (metrics ingestion pipeline)", "distributed_systems", ["Kafka", "Python"],
+        "project_deep_dive", "design",
+        "How did you implement the retry logic in MetricSync's ingestion pipeline?",
+        "MetricSync's ingestion pipeline uses exponential backoff with jitter for "
+        "retries, capping the retry count at five attempts before routing the message "
+        "to a dead-letter queue for manual inspection.",
+        ["retry mechanism", "failure escalation path"],
+        4, 3, 4, 2,
+        {
+            "technical_correctness": "Identical correct mechanism to (a) — held constant.",
+            "depth_specificity": "Identical specificity to (a) — held constant.",
+            "relevance_completeness": "Identical directness to (a) — held constant.",
+            "grounding_ownership": "Now explicitly names the project (MetricSync's ingestion pipeline) rather than 'the system', but stays third-person/system-level — moderate, project-specific but not personally owned.",
+        },
+    ),
+    _ex(
+        "v4_diag_xd1_c", "v4h_MetricSync", "XD-1", "cross_dimension",
+        "MetricSync (metrics ingestion pipeline)", "distributed_systems", ["Kafka", "Python"],
+        "project_deep_dive", "design",
+        "How did you implement the retry logic in MetricSync's ingestion pipeline?",
+        "I implemented exponential backoff with jitter for retries in MetricSync's "
+        "ingestion pipeline, capping the retry count at five attempts before routing the "
+        "message to a dead-letter queue for manual inspection.",
+        ["retry mechanism", "failure escalation path"],
+        4, 3, 4, 4,
+        {
+            "technical_correctness": "Identical correct mechanism to (a)/(b) — held constant.",
+            "depth_specificity": "Identical specificity to (a)/(b) — held constant.",
+            "relevance_completeness": "Identical directness to (a)/(b) — held constant.",
+            "grounding_ownership": "First-person ('I implemented') plus the same project-specific mechanism as (b) — clean genuine ownership, the top of the XD-1 swing.",
+        },
+    ),
+    _ex(
+        "v4_diag_xd2_a", "v4h_AlertMesh", "XD-2", "cross_dimension",
+        "AlertMesh (on-call alerting system)", "observability", ["Prometheus", "PagerDuty"],
+        "project_deep_dive", "optimization",
+        "How did you reduce alert fatigue in AlertMesh for on-call engineers?",
+        "I grouped related alerts firing within the same short window into a single "
+        "notification instead of paging separately for each one, and raised the "
+        "severity threshold required to page overnight versus during business hours, "
+        "which cut the average on-call engineer's overnight pages by more than half.",
+        ["alert grouping/deduplication mechanism", "severity threshold adjustment"],
+        4, 3, 4, 4,
+        {
+            "technical_correctness": "Correct, realistic alert-fatigue reduction techniques (grouping + time-aware severity thresholds).",
+            "depth_specificity": "Specific mechanisms and a measured effect — held roughly constant across the XD-2 group.",
+            "relevance_completeness": "Directly and specifically answers the actual question asked. This is the intended reference point for the group.",
+            "grounding_ownership": "First-person, specific, verifiable — held constant across the XD-2 group.",
+        },
+    ),
+    _ex(
+        "v4_diag_xd2_b", "v4h_AlertMesh", "XD-2", "cross_dimension",
+        "AlertMesh (on-call alerting system)", "observability", ["Prometheus", "PagerDuty"],
+        "project_deep_dive", "optimization",
+        "How did you reduce alert fatigue in AlertMesh for on-call engineers?",
+        "I redesigned AlertMesh's on-call dashboard so the most recent and most severe "
+        "alerts are visually highlighted at the top, with clearer color-coding by "
+        "severity, which engineers told us made it much faster to see what needed "
+        "attention first during an incident.",
+        ["alert grouping/deduplication mechanism", "severity threshold adjustment"],
+        4, 2, 1, 4,
+        {
+            "technical_correctness": "What's described (dashboard redesign) is accurate and true, and a real UX improvement.",
+            "depth_specificity": "Specific about the redesign, though it describes a display change rather than a reduction mechanism, so it lands slightly lower than (a)'s mechanism-level depth.",
+            "relevance_completeness": "A visually clearer dashboard does not reduce the NUMBER of alerts/pages an on-call engineer receives — it does not address alert fatigue's actual cause (page volume), only its presentation. This is the dimension intended to swing in XD-2.",
+            "grounding_ownership": "First-person, specific, verifiable — held constant with (a).",
+        },
+    ),
+    _ex(
+        "v4_diag_xd2_c", "v4h_AlertMesh", "XD-2", "cross_dimension",
+        "AlertMesh (on-call alerting system)", "observability", ["Prometheus", "PagerDuty"],
+        "project_deep_dive", "optimization",
+        "How did you reduce alert fatigue in AlertMesh for on-call engineers?",
+        "I changed how alerts get routed so that lower-severity alerts go to a Slack "
+        "channel during business hours instead of paging directly, and only page "
+        "immediately for the highest-severity category.",
+        ["alert grouping/deduplication mechanism", "severity threshold adjustment"],
+        4, 2, 2, 4,
+        {
+            "technical_correctness": "Accurate description of a routing change.",
+            "depth_specificity": "Specific about the routing split, roughly comparable to (b).",
+            "relevance_completeness": "Partially relevant — routing lower-severity alerts away from paging does reduce page volume (touches the actual cause), but doesn't address grouping/deduplication of repeated related alerts, so it is a partial, not full, answer to the question as asked.",
+            "grounding_ownership": "First-person, specific, verifiable — held constant with (a)/(b).",
+        },
+    ),
+]
+
+
+def build() -> list[dict]:
+    return EXAMPLES
+
+
+def main() -> None:
+    examples = build()
+    with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+        for ex in examples:
+            f.write(json.dumps(ex, ensure_ascii=False) + "\n")
+
+    by_category: dict[str, int] = {}
+    by_group: dict[str, int] = {}
+    for ex in examples:
+        by_category[ex["diagnostic_category"]] = by_category.get(ex["diagnostic_category"], 0) + 1
+        by_group[ex["pair_group_id"]] = by_group.get(ex["pair_group_id"], 0) + 1
+
+    manifest = {
+        "total_examples": len(examples),
+        "by_diagnostic_category": by_category,
+        "by_pair_group_id": by_group,
+        "num_pair_groups": len(by_group),
+        "source_ids": sorted({ex["source_id"] for ex in examples}),
+    }
+    with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2)
+
+    print(f"Wrote {len(examples)} examples to {OUTPUT_PATH}")
+    print(json.dumps(manifest, indent=2))
+
+
+if __name__ == "__main__":
+    main()

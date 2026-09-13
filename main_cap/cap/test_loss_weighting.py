@@ -25,6 +25,8 @@ import torch
 from evaluation_dimensions import all_keys as canonical_dimension_keys
 from four_dim_experiment_v2_split import load_v2_pool
 from loss_weighting import (
+    A1_ALPHA,
+    A2_ALPHA,
     DEFAULT_CLIP,
     DEFAULT_WEIGHTED_DIMENSIONS,
     compute_dimension_pos_weights,
@@ -388,6 +390,190 @@ class TestNoV4Reference(unittest.TestCase):
             content = f.read()
         self.assertNotIn("v4_diagnostic", content)
         self.assertNotIn("v4h_", content)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# Experiment A2 (power-law-dampened pos_weight, alpha=0.4) -- follow-up
+# read-only design review, approved. Same formula/module/entrypoint
+# pattern as A0/A1; the ONLY new variable is `alpha`.
+# ═══════════════════════════════════════════════════════════════════════
+
+class TestAlphaExactFormula(unittest.TestCase):
+    """Requirement 6: the transform must be exactly
+    `clip((neg_k/pos_k) ** alpha, clip_min, clip_max)`."""
+
+    def test_alpha_default_is_a1_identity(self):
+        self.assertEqual(A1_ALPHA, 1.0)
+
+    def test_a2_alpha_is_exactly_0_4(self):
+        # Guards against silent drift -- A2's alpha must remain the fixed
+        # design value from the approved design review, never tuned.
+        self.assertEqual(A2_ALPHA, 0.4)
+
+    def test_alpha_1_reproduces_raw_ratio_exactly(self):
+        counts = {0: 11, 1: 3, 2: 3, 3: 54, 4: 95}
+        w_default = pos_weight_from_tier_counts(counts, num_classes=5, clip=(0.0, 100.0))
+        w_explicit_alpha1 = pos_weight_from_tier_counts(counts, num_classes=5, clip=(0.0, 100.0), alpha=1.0)
+        # Hand-computed raw ratios (unclipped, so the transform is visible).
+        expected_raw = [11 / 155, 14 / 152, 17 / 149, 71 / 95]
+        for w, e in zip(w_default, expected_raw):
+            self.assertAlmostEqual(w, e, places=9)
+        self.assertEqual(w_default, w_explicit_alpha1)
+
+    def test_alpha_0_4_matches_hand_computed_power_law(self):
+        counts = {0: 11, 1: 3, 2: 3, 3: 54, 4: 95}
+        weights = pos_weight_from_tier_counts(counts, num_classes=5, clip=(0.0, 100.0), alpha=0.4)
+        expected = [(11 / 155) ** 0.4, (14 / 152) ** 0.4, (17 / 149) ** 0.4, (71 / 95) ** 0.4]
+        for w, e in zip(weights, expected):
+            self.assertAlmostEqual(w, e, places=9)
+
+    def test_edge_cases_unaffected_by_alpha(self):
+        # positives_k == 0 -> clip_max regardless of alpha; negatives_k == 0
+        # -> clip_min regardless of alpha (the alpha transform only applies
+        # to the ordinary ratio case, per the formula's own contract).
+        no_positives = {0: 10}
+        no_negatives = {4: 10}
+        for alpha in (1.0, 0.4, 0.1):
+            w = pos_weight_from_tier_counts(no_positives, num_classes=5, clip=(0.34, 3.0), alpha=alpha)
+            self.assertTrue(all(x == 3.0 for x in w))
+            w = pos_weight_from_tier_counts(no_negatives, num_classes=5, clip=(0.34, 3.0), alpha=alpha)
+            self.assertTrue(all(x == 0.34 for x in w))
+
+
+class TestA2ExpectedWeightsOnRealTrainSplit(unittest.TestCase):
+    """Requirement: verify the actual A2 weights independently from the
+    real 166-example train split (not hardcoded design-review estimates)."""
+
+    @classmethod
+    def setUpClass(cls):
+        split = _real_split()
+        by_id = {e.metadata.example_id: e for e in _EXAMPLES}
+        cls.train_only_examples = [by_id[i] for i in split.train_ids]
+        cls.a1_weights = compute_dimension_pos_weights(
+            cls.train_only_examples, CANONICAL_DIMENSION_KEYS, alpha=A1_ALPHA,
+        )
+        cls.a2_weights = compute_dimension_pos_weights(
+            cls.train_only_examples, CANONICAL_DIMENSION_KEYS, alpha=A2_ALPHA,
+        )
+
+    def test_train_split_size_is_166(self):
+        self.assertEqual(len(self.train_only_examples), 166)
+
+    def test_a1_weights_unchanged_from_before_a2_existed(self):
+        # Exact values recorded in the real A1 checkpoint's
+        # `dimension_pos_weights` metadata (verified against
+        # best_checkpoint.json in an earlier session) -- A2's addition must
+        # not perturb these at all.
+        expected_tc = [1 / 3, 1 / 3, 1 / 3, 0.7473684210526316]
+        expected_rel = [1 / 3, 1 / 3, 0.34959349593495936, 0.711340206185567]
+        for w, e in zip(self.a1_weights["technical_correctness"], expected_tc):
+            self.assertAlmostEqual(w, e, places=9)
+        for w, e in zip(self.a1_weights["relevance_completeness"], expected_rel):
+            self.assertAlmostEqual(w, e, places=9)
+        self.assertIsNone(self.a1_weights["depth_specificity"])
+        self.assertIsNone(self.a1_weights["grounding_ownership"])
+
+    def test_a2_technical_correctness_weights(self):
+        # Independently verified against the real train split this session:
+        # [0.3471, 0.3852, 0.4197, 0.8900]. (Not 0.829 at k=3 -- that value
+        # belongs to a different, non-selected design-review candidate;
+        # 0.890 is the actual A2/alpha=0.4 result, confirmed by direct
+        # computation from the real 166-example train split.)
+        expected = [0.347075849089803, 0.38522439262462416, 0.41966723273451667, 0.890048960631373]
+        for w, e in zip(self.a2_weights["technical_correctness"], expected):
+            self.assertAlmostEqual(w, e, places=6)
+
+    def test_a2_relevance_completeness_weights(self):
+        expected = [1 / 3, 0.5005971334627136, 0.6567881941079629, 0.8726316137626134]
+        for w, e in zip(self.a2_weights["relevance_completeness"], expected):
+            self.assertAlmostEqual(w, e, places=6)
+
+    def test_a2_depth_and_grounding_remain_unweighted(self):
+        self.assertIsNone(self.a2_weights["depth_specificity"])
+        self.assertIsNone(self.a2_weights["grounding_ownership"])
+
+    def test_a2_differs_from_a1_on_weighted_dimensions(self):
+        self.assertNotEqual(self.a1_weights["technical_correctness"], self.a2_weights["technical_correctness"])
+        self.assertNotEqual(self.a1_weights["relevance_completeness"], self.a2_weights["relevance_completeness"])
+
+    def test_a2_weights_have_no_duplicate_saturated_floor_values_for_tc(self):
+        # The specific defect A2 was designed to fix: A1's TC weights had
+        # k=0,1,2 all identically pinned to the clip floor. A2 must not.
+        tc = self.a2_weights["technical_correctness"]
+        self.assertEqual(len(set(round(w, 6) for w in tc)), 4, f"expected 4 distinct values, got {tc}")
+
+    def test_a2_weights_are_deterministic(self):
+        again = compute_dimension_pos_weights(self.train_only_examples, CANONICAL_DIMENSION_KEYS, alpha=A2_ALPHA)
+        self.assertEqual(again, self.a2_weights)
+
+    def test_a2_weights_within_clip_bounds(self):
+        for dim in ("technical_correctness", "relevance_completeness"):
+            for w in self.a2_weights[dim]:
+                self.assertGreaterEqual(w, 1 / 3 - 1e-9)
+                self.assertLessEqual(w, 3.0)
+
+
+class TestA2FiniteLoss(unittest.TestCase):
+    def test_a2_weighted_compute_batch_loss_is_finite(self):
+        split = _real_split()
+        train_loader, _, _ = build_dataloaders(
+            _EXAMPLES, split, _TOKENIZER, _BACKBONE_CONFIG, batch_size=8,
+            dimension_names=CANONICAL_DIMENSION_KEYS,
+        )
+        by_id = {e.metadata.example_id: e for e in _EXAMPLES}
+        train_only_examples = [by_id[i] for i in split.train_ids]
+        dimension_pos_weights = compute_dimension_pos_weights(
+            train_only_examples, CANONICAL_DIMENSION_KEYS, alpha=A2_ALPHA,
+        )
+        backbone = build_tiny_random_encoder(_TOKENIZER, hidden_size=16)
+        model = MultiTaskModel(BackboneConfig(), backbone=backbone, dimension_names=CANONICAL_DIMENSION_KEYS)
+        model.eval()
+        batch = next(iter(train_loader))
+        with torch.no_grad():
+            loss = compute_batch_loss(model, batch, "cpu", dimension_pos_weights)
+        self.assertTrue(torch.isfinite(loss))
+
+
+class TestA2ConfigurationSelector(unittest.TestCase):
+    def test_a2_registered_and_isolated(self):
+        from run_four_dim_training import EXPERIMENTS
+        self.assertIn("v3_expA2", EXPERIMENTS)
+        a2 = EXPERIMENTS["v3_expA2"]
+        self.assertEqual(a2["loss_weighting"], "train_derived_pos_weight")
+        self.assertEqual(a2["weighted_dimensions"], ("technical_correctness", "relevance_completeness"))
+        self.assertEqual(a2["loss_weight_alpha"], A2_ALPHA)
+        self.assertEqual(a2["loss_weight_clip"], (1.0 / 3.0, 3.0))
+
+    def test_a2_does_not_overwrite_v3_a0_or_a1_artifacts_dirs(self):
+        import os
+        from run_four_dim_training import EXPERIMENTS
+        dirs = {name: os.path.normpath(EXPERIMENTS[name]["artifacts_dir"]) for name in ("v3", "v3_expA0", "v3_expA1", "v3_expA2")}
+        self.assertEqual(len(set(dirs.values())), 4, f"artifacts_dir collision: {dirs}")
+
+    def test_a1_config_explicitly_records_alpha_1(self):
+        from run_four_dim_training import EXPERIMENTS
+        self.assertEqual(EXPERIMENTS["v3_expA1"]["loss_weight_alpha"], A1_ALPHA)
+
+    def test_a2_same_pool_split_hyperparams_as_a1(self):
+        from run_four_dim_training import EXPERIMENTS
+        a1, a2 = EXPERIMENTS["v3_expA1"], EXPERIMENTS["v3_expA2"]
+        self.assertIs(a1["load_pool"], a2["load_pool"])
+        self.assertEqual(a1["split_json_path"], a2["split_json_path"])
+        self.assertEqual(a1["split_seed"], a2["split_seed"])
+        self.assertEqual(a1["expected_total"], a2["expected_total"])
+        self.assertEqual(a1["expected_counts"], a2["expected_counts"])
+        self.assertEqual(a1["weighted_dimensions"], a2["weighted_dimensions"])
+        self.assertEqual(a1["loss_weight_clip"], a2["loss_weight_clip"])
+        # The ONLY difference between A1 and A2's configs:
+        self.assertNotEqual(a1["loss_weight_alpha"], a2["loss_weight_alpha"])
+
+    def test_v1_v2_v3_still_have_no_loss_weight_alpha_key_dependency(self):
+        # v1/v2/v3 never reference loss_weighting at all -- unaffected by
+        # A2's addition (train()'s `cfg.get("loss_weighting")` gate is
+        # still what decides whether alpha is ever read).
+        from run_four_dim_training import EXPERIMENTS
+        for name in ("v1", "v2", "v3"):
+            self.assertNotIn("loss_weighting", EXPERIMENTS[name])
 
 
 if __name__ == "__main__":

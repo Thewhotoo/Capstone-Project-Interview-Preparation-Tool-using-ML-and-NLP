@@ -74,6 +74,7 @@ from four_dim_experiment_split import load_core_pool
 from four_dim_experiment_v2_split import load_v2_pool
 from model_backbone import BackboneConfig, build_tokenizer
 from model_checkpoint_io import load_checkpoint_artifact, save_checkpoint_artifact
+import loss_weighting
 from loss_weighting import compute_dimension_pos_weights
 from model_dataset import build_dataloaders
 from model_evaluator import TrainedEvaluator
@@ -154,6 +155,7 @@ EXPERIMENTS = {
         loss_weighting="none",
         weighted_dimensions=(),
         loss_weight_clip=None,
+        loss_weight_alpha=None,  # not applicable -- weighting is off entirely
     ),
     "v3_expA1": dict(
         # Weighted variant: identical to v3_expA0 except `loss_weighting`
@@ -173,6 +175,31 @@ EXPERIMENTS = {
         loss_weighting="train_derived_pos_weight",
         weighted_dimensions=("technical_correctness", "relevance_completeness"),
         loss_weight_clip=(1.0 / 3.0, 3.0),
+        loss_weight_alpha=loss_weighting.A1_ALPHA,  # 1.0 -- raw ratio, A1's original formula, explicit not implicit
+    ),
+    "v3_expA2": dict(
+        # A2 (read-only design review, approved): IDENTICAL to v3_expA1 in
+        # every respect -- same pool/split/architecture/hyperparameters,
+        # same weighted_dimensions, same clip bounds -- except
+        # `loss_weight_alpha`, which selects the power-law-dampened variant
+        # of the SAME `pos_weight_from_tier_counts` formula
+        # (`loss_weighting.A2_ALPHA = 0.4`, a fixed design constant, never
+        # tuned against validation/test/V4 data). This is the ONLY
+        # behavioral difference from A1. See
+        # docs/architecture/V5_Ablation_Design_Review.md's Experiment-A2
+        # follow-up design review for the full rationale.
+        load_pool=load_v2_pool,
+        split_json_path=os.path.join(_HERE, "artifacts", "four_dim_experiment_v2", "split.json"),
+        artifacts_dir=os.path.join(_HERE, "artifacts", "four_dim_training_v3_expA2"),
+        expected_total=220, expected_counts=(166, 27, 27),
+        dataset_split_identifier="four_dim_experiment_v2",
+        split_seed="four_dim_v2_split_348",
+        model_version="deberta_v3_base_four_dim_training_v3_expA2",
+        label="Four-Dimension Training V3 Experiment A2 (power-law-dampened pos_weight, alpha=0.4, on TC + relevance)",
+        loss_weighting="train_derived_pos_weight",
+        weighted_dimensions=("technical_correctness", "relevance_completeness"),
+        loss_weight_clip=(1.0 / 3.0, 3.0),
+        loss_weight_alpha=loss_weighting.A2_ALPHA,  # 0.4 -- fixed design value, not tuned
     ),
 }
 
@@ -512,9 +539,10 @@ def train(experiment: str = "v1") -> int:
             train_only_examples, CANONICAL_DIMENSION_KEYS,
             weighted_dimensions=cfg.get("weighted_dimensions", ()),
             clip=cfg.get("loss_weight_clip") or (1.0 / 3.0, 3.0),
+            alpha=cfg.get("loss_weight_alpha", loss_weighting.A1_ALPHA),
         )
         _log(f"Experiment A loss weighting ENABLED. weighted_dimensions={cfg.get('weighted_dimensions')} "
-             f"clip={cfg.get('loss_weight_clip')} train_n={len(train_only_examples)}")
+             f"clip={cfg.get('loss_weight_clip')} alpha={cfg.get('loss_weight_alpha')} train_n={len(train_only_examples)}")
         for name, pw in dimension_pos_weights.items():
             _log(f"    pos_weight[{name}] = {pw}")
 
@@ -541,6 +569,7 @@ def train(experiment: str = "v1") -> int:
             "loss_weighting": cfg.get("loss_weighting", "none"),
             "weighted_dimensions": str(cfg.get("weighted_dimensions", ())),
             "loss_weight_clip": str(cfg.get("loss_weight_clip")),
+            "loss_weight_alpha": str(cfg.get("loss_weight_alpha")),
             "dimension_pos_weights": json.dumps(dimension_pos_weights) if dimension_pos_weights else "null",
         },
     )

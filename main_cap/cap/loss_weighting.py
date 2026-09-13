@@ -20,19 +20,38 @@ val/test/V4-shaped data that is never passed in).
 
 FORMULA (documented in detail, see module docstring section below and the
 design-review doc): standard `BCEWithLogitsLoss`-style `pos_weight` per
-CORAL threshold, `pos_weight_k = clip(neg_count_k / pos_count_k, clip_min,
-clip_max)`, computed independently per dimension and per threshold from the
-TRAINING split's own tier histogram for that dimension. This is the
-`torch.nn.functional.binary_cross_entropy_with_logits(..., pos_weight=...)`
-convention: since CORAL's threshold k asks the binary question "is tier >
-k?", `pos_weight_k < 1` DOWN-weights the (here, typically majority) positive
-class relative to the (here, typically minority) negative class at that
-threshold, which is exactly the direction needed to counteract the training
-pool's own tier-3/4-heavy skew on `technical_correctness` and
-`relevance_completeness` without touching label encoding, CORAL decoding,
-or the ordinal rank-consistency guarantee (which lives entirely in
-`CoralOrdinalHead`'s monotonic bias structure — completely untouched by
-loss weighting).
+CORAL threshold, `pos_weight_k = clip((neg_count_k / pos_count_k) ** alpha,
+clip_min, clip_max)`, computed independently per dimension and per
+threshold from the TRAINING split's own tier histogram for that dimension.
+This is the `torch.nn.functional.binary_cross_entropy_with_logits(...,
+pos_weight=...)` convention: since CORAL's threshold k asks the binary
+question "is tier > k?", `pos_weight_k < 1` DOWN-weights the (here,
+typically majority) positive class relative to the (here, typically
+minority) negative class at that threshold, which is exactly the direction
+needed to counteract the training pool's own tier-3/4-heavy skew on
+`technical_correctness` and `relevance_completeness` without touching label
+encoding, CORAL decoding, or the ordinal rank-consistency guarantee (which
+lives entirely in `CoralOrdinalHead`'s monotonic bias structure —
+completely untouched by loss weighting).
+
+ALPHA (Experiment A2, `docs/architecture/V5_Ablation_Design_Review.md`'s
+follow-up read-only design review, additive): `alpha=1.0` (the default,
+every A0/A1 call site) is the plain raw-ratio formula used by Experiment
+A1, unchanged. `alpha=0.4` is Experiment A2's power-law-dampened variant --
+a monotonic transform of the SAME raw ratio, chosen (fixed, not tuned
+against any held-out/V4/test data) because A1's investigation found its raw
+ratio saturating at the `clip_min` floor for most of `technical_correctness`'s
+and half of `relevance_completeness`'s thresholds (the raw ratios are far
+below the conservative 1/3 floor at low k), collapsing several distinct
+thresholds to an identical weight. Raising the ratio to a fractional power
+compresses extreme values toward 1 while preserving their relative order,
+so thresholds that would otherwise tie at the clip floor become
+distinguishable without loosening the floor itself (which would require an
+even more extreme, less conservative bound to achieve the same
+differentiation -- see the design review's Candidate 1 for why that
+tradeoff was rejected). `alpha` only reshapes the pre-clip value; the clip
+bounds, the edge-case handling, `coral_targets`, `coral_predict`,
+`coral_confidence`, and `CoralOrdinalHead` are all completely unaffected.
 """
 from __future__ import annotations
 
@@ -43,11 +62,21 @@ from model_dataset import score_to_tier
 DEFAULT_CLIP: tuple[float, float] = (1.0 / 3.0, 3.0)
 DEFAULT_WEIGHTED_DIMENSIONS: tuple[str, ...] = ("technical_correctness", "relevance_completeness")
 
+# Fixed, non-tuned constants for the two currently-implemented experiments
+# -- named here so callers reference an intentional constant rather than a
+# bare literal, and so a test can assert each experiment's alpha is exactly
+# what it claims to be. Neither was fit against validation/test/V4 data;
+# A1_ALPHA is the identity exponent (raw ratio, unchanged), A2_ALPHA is the
+# fixed design value from the approved Experiment A2 design review.
+A1_ALPHA: float = 1.0
+A2_ALPHA: float = 0.4
+
 
 def pos_weight_from_tier_counts(
     tier_counts: dict[int, int],
     num_classes: int = 5,
     clip: tuple[float, float] = DEFAULT_CLIP,
+    alpha: float = A1_ALPHA,
 ) -> list[float]:
     """Pure function: given a `{tier: count}` histogram (already computed
     from SOME set of examples — this function has no opinion on which set,
@@ -58,7 +87,17 @@ def pos_weight_from_tier_counts(
     `coral_targets` definition, unchanged): positives = examples with
     tier > k, negatives = examples with tier <= k.
 
-        pos_weight_k = clip(negatives_k / positives_k, clip_min, clip_max)
+        raw_ratio   = negatives_k / positives_k
+        transformed = raw_ratio ** alpha
+        pos_weight_k = clip(transformed, clip_min, clip_max)
+
+    `alpha=1.0` (the default -- Experiment A1's exact formula, unchanged)
+    makes `transformed` identical to `raw_ratio` (`x ** 1.0 == x` exactly,
+    IEEE-754 `pow`'s defined identity case). `alpha=0.4` is Experiment A2's
+    power-law dampening (see module docstring). `alpha` is applied ONLY to
+    the ordinary (positives>0 and negatives>0) case -- the two edge cases
+    below are unaffected by `alpha`, since they represent "no data on one
+    side of this threshold at all" rather than a ratio to be dampened.
 
     Edge cases (avoid divide-by-zero, avoid unbounded weights — "avoid
     extreme weights" per the design review):
@@ -74,12 +113,13 @@ def pos_weight_from_tier_counts(
         positives = sum(c for tier, c in tier_counts.items() if tier > k)
         negatives = sum(c for tier, c in tier_counts.items() if tier <= k)
         if positives == 0:
-            raw = clip_max
+            transformed = clip_max
         elif negatives == 0:
-            raw = clip_min
+            transformed = clip_min
         else:
-            raw = negatives / positives
-        weights.append(max(clip_min, min(clip_max, raw)))
+            raw_ratio = negatives / positives
+            transformed = raw_ratio ** alpha
+        weights.append(max(clip_min, min(clip_max, transformed)))
     return weights
 
 
@@ -108,6 +148,7 @@ def compute_dimension_pos_weights(
     num_classes: int = 5,
     weighted_dimensions: tuple[str, ...] = DEFAULT_WEIGHTED_DIMENSIONS,
     clip: tuple[float, float] = DEFAULT_CLIP,
+    alpha: float = A1_ALPHA,
 ) -> dict[str, Optional[list[float]]]:
     """Top-level entry point. `train_examples` MUST be the caller's
     train-split subset only (this function does not know or care where they
@@ -123,6 +164,10 @@ def compute_dimension_pos_weights(
     are in V3 by default, per the design review's "don't over-engineer
     weighting for grounding" instruction, while still being generically
     overridable via `weighted_dimensions` if a future experiment wants to.
+
+    `alpha=1.0` (the default) preserves Experiment A1's exact formula.
+    `alpha=A2_ALPHA` (0.4) selects Experiment A2's power-law dampening --
+    see `pos_weight_from_tier_counts`'s docstring.
     """
     result: dict[str, Optional[list[float]]] = {}
     for name in dimension_names:
@@ -130,5 +175,5 @@ def compute_dimension_pos_weights(
             result[name] = None
             continue
         counts = tier_counts_from_examples(train_examples, name)
-        result[name] = pos_weight_from_tier_counts(counts, num_classes=num_classes, clip=clip)
+        result[name] = pos_weight_from_tier_counts(counts, num_classes=num_classes, clip=clip, alpha=alpha)
     return result

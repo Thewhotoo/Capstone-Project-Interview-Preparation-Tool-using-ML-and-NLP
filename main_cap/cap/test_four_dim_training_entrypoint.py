@@ -98,7 +98,7 @@ class TestExperimentSelector(unittest.TestCase):
         # "v3_expA1" -- additive, isolated-artifacts-dir configurations
         # (see test_loss_weighting.py::TestA0A1ConfigurationsDistinguishable)
         # that reuse v3's exact pool/split and only vary loss weighting.
-        self.assertEqual(set(entrypoint.EXPERIMENTS), {"v1", "v2", "v3", "v3_expA0", "v3_expA1"})
+        self.assertEqual(set(entrypoint.EXPERIMENTS), {"v1", "v2", "v3", "v3_expA0", "v3_expA1", "v3_expA2"})
 
     def test_v1_config_matches_the_frozen_phase3_split(self):
         cfg = entrypoint.EXPERIMENTS["v1"]

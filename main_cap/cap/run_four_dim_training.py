@@ -201,6 +201,37 @@ EXPERIMENTS = {
         loss_weight_clip=(1.0 / 3.0, 3.0),
         loss_weight_alpha=loss_weighting.A2_ALPHA,  # 0.4 -- fixed design value, not tuned
     ),
+    # ── Experiment B0 (V6 Ablation Design Review, H2: architecture) ─────────
+    # Same 220-example pool + same frozen V2 split + same hyperparameters as
+    # "v3_expA0" -- the ONLY variable is architecture: each of the four
+    # canonical dimensions gets its own private
+    # Linear(768->128) -> GELU -> Dropout(0.1) projection (`model_heads.
+    # DimensionPrivateProjection`) between the shared pooled representation
+    # and its (unchanged) `CoralOrdinalHead`. Loss weighting is explicitly
+    # OFF (identical to A0) -- this is a single-variable ablation against
+    # A0, not a combination with A1/A2's loss weighting (see
+    # docs/architecture/V6_Experiment_B_Design_Review.md §10, §20).
+    # `use_private_mlp`/`mlp_hidden_dim`/`mlp_dropout` are read by `train()`
+    # below (absent on every other experiment -- `.get(...)` defaults there
+    # reproduce today's exact unweighted, no-private-MLP architecture for
+    # v1/v2/v3/v3_expA0/v3_expA1/v3_expA2, unchanged).
+    "v3_expB0": dict(
+        load_pool=load_v2_pool,
+        split_json_path=os.path.join(_HERE, "artifacts", "four_dim_experiment_v2", "split.json"),
+        artifacts_dir=os.path.join(_HERE, "artifacts", "four_dim_training_v3_expB0"),
+        expected_total=220, expected_counts=(166, 27, 27),
+        dataset_split_identifier="four_dim_experiment_v2",
+        split_seed="four_dim_v2_split_348",
+        model_version="deberta_v3_base_four_dim_training_v3_expB0",
+        label="Four-Dimension Training V3 Experiment B0 (private per-dimension MLP, unweighted A0 loss)",
+        loss_weighting="none",
+        weighted_dimensions=(),
+        loss_weight_clip=None,
+        loss_weight_alpha=None,  # not applicable -- weighting is off entirely, same as A0
+        use_private_mlp=True,
+        mlp_hidden_dim=128,
+        mlp_dropout=0.1,
+    ),
 }
 
 # ── Training configuration (recorded verbatim in the checkpoint + report) ───
@@ -546,6 +577,17 @@ def train(experiment: str = "v1") -> int:
         for name, pw in dimension_pos_weights.items():
             _log(f"    pos_weight[{name}] = {pw}")
 
+    # ── Experiment B0 (V6 Ablation Design Review, H2) architecture flags ────
+    # `cfg.get(...)` defaults reproduce today's exact architecture
+    # (`use_private_mlp=False`, byte-identical `DimensionOrdinalHeads`) for
+    # every experiment that doesn't explicitly set `use_private_mlp` (v1,
+    # v2, v3, v3_expA0, v3_expA1, v3_expA2).
+    use_private_mlp = cfg.get("use_private_mlp", False)
+    mlp_hidden_dim = cfg.get("mlp_hidden_dim", 128)
+    mlp_dropout = cfg.get("mlp_dropout", 0.1)
+    _log(f"Architecture: use_private_mlp={use_private_mlp} mlp_hidden_dim={mlp_hidden_dim} "
+         f"mlp_dropout={mlp_dropout}")
+
     backbone_config = BackboneConfig(hf_model_id=CONFIG["base_model"], max_length=CONFIG["max_length"])
     tokenizer = build_tokenizer(backbone_config)
     train_loader, val_loader, test_loader = build_dataloaders(
@@ -571,6 +613,9 @@ def train(experiment: str = "v1") -> int:
             "loss_weight_clip": str(cfg.get("loss_weight_clip")),
             "loss_weight_alpha": str(cfg.get("loss_weight_alpha")),
             "dimension_pos_weights": json.dumps(dimension_pos_weights) if dimension_pos_weights else "null",
+            "use_private_mlp": str(use_private_mlp),
+            "mlp_hidden_dim": str(mlp_hidden_dim),
+            "mlp_dropout": str(mlp_dropout),
         },
     )
 
@@ -606,6 +651,7 @@ def train(experiment: str = "v1") -> int:
         device=device, random_seed=CONFIG["random_seed"], on_epoch_end=on_epoch_end,
         dimension_names=CANONICAL_DIMENSION_KEYS,
         dimension_pos_weights=dimension_pos_weights,
+        use_private_mlp=use_private_mlp, mlp_hidden_dim=mlp_hidden_dim, mlp_dropout=mlp_dropout,
     )
     duration_s = time.time() - t0
     _log(f"Training complete in {duration_s:.1f}s ({duration_s/60:.1f} min).")
@@ -621,6 +667,7 @@ def train(experiment: str = "v1") -> int:
     # ── TEST SET -- touched exactly once, after checkpoint selection ────────
     best_model = load_checkpoint_artifact(
         best_weights_path, backbone_config, dimension_names=CANONICAL_DIMENSION_KEYS, map_location=device,
+        use_private_mlp=use_private_mlp, mlp_hidden_dim=mlp_hidden_dim, mlp_dropout=mlp_dropout,
     )
     test_metrics = _all_dimension_metrics(best_model, test_loader, device)
     _log(f"TEST metrics (best checkpoint, epoch {best['epoch']}):")

@@ -36,6 +36,9 @@ def load_checkpoint_artifact(
     num_ordinal_classes: int = 5,
     backbone: Optional[nn.Module] = None,
     map_location: str = "cpu",
+    use_private_mlp: bool = False,
+    mlp_hidden_dim: int = 128,
+    mlp_dropout: float = 0.1,
 ) -> MultiTaskModel:
     """Reconstructs a fresh `MultiTaskModel` (the architecture, not the
     weights) matching the given config/head shapes, then loads `path`'s
@@ -53,6 +56,17 @@ def load_checkpoint_artifact(
     Pass `"cuda"` explicitly if the caller wants to keep working with the
     loaded model on GPU immediately (e.g. continuing on the same Colab
     session that trained it) rather than reloading onto CPU first.
+
+    `use_private_mlp`/`mlp_hidden_dim`/`mlp_dropout` (Experiment B0, V6
+    Ablation Design Review, additive): forwarded unchanged to
+    `MultiTaskModel`. `use_private_mlp=False` (the default, every existing
+    call site — every A0/A1/A2/V1/V2/V3 checkpoint) reconstructs the exact
+    same architecture as before this parameter existed, so those
+    checkpoints keep loading identically. A B0 checkpoint MUST be reloaded
+    with `use_private_mlp=True` (and the same `mlp_hidden_dim`/
+    `mlp_dropout` it was trained with) — `load_state_dict` is strict by
+    default (see below), so a mismatched flag fails loudly with a shape
+    error rather than silently loading wrong weights.
     """
     from reasoning_dimension_relevance import ALL_DIMENSIONS
     from model_heads import _MISSING_REASONING_CATEGORIES
@@ -63,6 +77,9 @@ def load_checkpoint_artifact(
         dimension_names=dimension_names or ALL_DIMENSIONS,
         missing_reasoning_categories=missing_reasoning_categories or _MISSING_REASONING_CATEGORIES,
         num_ordinal_classes=num_ordinal_classes,
+        use_private_mlp=use_private_mlp,
+        mlp_hidden_dim=mlp_hidden_dim,
+        mlp_dropout=mlp_dropout,
     )
     state_dict = torch.load(path, map_location=map_location)
     model.load_state_dict(state_dict)

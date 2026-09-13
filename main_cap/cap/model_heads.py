@@ -157,24 +157,95 @@ def coral_confidence(logits: torch.Tensor) -> torch.Tensor:
 # ═════════════════════════════════════════════════════════════════════════════
 
 
+class DimensionPrivateProjection(nn.Module):
+    """Experiment B0 (V6 Ablation Design Review, additive): a small,
+    per-dimension private nonlinear projection inserted between the shared
+    pooled representation and a dimension's `CoralOrdinalHead`, so each
+    dimension can learn its own reduced view of the shared pooled vector
+    instead of every dimension reading the identical vector through only
+    its own final linear layer (see the design review's "why B, not more
+    of A" — the shared vector is the suspected representational
+    bottleneck behind A2's still-unsolved relevance/detail confusion).
+
+    `Linear(in_features -> hidden_dim) -> GELU -> Dropout(dropout)` — ONE
+    hidden layer (the design review's §6: a second layer would roughly
+    double new parameters for a hypothesis this ablation isn't testing),
+    GELU to match `microsoft/deberta-v3-base`'s own internal activation
+    (§7), dropout defaulting to 0.1 to match the encoder's own default
+    rate (§8). Deliberately nonlinear: a pure `Linear -> Linear` stack
+    with no activation between them collapses to a single linear map
+    (composition of linear maps is linear) and would NOT add real
+    representational capacity over today's single shared-projection CORAL
+    head — see the design review's §19 discussion of why a linear-only
+    bottleneck was rejected as the primary design.
+
+    `CoralOrdinalHead` itself is never touched by this class — it is
+    constructed downstream (see `DimensionOrdinalHeads`) with
+    `in_features=hidden_dim` instead of the backbone's `hidden_size`,
+    exactly like any other change to the VALUE passed to its existing
+    `in_features` parameter; none of `CoralOrdinalHead`'s own code
+    changes."""
+
+    def __init__(self, in_features: int, hidden_dim: int = 128, dropout: float = 0.1):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(in_features, hidden_dim),
+            nn.GELU(),
+            nn.Dropout(dropout),
+        )
+
+    def forward(self, pooled: torch.Tensor) -> torch.Tensor:
+        return self.net(pooled)
+
+
 class DimensionOrdinalHeads(nn.Module):
     """One `CoralOrdinalHead` per dimension in `dimension_names` — ALL 12 are
     always computed (a real trained model always declares full coverage,
     per `TrainedEvaluator.declared_dimensions`); masking irrelevant
     dimensions for a given `ReasoningType` happens at LOSS time
     (`compute_batch_loss`) and at read time (`TrainedEvaluator.evaluate`
-    only reports relevant ones), never by omitting a head."""
+    only reports relevant ones), never by omitting a head.
 
-    def __init__(self, in_features: int, dimension_names: tuple[str, ...] = ALL_DIMENSIONS,
-                 num_classes: int = _NUM_ORDINAL_CLASSES_DEFAULT):
+    PRIVATE MLP (Experiment B0, V6 Ablation Design Review, additive):
+    `use_private_mlp=False` (the default, every existing call site —
+    `v1`/`v2`/`v3`/`v3_expA0`/`v3_expA1`/`v3_expA2`'s training configs all
+    omit it) is BYTE-IDENTICAL to this class's behavior before this
+    parameter existed: each dimension's `CoralOrdinalHead` is constructed
+    with `in_features=in_features` (the raw backbone hidden size, e.g.
+    768) and `forward` calls `head(pooled)` directly, exactly as always.
+    `use_private_mlp=True` (Experiment B0 only) inserts a
+    `DimensionPrivateProjection` — one independent instance per dimension,
+    never shared — between `pooled` and each dimension's
+    `CoralOrdinalHead`, which is then constructed with
+    `in_features=mlp_hidden_dim` instead. `CoralOrdinalHead` is identical
+    code in both branches."""
+
+    def __init__(
+        self, in_features: int, dimension_names: tuple[str, ...] = ALL_DIMENSIONS,
+        num_classes: int = _NUM_ORDINAL_CLASSES_DEFAULT,
+        use_private_mlp: bool = False, mlp_hidden_dim: int = 128, mlp_dropout: float = 0.1,
+    ):
         super().__init__()
         self.dimension_names = dimension_names
         self.num_classes = num_classes
+        self.use_private_mlp = use_private_mlp
+        self.mlp_hidden_dim = mlp_hidden_dim
+        if use_private_mlp:
+            self.projections = nn.ModuleDict({
+                name: DimensionPrivateProjection(in_features, mlp_hidden_dim, mlp_dropout)
+                for name in dimension_names
+            })
+            head_in_features = mlp_hidden_dim
+        else:
+            self.projections = None
+            head_in_features = in_features
         self.heads = nn.ModuleDict({
-            name: CoralOrdinalHead(in_features, num_classes) for name in dimension_names
+            name: CoralOrdinalHead(head_in_features, num_classes) for name in dimension_names
         })
 
     def forward(self, pooled: torch.Tensor) -> dict[str, torch.Tensor]:
+        if self.projections is not None:
+            return {name: head(self.projections[name](pooled)) for name, head in self.heads.items()}
         return {name: head(pooled) for name, head in self.heads.items()}
 
 
@@ -248,7 +319,17 @@ class MultiTaskModel(nn.Module):
         dimension_names: tuple[str, ...] = ALL_DIMENSIONS,
         missing_reasoning_categories: tuple[str, ...] = _MISSING_REASONING_CATEGORIES,
         num_ordinal_classes: int = _NUM_ORDINAL_CLASSES_DEFAULT,
+        use_private_mlp: bool = False,
+        mlp_hidden_dim: int = 128,
+        mlp_dropout: float = 0.1,
     ):
+        """
+        `use_private_mlp`/`mlp_hidden_dim`/`mlp_dropout` (Experiment B0, V6
+        Ablation Design Review, additive): forwarded unchanged to
+        `DimensionOrdinalHeads` (see its own docstring). `use_private_mlp=
+        False` (the default, every existing call site) reproduces this
+        class's exact prior architecture/`state_dict()` shape.
+        """
         super().__init__()
         from model_backbone import CrossEncoderBackbone
 
@@ -257,7 +338,11 @@ class MultiTaskModel(nn.Module):
         self.dimension_names = dimension_names
         self.missing_reasoning_categories = missing_reasoning_categories
         self.num_ordinal_classes = num_ordinal_classes
-        self.dimension_heads = DimensionOrdinalHeads(hidden, dimension_names, num_ordinal_classes)
+        self.use_private_mlp = use_private_mlp
+        self.dimension_heads = DimensionOrdinalHeads(
+            hidden, dimension_names, num_ordinal_classes,
+            use_private_mlp=use_private_mlp, mlp_hidden_dim=mlp_hidden_dim, mlp_dropout=mlp_dropout,
+        )
         self.concept_head = ConceptObservationHead(hidden)
         self.missing_reasoning_head = MissingReasoningHead(hidden, len(missing_reasoning_categories))
 
@@ -359,6 +444,9 @@ def train_model(
     num_warmup_steps: int = 0,
     use_lr_decay: bool = False,
     dimension_pos_weights: Optional[dict[str, Optional[list]]] = None,
+    use_private_mlp: bool = False,
+    mlp_hidden_dim: int = 128,
+    mlp_dropout: float = 0.1,
 ) -> MultiTaskModel:
     """
     Minimal, reference end-to-end trainer (approved clarification #1) —
@@ -435,6 +523,14 @@ def train_model(
     benchmarks anything — the callback decides what, if anything, to do
     with the model/losses it receives. `on_epoch_end=None` (the default)
     preserves the previous behavior exactly.
+
+    PRIVATE MLP (Experiment B0, V6 Ablation Design Review, additive):
+    `use_private_mlp=False` (the default, every existing call site) is
+    BYTE-IDENTICAL to this function's behavior before this parameter
+    existed -- forwarded straight through to `MultiTaskModel` (see its own
+    docstring), which constructs the exact same `DimensionOrdinalHeads`
+    architecture as before when the flag is off. `mlp_hidden_dim`/
+    `mlp_dropout` are ignored entirely unless `use_private_mlp=True`.
     """
     if random_seed is not None:
         torch.manual_seed(random_seed)
@@ -444,6 +540,7 @@ def train_model(
 
     model = MultiTaskModel(
         backbone_config, backbone=backbone, dimension_names=dimension_names,
+        use_private_mlp=use_private_mlp, mlp_hidden_dim=mlp_hidden_dim, mlp_dropout=mlp_dropout,
         missing_reasoning_categories=missing_reasoning_categories,
         num_ordinal_classes=num_ordinal_classes,
     )

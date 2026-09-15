@@ -185,17 +185,27 @@ class TestLegacyEvaluatorRollbackAvailability(unittest.TestCase):
         self.assertTrue(hasattr(model_evaluator, "TrainedEvaluator"))
         self.assertTrue(hasattr(hybrid_evaluator, "HybridEvaluator"))
 
-    def test_deployment_evaluator_still_targets_a2_unchanged(self):
-        # This new architecture is explicitly NOT deployed -- the live A2
-        # cutover (deployment_evaluator.py) must be byte-for-byte
-        # unaffected by anything added in this session.
+    def test_deployment_evaluator_still_targets_a2_as_the_rollback_tier(self):
+        # V3 single-overall-score integration (later session): A2 is no
+        # longer the sole/primary deployment target, but it MUST remain a
+        # fully intact, reachable rollback tier -- see
+        # deployment_evaluator.py's three-tier fallback chain and
+        # test_deployment_evaluator_overall_single_v3.py's dedicated
+        # coverage of that chain end-to-end. This test only asserts A2's
+        # own paths/constants are still exactly where they were.
         import deployment_evaluator
         self.assertTrue(deployment_evaluator.DEPLOYED_MODEL_DIR.replace("\\", "/").endswith("deployed_model_a2"))
         self.assertTrue(
             deployment_evaluator.LEGACY_DEPLOYED_MODEL_DIR.replace("\\", "/").endswith("deployed_model")
         )
+        self.assertTrue(hasattr(deployment_evaluator, "activate_a2_rollback"))
 
-    def test_overall_single_evaluator_is_not_registered_or_imported_by_deployment_evaluator(self):
+    def test_overall_single_evaluator_is_now_wired_as_the_primary_deployment_tier(self):
+        # Superseded expectation from before integration (this evaluator
+        # used to be explicitly NOT deployed). Integration is now done --
+        # deployment_evaluator.py DOES import and register it (tier 1 of
+        # the fallback chain), while A2 (tier 2) and HeuristicEvaluator
+        # (tier 3) remain fully intact and reachable.
         import ast
         import inspect
         import deployment_evaluator
@@ -205,8 +215,11 @@ class TestLegacyEvaluatorRollbackAvailability(unittest.TestCase):
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.module:
                 imported_modules.add(node.module)
-        self.assertNotIn("overall_single_evaluator", imported_modules)
-        self.assertNotIn("overall_score_model", imported_modules)
+        self.assertIn("overall_single_evaluator", imported_modules)
+        self.assertIn("overall_score_model", imported_modules)
+        # And A2's own wiring (model_evaluator/hybrid_evaluator) is still present too.
+        self.assertIn("model_evaluator", imported_modules)
+        self.assertIn("hybrid_evaluator", imported_modules)
 
 
 if __name__ == "__main__":

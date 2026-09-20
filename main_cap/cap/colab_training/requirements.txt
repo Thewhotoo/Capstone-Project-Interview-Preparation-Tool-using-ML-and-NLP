@@ -1,0 +1,10 @@
+# Colab already ships a CUDA-enabled torch build preinstalled -- do NOT
+# pin/reinstall torch here, doing so risks replacing Colab's matched
+# CUDA build with a CPU-only or mismatched one. Everything else this
+# package needs, pinned to floors known to work with this codebase:
+
+transformers>=5.0
+sentencepiece>=0.2
+protobuf>=4.0
+pydantic>=2.0
+accelerate>=0.30

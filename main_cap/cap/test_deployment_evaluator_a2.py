@@ -215,13 +215,17 @@ def _tiny_canonical_loader(path, backbone_config, **kwargs):
 
 
 class _PatchedA2DeploymentPaths:
-    """Also forces TIER 1 (V3 single-overall-score) to fail by pointing
-    `deployment_evaluator.DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V3` at an empty
-    sibling directory -- this suite specifically exercises the A2 tier in
-    isolation, and post V3-cutover the real `deployed_model_overall_single_v3/`
-    on disk contains a real, loadable checkpoint that would otherwise win
-    tier 1 every time (see test_deployment_evaluator_overall_single_v3.py
-    for the dedicated three-tier fallback-chain coverage)."""
+    """Also forces TIER 1 (v5_1088 single-overall-score) and TIER 2 (v3
+    single-overall-score) to fail by pointing both
+    `deployment_evaluator.DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V5_1088` and
+    `deployment_evaluator.DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V3` at empty
+    sibling directories -- this suite specifically exercises the A2 tier in
+    isolation, and post v5_1088-cutover the real
+    `deployed_model_overall_single_v5_1088/`/`deployed_model_overall_single_v3/`
+    on disk may contain a real, loadable checkpoint that would otherwise
+    win every time (see test_deployment_evaluator_overall_single_v3.py /
+    test_deployment_evaluator_overall_single_v5_1088.py for the dedicated
+    fallback-chain coverage)."""
 
     def __init__(self, deploy_dir):
         self.deploy_dir = deploy_dir
@@ -234,6 +238,10 @@ class _PatchedA2DeploymentPaths:
             "DEPLOYED_CHECKPOINT_PATH": deployment_evaluator.DEPLOYED_CHECKPOINT_PATH,
             "DEPLOYED_PROMOTION_DECISION_PATH": deployment_evaluator.DEPLOYED_PROMOTION_DECISION_PATH,
             "load_checkpoint_artifact": deployment_evaluator.load_checkpoint_artifact,
+            "DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V5_1088": deployment_evaluator.DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V5_1088,
+            "_OVERALL_SINGLE_V5_1088_WEIGHTS_PATH": deployment_evaluator._OVERALL_SINGLE_V5_1088_WEIGHTS_PATH,
+            "_OVERALL_SINGLE_V5_1088_CHECKPOINT_PATH": deployment_evaluator._OVERALL_SINGLE_V5_1088_CHECKPOINT_PATH,
+            "_OVERALL_SINGLE_V5_1088_PROMOTION_DECISION_PATH": deployment_evaluator._OVERALL_SINGLE_V5_1088_PROMOTION_DECISION_PATH,
             "DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V3": deployment_evaluator.DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V3,
             "_OVERALL_SINGLE_V3_WEIGHTS_PATH": deployment_evaluator._OVERALL_SINGLE_V3_WEIGHTS_PATH,
             "_OVERALL_SINGLE_V3_CHECKPOINT_PATH": deployment_evaluator._OVERALL_SINGLE_V3_CHECKPOINT_PATH,
@@ -247,10 +255,17 @@ class _PatchedA2DeploymentPaths:
 
         empty_tier1_dir = os.path.join(self.deploy_dir, "_empty_tier1_for_isolation")
         os.makedirs(empty_tier1_dir, exist_ok=True)
-        deployment_evaluator.DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V3 = empty_tier1_dir
-        deployment_evaluator._OVERALL_SINGLE_V3_WEIGHTS_PATH = os.path.join(empty_tier1_dir, "best_checkpoint_weights.pt")
-        deployment_evaluator._OVERALL_SINGLE_V3_CHECKPOINT_PATH = os.path.join(empty_tier1_dir, "best_checkpoint.json")
-        deployment_evaluator._OVERALL_SINGLE_V3_PROMOTION_DECISION_PATH = os.path.join(empty_tier1_dir, "final_promotion_decision.json")
+        deployment_evaluator.DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V5_1088 = empty_tier1_dir
+        deployment_evaluator._OVERALL_SINGLE_V5_1088_WEIGHTS_PATH = os.path.join(empty_tier1_dir, "best_checkpoint_weights.pt")
+        deployment_evaluator._OVERALL_SINGLE_V5_1088_CHECKPOINT_PATH = os.path.join(empty_tier1_dir, "best_checkpoint.json")
+        deployment_evaluator._OVERALL_SINGLE_V5_1088_PROMOTION_DECISION_PATH = os.path.join(empty_tier1_dir, "final_promotion_decision.json")
+
+        empty_tier2_dir = os.path.join(self.deploy_dir, "_empty_tier2_for_isolation")
+        os.makedirs(empty_tier2_dir, exist_ok=True)
+        deployment_evaluator.DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V3 = empty_tier2_dir
+        deployment_evaluator._OVERALL_SINGLE_V3_WEIGHTS_PATH = os.path.join(empty_tier2_dir, "best_checkpoint_weights.pt")
+        deployment_evaluator._OVERALL_SINGLE_V3_CHECKPOINT_PATH = os.path.join(empty_tier2_dir, "best_checkpoint.json")
+        deployment_evaluator._OVERALL_SINGLE_V3_PROMOTION_DECISION_PATH = os.path.join(empty_tier2_dir, "final_promotion_decision.json")
         return self
 
     def __exit__(self, *exc_info):

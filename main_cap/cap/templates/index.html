@@ -5228,15 +5228,15 @@
                         const ch = text[i];
                         el.textContent += ch;
                         i++;
-                        let delay = 46 + (Math.random() * 26 - 13); // ~100-120wpm feel
-                        if (/[,.:;!?]/.test(ch)) delay += 200;
+                        let delay = 17 + (Math.random() * 10 - 5); // ~55-60 chars/sec feel
+                        if (/[,.:;!?]/.test(ch)) delay += 60;
                         setTimeout(tick, delay);
                     } else {
                         setTimeout(() => {
                             if (el.__typeToken !== token) return;
                             el.classList.remove("type-caret");
                             resolve();
-                        }, 550);
+                        }, 180);
                     }
                 }
                 tick();

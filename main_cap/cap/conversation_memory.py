@@ -170,6 +170,18 @@ class ConversationMemory:
     def is_transition_recently_used(self, text: str, window: int = _RECENCY_WINDOW) -> bool:
         return text in self.recent_transitions[-window:]
 
+    def recent_source_ids(self, window: int = _RECENCY_WINDOW) -> tuple[str, ...]:
+        """The source_id of each of the last `window` turns (any category) —
+        read by TopicPool.select_next's soft recent-source cooldown (a
+        source/project should not dominate several consecutive turns even
+        when the category changes, since a project's overview/deep-dive/
+        skill_in_context specs all share the same source_id). Deliberately
+        reuses the same _RECENCY_WINDOW already governing family/transition
+        recency above rather than introducing a second, independent
+        tunable. Read-only: TopicPool has no way to feed anything back into
+        this — it only ever consumes the tuple this returns."""
+        return tuple(t.source_id for t in self.timeline[-window:])
+
     def last_phrasing_style(self) -> Optional[tuple[str, int]]:
         return self.recent_phrasing_styles[-1] if self.recent_phrasing_styles else None
 

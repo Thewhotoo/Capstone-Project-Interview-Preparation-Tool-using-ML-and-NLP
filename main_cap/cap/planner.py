@@ -54,9 +54,18 @@ class ConversationState:
     picture; this is the narrow slice Planning actually consumes — the rest
     of DiscussionMemory, e.g. concept mastery, belongs to Evaluation, out of
     scope for Phase 1).
+
+    `recent_source_ids` (additive, defaults to empty): the source_id of
+    each of the last few turns, any category — feeds `TopicPool.
+    select_next`'s soft recent-source cooldown (product-quality fix: a
+    project/experience/certification should not dominate several
+    consecutive turns just because the category happens to change). Empty
+    by default so every existing caller that only ever sets
+    `last_category` keeps byte-identical behavior.
     """
 
     last_category: Optional[QuestionCategory] = None
+    recent_source_ids: tuple[str, ...] = ()
 
 
 class Planner:
@@ -89,7 +98,7 @@ class Planner:
         """Return the next best Question Specification given the current
         conversation state, or None if the pool is exhausted. Pure/read-only:
         does not itself advance any unit's lifecycle status."""
-        return self.pool.select_next(state.last_category)
+        return self.pool.select_next(state.last_category, state.recent_source_ids)
 
     def get(self, spec_id: str) -> Optional[QuestionSpecification]:
         """Look up a previously-planned specification by id — e.g. for a

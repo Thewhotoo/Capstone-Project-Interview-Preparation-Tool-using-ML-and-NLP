@@ -78,6 +78,83 @@ def _project_reference(spec: QuestionSpecification) -> Optional[str]:
     return spec.grounding.project.title if spec.grounding.project is not None else None
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+# Evidence-specific seed realization (product-quality fix, investigation
+# Phase 1) — see module-level note below `realize()` for the full rationale.
+# ═════════════════════════════════════════════════════════════════════════════
+
+# A verbatim-rendered seed is recorded with this `family` value rather than
+# a real, registered question_families.py name — it is intentionally NEVER
+# passed to `question_families.register_family`, so it can never be chosen
+# by `discussion_policy.select_family`'s own arc/registry logic, never
+# appears in `families_for_category`, and never collides with a real
+# family for `family_already_used_for_source`/`is_family_recently_used`
+# bookkeeping (those checks are about phrasing-ANGLE repetition, which does
+# not apply to a one-off, seed-specific sentence).
+_SEED_VERBATIM_FAMILY = "interview_seed"
+
+# seed_synthesis.py's five template families (metric_probe, tradeoff_probe,
+# tech_probe, integration_probe, concept_probe) are not distinguishable by
+# the time their output reaches here — CandidateProfile.projects[].
+# interview_seeds is a plain list[str] (Chapter 8 schema), so the
+# originating family is already lost. Every one of those five templates is
+# an "explain/justify a concrete technical choice or fact" question, so a
+# single constant reasoning type is an honest, if coarse, description —
+# consistent with InterviewQuestion.reasoning_type's own documented
+# contract ("derived from family, never independently chosen": here it's
+# derived from THIS family, `_SEED_VERBATIM_FAMILY`, same as any other).
+_SEED_VERBATIM_REASONING_TYPE = ReasoningType.APPLICATION
+
+# Below this many characters, a "seed" is too degenerate to be worth
+# rendering verbatim (e.g. a stray "?" or a single word) — deterministic,
+# no ML, just a minimum-shape sanity floor. seed_synthesis.py's own
+# shortest real template output ("Why did you use X in this project?" for
+# a one-character tech name) is comfortably above this.
+_MIN_VERBATIM_SEED_LENGTH = 12
+
+
+def _is_candidate_facing_question_seed(spec: QuestionSpecification) -> bool:
+    """True only when `spec.text_seed` is safe and appropriate to present
+    to the candidate EXACTLY AS WRITTEN, with no family-template wrapping.
+
+    Deliberately conservative — every condition here is a real signal
+    already produced by an existing, reviewed system, never a new
+    heuristic invented for this check:
+
+    - `text_seed_is_sentence` is TopicPool's own explicit signal (Fix #2,
+      see question_specification.py) that this text_seed is a complete,
+      already-composed question sentence — set ONLY for units built from
+      a project's `interview_seeds` (topic_pool.py's Priority-1 loop),
+      themselves produced entirely by seed_synthesis.py's deterministic,
+      evidence-grounded templates (metric_probe/tradeoff_probe/tech_probe/
+      integration_probe/concept_probe) from resume_engine's own extracted
+      technologies/concepts/metrics/comparison-language — never invented,
+      never LLM-generated. Any OTHER text_seed (e.g. SKILL_IN_CONTEXT's
+      bare technology name) has this flag False and is correctly rejected
+      here.
+    - Non-empty after stripping.
+    - Ends in "?" — every one of seed_synthesis.py's five templates
+      produces a sentence ending in "?"; a seed that doesn't is not
+      trusted here even if `text_seed_is_sentence` is set, since it can no
+      longer be confirmed to be phrased as a question.
+    - At least `_MIN_VERBATIM_SEED_LENGTH` characters, ruling out a
+      degenerate near-empty string.
+
+    Grounding is automatic, not a separate check: this is `spec.text_seed`
+    — a field that already went through TopicPool's traceability-validated
+    construction — never any other text, so nothing here can surface an
+    invented technology, metric, or claim.
+    """
+    if not spec.text_seed_is_sentence:
+        return False
+    seed = (spec.text_seed or "").strip()
+    if len(seed) < _MIN_VERBATIM_SEED_LENGTH:
+        return False
+    if not seed.endswith("?"):
+        return False
+    return True
+
+
 def _select_variant_index(spec: QuestionSpecification, family: str, variant_count: int,
                            memory: ConversationMemory) -> int:
     """Deterministic base index from (spec id, family), flipped to the
@@ -101,9 +178,41 @@ def _render(spec: QuestionSpecification, family: str, memory: ConversationMemory
 def realize(spec: QuestionSpecification, memory: ConversationMemory, turn_number: int) -> InterviewQuestion:
     """Realize a fresh (non-follow-up) turn for `spec`. Returns the
     InterviewQuestion; the caller must call `memory.record_turn(question,
-    variant_index)` afterward — this function does not mutate memory."""
-    family = discussion_policy.select_family(spec, memory)
-    text, variant_idx = _render(spec, family, memory)
+    variant_index)` afterward — this function does not mutate memory.
+
+    Evidence-specific seed realization (product-quality fix): a validated
+    candidate-facing seed (`_is_candidate_facing_question_seed`) is
+    rendered VERBATIM instead of being routed through a generic family —
+    this is what stops seed_synthesis.py's specific, evidence-grounded
+    questions ("Why did you use Docker in this project?", "You mentioned
+    '40% faster' — how was that measured?") from being silently discarded
+    in favor of a generic architecture/deployment/scaling/failures
+    template (investigation finding: `_seed_clause` previously discarded
+    `text_seed` whenever `text_seed_is_sentence` was True, replacing it
+    with the generic fallback "your approach").
+
+    The one deliberate exception: the very FIRST turn on a source_id keeps
+    using the "overview" family exactly as before, even when a valid seed
+    exists — this is discussion_policy.py's own documented, pre-existing
+    narrative-flow decision (a project's first-ever mention should sound
+    like an opening overview, Chapter 12 Section 6), untouched by this fix.
+    Every existing family/template remains the fallback for every other
+    case: no valid seed, an unsafe/non-question seed, SKILL_IN_CONTEXT
+    (never sentence-shaped), EXPERIENCE, CERTIFICATION, and PROJECT_OVERVIEW.
+    """
+    is_first_touch_on_source = memory.times_source_touched(spec.source_id) == 0
+    use_verbatim_seed = _is_candidate_facing_question_seed(spec) and not is_first_touch_on_source
+
+    if use_verbatim_seed:
+        family = _SEED_VERBATIM_FAMILY
+        text = spec.text_seed.strip()
+        reasoning_type = _SEED_VERBATIM_REASONING_TYPE
+        variant_idx = 0
+    else:
+        family = discussion_policy.select_family(spec, memory)
+        text, variant_idx = _render(spec, family, memory)
+        reasoning_type = get_family(family).reasoning_type
+
     transition = discussion_policy.select_transition(spec, memory)
     full_text = f"{transition}{text}" if transition else text
 
@@ -112,7 +221,7 @@ def realize(spec: QuestionSpecification, memory: ConversationMemory, turn_number
         transition_text=transition,
         specification=spec,
         family=family,
-        reasoning_type=get_family(family).reasoning_type,
+        reasoning_type=reasoning_type,
         project_reference=_project_reference(spec),
         is_followup=False,
         turn_number=turn_number,

@@ -191,7 +191,10 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
     if memory.turn_count() >= RESUME_DISCUSSION_QUESTION_BUDGET:
         next_spec = None
     else:
-        next_spec = planner.plan_next(ConversationState(last_category=session["last_category"]))
+        next_spec = planner.plan_next(ConversationState(
+            last_category=session["last_category"],
+            recent_source_ids=memory.recent_source_ids(),
+        ))
     # Improved Answer / Coaching Note are derived here, at the one site
     # where the EvaluationResult, the InterviewQuestion (its grounding) AND
     # the raw candidate `answer` are all in scope. `_result_payload` stays a

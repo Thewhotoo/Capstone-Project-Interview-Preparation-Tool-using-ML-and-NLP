@@ -167,6 +167,32 @@ def select_family(spec: QuestionSpecification, memory: ConversationMemory) -> st
                 candidate = next_candidate
                 break
 
+    # Product-quality fix: ConversationMemory.is_family_recently_used(...)
+    # already existed but had no production caller (investigation finding)
+    # — the only repetition guard actually wired in was the single-step
+    # "never repeat the IMMEDIATELY preceding family" rule above, which
+    # can't stop a family used 2-3 turns ago (rather than 1) from
+    # resurfacing. This is a SOFT preference layered on top, not a
+    # replacement: it only ever steps forward to another family that is
+    # (a) still in this category's arc, (b) still seed-safe (never
+    # re-introduces the exclusion the loop above just enforced), and (c)
+    # not itself recently used. If every arc entry is recently used (a
+    # short arc fully cycled within the window, e.g. SKILL_IN_CONTEXT's
+    # 3-entry arc against the default 3-turn window), the loop finds no
+    # qualifying alternative and leaves `candidate` exactly as computed
+    # above — allowing the repeat rather than forcing artificial variety,
+    # exactly mirroring the "no viable alternative -> allow it" rule
+    # `topic_pool._RECENT_SOURCE_PENALTY` uses for source cooldown.
+    if memory.is_family_recently_used(candidate):
+        start = arc.index(candidate) if candidate in arc else 0
+        for offset in range(1, len(arc) + 1):
+            next_candidate = arc[(start + offset) % len(arc)]
+            if spec.text_seed_is_sentence and family_requires_short_seed(next_candidate):
+                continue
+            if not memory.is_family_recently_used(next_candidate):
+                candidate = next_candidate
+                break
+
     applicable = families_for_category(spec.category)
     if candidate not in applicable:
         # Defensive fallback — should never trigger if _ARC and the family

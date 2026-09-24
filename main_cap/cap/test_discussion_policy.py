@@ -112,10 +112,27 @@ class TestSelectFamily(unittest.TestCase):
             self.memory._source_category_touch_counts[(project_title, "project_deep_dive")] = i + 1
             self.memory.recent_question_families.append(family)
 
+        # The bug this test guards against: this category's OWN arc
+        # position must still be 0 (untouched), regardless of how many
+        # project_deep_dive turns already happened for the same project.
+        self.assertEqual(
+            self.memory.times_source_category_touched(project_title, "skill_in_context"), 0
+        )
+
         skill_spec = _project_spec(QuestionCategory.SKILL_IN_CONTEXT, source_id=project_title, spec_id="sk", text_seed="y")
         skill_arc = _ARC[QuestionCategory.SKILL_IN_CONTEXT]
         first_skill_family = select_family(skill_spec, self.memory)
-        self.assertEqual(first_skill_family, skill_arc[0] if skill_arc[0] != self.memory.last_family() else skill_arc[1])
+        # Phase 3 (family-recency fix, ConversationMemory.
+        # is_family_recently_used wired into select_family): the exact arc
+        # member chosen may be nudged away from arc[0] if arc[0]'s family
+        # NAME was used recently by a DIFFERENT category on the same
+        # project -- family names are global (e.g. "decision_making"
+        # appears in both PROJECT_DEEP_DIVE's and SKILL_IN_CONTEXT's arcs).
+        # That's the intended, additive behavior; the actual invariant this
+        # test protects (arc POSITION not advanced by another category's
+        # touches) is asserted above, so here we only need the result to
+        # still be a real, applicable member of this category's own arc.
+        self.assertIn(first_skill_family, skill_arc)
 
     def test_project_overview_category_does_not_reopen_with_overview_if_already_used(self):
         """A project_deep_dive spec already framed the project's opening

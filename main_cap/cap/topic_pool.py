@@ -34,7 +34,7 @@ implementation summary for the full rationale.
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional, Union
+from typing import Any, Optional, Sequence, Union
 
 from coverage_tracker import CoverageTracker
 from question_specification import (
@@ -58,6 +58,35 @@ from traceability import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Soft, additive de-prioritization for a source_id touched within the
+# recent window (ConversationMemory.recent_source_ids) -- product-quality
+# fix for "the same project can dominate several consecutive turns even
+# when its category changes" (investigation finding: the coverage-sweep
+# bonus is per-CATEGORY, not per-SOURCE, so once every category has been
+# touched once, several remaining same-tier units from the SAME source can
+# keep winning ties against a different, still-unasked source).
+#
+# Chosen relative to the scale select_next already uses below: tier steps
+# of 10 (CATEGORY_PRIORITY * 10), the coverage-sweep bonus of 100,
+# weakness_bonus of 2, diversity_bonus of 1.
+#   - Larger than weakness_bonus (2) and diversity_bonus (1) combined, so
+#     it reliably wins a same-tier tie against a fresher source even when
+#     the recent source also happens to be weakness-boosted or the more
+#     "diverse" category pick -- this is what actually produces the
+#     "prefer the alternative when one exists" behavior.
+#   - Far smaller than one tier step (10) or the coverage-sweep bonus
+#     (100), so it can NEVER make a lower-tier or not-yet-covered-category
+#     unit outrank a higher-tier/uncovered one -- it only ever breaks ties
+#     WITHIN an otherwise-comparable score band, never overrides the
+#     priority hierarchy itself.
+# This is a preference, not an exclusion: select_next's candidate list is
+# never filtered by it, so when every remaining candidate at the winning
+# score level shares the same recently-used source_id (or there simply is
+# no alternative), the penalty applies equally to all of them and the
+# previously-dominant source is still selected -- exactly the "allow it
+# when there's no viable alternative" requirement.
+_RECENT_SOURCE_PENALTY = 3.0
 
 # Type alias: a Candidate Profile as consumed here may be the Pydantic model
 # from candidate_profile_generator.py, or its plain-dict `.model_dump()` form
@@ -410,7 +439,9 @@ class TopicPool:
     # ── Selection (Chapter 10.3) ─────────────────────────────────────────
 
     def select_next(
-        self, last_category: Optional[QuestionCategory]
+        self,
+        last_category: Optional[QuestionCategory],
+        recent_source_ids: Sequence[str] = (),
     ) -> Optional[QuestionSpecification]:
         """
         Pick the highest-priority `unasked` unit. Dominant factor: tier
@@ -420,9 +451,20 @@ class TopicPool:
         many interview_seeds can't consume the whole session before
         experience/certifications are ever reached. Ties broken by: weak-
         area boost, category diversity against the immediately preceding
-        turn, then deterministic build order (see module docstring's
-        determinism note — no random component, unlike the legacy
-        `discussion_engine.TopicPool`).
+        turn, a soft penalty for a source_id touched within
+        `recent_source_ids` (see `_RECENT_SOURCE_PENALTY` — a preference,
+        not an exclusion, so a source can still win when it's genuinely the
+        best/only remaining option), then deterministic build order (see
+        module docstring's determinism note — no random component, unlike
+        the legacy `discussion_engine.TopicPool`).
+
+        `recent_source_ids` is optional and empty by default — every
+        existing caller that doesn't pass it gets byte-identical behavior
+        to before this parameter existed. Typically
+        `ConversationMemory.recent_source_ids()`, but `select_next` has no
+        dependency on `ConversationMemory` itself; it only ever compares
+        `spec.source_id` against whatever short sequence of source_ids the
+        caller supplies.
 
         Does not mutate any state — selecting a unit does not, by itself,
         advance its lifecycle status; call `mark_active`/`mark_covered`/
@@ -440,6 +482,7 @@ class TopicPool:
 
         covered_categories = self.categories_covered()
         build_index = {unit_id: i for i, unit_id in enumerate(self._build_order)}
+        recent_source_set = set(recent_source_ids)
 
         def score_key(unit_id: str) -> tuple:
             spec = self.specifications[unit_id]
@@ -449,7 +492,10 @@ class TopicPool:
             diversity_bonus = (
                 1.0 if last_category is not None and spec.category != last_category else 0.0
             )
-            total = tier + coverage_bonus + weakness_bonus + diversity_bonus
+            recent_source_penalty = (
+                _RECENT_SOURCE_PENALTY if spec.source_id in recent_source_set else 0.0
+            )
+            total = tier + coverage_bonus + weakness_bonus + diversity_bonus - recent_source_penalty
             # Negate build_index so that, for equal scores, the earliest-
             # built unit sorts first when we take max() below (deterministic
             # tie-break — see module docstring).

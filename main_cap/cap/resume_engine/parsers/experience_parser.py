@@ -19,10 +19,31 @@ from resume_engine.dates import parse_date_range
 from resume_engine.interfaces import ParserResult
 from resume_engine.job_title_gazetteer import JOB_TITLES
 from resume_engine.parsers._entry_clustering import cluster_entries, strip_section_header_line
+from resume_engine.text_normalization import strip_leading_bullet
 from resume_engine.validation import Observation
 
 # Validation-derived, tunable, same discipline as layout.py/sections.py.
 ROLE_MATCH_THRESHOLD = 75
+
+# Generic company-name suffix markers (a legal/organizational form), used
+# ONLY in the no-gazetteer-role fallback to recognize a header that is a
+# COMPANY name on its own (no role printed on the same line) -- e.g.
+# "Hindustan Aeronautics Limited", where the role ("Engineering Intern")
+# lives on the following body line. Without this the whole company name was
+# guessed to be the `role` by the positional fallback. A small, generic
+# lexical class (organizational-form nouns), never a specific company name.
+_COMPANY_MARKERS = (
+    "limited", "ltd", "inc", "incorporated", "llc", "llp", "plc", "gmbh",
+    "corp", "corporation", "company", "co.", "pvt", "private", "technologies",
+    "solutions", "systems", "industries", "enterprises", "labs",
+)
+_COMPANY_MARKER_PATTERN = re.compile(
+    r"\b(?:" + "|".join(re.escape(m) for m in _COMPANY_MARKERS) + r")\b", re.IGNORECASE,
+)
+
+
+def _looks_like_company(text: str) -> bool:
+    return bool(_COMPANY_MARKER_PATTERN.search(text))
 
 _SPLIT_PATTERNS = (
     re.compile(r"\s+at\s+", re.IGNORECASE),
@@ -124,12 +145,24 @@ class ExperienceParser:
         for index, entry in enumerate(entries):
             date_range, date_line_index = _find_date_range(entry.header_text, entry.body_lines)
 
-            header_for_split = entry.header_text
+            header_for_split = strip_leading_bullet(entry.header_text)
             if date_range is not None and date_line_index is None:
                 header_for_split = header_for_split.replace(date_range.display, "").strip(" ,-—–")
 
             part_a, part_b = _split_role_company(header_for_split)
             role, company, gazetteer_matched = _disambiguate_role_company(part_a, part_b)
+
+            # Company-only header fallback (Phase 1): the header is a single
+            # segment that reads as a COMPANY name (organizational-form
+            # marker) rather than a job title, and nothing gazetteer-matched
+            # as a role -- e.g. "Hindustan Aeronautics Limited", with the
+            # role on a following body line. Put it in `company` and leave
+            # `role` empty (never fabricate a title from a company name),
+            # the same honest-empty discipline as the institution fallback.
+            company_fallback = False
+            if not gazetteer_matched and not company and role and _looks_like_company(role):
+                company, role = role, ""
+                company_fallback = True
 
             institution_fallback = False
             if not gazetteer_matched and part_b and (_looks_like_institution(part_a) or _looks_like_institution(part_b)):
@@ -162,6 +195,9 @@ class ExperienceParser:
             elif institution_fallback:
                 reasons.append("-role_not_gazetteer_matched")
                 reasons.append("+role_left_empty_institutional_pattern")
+            elif company_fallback:
+                reasons.append("-role_not_gazetteer_matched")
+                reasons.append("+company_marker_recognized_role_left_empty")
             else:
                 reasons.append("-role_not_gazetteer_matched")
             if date_range is not None and date_range.start is not None:

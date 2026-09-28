@@ -35,6 +35,36 @@ from rapidfuzz import fuzz, process
 
 from resume_engine.document_model import DocumentModel, TextSpan
 from resume_engine.section_gazetteer import SECTION_ALIASES
+from resume_engine.text_normalization import contains_year, normalize_heading, starts_with_bullet
+
+# An unrecognized candidate-header line that carries entry-level signals (a
+# year, a "|" technology delimiter, or an institution keyword) is almost
+# always the first ENTRY of the current section, not a brand-new section --
+# e.g. a bold "PES University 2023 - 2027" line right under an "EDUCATION"
+# heading. Folding it into the current section (rather than letting it start
+# its own "unknown" section that is later dropped) is what keeps such
+# entry content from vanishing. Generic structural signals, never
+# resume-specific text.
+_INSTITUTION_KEYWORD_RE = re.compile(
+    r"\b(?:university|college|institute|polytechnic|school|campus|academy)\b", re.IGNORECASE,
+)
+# Degree-level keywords -- a bold "B.Tech in Computer Science" line is entry
+# content (the degree line of an education entry), not a new section, even
+# when it carries no year/institution/pipe. Dotted/multi-letter forms only,
+# to avoid matching ordinary words.
+_DEGREE_KEYWORD_RE = re.compile(
+    r"\b(?:bachelor|master|b\.?tech|m\.?tech|b\.?e|m\.?e|b\.?sc|m\.?sc|mba|ph\.?d|diploma|associate)\b",
+    re.IGNORECASE,
+)
+
+
+def _looks_like_entry_content(text: str) -> bool:
+    return bool(
+        "|" in text
+        or contains_year(text)
+        or _INSTITUTION_KEYWORD_RE.search(text)
+        or _DEGREE_KEYWORD_RE.search(text)
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -146,9 +176,29 @@ def _is_candidate_header_line(line: _Line, body_font_size: float) -> bool:
     three ways, not just font size: some real resumes (plain/ATS-style
     templates) use same-size, non-bold, ALL-CAPS text for headers instead
     of bigger/bolder text -- excluding that pattern would miss a very
-    common real-world case, not a rare edge case."""
-    text = line.text
+    common real-world case, not a rare edge case.
+
+    Phase 1 (parser generalization): a line that OPENS with a bullet/dash
+    glyph is a list item, never a section heading -- excluding it here is
+    what stops a bulleted entry title (e.g. "* RAG Research Assistant
+    Agent", the way some resumes mark project/education/experience entries)
+    from being carved off into its own spurious "unknown" section and then
+    dropped, losing the entry entirely. Word count / all-caps are measured
+    on the glyph-repaired text (`normalize_heading`) so a drop-cap-split
+    heading ("T ECHNICAL   S KILLS") is judged by its intended token count
+    and casing, not the artifact's."""
+    if starts_with_bullet(line.text):
+        return False
+    text = normalize_heading(line.text)
     if not text or len(text.split()) > MAX_HEADER_WORDS:
+        return False
+    # A section heading never ends in sentence punctuation; a line that does
+    # is a wrapped body/sentence fragment (e.g. "...preparation experience."
+    # overflowing onto its own line), not a heading. Rejecting it here stops
+    # such a fragment from being classified as a spurious section (a real
+    # bug: a trailing "experience." fragment was matched as an "experience"
+    # section and pulled following project bullets into a phantom job).
+    if text.rstrip().endswith((".", ",")):
         return False
     larger = body_font_size > 0 and line.max_font_size >= body_font_size * MIN_HEADER_FONT_RATIO
     all_caps = text.isupper() and any(c.isalpha() for c in text)
@@ -251,8 +301,14 @@ def _classify_header_line(line: _Line) -> tuple[str, float, str]:
     module docstring: a single fuzzy-match with a graduated confidence,
     rather than two literally separate matching passes -- behaviorally
     identical to the documented cascade. Tier 4 (SBERT) is tried only when
-    the gazetteer match is too weak to trust at all."""
-    text = line.text
+    the gazetteer match is too weak to trust at all.
+
+    Phase 1: matches on the glyph-repaired heading text so a drop-cap-split
+    header ("T ECHNICAL   S KILLS") scores against the gazetteer exactly as
+    its intended form ("TECHNICAL SKILLS") would -- the artifact otherwise
+    fragments the phrase into single-letter tokens that no scorer can
+    recover, silently dropping the whole section (skills/coursework/etc.)."""
+    text = normalize_heading(line.text)
     label, score = _fuzzy_match_label(text)
     docx_style = _is_docx_heading_style(line)
 
@@ -313,6 +369,26 @@ def _build_sections(lines: list[_Line], body_font_size: float) -> list[Section]:
         if _is_header_line(line, body_font_size):
             label, confidence, reason = _classify_header_line(line)
             if label == "unknown" and not found_real_section:
+                current.spans.extend(line.spans)
+                continue
+            # An entry-content-shaped line (a year / "|" / institution /
+            # degree keyword) right inside a real section is that section's
+            # own entry content, not a new section -- fold it in rather than
+            # letting it start its own section that gets dropped downstream
+            # (which silently lost education/experience entries whose
+            # institution/company/degree line is bold). This fires for an
+            # "unknown" line OR a WEAKLY-matched one (a degree line can
+            # embedding-match "skills" at ~0.58): a low-confidence section
+            # guess that looks like entry content is far more likely to BE
+            # entry content than a real new section. A CONFIDENT gazetteer
+            # header (>= FUZZY_CONFIDENT_THRESHOLD confidence) is never
+            # folded -- it's a genuine section boundary.
+            if (
+                found_real_section
+                and current.label != "unknown"
+                and confidence <= 0.4
+                and _looks_like_entry_content(normalize_heading(line.text))
+            ):
                 current.spans.extend(line.spans)
                 continue
             if label != "unknown":

@@ -30,6 +30,55 @@ DEGREE_MATCH_THRESHOLD = 80
 INSTITUTION_MATCH_THRESHOLD = 80
 
 _YEAR_PATTERN = re.compile(r"\b(19|20)\d{2}\b")
+# A START year directly followed by an open-ended marker ("2023 - Present",
+# "2023 to Current") -- the only shape from which we INFER an expected
+# graduation year by adding the program's nominal duration. A lone
+# "Expected 2027" is NOT this shape (the year is already the graduation
+# year), so it is used as-is rather than having a duration added to it.
+_START_PRESENT_PATTERN = re.compile(
+    r"\b((?:19|20)\d{2})\s*(?:[-–—]|to)?\s*(?:present|current|ongoing)\b", re.IGNORECASE,
+)
+
+# Typical nominal duration (years) of a program, keyed by degree-level
+# keywords, used ONLY to derive the EXPECTED graduation year of an ONGOING
+# program from its start year (e.g. an in-progress "2023 - Present" B.Tech
+# graduates in 2027). A general degree->duration convention, not a
+# hard-coded year and not resume-specific. Longest/most-specific keys are
+# checked first so "b.tech" wins before a bare "b".
+_DEGREE_DURATION_YEARS: tuple[tuple[str, int], ...] = (
+    ("ph.d", 5), ("phd", 5), ("doctor", 5),
+    ("m.tech", 2), ("mtech", 2), ("m.e", 2), ("m.sc", 2), ("msc", 2),
+    ("m.s", 2), ("ms", 2), ("m.a", 2), ("ma", 2), ("mba", 2), ("master", 2),
+    ("b.tech", 4), ("btech", 4), ("b.e", 4), ("be", 4), ("b.sc", 4),
+    ("bsc", 4), ("b.s", 4), ("bs", 4), ("b.a", 4), ("ba", 4),
+    ("bachelor", 4), ("bachelors", 4),
+    ("associate", 2), ("diploma", 3),
+)
+
+# Secondary / pre-university markers: an education entry that has NO
+# recognized tertiary degree AND matches one of these is schooling that
+# precedes university. When a real degree-bearing entry exists, these are
+# suppressed so they don't crowd out the primary record. Generic markers,
+# never a specific school name.
+_SECONDARY_MARKERS = (
+    "high school", "higher secondary", "senior secondary", "secondary school",
+    "pu college", "puc", "pre-university", "pre university", "junior college",
+    "icse", "cbse", "igcse", "sslc", "hsc", "matriculation", "matric",
+    "class 10", "class 12", "class x", "class xii", "grade 10", "grade 12",
+    "10th", "12th", "xth", "xiith",
+)
+_SECONDARY_PATTERN = re.compile(
+    r"(?:" + "|".join(re.escape(m) for m in _SECONDARY_MARKERS) + r"|\bschool\b)",
+    re.IGNORECASE,
+)
+
+
+def _degree_duration_years(degree: str) -> int | None:
+    degree_lower = (degree or "").lower()
+    for keyword, years in _DEGREE_DURATION_YEARS:
+        if keyword in degree_lower:
+            return years
+    return None
 # Bounded (not a broad greedy character class -- an earlier version let the
 # trailing group consume unrelated text past the institution name, e.g. a
 # degree line concatenated onto the same match) title-case word sequence
@@ -90,9 +139,40 @@ def _find_institution(lines: list[str]) -> tuple[str, bool]:
     return "", False
 
 
-def _find_graduation_year(text: str) -> str:
-    match = _YEAR_PATTERN.search(text)
-    return match.group(0) if match else ""
+def _find_graduation_year(text: str, degree: str = "") -> str:
+    """Graduation year = the year the program ENDS, not when it started
+    (Phase 1). Rules, in order:
+      - an explicit year RANGE ("2023 - 2027") -> the later (end) year;
+      - an ONGOING program ("2023 - Present") with a known degree level ->
+        start year + the degree's nominal duration (a B.Tech that began in
+        2023 is expected to graduate in 2027); if the degree level is
+        unknown, fall back to the latest year present;
+      - otherwise the single year found.
+    Previously this returned the FIRST year matched, which for any range
+    reported the START year (e.g. 2023 instead of 2027)."""
+    years = [int(m.group(0)) for m in _YEAR_PATTERN.finditer(text)]
+    start_present = _START_PRESENT_PATTERN.search(text)
+
+    if start_present:
+        duration = _degree_duration_years(degree)
+        if duration is not None:
+            return str(int(start_present.group(1)) + duration)
+        # Unknown degree level: best-effort, use the latest year present.
+        return str(max(years)) if years else ""
+    if len(years) >= 2:
+        return str(max(years))
+    if len(years) == 1:
+        return str(years[0])
+    return ""
+
+
+def _is_secondary_entry(degree: str, entry_text: str) -> bool:
+    """True if the entry is pre-university schooling (no recognized tertiary
+    degree AND a secondary-education marker in its text). Used to suppress
+    such entries only when a real degree-bearing entry also exists."""
+    if degree:
+        return False
+    return bool(_SECONDARY_PATTERN.search(entry_text))
 
 
 class EducationParser:
@@ -123,6 +203,7 @@ class EducationParser:
 
         result_entities = []
         result_confidences = []
+        secondary_flags: list[bool] = []
         observations = []
 
         for index, entry in enumerate(entries):
@@ -132,7 +213,7 @@ class EducationParser:
             degree, degree_line = _find_degree(lines)
             major = _find_major(degree_line, degree) if degree else ""
             institution, institution_gazetteer_matched = _find_institution(lines)
-            graduation_year = _find_graduation_year(entry_text)
+            graduation_year = _find_graduation_year(entry_text, degree)
 
             # An entry with nothing recognizable at all (degree, major,
             # institution, AND graduation_year all empty) is not a real
@@ -187,5 +268,21 @@ class EducationParser:
                 }
             )
             result_confidences.append(Confidence(score=round(score, 4), reasons=reasons))
+            secondary_flags.append(_is_secondary_entry(degree, entry_text))
+
+        # Suppress pre-university/secondary schooling entries (Phase 1), but
+        # ONLY when at least one real degree-bearing entry exists -- so a
+        # resume that lists only schooling still yields something, while a
+        # university record isn't crowded out by 10th/12th-grade entries.
+        if any(not is_secondary for is_secondary in secondary_flags) and any(secondary_flags):
+            kept = [
+                (entity, confidence)
+                for entity, confidence, is_secondary in zip(
+                    result_entities, result_confidences, secondary_flags
+                )
+                if not is_secondary
+            ]
+            result_entities = [e for e, _ in kept]
+            result_confidences = [c for _, c in kept]
 
         return ParserResult(entities=result_entities, confidences=result_confidences, observations=observations)

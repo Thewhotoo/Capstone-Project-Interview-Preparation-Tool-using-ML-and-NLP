@@ -30,8 +30,29 @@ from resume_engine.interfaces import ParserResult
 from resume_engine.location_gazetteer import LOCATIONS
 
 _EMAIL_PATTERN = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
+# Kept for compatibility (the strict North-American shape). Phone EXTRACTION
+# now uses the more permissive `_PHONE_SEARCH` below, which also handles
+# international groupings like "+91 88617 74950" (5-5) that the strict 3-3-4
+# pattern silently missed; digit-count validation guards against false hits.
 _PHONE_PATTERN = re.compile(r"(\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b")
+_PHONE_SEARCH = re.compile(r"\(?\+?\d[\d\s().\-]{8,15}\d")
 _LINKEDIN_PATTERN = re.compile(r"linkedin\.com/\S+", re.IGNORECASE)
+_URL_PATTERN = re.compile(r"https?://\S+|www\.\S+|(?:linkedin|github|gitlab)\.com/\S+", re.IGNORECASE)
+
+# Words that never appear in a person's NAME but DO appear on the same
+# banner line or in the header block: social/profile labels, section words,
+# contact labels, and common job-title nouns (a headline like "AI Engineer"
+# is not a name). Generic vocabulary, never resume-specific.
+_NON_NAME_WORDS: frozenset[str] = frozenset({
+    "github", "gitlab", "linkedin", "profile", "portfolio", "website", "blog",
+    "university", "college", "institute", "campus", "school", "department",
+    "roll", "no", "email", "e-mail", "mail", "phone", "mobile", "tel", "cell",
+    "contact", "address", "resume", "cv", "curriculum", "vitae",
+    "objective", "summary", "about", "engineer", "engineering", "developer",
+    "intern", "analyst", "manager", "scientist", "consultant", "architect",
+    "designer", "administrator", "specialist", "lead", "student", "aiml",
+    "ml", "ai", "sde", "swe",
+})
 
 _LINE_Y_TOLERANCE = 3.0  # points; spans within this y0 delta are one visual line
 
@@ -91,8 +112,17 @@ def _extract_email(text: str) -> str:
 
 
 def _extract_phone(text: str) -> str:
-    match = _PHONE_PATTERN.search(text)
-    return match.group(0).strip() if match else ""
+    """Finds the first phone-number-shaped substring and validates it by
+    digit count (10-13, optionally including a country code). More permissive
+    than the strict 3-3-4 `_PHONE_PATTERN` so international groupings like
+    "+91 88617 74950" (5-5) are recovered, while the digit-count check keeps
+    it from matching years, IDs, or roll numbers."""
+    for match in _PHONE_SEARCH.finditer(text):
+        candidate = match.group(0).strip()
+        digits = re.sub(r"\D", "", candidate)
+        if 10 <= len(digits) <= 13:
+            return candidate
+    return ""
 
 
 def _extract_linkedin_from_text(text: str) -> str:
@@ -183,30 +213,99 @@ def _extract_location(lines: list[str]) -> tuple[str, float]:
     return best_line, best_score
 
 
-def _infer_candidate_name(lines_with_font_size: list[tuple[str, float]]) -> str:
-    """The most prominent (largest font) line(s) in the contact block that
-    aren't themselves an email/phone/URL match -- almost always the name
-    banner Section Detection's leading-block rule (Milestone 2) folded in
-    here.
+def _residual_after_contact(text: str) -> str:
+    """Strips email/phone/URL/linkedin substrings out of a line, leaving
+    only the residual prose -- so a line that carries the NAME alongside a
+    phone number ("M S Nandagopal  +91-96061175244") still yields the name
+    for scoring instead of being discarded wholesale (the prior behavior,
+    which excluded any line containing contact info and so missed a name
+    printed on the same line as the phone)."""
+    residual = _URL_PATTERN.sub(" ", text)
+    residual = _EMAIL_PATTERN.sub(" ", residual)
+    phone = _extract_phone(residual)
+    if phone:
+        residual = residual.replace(phone, " ")
+    # Drop decorative/icon glyphs (e.g. Font-Awesome contact icons that
+    # extract as stray control/symbol characters like "\x83", "§", "ï")
+    # so a name sharing a line with such a glyph isn't disqualified by a
+    # non-name-like junk token. Keeps letters, digits, spaces, and the
+    # punctuation that legitimately appears in names.
+    residual = re.sub(r"[^A-Za-z0-9 .,&'/\-]", " ", residual)
+    return re.sub(r"\s+", " ", residual).strip()
 
-    ALL lines sharing that same largest font size are joined together (in
-    their original top-to-bottom order), not just the first one found:
-    some templates print a first/last name as two separate stacked lines
-    at identical font size (e.g. "ANGEL" / "MATAPANG") rather than one
-    line, and a strict single-line pick truncated the name to just the
-    first line (found during Phase 1 real-world evaluation)."""
-    candidates = [
-        (text, size)
-        for text, size in lines_with_font_size
-        if text.strip()
-        and not _EMAIL_PATTERN.search(text)
-        and not _PHONE_PATTERN.search(text)
-        and not _LINKEDIN_PATTERN.search(text)
+
+def _is_name_token(token: str) -> bool:
+    """A token that could belong to a person's name: alphabetic (allowing an
+    internal apostrophe/hyphen and a trailing '.' for an initial), and not a
+    known non-name word (social label, section word, job-title noun)."""
+    core = token.strip(".")
+    if not core or not re.fullmatch(r"[A-Za-z][A-Za-z'\-]*", core):
+        return False
+    return core.lower() not in _NON_NAME_WORDS
+
+
+def _infer_candidate_name(lines_with_font_size: list[tuple[str, float]]) -> str:
+    """Evidence-scored single-line name selection (Phase 1 rewrite).
+
+    Replaces the prior "join every line sharing the largest font" rule,
+    which glued unrelated banner lines (a headline, a GitHub/LinkedIn label,
+    an institution line) into one garbled 'name' whenever they happened to
+    share the name's font size. Instead: strip contact info from each line,
+    then accept only lines whose residual is 2-4 tokens that are ALL
+    name-like (no social/section/job-title words, no digits). Among those,
+    prefer the largest font, breaking ties toward the earliest line (a name
+    sits at the top of the block). Never concatenates lines.
+
+    A name stacked across consecutive equal-font lines each holding a SINGLE
+    name token ("ANGEL" / "MATAPANG") is still recovered -- but ONLY that
+    narrow, adjacent, equal-font, all-single-name-token shape, never the
+    old "glue every line at the max font size" rule that produced garbled
+    names from unrelated banner lines.
+
+    `lines_with_font_size` is in document order (earlier lines first)."""
+    residuals = [
+        (index, _residual_after_contact(text), size)
+        for index, (text, size) in enumerate(lines_with_font_size)
     ]
-    if not candidates:
-        return ""
-    max_size = max(size for _, size in candidates)
-    return " ".join(text.strip() for text, size in candidates if size == max_size)
+
+    best_text = ""
+    best_key: tuple[float, int] | None = None
+
+    def _consider(text: str, key: tuple[float, int]) -> None:
+        nonlocal best_text, best_key
+        if best_key is None or key > best_key:
+            best_key = key
+            best_text = text
+
+    # Single-line candidates: a residual of 2-4 all-name-like tokens.
+    for index, residual, size in residuals:
+        tokens = residual.split()
+        if 2 <= len(tokens) <= 4 and all(_is_name_token(tok) for tok in tokens):
+            _consider(residual, (size, -index))  # larger font wins; earlier breaks ties
+
+    # Stacked candidates: a run of consecutive equal-font lines each a single
+    # name-like token, forming a 2-4 token name.
+    i = 0
+    n = len(residuals)
+    while i < n:
+        tokens = residuals[i][1].split()
+        if len(tokens) == 1 and _is_name_token(tokens[0]):
+            size_i = residuals[i][2]
+            group = []
+            j = i
+            while j < n:
+                toks_j = residuals[j][1].split()
+                if len(toks_j) == 1 and _is_name_token(toks_j[0]) and abs(residuals[j][2] - size_i) < 0.01:
+                    group.append(residuals[j])
+                    j += 1
+                else:
+                    break
+            if 2 <= len(group) <= 4:
+                _consider(" ".join(g[1] for g in group), (size_i, -group[0][0]))
+            i = max(j, i + 1)
+        else:
+            i += 1
+    return best_text
 
 
 class ContactParser:

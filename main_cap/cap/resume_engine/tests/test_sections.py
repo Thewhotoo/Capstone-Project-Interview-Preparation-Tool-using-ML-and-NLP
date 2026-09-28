@@ -139,7 +139,10 @@ def test_classify_header_line_docx_style_boosts_confidence(make_text_span):
 
 
 def test_classify_header_line_unrecognized_text_becomes_unknown(make_text_span):
-    span = make_text_span(text="Hobbies And Interests", bbox=(72.0, 72.0, 200.0, 90.0), font_size=14.0)
+    # A genuinely meaningless heading -- no gazetteer alias (Phase 1 added
+    # "Hobbies And Interests" as a real isolation alias, so it is no longer
+    # a valid "unrecognized" example) and far below the embedding floor.
+    span = make_text_span(text="Zzxq Wibble Flerg", bbox=(72.0, 72.0, 200.0, 90.0), font_size=14.0)
     line = _group_into_document_lines([span])[0]
     label, confidence, reason = _classify_header_line(line)
     assert label == "unknown"

@@ -23,8 +23,29 @@ from resume_engine.parsers._entry_clustering import _group_into_lines, strip_sec
 from resume_engine.technology_gazetteer import TECHNOLOGIES
 from resume_engine.validation import Observation
 
-_SPLIT_PATTERN = re.compile(r"[,;|•·•·\n]")
+_SPLIT_PATTERN = re.compile(r"[,;|•·]")
 _TECHNOLOGIES_LOWER = {t.lower(): t for t in TECHNOLOGIES}
+
+# Category sub-labels that appear INSIDE a Skills section but whose values
+# are not technical skills -- prose that was being comma-split into junk
+# "skills" (e.g. an "Areas of Interest:" sentence). When such a label opens
+# a line, that line AND its wrapped continuation lines are skipped, until
+# the next real category label. Generic category names, never resume text.
+_NON_SKILL_CATEGORIES: frozenset[str] = frozenset({
+    "areas of interest", "area of interest", "interests", "interest",
+    "hobbies", "hobbies and interests", "coursework", "relevant coursework",
+    "courses", "objective", "summary", "achievements", "accomplishments",
+    "awards", "activities", "extracurricular", "extra-curricular",
+    "references", "languages spoken", "spoken languages",
+    "soft skills", "soft skill", "interpersonal skills",
+})
+
+# A "Label: values" line's label is at most this many words -- longer means
+# it's almost certainly not a category label but ordinary content.
+_MAX_LABEL_WORDS = 4
+# A single skill is short; a token longer than this is prose that slipped
+# past the category filter (a backstop, not the primary guard).
+_MAX_SKILL_WORDS = 6
 
 
 def _spans_to_text(spans) -> str:
@@ -45,29 +66,61 @@ def _spans_to_text(spans) -> str:
 
 
 def _split_tokens(text: str) -> list[str]:
-    """Splits on common delimiters (comma, pipe, bullet, line break), then
-    dedupes case-insensitively while preserving first-seen casing -- same
-    dedup convention `ProjectParser._extract_technologies` already uses.
+    """Turns a Skills section's text (visual lines joined by '\\n') into a
+    deduped skill list. Processed one line at a time with a small state
+    machine (Phase 1) so a non-skill category inside the section, and its
+    wrapped continuation lines, are excluded rather than comma-split into
+    junk skills:
 
-    A category-labeled skills line ("Languages: Python, Java, ...") has no
-    comma between the label and its first value, so that first split token
-    is "Languages: Python", not "Languages:" and "Python" separately --
-    every such token is resolved the same structural way: whatever precedes
-    the LAST ':' is a category label, never a skill, so only the text after
-    it is kept (a colon-only token, e.g. a standalone "Databases:" label
-    line with nothing after it, resolves to nothing and is dropped)."""
+      - A "Label: values" line whose label (<= _MAX_LABEL_WORDS words) is a
+        NON-skill category ("Areas of Interest", "Soft Skills",
+        "Coursework", ...) is skipped, and `accept_continuation` is turned
+        OFF so the following unlabeled wrapped lines are skipped too.
+      - A "Label: values" line with any OTHER short label ("Languages:",
+        "Frameworks & Libraries:", ...) is a real skill category: its values
+        are kept and `accept_continuation` is turned ON.
+      - An unlabeled line is kept only while `accept_continuation` is ON
+        (the wrapped continuation of a real skill category, or a plain
+        comma-list before any label).
+
+    Values are split on comma/semicolon/pipe/bullet, deduped
+    case-insensitively (first-seen casing preserved -- the same convention
+    `ProjectParser._extract_technologies` uses), and a token longer than
+    `_MAX_SKILL_WORDS` words is dropped as prose (a backstop)."""
     tokens: list[str] = []
     seen: set[str] = set()
-    for raw in _SPLIT_PATTERN.split(text):
-        token = raw.strip(" \t.")
-        if ":" in token:
-            token = token.rsplit(":", 1)[-1].strip(" \t.")
-        if not token:
+    accept_continuation = True  # a plain comma-list before any label is kept
+
+    for line in text.split("\n"):
+        stripped = line.strip()
+        if not stripped:
             continue
-        key = token.lower()
-        if key not in seen:
-            seen.add(key)
-            tokens.append(token)
+
+        segment = stripped
+        if ":" in stripped:
+            # Normalize internal whitespace before matching -- PDF word
+            # spans reconstruct with multiple spaces ("Soft   Skills"), which
+            # would otherwise never equal a single-spaced category name.
+            label = " ".join(stripped.split(":", 1)[0].split())
+            if label and len(label.split()) <= _MAX_LABEL_WORDS:
+                if label.lower() in _NON_SKILL_CATEGORIES:
+                    accept_continuation = False
+                    continue
+                accept_continuation = True
+                segment = stripped.split(":", 1)[1]
+        elif not accept_continuation:
+            continue
+
+        for raw in _SPLIT_PATTERN.split(segment):
+            token = raw.strip(" \t.")
+            if ":" in token:
+                token = token.rsplit(":", 1)[-1].strip(" \t.")
+            if not token or len(token.split()) > _MAX_SKILL_WORDS:
+                continue
+            key = token.lower()
+            if key not in seen:
+                seen.add(key)
+                tokens.append(token)
     return tokens
 
 

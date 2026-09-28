@@ -31,14 +31,22 @@ _MONTH = (
     r"Jul(?:y)?|Aug(?:ust)?|Sep(?:t|tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
 )
 _MONTH_YEAR = rf"{_MONTH}\.?\s+\d{{4}}"
+# Numeric day-month-year (or month-day-year) with '-' or '/' separators,
+# e.g. "17-7-2024", "02/08/2024". Listed before the bare-year alternative so
+# a full DMY token is matched whole rather than partially (which previously
+# left a stray leading day number, e.g. "...Limited 17", attached to the
+# role/company split). Uses the word "to" as the range separator here (the
+# unambiguous case) so the DMY token's own internal '-' separators are not
+# mistaken for the range separator.
+_NUMERIC_DMY = r"\d{1,2}[-/]\d{1,2}[-/]\d{4}"
 
 # One date-range-shaped substring: "<start> <separator> <end>", where <end>
 # may be an actual date or "Present"/"Current". Separator is permissive
 # (hyphen, en dash, em dash, or the word "to") since resumes vary.
 _DATE_RANGE_PATTERN = re.compile(
-    rf"(?P<start>{_MONTH_YEAR}|\d{{1,2}}/\d{{4}}|\d{{4}})"
+    rf"(?P<start>{_NUMERIC_DMY}|{_MONTH_YEAR}|\d{{1,2}}/\d{{4}}|\d{{4}})"
     r"\s*(?:-|–|—|to)\s*"
-    rf"(?P<end>Present|Current|{_MONTH_YEAR}|\d{{1,2}}/\d{{4}}|\d{{4}})",
+    rf"(?P<end>Present|Current|{_NUMERIC_DMY}|{_MONTH_YEAR}|\d{{1,2}}/\d{{4}}|\d{{4}})",
     re.IGNORECASE,
 )
 

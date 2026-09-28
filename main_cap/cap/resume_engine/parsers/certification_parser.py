@@ -11,6 +11,8 @@ the same gazetteer.
 
 from __future__ import annotations
 
+import re
+
 from rapidfuzz import fuzz, process
 
 from resume_engine.certification_gazetteer import CERTIFICATIONS
@@ -23,6 +25,28 @@ from resume_engine.validation import Observation
 # thresholds (ROLE_MATCH_THRESHOLD, LOCATION_MATCH_THRESHOLD, ...).
 CERTIFICATION_MATCH_THRESHOLD = 85
 STRAY_MENTION_MATCH_THRESHOLD = 90
+
+# Lines that are certificate/credential IDs or bare numeric fragments, not
+# certification NAMES. A credential ID line and its wrapped numeric tail
+# ("Credential ID: UC-...", "064") were being emitted as separate
+# "certifications". Generic structural patterns, never resume-specific.
+_CREDENTIAL_ID_PATTERN = re.compile(
+    r"(?:credential|certificate|licen[cs]e|registration|enrol(?:l)?ment|serial)\s*(?:id|no|number|#)?\s*[:#]"
+    r"|\bid\s*[:#]",
+    re.IGNORECASE,
+)
+_ID_FRAGMENT_PATTERN = re.compile(r"^[\d\s.\-/]+$")  # only digits/dashes/dots/slashes
+
+
+def _is_credential_noise(text: str) -> bool:
+    """True for a credential/certificate ID line or a bare numeric-fragment
+    line -- metadata about a certification, never the certification name."""
+    stripped = text.strip()
+    if len(stripped) < 3:
+        return True
+    if _ID_FRAGMENT_PATTERN.match(stripped):
+        return True
+    return bool(_CREDENTIAL_ID_PATTERN.search(stripped))
 
 
 def _lines_from_spans(spans) -> list[str]:
@@ -46,7 +70,10 @@ def _lines_from_spans(spans) -> list[str]:
     lines: list[str] = []
     for line in lines_grouped:
         text = line.text.strip(" \t•·-")
-        if text and text not in seen:
+        # Phase 1: drop credential/certificate ID lines and bare numeric
+        # fragments -- they are metadata, not certification names, and were
+        # being counted as separate certifications.
+        if text and text not in seen and not _is_credential_noise(text):
             seen.add(text)
             lines.append(text)
     return lines

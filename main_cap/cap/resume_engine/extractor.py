@@ -285,7 +285,19 @@ class PdfDocxExtractor:
         (DOCX_* constants), so Layout Reconstruction and everything
         downstream sees ordinary single-column body text and needs no
         format-specific handling. Uniform body_font_size (there's no font
-        information in a .txt file to infer from)."""
+        information in a .txt file to infer from).
+
+        Blank lines are NOT emitted as spans (nothing to render), but each
+        blank source line advances the vertical cursor by one line height,
+        so the surrounding real lines carry a genuine vertical gap. This is
+        the ONE structural signal a plain-text resume actually has that a
+        `.txt` file's uniform font otherwise throws away: entries are almost
+        universally separated by a blank line. Preserving that gap in the
+        geometry lets Entry Clustering (`_entry_clustering.cluster_entries`)
+        use the same blank-line-boundary signal on TXT that a real gap
+        already gives it on PDF/DOCX -- a format-independent boundary cue,
+        not a TXT-specific rule. (`test_extract_txt_skips_blank_lines` still
+        holds: no blank span is produced, only the cursor moves.)"""
         try:
             with open(file_path, "r", encoding="utf-8", errors="replace") as f:
                 raw_text = f.read()
@@ -299,6 +311,8 @@ class PdfDocxExtractor:
         for line in raw_text.splitlines():
             text = line.strip()
             if not text:
+                # Preserve blank-line separation as vertical whitespace.
+                y += DOCX_LINE_HEIGHT
                 continue
             spans.append(
                 TextSpan(

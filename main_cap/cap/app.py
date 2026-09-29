@@ -12,6 +12,7 @@ import logging
 import conversation_engine
 import deployment_evaluator
 import discussion_engine
+import heuristic_evaluator
 
 # Load .env file (if it exists)
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
@@ -37,6 +38,12 @@ if not os.environ.get("GEMINI_API_KEY", "").strip():
 # ── Startup wiring: production evaluator (trained model, falls back to
 # HeuristicEvaluator automatically -- see deployment_evaluator.py) ──────────
 deployment_evaluator.bootstrap_production_evaluator()
+
+# ── Latency fix: warm the heuristic diagnostics' lazy SentenceTransformer/
+# CrossEncoder singletons at boot instead of on a real candidate's first
+# answer (see heuristic_evaluator.warm_up_models's docstring -- this is the
+# ~6s one-time cost previously paid inline on the first /reply call). ──────
+heuristic_evaluator.warm_up_models()
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 

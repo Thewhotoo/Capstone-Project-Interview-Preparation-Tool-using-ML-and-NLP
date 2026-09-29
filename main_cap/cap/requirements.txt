@@ -1,0 +1,23 @@
+# Interview Preparation Tool — runtime dependencies (Python 3.11–3.13).
+# Versions pinned to the environment the app is developed/tested on.
+#
+# NOTE on torch: this is CPU-only. On a machine with no CUDA, install the CPU
+# build explicitly if plain `pip install torch==2.12.1` pulls a CUDA wheel:
+#   pip install torch==2.12.1 --index-url https://download.pytorch.org/whl/cpu
+
+# ── Web app ──
+flask==3.1.3
+python-dotenv==1.2.2
+
+# ── ML / NLP (evaluator, embeddings, NLI) ──
+torch==2.12.1
+transformers==5.13.0
+sentence-transformers==5.6.0
+numpy==2.3.3
+scikit-learn==1.7.2
+pydantic==2.13.4
+
+# ── Résumé parsing (PDF / DOCX) ──
+pdfplumber==0.11.10
+pymupdf==1.28.0
+python-docx==1.2.0

@@ -1,0 +1,39 @@
+{
+  "model_version": "deberta_v3_base_overall_single_v3_epoch6",
+  "schema_version": "v1",
+  "created_at": "2026-09-15T08:32:24.060894+00:00",
+  "dataset_version": "four_dim_experiment_v2",
+  "experiment_config": {
+    "backbone_name": "microsoft/deberta-v3-base",
+    "formulation": "ordinal_regression",
+    "parameters": {
+      "base_model": "microsoft/deberta-v3-base",
+      "fresh_initialization": true,
+      "random_seed": 42,
+      "learning_rate": 0.00002,
+      "batch_size": 8,
+      "num_epochs": 8,
+      "max_length": 256,
+      "optimizer": "AdamW (torch.optim.AdamW, default betas/eps)",
+      "scheduler": "none (constant learning rate)",
+      "weight_decay": 0.01,
+      "loss": "unweighted CORAL (coral_loss, no pos_weight -- no A1/A2 loss weighting)",
+      "dropout": "not explicitly configured -- uses microsoft/deberta-v3-base's own HF config default (hidden_dropout_prob=0.1, attention_probs_dropout_prob=0.1)",
+      "split_seed": "four_dim_v2_split_348",
+      "experiment": "v3_overall_single",
+      "environment": "{\"python_version\": \"3.13.15\", \"torch_version\": \"2.11.0+cu128\", \"transformers_version\": \"5.16.1\", \"cuda_available\": true, \"gpu_name\": \"Tesla T4\", \"gpu_count\": 1}",
+      "architecture": "single_coral_head_overall_score"
+    },
+    "random_seed": 42,
+    "dataset_version": "four_dim_experiment_v2",
+    "split_ratios": [
+      0.7,
+      0.15,
+      0.15
+    ],
+    "schema_version": "v1"
+  },
+  "artifact_uri": "/content/Capstone-Project-Interview-Preparation-Tool-using-ML-and-NLP/main_cap/cap/artifacts/overall_single_v3/best_checkpoint_weights.pt",
+  "parent_model_version": null,
+  "superseded_by": null
+}

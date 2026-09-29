@@ -147,6 +147,28 @@ class _LazyModels:
         return cls._nli_model if cls._nli_model is not False else None
 
 
+def warm_up_models() -> None:
+    """Eagerly loads `_LazyModels`' singletons (called once, at app startup,
+    alongside `deployment_evaluator.bootstrap_production_evaluator()`).
+
+    Latency fix, not a behavior change: `heuristic_diagnostics.py`'s
+    `_raw_legacy_signals` calls `_semantic_similarity` (-> `_LazyModels.
+    semantic()`) on every turn's diagnostic dimensions regardless of which
+    evaluator tier is active, since even the v5_1088/v3 single-overall-score
+    evaluators use `HeuristicDiagnosticsEngine` for their four diagnostic
+    dimensions. Left lazy, that first-ever call pays SentenceTransformer's
+    full load cost (plus HF Hub cache-check network calls) inline during a
+    real candidate's first answer -- measured at ~6s. Calling both lazy
+    singletons once here moves that one-time cost to server boot instead.
+    Never raises -- `_LazyModels.semantic()`/`.nli()` already swallow their
+    own load failures and fall back to a degraded mode; this function does
+    nothing but trigger that same fallback path early if it's going to
+    happen at all.
+    """
+    _LazyModels.semantic()
+    _LazyModels.nli()
+
+
 def _semantic_similarity(text_a: str, text_b: str) -> float:
     model = _LazyModels.semantic()
     if model is None or not text_a.strip() or not text_b.strip():

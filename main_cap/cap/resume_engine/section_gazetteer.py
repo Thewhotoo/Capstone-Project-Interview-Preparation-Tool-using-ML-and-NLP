@@ -32,7 +32,9 @@ SECTION_ALIASES: dict[str, list[str]] = {
         "Objective",
         "Career Objective",
         "Profile",
+        "Profile Summary",
         "About Me",
+        "About",
         "Executive Summary",
     ],
     "experience": [
@@ -73,6 +75,55 @@ SECTION_ALIASES: dict[str, list[str]] = {
         "Certifications and Licenses",
         "Licenses and Certifications",
         "Professional Certifications",
+        "Training and Certifications",
+        "Training & Certifications",
+        "Courses and Certifications",
+        "Certifications and Courses",
+    ],
+    # ── Isolation-only labels (Phase 1, parser generalization) ──────────────
+    # These are real, common resume sections with NO dedicated entity parser
+    # today. Recognizing them matters anyway: an UNrecognized heading lets
+    # its prose fall through into whatever section preceded it -- e.g. an
+    # "Areas of Interest" paragraph bleeding into the Skills list and being
+    # comma-split into junk "skills". Giving each its own canonical label
+    # ISOLATES that content in its own (unparsed) Section, so no other
+    # parser ingests it. When these headings appear as inline sub-labels
+    # inside another section rather than as their own heading, the relevant
+    # parser (e.g. SkillsParser) guards against them separately; this
+    # gazetteer covers the case where they are true section headings.
+    "coursework": [
+        "Coursework",
+        "Relevant Coursework",
+        "Relevant Courses",
+        "Key Courses",
+        "Academic Coursework",
+    ],
+    "soft_skills": [
+        "Soft Skills",
+        "Interpersonal Skills",
+    ],
+    "interests": [
+        "Interests",
+        "Areas of Interest",
+        "Hobbies",
+        "Hobbies and Interests",
+        "Personal Interests",
+    ],
+    "awards": [
+        "Awards",
+        "Achievements",
+        "Awards and Achievements",
+        "Awards & Achievements",
+        "Honors and Awards",
+        "Honors & Awards",
+        "Accomplishments",
+    ],
+    "leadership": [
+        "Leadership",
+        "Positions of Responsibility",
+        "Leadership and Activities",
+        "Extracurricular Activities",
+        "Activities",
     ],
 }
 

@@ -3636,8 +3636,12 @@
             return {
                 average_answer_quality: avgOverall,
                 overall_grade: overallGrade,
-                verdict_text: RD_VERDICT_BY_GRADE[overallGrade],
-                debrief_text: rdBuildDebrief(overallGrade, dimAverages, reasoningGaps, strongestProject, weakestProject, timeline),
+                // Prefer the backend's honest, data-driven feedback (interview_feedback.build_feedback)
+                // over the fixed client-side templates, when present.
+                verdict_text: (endData.feedback && endData.feedback.headline) || RD_VERDICT_BY_GRADE[overallGrade],
+                debrief_text: (endData.feedback && endData.feedback.summary) || rdBuildDebrief(overallGrade, dimAverages, reasoningGaps, strongestProject, weakestProject, timeline),
+                scope_note: (endData.feedback && endData.feedback.scope_note) || "",
+                focus_areas: (endData.feedback && endData.feedback.focus_areas) || [],
                 snapshot: rdBuildSnapshot(avgOverall, dimAverages),
                 next_steps: rdBuildNextSteps(recommendedTopics, reasoningGaps, weakestProject, strongestProject),
                 topics: rdBuildTopics(turnHistory),
@@ -3725,6 +3729,8 @@
 
                 <div id="rd-report-body">
                     <p class="rd-debrief-text">${esc((data.debrief_text && data.debrief_text.trim()) || "This was a steady discussion without one section clearly pulling ahead of the rest.")}</p>
+                    ${(data.focus_areas && data.focus_areas.length) ? `<div class="rd-section-title">What to focus on</div><ul class="rd-next-list">${data.focus_areas.map(f => `<li>${esc(f.tip)}</li>`).join("")}</ul>` : ""}
+                    ${(data.scope_note && data.scope_note.trim()) ? `<p class="rd-debrief-text" style="opacity:0.6;font-size:0.82rem;margin-top:14px;">${esc(data.scope_note)}</p>` : ""}
 
                     ${snapshotHtml ? `<div class="rd-section-title">Performance Snapshot</div><div class="rd-snapshot-list">${snapshotHtml}</div>` : ""}
 

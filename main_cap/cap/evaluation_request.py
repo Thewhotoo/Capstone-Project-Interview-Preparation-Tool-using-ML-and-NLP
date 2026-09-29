@@ -30,10 +30,15 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from answer_key import AnswerKey
 from question_families import ReasoningType
 from question_specification import QuestionSpecification
 
-EVALUATION_REQUEST_SCHEMA_VERSION = "v2"
+# Bumped v2 -> v3 for the AnswerKey revision (Chapter 8.5 versioning discipline:
+# adding an optional field is routine evolution, not a breaking change, as long
+# as the version stamp changes). `answer_key` defaults to None, so every
+# v1/v2-shaped request remains valid under this schema unchanged.
+EVALUATION_REQUEST_SCHEMA_VERSION = "v3"
 
 
 class ConversationContextSnapshot(BaseModel):
@@ -95,6 +100,15 @@ class EvaluationRequest(BaseModel):
     # (expected_concepts_registry.py); empty when no table entry matches
     # this turn's grounding — graceful degradation, never an error.
     expected_concepts: tuple[str, ...] = ()
+
+    # AnswerKey (reference-anchored correctness evaluation). Deterministically
+    # looked up at request-assembly time (evaluation_engine._lookup_answer_key
+    # via answer_key_registry) — NEVER predicted, never invented, never
+    # generated at answer time. None when no table entry matches this turn's
+    # question/grounding — graceful degradation, never an error; the evaluator
+    # then makes the "correctness not fully evaluated" fallback explicit in its
+    # result rather than silently assuming a full correctness judgment.
+    answer_key: Optional[AnswerKey] = None
 
     @model_validator(mode="after")
     def _non_empty_provenance(self) -> "EvaluationRequest":

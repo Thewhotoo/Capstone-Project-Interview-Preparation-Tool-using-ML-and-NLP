@@ -316,5 +316,10 @@ def end_conversation(conversation_id: str) -> tuple[dict, int]:
         ],
         "evaluations": [_result_payload(r) for r in ledger.all()],
     }
+    # Honest, data-driven end-of-session feedback derived from the actual per-turn
+    # results (replaces the frontend's fixed narrative templates). No evaluation
+    # logic here — pure summarization of results already computed.
+    from interview_feedback import build_feedback
+    summary["feedback"] = build_feedback(summary["evaluations"], summary["timeline"])
     _conversations.pop(conversation_id, None)
     return summary, 200

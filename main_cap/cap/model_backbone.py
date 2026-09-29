@@ -19,6 +19,7 @@ CLS pooling is the default (DeBERTa's own convention, approved clarification
 
 from __future__ import annotations
 
+import re
 from typing import Optional
 
 import torch
@@ -112,6 +113,89 @@ def grounding_to_text(grounding) -> str:
             getattr(experience, "role", "") or "",
             getattr(experience, "company", "") or "",
             getattr(experience, "summary", "") or "",
+        ]
+        return " ".join(p for p in parts if p).strip()
+    certification = getattr(grounding, "certification", None)
+    if certification is not None:
+        return (getattr(certification, "name", "") or "").strip()
+    return ""
+
+
+# ── Production-only bounded grounding (Phase 1 input correction) ─────────────
+# FORENSIC MOTIVATION: the deployed single-overall-score checkpoint
+# (deployed_model_overall_single_v5_1088) was trained on grounding text whose
+# RELEVANT CONTEXT block was SHORT -- median ~15 words, p90 ~27, max 60 across
+# all 1088 training examples. In production the same `grounding_to_text` path
+# is fed a full résumé project/experience summary (~85-92 words), 4-6x longer
+# than anything the checkpoint saw. A read-only ablation showed this long,
+# answer-like context DOMINATES the pooled representation: the model's score
+# becomes ~answer-insensitive (an EMPTY answer and a WORD-SALAD answer both
+# scored 1.0). Bounding the free-text summary back into the training length
+# band restores answer sensitivity WITHOUT retraining, because it moves the
+# production input TOWARD the distribution the frozen weights already fit.
+#
+# This is deliberately a SEPARATE, additive helper -- `grounding_to_text`
+# above is left byte-for-byte UNCHANGED because training and evaluation
+# dataset construction (`overall_dataset.collate_fn`,
+# `four_dim_experiment_split`, `model_dataset.collate_fn`) all depend on its
+# current behavior, and those short training summaries would be unaffected by
+# the cap anyway. Only the deployed evaluator's inference input is changed.
+
+_DEFAULT_GROUNDING_SUMMARY_MAX_WORDS = 25
+
+
+def _bound_summary(summary: str, max_words: int = _DEFAULT_GROUNDING_SUMMARY_MAX_WORDS) -> str:
+    """Bounds a free-text résumé summary to ~`max_words`, using ONLY the
+    existing text -- never paraphrases, generates, or invents content. Prefers
+    a clean first-sentence cut when that sentence already fits the cap;
+    otherwise applies a safe word cap on the original text. Returns "" for an
+    empty/whitespace-only summary. A summary already within the cap is returned
+    unchanged (whitespace-normalised only)."""
+    text = " ".join((summary or "").split())  # normalise whitespace/newlines
+    if not text:
+        return ""
+    words = text.split()
+    if len(words) <= max_words:
+        return text
+    # Prefer the first sentence if it already fits the cap.
+    match = re.match(r"(.+?[.!?])(?:\s|$)", text)
+    if match:
+        first_sentence = match.group(1).strip()
+        if 0 < len(first_sentence.split()) <= max_words:
+            return first_sentence
+    # No sentence boundary, or the first sentence itself exceeds the cap:
+    # fall back to a hard word cap on the original text (no fabricated
+    # punctuation -- a truthful factual fragment of the real summary).
+    return " ".join(words[:max_words])
+
+
+def bounded_grounding_to_text(grounding, max_summary_words: int = _DEFAULT_GROUNDING_SUMMARY_MAX_WORDS) -> str:
+    """PRODUCTION-ONLY variant of `grounding_to_text`: produces the IDENTICAL
+    flat, space-joined output (project title / experience role+company +
+    summary + technologies + concepts; certification name), EXCEPT the
+    project/experience free-text summary is bounded via `_bound_summary` to
+    keep the RELEVANT CONTEXT block inside the length distribution the deployed
+    checkpoint was trained on (see the module note above). Title, technologies,
+    concepts, role, company, and the certification name are ALWAYS preserved in
+    full -- only the free-text summary is capped, and the cap can never truncate
+    those other fields. Duck-typed identically to `grounding_to_text` (attribute
+    access via getattr), so it works for both the real `Grounding` object and a
+    lightweight test stand-in, and never raises on a missing/empty field."""
+    project = getattr(grounding, "project", None)
+    if project is not None:
+        parts = [
+            getattr(project, "title", "") or "",
+            _bound_summary(getattr(project, "summary", "") or "", max_summary_words),
+        ]
+        parts += [str(t) for t in (getattr(project, "technologies", ()) or [])]
+        parts += [str(c) for c in (getattr(project, "concepts", ()) or [])]
+        return " ".join(p for p in parts if p).strip()
+    experience = getattr(grounding, "experience", None)
+    if experience is not None:
+        parts = [
+            getattr(experience, "role", "") or "",
+            getattr(experience, "company", "") or "",
+            _bound_summary(getattr(experience, "summary", "") or "", max_summary_words),
         ]
         return " ".join(p for p in parts if p).strip()
     certification = getattr(grounding, "certification", None)

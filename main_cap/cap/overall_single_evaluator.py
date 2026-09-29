@@ -45,13 +45,38 @@ import torch
 from evaluation_request import EvaluationRequest
 from evaluation_result import EvaluationResult
 from heuristic_diagnostics import CANONICAL_DIMENSION_KEYS, HeuristicDiagnosticsEngine
-from model_backbone import BackboneConfig, build_dimension_pair, grounding_to_text, tokenize_pair
+from correctness_nli_scorer import degeneracy
+from model_backbone import BackboneConfig, build_dimension_pair, bounded_grounding_to_text, tokenize_pair
 from model_heads import coral_confidence, coral_predict
 from overall_score_model import OverallScoreModel
 from question_families import ReasoningType
 from training_experimentation import Checkpoint
 
 _CONFIDENCE_SOURCE_MODEL_DERIVED = "model_derived"
+
+# ── Non-answer fairness gate ────────────────────────────────────────────────
+# FORENSIC FIX (real-résumé test): on project questions with rich grounding, the
+# CORAL head is answer-insensitive enough that a NON-ANSWER ("idk", "not sure",
+# a one-word reply) rides the grounding to a middling/good score (observed
+# "idk" scoring 0.5-0.75 across real résumés). A learned score must never let an
+# empty or evasive answer inherit the question's context. This deterministic,
+# model-free gate caps such answers to a poor score. It is conservative: it only
+# fires on an explicit non-answer phrase, a <3-token reply, or text the
+# deterministic `degeneracy` check flags (empty / keyword-dump / gibberish) — it
+# never flags a normal, on-topic technical answer, however concise.
+_NON_ANSWER_MARKERS = (
+    "idk", "i don't know", "i dont know", "i do not know", "don't know", "dont know",
+    "not sure", "no idea", "no clue", "can't remember", "cannot remember", "don't recall",
+    "not familiar", "didn't work on", "did not work on", "beats me", "pass",
+)
+
+
+def _is_non_answer(answer_text: str) -> bool:
+    raw = (answer_text or "").strip()
+    if len(raw.split()) < 3:
+        return True  # empty / one- or two-word reply is a non-answer to a technical question
+    low = raw.lower()
+    return any(m in low for m in _NON_ANSWER_MARKERS)
 
 
 def _grade_from_score(score: float) -> str:
@@ -101,9 +126,20 @@ class OverallSingleEvaluator:
     def evaluate(self, request: EvaluationRequest) -> EvaluationResult:
         self.model.eval()
         with torch.no_grad():
+            # Phase 1 production input correction: use `bounded_grounding_to_text`
+            # (NOT `grounding_to_text`) so the RELEVANT CONTEXT block stays inside
+            # the short-grounding length distribution this deployed checkpoint was
+            # trained on. A full résumé summary (~85-92 words) is ~4-6x longer than
+            # anything in training and was shown to dominate the representation and
+            # collapse answer sensitivity; bounding the free-text summary restores
+            # it without retraining. Title/technologies/concepts/role/company are
+            # preserved in full; only the free-text summary is capped. Everything
+            # else about this input pair (question, expected_concepts, answer,
+            # tokenization, model call) is unchanged. See model_backbone.py's
+            # `bounded_grounding_to_text` note for the full forensic rationale.
             context_text, answer_text = build_dimension_pair(
                 request.question_text,
-                grounding_to_text(request.specification.grounding),
+                bounded_grounding_to_text(request.specification.grounding),
                 request.expected_concepts,
                 request.answer_text,
             )
@@ -120,6 +156,14 @@ class OverallSingleEvaluator:
             # head, never touched or recomputed from the heuristic
             # diagnostics below. ──
             overall_score = round(ordinal / (self.model.num_ordinal_classes - 1), 3)
+
+            # Non-answer fairness gate (deterministic): a non-answer / degenerate
+            # reply must not ride the grounding to a decent score. Downward-only;
+            # never rescues or raises a real answer's learned score.
+            gated_non_answer = _is_non_answer(request.answer_text) or degeneracy(request.answer_text).is_degenerate
+            if gated_non_answer:
+                overall_score = min(overall_score, 0.1)
+
             grade = _grade_from_score(overall_score)
 
             # ── Diagnostic dimensions — heuristic, explanatory only. Every

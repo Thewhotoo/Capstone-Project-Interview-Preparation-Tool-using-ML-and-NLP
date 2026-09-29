@@ -79,10 +79,15 @@ class TestEvaluationRequestConstruction(unittest.TestCase):
             _request(request_id="")
 
     def test_schema_version_default(self):
-        """Bumped v1 -> v2 for the approved Expected Concepts revision
-        (additive field, backward-compatible per Chapter 8.5's discipline)."""
+        """Bumped v1 -> v2 for the Expected Concepts revision, then v2 -> v3 for
+        the AnswerKey revision — both additive optional fields, backward-
+        compatible per Chapter 8.5's discipline."""
         req = _request()
-        self.assertEqual(req.schema_version, "v2")
+        self.assertEqual(req.schema_version, "v3")
+
+    def test_answer_key_defaults_none(self):
+        req = _request()
+        self.assertIsNone(req.answer_key)
 
     def test_expected_concepts_defaults_empty(self):
         req = _request()

@@ -26,13 +26,17 @@ pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r Requirements_Global.txt
 ```
 
-### Round 1 evaluator weights (not in git): ask a teammate
+### Git LFS, for the Round 1 evaluator weights
 
-The trained Round 1 evaluator is a 735 MB file, over GitHub's 100 MB file limit, so it is shared separately. Put it at:
+The trained Round 1 evaluator is a 735 MB file, stored in the repository with **Git LFS** (GitHub's large-file storage):
 
 ```
 main_cap/cap/deployed_model_overall_single_v5_1088/best_checkpoint_weights.pt
 ```
+
+**Install Git LFS before cloning** (it ships with Git for Windows; elsewhere see [git-lfs.com](https://git-lfs.com)), run `git lfs install` once, then clone as usual; the file downloads with the clone. If you cloned without it, you have a ~130-byte text "pointer" instead of the model: run `git lfs install` and then `git lfs pull` in the repository.
+
+The repository's free LFS allowance is about **1 GB of downloads per month** across everyone, which is roughly one full clone of this file. Clone once and copy the file to teammates instead of each of you cloning. If the monthly allowance runs out, `git lfs pull` fails until it resets, and the app still works (below).
 
 To check your copy is intact, it should be exactly **735,421,149 bytes** with this SHA-256:
 
@@ -114,7 +118,6 @@ Steps are in the README ("Rebuilding the question bank").
 | What | Why | Where it lives locally |
 |---|---|---|
 | Database, uploaded resumes, secret key | User data | `main_cap/cap/instance/` |
-| Round 1 evaluator weights | 735 MB | `main_cap/cap/deployed_model_overall_single_v5_1088/` |
 | Lecture slides and the search indexes built from them | Course material | `rag_system/rag_tester/sources/`, `knowledge_base*/` |
 | Question-generation caches | Regenerable | `rag_system/rag_tester/.qbank_cache/`, `.enrich_cache/` |
 | Real test resumes and their parsed outputs | Personal data | `parser_tests/resumes/`, `baseline/`, `metadata/` |

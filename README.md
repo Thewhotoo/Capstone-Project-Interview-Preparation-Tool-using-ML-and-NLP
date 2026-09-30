@@ -38,15 +38,15 @@ Open **http://localhost:5000**, sign up with a resume, and start an interview fr
 - The SQLite database and its migrations are created automatically on first start (`main_cap/cap/instance/`, not in git).
 - The first start downloads the Hugging Face models the graders use; later starts load them offline in a background thread (~2 s to a running server).
 
-### Round 1 evaluator weights (not in git)
+### Round 1 evaluator weights (Git LFS)
 
-The trained Round 1 evaluator's weights (`best_checkpoint_weights.pt`, ~735 MB) are too large for GitHub. Get the file from the team and place it at:
+The trained Round 1 evaluator's weights (`best_checkpoint_weights.pt`, ~735 MB) are stored with **Git LFS**. Install Git LFS and run `git lfs install` **before cloning**, or run `git lfs pull` afterwards. Without Git LFS you get a small pointer file instead of the model. Details, and the monthly download allowance: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
 
 ```
 main_cap/cap/deployed_model_overall_single_v5_1088/best_checkpoint_weights.pt
 ```
 
-Without it the app still runs: Round 1 falls back to the heuristic evaluator (the startup log says which evaluator is active).
+Without the real file the app still runs: Round 1 falls back to the heuristic evaluator (the startup log says which evaluator is active).
 
 ---
 
@@ -105,7 +105,7 @@ Evaluation scripts:
 │   │   overall_single_evaluator.py, heuristic_evaluator.py                   Round 1 answer evaluation
 │   ├── interview_feedback.py      End-of-session feedback text
 │   ├── tech_interview/            Technical interview: bank, selector, NLI grader, follow-ups, session
-│   ├── deployed_model_overall_single_v5_1088/   Trained Round 1 evaluator (weights fetched separately)
+│   ├── deployed_model_overall_single_v5_1088/   Trained Round 1 evaluator (weights via Git LFS)
 │   ├── templates/index.html       The whole web UI (incl. proctoring and webcam monitoring)
 │   └── static/models/             MediaPipe Face Landmarker model
 ├── rag_system/rag_tester/
@@ -118,7 +118,7 @@ Evaluation scripts:
 └── docs/architecture/             Earlier design documents
 ```
 
-Not in git (see `.gitignore`): the database and uploads, model weights, the lecture slides and the search indexes built from them, generation caches, and personal test resumes.
+Not in git (see `.gitignore`): the database and uploads, the lecture slides and the search indexes built from them, generation caches, and personal test resumes.
 
 ---
 
@@ -151,6 +151,6 @@ python -m slide_rag.interview_priority    # interview-frequency tiers
 ## Troubleshooting
 
 - **Port 5000 in use:** stop the other process, or change the port in `app.run` in `main_cap/cap/app.py`.
-- **Round 1 shows the heuristic evaluator:** the weights file is missing (see above), or `CAP_TRAINED_EVALUATOR=0` is set. Check the startup line `Production evaluator ACTIVE: ...`.
+- **Round 1 shows the heuristic evaluator:** the weights file is missing or is only an LFS pointer (run `git lfs pull`), or `CAP_TRAINED_EVALUATOR=0` is set. Check the startup line `Production evaluator ACTIVE: ...`.
 - **Slow first start:** the models are downloading; later starts load them offline.
 - **Camera check fails:** allow camera access in the browser and press Retry; the interview can't start without a camera.

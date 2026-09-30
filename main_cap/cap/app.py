@@ -1275,7 +1275,7 @@ def resume_discussion_v2_start():
         if not profile:
             return jsonify({"error": "Candidate Profile not found. Upload a resume first."}), 404
 
-        result, status = conversation_engine.start_conversation(profile)
+        result, status = conversation_engine.start_conversation(profile, enable_adaptive_followups=True)
         return jsonify(result), status
 
     except Exception as e:

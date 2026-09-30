@@ -68,6 +68,19 @@ _conversations: dict[str, dict] = {}
 # zero change to planning heuristics. Single constant, easy to retune.
 RESUME_DISCUSSION_QUESTION_BUDGET = 10
 
+# Adaptive follow-up probing. Opt-in via start_conversation(..., enable_adaptive_
+# followups=True) — default OFF preserves the original non-adaptive flow and every
+# existing test. At most this many extra probes per topic (keeps it natural, no loops).
+MAX_FOLLOWUPS_PER_SPEC = 1
+
+
+def _answer_warrants_followup(result) -> bool:
+    """A follow-up ("can you go a bit deeper on X?") is worth asking only for a
+    WEAK-BUT-REAL answer — on-topic but shallow or incomplete. A strong answer
+    (>= 0.60) needs no probe, and a gated non-answer / degenerate reply
+    (<= 0.15) should not be badgered; in both cases the interview moves on."""
+    return 0.15 < result.overall_score < 0.60
+
 
 def _question_payload(question: InterviewQuestion) -> dict:
     return {
@@ -109,10 +122,14 @@ def _resolve_session_evaluator() -> Evaluator:
         return default
 
 
-def start_conversation(profile: ProfileLike) -> tuple[dict, int]:
+def start_conversation(profile: ProfileLike, enable_adaptive_followups: bool = False) -> tuple[dict, int]:
     """Start a new Resume Discussion conversation from a Candidate Profile
     (the real Pydantic model or its `.model_dump()` dict form — Planner
-    already accepts either)."""
+    already accepts either).
+
+    `enable_adaptive_followups` (default False) turns on deeper-probe follow-ups
+    on weak-but-real answers. Default off keeps the original flow and all
+    existing behavior unchanged; the live app opts in."""
     planner = Planner(profile)
     memory = ConversationMemory()
     session_evaluator = _resolve_session_evaluator()
@@ -134,6 +151,8 @@ def start_conversation(profile: ProfileLike) -> tuple[dict, int]:
         "evaluator": session_evaluator,
         "evaluation_ledger": EvaluationLedger(),
         "answer_history": {},  # spec_id -> tuple[str, ...] of raw answers given (Phase 3)
+        "enable_adaptive_followups": enable_adaptive_followups,
+        "followups_by_spec": {},  # spec_id -> count of adaptive follow-ups asked (session-local)
     }
     return {
         "status": "success",
@@ -182,6 +201,56 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
     answer_history[spec_id] = answer_history.get(spec_id, ()) + (answer,)
 
     memory.record_turn(current_question, variant_idx, answer_text=answer)
+
+    # Improved Answer / Coaching Note / concept coverage are derived here, at the
+    # one site where the EvaluationResult, the InterviewQuestion (its grounding)
+    # AND the raw candidate `answer` are all in scope; built once so BOTH the
+    # follow-up and move-on branches return the same payload. `_result_payload`
+    # stays a pure field-selector; the ledger (results only) is untouched.
+    # UI-honesty: `improved_answer` is the candidate's own answer + one appended
+    # coaching sentence; `coaching_note` is that same sentence alone (identical
+    # shared logic, strong_answer._compute) so the report can show "Your Answer"
+    # and "Coaching Note" separately without implying a rewrite. concept_coverage_pct
+    # comes straight from result.concept_coverage's per-concept statuses (None when
+    # the turn has no concept pool).
+    turn_evaluation = _result_payload(result)
+    turn_evaluation["improved_answer"] = build_improved_answer(current_question, result, answer)
+    turn_evaluation["coaching_note"] = coaching_note(current_question, result, answer)
+    turn_evaluation["concept_coverage_pct"] = concept_coverage_percent(result)
+
+    # ── ADAPTIVE FOLLOW-UP (opt-in): on a weak-but-real answer, probe deeper on
+    # the SAME topic before covering it — up to MAX_FOLLOWUPS_PER_SPEC and within
+    # the question budget. Follow-up counts are tracked session-locally (NOT via
+    # the pool's lifecycle: specs go unasked->covered and are never ACTIVE, so
+    # pool.mark_followup_used would reject them). The spec simply isn't advanced
+    # yet, so the next answer is evaluated against the same spec. Default off →
+    # this whole block is skipped and the flow below is the original behavior. ──
+    followups_used = session["followups_by_spec"].get(spec_id, 0)
+    if (session.get("enable_adaptive_followups")
+            and followups_used < MAX_FOLLOWUPS_PER_SPEC
+            and memory.turn_count() < RESUME_DISCUSSION_QUESTION_BUDGET
+            and _answer_warrants_followup(result)):
+        session["followups_by_spec"][spec_id] = followups_used + 1
+        focus = (current_question.specification.text_seed
+                 or current_question.project_reference
+                 or current_question.specification.source_id)
+        followup_turn_number = memory.turn_count() + 1
+        followup_q, followup_variant = question_realizer.realize_followup(
+            current_question.specification, memory, followup_turn_number,
+            followups_used_on_this_spec=followups_used, angle="more_detail", focus_hint=focus,
+        )
+        session["current_question"] = followup_q
+        session["current_variant_idx"] = followup_variant
+        # same topic → last_category unchanged; spec not advanced (probed again)
+        return {
+            "status": "success",
+            "next_question": _question_payload(followup_q),
+            "is_completed": False,
+            "turn_number": followup_turn_number,
+            "evaluation": turn_evaluation,
+        }, 200
+
+    # ── Move on: cover this topic and select the next one (original behavior). ──
     planner.advance(spec_id, UnitStatus.COVERED)
 
     # Budget check BEFORE asking the planner for another unit -- this is
@@ -195,32 +264,6 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
             last_category=session["last_category"],
             recent_source_ids=memory.recent_source_ids(),
         ))
-    # Improved Answer / Coaching Note are derived here, at the one site
-    # where the EvaluationResult, the InterviewQuestion (its grounding) AND
-    # the raw candidate `answer` are all in scope. `_result_payload` stays a
-    # pure field-selector and the ledger (results only) is untouched. See
-    # strong_answer.py.
-    #
-    # UI-honesty fix (post-demo forensic investigation): `improved_answer`
-    # (the candidate's own answer + one appended coaching sentence,
-    # concatenated) is kept for any existing consumer, but the report now
-    # additionally receives `coaching_note` -- that same appended sentence
-    # on its own -- computed from the identical shared logic
-    # (strong_answer._compute), so it can never disagree with what
-    # `improved_answer` would have embedded. This lets the report show
-    # "Your Answer" (the candidate's real, unmodified `answer`, already
-    # available on this payload) and "Coaching Note" as two honest, separate
-    # pieces instead of one blob under a label implying a rewritten answer.
-    turn_evaluation = _result_payload(result)
-    turn_evaluation["improved_answer"] = build_improved_answer(current_question, result, answer)
-    turn_evaluation["coaching_note"] = coaching_note(current_question, result, answer)
-    # Concept Coverage % for the dashboard, derived directly from
-    # result.concept_coverage's own per-concept statuses (never a separate
-    # re-scan of the answer text -- see concept_analysis.py's module
-    # docstring for the bug this fixed). None when the turn has no concept
-    # pool (e.g. experience/certification) — the dashboard averages only
-    # non-null turns.
-    turn_evaluation["concept_coverage_pct"] = concept_coverage_percent(result)
 
     if next_spec is None:
         session["ended"] = True

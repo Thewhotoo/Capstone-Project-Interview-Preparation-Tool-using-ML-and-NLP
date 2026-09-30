@@ -1,0 +1,27 @@
+{
+  "dataset_version": "overall_v5_1088",
+  "total_examples": 1088,
+  "sources": {
+    "four_dim_overall_v4_5000": {
+      "count": 1003,
+      "role": "frozen baseline, untouched"
+    },
+    "v5_short_quality_calibration_80": {
+      "count": 85,
+      "role": "appended to train only"
+    }
+  },
+  "split_counts": {
+    "train": 787,
+    "val": 150,
+    "test": 151
+  },
+  "val_ids_identical_to_1003_baseline": true,
+  "test_ids_identical_to_1003_baseline": true,
+  "calibration_ids_in_train_only": true,
+  "group_leakage_across_split": {
+    "train|val": [],
+    "train|test": [],
+    "val|test": []
+  }
+}

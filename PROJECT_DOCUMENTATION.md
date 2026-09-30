@@ -8,6 +8,7 @@
 ## Table of Contents
 
 1. [Project Overview](#1-project-overview)
+   - 1.1 [The four main modules](#11-the-four-main-modules)
 2. [Tech Stack & Dependencies](#2-tech-stack--dependencies)
 3. [High-Level Design (HLD)](#3-high-level-design-hld)
 4. [Low-Level Design (LLD)](#4-low-level-design-lld)
@@ -77,6 +78,26 @@ The repository also contains a substantial **ML research track**: synthetic data
 **Teammate's branch integrated (2026-09-30, `resumeParser_integration.md`).** A teammate's improved resume engine, Round 1 question-variety changes, a trained Round 1 answer evaluator (blended 80/20 with the heuristic) and data-driven report feedback were merged in, each measured before/after and with a rollback in `archive/` (`resume_engine_backup_2026-09-30/`, `round1_planner_backup_2026-09-30/`, `evaluator_backup_2026-09-30/`). Comparison scripts: `integration_checks/`.
 
 **Slide RAG pipeline and question bank.** `rag_system/rag_tester/slide_rag/` rebuilds the technical knowledge base from the faculty lecture slides of five subjects (CN, DBMS, DSA, OOAD, OS; ~5,800 slides). It reads slides by layout, cleans and classifies them, regroups them into sections, and indexes them for hybrid retrieval with exact slide-page citations. On hand-labelled interview questions it finds the right slides in its top 5 for 96–100% of questions, against 68–82% for the old page-per-chunk index (§4.24). From it and 279 curated topics, a local LLM (Qwen3-8B via Ollama) generated a **422-question technical-interview bank** offline, spanning all five subjects and three difficulty levels. Every key point is backed by a verified slide quote and every question passed an LLM judge; each question then carries a confidence rank, a hand-assigned quality score and an interview-frequency tier, so interviews draw the strongest questions on the most-asked topics first (§4.25). It feeds the standalone Technical Interview (10 questions) and the full interview's Round 2 (8), graded by an NLI grader that needs no LLM or GPU at interview time (`tech_interview/`, §4.25); a 30-question MCQ test is planned for later (`mcq_tobedone.md`).
+
+### 1.1 The four main modules
+
+The project is organised into four modules, each owned by one team member. LOC is non-blank source lines in the repository, excluding tests (2026-09-30).
+
+| # | Module | Owner | What it does | Main code | LOC | Test LOC |
+|---|---|---|---|---|---|---|
+| 1 | **Resume Intelligence & Resume Discussion** | Mayuran | Parses the uploaded resume into a structured Candidate Profile, then plans and phrases the 10 Round 1 questions, each traceable to a specific project, job, certification or skill | `resume_engine/`, `candidate_profile_generator.py`, `resume_classifier/`, `planner.py`, `topic_pool.py`, `question_realizer.py`, `question_families.py`, `discussion_policy.py`, `conversation_engine.py` | 13,618 | 8,796 |
+| 2 | **RAG, Technical Interview & Answer Evaluation** | Ninad | Builds the knowledge base from the lecture slides and the 422-question bank; runs the technical interview with its NLI grader and follow-ups; scores Round 1 answers with the fine-tuned DeBERTa-v3 evaluator blended with the heuristic evaluator | `rag_system/rag_tester/slide_rag/`, `question_bank/`, `tech_interview/`, `evaluation_engine.py`, `averaged_evaluator.py`, `overall_single_evaluator.py`, `heuristic_evaluator.py`, `answer_gate.py`, `deployment_evaluator.py`, ML research track | 23,498 | 9,078 |
+| 3 | **Webcam Monitoring & Proctoring** | Surya | In the browser: camera setup check, face tracking (MediaPipe Face Landmarker), gaze and head-pose attention score, head-turn liveness checks, second-person and lighting/blur alerts, and the full-screen / tab-switch / copy-paste rules | Monitoring, camera-check and session-integrity code in `templates/index.html`, `static/models/face_landmarker.task` | 2,162 | 235 |
+| 4 | **Accounts, Data & User Interface** | Nandu | Sign up and login, profile photos, the SQLite database and its migrations, saving every session turn by turn, Home stats and "Focus next", the Sessions and Profile screens and the interview report pages | `app.py`, `account_routes.py`, `avatar_store.py`, `database.py`, `models.py`, `migrations/`, `session_history.py`, `session_routes.py`, `insights.py`, `interview_feedback.py`, the rest of `templates/index.html` | 9,179 | 2,321 |
+| | **Total** | | | | **48,457** | **20,430** |
+
+**How the modules connect in one Full Interview:**
+
+1. **Module 4** signs the candidate in and stores the resume.
+2. **Module 1** turns it into a Candidate Profile and asks the Round 1 questions.
+3. **Module 2** scores each Round 1 answer, then runs Round 2 from the question bank and grades it.
+4. **Module 3** watches the camera and enforces the session rules throughout; a violation ends the interview.
+5. **Module 4** saves every turn and shows the final report, the history and the Home stats.
 
 ---
 

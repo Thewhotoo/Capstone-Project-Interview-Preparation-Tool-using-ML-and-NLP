@@ -23,6 +23,19 @@ A proctored mock-interview platform built around the candidate's **own resume**.
 
 ---
 
+## Project modules
+
+| # | Module | Owner |
+|---|---|---|
+| 1 | Resume Intelligence & Resume Discussion: resume parsing, Candidate Profile, Round 1 questions | Mayuran |
+| 2 | RAG, Technical Interview & Answer Evaluation: slide RAG, question bank, NLI grader, DeBERTa evaluator | Ninad |
+| 3 | Webcam Monitoring & Proctoring: camera check, gaze/attention, liveness, session rules | Surya |
+| 4 | Accounts, Data & User Interface: login, database, session history, dashboards and reports | Nandu |
+
+Details, main files and LOC per module: [`PROJECT_DOCUMENTATION.md` §1.1](PROJECT_DOCUMENTATION.md#11-the-four-main-modules).
+
+---
+
 ## Quick start
 
 **Requirements:** Python 3.12, about 8 GB RAM, Chrome or Edge with a webcam, and internet on the first run. Node.js only for the frontend tests. A GPU is **not** needed to run the app. Full list (disk space, models, the weights file, browser permissions): [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).

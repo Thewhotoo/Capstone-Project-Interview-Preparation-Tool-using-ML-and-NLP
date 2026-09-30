@@ -3,9 +3,14 @@ LLM Generation Module
 Generates technical interview questions from retrieved RAG context.
 Strictly grounded in the provided context, with citations and pseudocode support.
 """
+import json
 import re
 import time
+from pathlib import Path
+
 import torch
+
+KNOWLEDGE_BASE_DIR = Path(__file__).resolve().parent / "knowledge_base"
 
 # --------------------------------------------------
 # Lazy Loaded Qwen Model
@@ -171,12 +176,13 @@ def _llm_generate(system: str, user: str, max_tokens=180, temperature=0.0) -> st
     outputs = model.generate(
         **inputs,
         max_new_tokens=max_tokens,
-        temperature=temperature,          # now configurable
-        do_sample=(temperature > 0),      # sample only if temp > 0
+        temperature=temperature,
+        do_sample=(temperature > 0),
         repetition_penalty=1.2,
         pad_token_id=tokenizer.pad_token_id,
     )
     return tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True).strip()
+
 def generate_interview_question(context, concept=None, difficulty="medium"):
     """Generates ONE interview question from retrieved RAG context."""
     if not context or len(context.strip()) < 30:
@@ -286,12 +292,9 @@ Instructions:
 
 Answer:"""
     answer = _llm_generate(system_prompt, user_prompt, max_tokens=180)
-    # If answer is "I don't know" we keep it
     if "i don't know" in answer.lower():
         return answer
-    # Ensure at least one citation appears
     if not re.search(r'\(p\.\d+\)', answer):
-        # Try to add a generic citation if possible
         pages = re.findall(r'\[p\.(\d+)\]', context)
         if pages:
             first_page = pages[0]
@@ -299,20 +302,11 @@ Answer:"""
     return answer
 
 def generate_grounded_answer(question, context):
-    """
-    Lightweight wrapper for strict answer generation, used by evaluator.
-    """
     return generate_reference_answer(question, context)
 
 def generate_mcq(context, concept=None, difficulty="medium", variant=0):
-    """
-    Generate a multiple‑choice question with options and correct answer.
-    Returns a dict with keys: question, options, correct, difficulty, type.
-    """
     context = clean_context(context)
     topic = concept or "the topic"
-
-    # Different focuses for variety
     focuses = ["definition", "mechanism", "comparison", "application", "advantage/disadvantage"]
     focus = focuses[variant % len(focuses)]
 
@@ -335,24 +329,11 @@ Ensure the question is based strictly on the context and that only one option is
 Do not add explanations or extra text.
 """
     system_prompt = "You are an exam writer. Always produce the output in the specified format."
-
-    # Use small temperature for variety
     raw = _llm_generate(system_prompt, prompt, max_tokens=220, temperature=0.3)
 
-    # Debug: uncomment to see raw output
-    # print("RAW MCQ:", raw)
-
-    parsed = {
-        "question": "",
-        "options": [],
-        "correct": "",
-        "difficulty": difficulty,
-        "type": "mcq"
-    }
-
+    parsed = {"question": "", "options": [], "correct": "", "difficulty": difficulty, "type": "mcq"}
     lines = [line.strip() for line in raw.splitlines() if line.strip()]
 
-    # Extract question
     q_line = None
     for line in lines:
         if re.match(r'^QUESTION\s*[:;]\s*', line, re.IGNORECASE):
@@ -365,7 +346,6 @@ Do not add explanations or extra text.
         if q_text:
             parsed["question"] = q_text
 
-    # Extract options (support A), A., A: etc.)
     opt_map = {}
     for line in lines:
         m = re.match(r'^([A-D])\s*[):;.\-]\s*(.+)$', line, re.IGNORECASE)
@@ -374,13 +354,10 @@ Do not add explanations or extra text.
             text = m.group(2).strip()
             opt_map[letter] = text
     if opt_map:
-        # Sort by letter
         parsed["options"] = [f"{let}) {opt_map[let]}" for let in sorted(opt_map.keys())]
 
-    # Extract correct answer
     ans = None
     for line in lines:
-        # Try multiple patterns
         if re.search(r'^ANSWER\s*[:;]\s*([A-D])', line, re.IGNORECASE):
             ans = re.search(r'([A-D])', line, re.IGNORECASE).group(1).upper()
             break
@@ -390,35 +367,26 @@ Do not add explanations or extra text.
         if re.search(r'answer\s*[:;]\s*([A-D])', line, re.IGNORECASE):
             ans = re.search(r'([A-D])', line, re.IGNORECASE).group(1).upper()
             break
-
     if ans and ans in opt_map:
         parsed["correct"] = ans
     else:
-        # Fallback: if we have options, try to find the most relevant one by matching context
-        # Simple heuristic: pick the longest option (often the correct one)
         if opt_map:
-            # Try to find option that appears most similar to a key phrase in context
-            # But for simplicity, pick a random one (to avoid always A)
             import random
             parsed["correct"] = random.choice(list(opt_map.keys()))
         else:
             parsed["correct"] = "A"
 
-    # If no question or no options, return a fallback
     if not parsed["question"] or len(parsed["options"]) < 4:
-        # Try to create a generic MCQ from the raw text
         return {
             "question": raw if raw else f"Explain the concept of {topic}.",
             "options": ["A) Option A", "B) Option B", "C) Option C", "D) Option D"],
-            "correct": "A",  # still fallback, but we randomize later if needed
+            "correct": "A",
             "difficulty": difficulty,
             "type": "mcq"
         }
-
     return parsed
 
 def generate_pseudocode_question(context, concept=None, difficulty="medium"):
-    """Generate a question that asks for pseudocode implementation."""
     context = clean_context(context)
     topic = concept or "the algorithm"
     system = "You create pseudocode interview questions grounded in context only."
@@ -436,10 +404,6 @@ Return only the question.
     return q or f"Write pseudocode to implement {topic}."
 
 def generate_pseudocode_reference(question, context):
-    """
-    Generate a pseudocode solution strictly from the context.
-    Includes comments and clear indentation.
-    """
     context_clean = clean_reference_text(context)
     system = (
         "You write pseudocode using ONLY supplied context. "
@@ -459,7 +423,6 @@ If the context lacks details, state 'I don't know.'.
     return ref or "Pseudocode not available from context."
 
 def generate_coding_question(context, concept=None, difficulty="medium"):
-    """Generate a coding/design question."""
     context = clean_context(context)
     topic = concept or "the concept"
     system = "You create coding interview questions from PDF context only."
@@ -474,7 +437,6 @@ Return only the question.
     return q or f"Design a solution for {topic} based on the studied material."
 
 def generate_question_by_type(context, concept=None, difficulty="medium", question_type="open"):
-    """Unified entry point for different question types."""
     qtype = question_type.lower()
     if qtype == "mcq":
         return generate_mcq(context, concept, difficulty)
@@ -497,7 +459,6 @@ def generate_question_by_type(context, concept=None, difficulty="medium", questi
     }
 
 def generate_explanation(context, topic):
-    """Generate a brief explanation of a topic (used for learning)."""
     if not context or len(context.strip()) < 30:
         return "Insufficient context to generate explanation."
     context_clean = clean_context(context)
@@ -516,8 +477,8 @@ Provide a 2-3 sentence explanation of the topic.
 """
     explanation = _llm_generate(system, user, max_tokens=120)
     return explanation if explanation else context_clean[:150] + "..."
+
 def generate_test_cases(context, concept, num_cases=3):
-    """Generate test cases (input/output pairs) from context using LLM."""
     prompt = f"""
 Context:
 {context}
@@ -535,7 +496,82 @@ Example format:
 """
     raw = _llm_generate("You are a test generator.", prompt, max_tokens=300, temperature=0.2)
     try:
-        import json
         return json.loads(raw)
     except:
         return []
+
+# --------------------------------------------------
+# Diagram-based question generation (automatic)
+# --------------------------------------------------
+DIAGRAM_TYPE_KEYWORDS = {
+    "binary_tree": ["tree", "bst", "binary search tree", "heap", "root", "leaf node"],
+    "linked_list": ["linked list", "singly linked", "doubly linked", "node pointer"],
+    "ds_graph": ["graph", "dijkstra", "bfs", "dfs", "shortest path", "minimum spanning", "adjacency"],
+    "array_structure": ["array", "stack", "queue", "hash table", "hashing", "collision"],
+    "uml_class": ["class diagram", "uml", "inheritance", "encapsulation", "design pattern", "object oriented"],
+    "sequence_diagram": ["handshake", "sequence diagram", "message flow", "request response", "protocol steps"],
+    "network_topology": ["topology", "router", "network layer", "osi", "ip address", "routing"],
+    "flowchart": ["algorithm", "flowchart", "process flow", "decision", "step by step"],
+}
+
+def infer_diagram_type(topic: str, context: str) -> str:
+    text = f"{topic} {context}".lower()
+    scores = {
+        dtype: sum(1 for kw in keywords if kw in text)
+        for dtype, keywords in DIAGRAM_TYPE_KEYWORDS.items()
+    }
+    best = max(scores, key=scores.get)
+    return best if scores[best] > 0 else "flowchart"
+
+def load_diagram_chunks(subject: str) -> list[dict]:
+    path = KNOWLEDGE_BASE_DIR / subject / "diagram_chunks.json"
+    if not path.exists():
+        return []
+    try:
+        return json.loads(path.read_text())
+    except Exception:
+        return []
+
+def find_matching_diagram_chunk(subject: str, topic: str) -> dict | None:
+    chunks = load_diagram_chunks(subject)
+    if not chunks:
+        return None
+    topic_words = [w for w in topic.lower().split() if len(w) > 3]
+    if not topic_words:
+        return chunks[0]
+    best, best_score = None, 0
+    for chunk in chunks:
+        haystack = f"{chunk.get('text', '')} {chunk.get('nearby_text', '')}".lower()
+        score = sum(1 for w in topic_words if w in haystack)
+        if score > best_score:
+            best, best_score = chunk, score
+    return best if best_score > 0 else None
+
+def generate_diagram_question_auto(subject: str, topic: str, context: str, difficulty: str = "medium") -> dict | None:
+    from diagram_question_gen import generate_diagram_question
+
+    matched_chunk = find_matching_diagram_chunk(subject, topic)
+    if matched_chunk is not None:
+        try:
+            from diagram_renderer import render_diagram
+            result = generate_diagram_question(matched_chunk, difficulty)
+            result["source"] = "retrieved"
+            result["image_bytes"] = render_diagram(matched_chunk["diagram_type"], matched_chunk["structured_data"])
+            result["weighted_concepts"] = None
+            return result
+        except Exception as e:
+            print(f"[diagram question] retrieval-based generation failed, falling back to synthesis: {e}")
+
+    try:
+        from diagram_pipeline import generate_diagram_question_full
+        diagram_type = infer_diagram_type(topic, context)
+        result = generate_diagram_question_full(topic, context, diagram_type=diagram_type, difficulty=difficulty)
+        if result:
+            result["source"] = "synthesized"
+        return result
+    except NotImplementedError:
+        print("[diagram question] call_vlm()/VLM not wired — diagram question generation unavailable this run.")
+        return None
+    except Exception as e:
+        print(f"[diagram question] synthesis failed: {e}")
+        return None

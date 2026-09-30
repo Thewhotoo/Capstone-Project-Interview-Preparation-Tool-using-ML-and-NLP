@@ -8,7 +8,8 @@ from generate import (
     generate_reference_answer,
     generate_question_by_type,
     generate_mcq,
-    generate_test_cases
+    generate_test_cases,
+    generate_diagram_question_auto,
 )
 from evaluate import evaluate_answer
 from tracking import log_evaluation, get_stats, get_history
@@ -16,6 +17,25 @@ from tqdm import tqdm
 from pathlib import Path
 
 KNOWLEDGE_BASE_DIR = Path(__file__).resolve().parent / "knowledge_base"
+DIAGRAM_OUTPUT_DIR = Path(__file__).resolve().parent / "generated_diagrams"
+
+
+def save_and_report_diagram(diagram_result: dict, topic: str) -> Path | None:
+    """
+    Saves the diagram image to disk and prints the path so the CLI user
+    can open it (a terminal can't render an image inline). Returns the
+    saved path, or None if there was no image to save.
+    """
+    image_bytes = diagram_result.get("image_bytes")
+    if not image_bytes:
+        return None
+    DIAGRAM_OUTPUT_DIR.mkdir(exist_ok=True)
+    safe_topic = "".join(c if c.isalnum() or c in "-_" else "_" for c in topic)[:40]
+    out_path = DIAGRAM_OUTPUT_DIR / f"{safe_topic}_{diagram_result['diagram_type']}.png"
+    out_path.write_bytes(image_bytes)
+    print(f"\n🖼️  Diagram saved: {out_path}")
+    print("   Open this file to view the diagram before answering.")
+    return out_path
 
 # --------------------------------------------------
 # Subject selection
@@ -68,10 +88,11 @@ def get_question_type():
     print("2. Multiple Choice (MCQ)")
     print("3. Pseudocode")
     print("4. Coding/Design")
+    print("5. Diagram-based")
     while True:
-        t = input("Choice (1-4): ").strip()
-        if t in ['1', '2', '3', '4']:
-            return ['open', 'mcq', 'pseudocode', 'coding'][int(t)-1]
+        t = input("Choice (1-5): ").strip()
+        if t in ['1', '2', '3', '4', '5']:
+            return ['open', 'mcq', 'pseudocode', 'coding', 'diagram'][int(t)-1]
         print("Invalid choice.")
 
 def get_programming_language():
@@ -119,6 +140,23 @@ def generate_rag_questions(subject, topic, num_questions=3, difficulty="medium",
                 'type': 'mcq',
                 'source_context': context[:300] + "..."
             })
+        elif qtype == "diagram":
+            diagram_result = generate_diagram_question_auto(subject, topic, context, difficulty=difficulty)
+            if diagram_result is None:
+                print(f"⚠️  Could not generate a diagram question for '{topic}' (question {i+1}). Skipping.")
+                continue
+            question = diagram_result['question']
+            saved_path = save_and_report_diagram(diagram_result, f"{topic}_{i+1}")
+            questions.append({
+                'question_num': i + 1,
+                'question': diagram_result['question'],
+                'reference_answer': diagram_result['reference_answer'],
+                'type': 'diagram',
+                'diagram_type': diagram_result['diagram_type'],
+                'source': diagram_result['source'],
+                'image_path': str(saved_path) if saved_path else None,
+                'grounding_facts': diagram_result['grounding_facts'],
+            })
         else:
             q_data = generate_question_by_type(context, concept=topic, difficulty=difficulty, question_type=qtype)
             question = q_data['question']
@@ -138,6 +176,8 @@ def generate_rag_questions(subject, topic, num_questions=3, difficulty="medium",
             for opt in options:
                 print(f"   {opt}")
             print(f"   Correct: {correct}")
+        elif qtype == "diagram":
+            print(f"   [{diagram_result['source']}, {diagram_result['diagram_type']}]")
         else:
             print(f"\n📖 Reference Answer (partial):")
             print(f"   {reference[:200]}...")
@@ -205,6 +245,39 @@ def interactive_mode(subject):
                     print(f"   Correct answer: {correct}")
             else:
                 print(f"\n📖 Correct answer: {correct}")
+
+        elif qtype == "diagram":
+            diagram_result = generate_diagram_question_auto(subject, topic, context, difficulty=difficulty)
+            if diagram_result is None:
+                print("\n⚠️  Could not generate a diagram-based question for this topic "
+                      "(no matching extracted diagram, and synthesis unavailable). "
+                      "Try an open-ended question instead.")
+            else:
+                print(f"\n🤖 DIAGRAM QUESTION ({difficulty}) [{diagram_result['source']}, {diagram_result['diagram_type']}]:")
+                print(f"   {diagram_result['question']}")
+                save_and_report_diagram(diagram_result, topic)
+
+                student_answer = input("\n✍️  Enter your answer (or press Enter to skip): ").strip()
+                if student_answer:
+                    from diagram_evaluator import evaluate_diagram_answer
+                    evaluation = evaluate_diagram_answer(student_answer, diagram_result)
+                    log_evaluation(topic, difficulty, qtype, evaluation['score'], evaluation['grade'])
+                    print(f"\n📊 EVALUATION RESULT:")
+                    print(f"   Overall Score: {evaluation['score']:.1f}/100")
+                    print(f"   Grade: {evaluation['grade']}")
+                    if evaluation.get('rubric'):
+                        print(f"   Semantic: {evaluation['rubric']['semantic_score']:.1f}%")
+                        print(f"   Concept Coverage: {evaluation['rubric']['concept_score']:.1f}%")
+                        print(f"   Clarity: {evaluation['rubric']['clarity_score']:.1f}%")
+                    if evaluation.get('strengths'):
+                        print(f"\n✅ Strengths: {'; '.join(evaluation['strengths'])}")
+                    if evaluation.get('weaknesses'):
+                        print(f"⚠️  Gaps: {'; '.join(evaluation['weaknesses'])}")
+                    print(f"\n📖 Reference Answer:")
+                    print(f"   {diagram_result['reference_answer']}")
+                else:
+                    print(f"\n📖 Reference Answer (for learning):")
+                    print(f"   {diagram_result['reference_answer']}")
 
         else:
             q_data = generate_question_by_type(context, concept=topic, difficulty=difficulty, question_type=qtype)

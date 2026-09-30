@@ -3,7 +3,8 @@
 The trigger decision is unit-tested model-free. The end-to-end behavior is
 exercised against the live evaluator: a weak-but-real answer draws a deeper
 probe when the feature is ON and never when it's OFF, follow-ups stay within the
-question budget, and no more than MAX_FOLLOWUPS_PER_SPEC probes per topic.
+question budget, no more than MAX_FOLLOWUPS_PER_PROJECT probes per topic, and no
+more than MAX_FOLLOWUPS_PER_SESSION probes in total.
 Default-off (all existing behavior) is covered by test_conversation_engine.
 """
 
@@ -17,7 +18,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import conversation_engine as ce
 from conversation_engine import (
-    MAX_FOLLOWUPS_PER_SPEC,
+    MAX_FOLLOWUPS_PER_PROJECT,
+    MAX_FOLLOWUPS_PER_SESSION,
     RESUME_DISCUSSION_QUESTION_BUDGET,
     _answer_warrants_followup,
 )
@@ -66,12 +68,15 @@ def test_followups_on_only_when_enabled_and_within_budget():
     assert off_followups == 0                      # feature off → never probes
     assert on_followups >= 1                        # feature on → probes weak answers
     assert on_followups > off_followups             # the flag is what causes it
+    assert on_followups <= MAX_FOLLOWUPS_PER_SESSION  # session cap holds
     assert len(on) <= RESUME_DISCUSSION_QUESTION_BUDGET   # budget still respected
 
 
-def test_no_two_consecutive_followups_on_same_topic():
-    # MAX_FOLLOWUPS_PER_SPEC == 1: a probe is always followed by a non-probe turn
-    # (either the next topic or completion), never a second probe back-to-back.
+def test_no_two_consecutive_followups():
+    # A probe is always followed by a non-probe turn (the next topic or
+    # completion), never a second probe back-to-back: MAX_FOLLOWUPS_PER_PROJECT == 1
+    # means a project is never probed twice in a row, and every probe leaves the
+    # spec un-advanced so the very next turn answers it (a non-probe).
     on = _run_interview(enable=True)
-    assert MAX_FOLLOWUPS_PER_SPEC == 1
+    assert MAX_FOLLOWUPS_PER_PROJECT == 1
     assert not any(on[i] and on[i + 1] for i in range(len(on) - 1))

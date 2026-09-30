@@ -171,6 +171,16 @@ class OverallSingleEvaluator:
             # by HeuristicDiagnosticsEngine itself); nothing below this
             # point is allowed to change overall_score/grade. ──
             dimensions = self.diagnostics_engine.compute(request)
+            # A non-substantive response (deflection like "What is chart.js?",
+            # gibberish, keyword-dump, one-liner) has no real technical accuracy
+            # or depth — the similarity/marker heuristics otherwise report absurd
+            # values (e.g. 100% technical_correctness for a counter-question that
+            # merely names the tech). Floor the DIAGNOSTIC dimensions to match the
+            # gated overall so the report is coherent. Real answers are untouched.
+            if gated_non_answer:
+                dimensions = tuple(
+                    d.model_copy(update={"raw_score": min(d.raw_score, 0.1)}) for d in dimensions
+                )
             strengths, weaknesses = self.diagnostics_engine.claims(dimensions)
 
             reasoning = (

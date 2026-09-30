@@ -70,15 +70,22 @@ RESUME_DISCUSSION_QUESTION_BUDGET = 10
 
 # Adaptive follow-up probing. Opt-in via start_conversation(..., enable_adaptive_
 # followups=True) — default OFF preserves the original non-adaptive flow and every
-# existing test. At most this many extra probes per topic (keeps it natural, no loops).
-MAX_FOLLOWUPS_PER_SPEC = 1
+# existing test. Throttled at three levels so it never badgers the candidate:
+#   - at most ONE probe per project (source_id) — a project is never re-probed,
+#     which is what stops "it probed one project 3 times in a row";
+#   - at most this many probes over the whole session;
+#   - and only ever on a weak-but-REAL answer (non-answers score <= 0.1 via the
+#     evaluator's substance gate, so they fall below the probe band automatically).
+MAX_FOLLOWUPS_PER_PROJECT = 1
+MAX_FOLLOWUPS_PER_SESSION = 2
 
 
 def _answer_warrants_followup(result) -> bool:
     """A follow-up ("can you go a bit deeper on X?") is worth asking only for a
     WEAK-BUT-REAL answer — on-topic but shallow or incomplete. A strong answer
-    (>= 0.60) needs no probe, and a gated non-answer / degenerate reply
-    (<= 0.15) should not be badgered; in both cases the interview moves on."""
+    (>= 0.60) needs no probe, and a non-substantive answer (deflection / gibberish
+    / one-liner) is floored to <= 0.10 by the evaluator's substance gate and so
+    falls below this band; in both cases the interview simply moves on."""
     return 0.15 < result.overall_score < 0.60
 
 
@@ -152,7 +159,7 @@ def start_conversation(profile: ProfileLike, enable_adaptive_followups: bool = F
         "evaluation_ledger": EvaluationLedger(),
         "answer_history": {},  # spec_id -> tuple[str, ...] of raw answers given (Phase 3)
         "enable_adaptive_followups": enable_adaptive_followups,
-        "followups_by_spec": {},  # spec_id -> count of adaptive follow-ups asked (session-local)
+        "followups_by_source": {},  # source_id (project) -> count of adaptive follow-ups asked (session-local)
     }
     return {
         "status": "success",
@@ -219,25 +226,28 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
     turn_evaluation["concept_coverage_pct"] = concept_coverage_percent(result)
 
     # ── ADAPTIVE FOLLOW-UP (opt-in): on a weak-but-real answer, probe deeper on
-    # the SAME topic before covering it — up to MAX_FOLLOWUPS_PER_SPEC and within
-    # the question budget. Follow-up counts are tracked session-locally (NOT via
-    # the pool's lifecycle: specs go unasked->covered and are never ACTIVE, so
-    # pool.mark_followup_used would reject them). The spec simply isn't advanced
-    # yet, so the next answer is evaluated against the same spec. Default off →
-    # this whole block is skipped and the flow below is the original behavior. ──
-    followups_used = session["followups_by_spec"].get(spec_id, 0)
+    # the SAME topic before covering it — throttled per project, per session, and
+    # to the question budget so it never badgers. Counts are tracked session-
+    # locally by source_id (NOT via the pool's lifecycle: specs go unasked->covered
+    # and are never ACTIVE, so pool.mark_followup_used would reject them). The spec
+    # simply isn't advanced yet, so the next answer is evaluated against it.
+    # Default off → this whole block is skipped and the flow below is unchanged. ──
+    source_id = current_question.specification.source_id
+    followups_for_project = session["followups_by_source"].get(source_id, 0)
+    total_followups = sum(session["followups_by_source"].values())
     if (session.get("enable_adaptive_followups")
-            and followups_used < MAX_FOLLOWUPS_PER_SPEC
+            and followups_for_project < MAX_FOLLOWUPS_PER_PROJECT
+            and total_followups < MAX_FOLLOWUPS_PER_SESSION
             and memory.turn_count() < RESUME_DISCUSSION_QUESTION_BUDGET
             and _answer_warrants_followup(result)):
-        session["followups_by_spec"][spec_id] = followups_used + 1
+        session["followups_by_source"][source_id] = followups_for_project + 1
         focus = (current_question.specification.text_seed
                  or current_question.project_reference
                  or current_question.specification.source_id)
         followup_turn_number = memory.turn_count() + 1
         followup_q, followup_variant = question_realizer.realize_followup(
             current_question.specification, memory, followup_turn_number,
-            followups_used_on_this_spec=followups_used, angle="more_detail", focus_hint=focus,
+            followups_used_on_this_spec=followups_for_project, angle="more_detail", focus_hint=focus,
         )
         session["current_question"] = followup_q
         session["current_variant_idx"] = followup_variant

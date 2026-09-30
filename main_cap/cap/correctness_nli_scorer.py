@@ -137,12 +137,29 @@ def degeneracy(text: str) -> DegeneracyVerdict:
     if nonspace >= 8 and (letters / nonspace) < 0.5:  # mostly digits/symbols, not words
         reasons.append("non_linguistic")
 
+    # ── No substantive assertion (general non-answer / deflection detector). A
+    # real answer makes at least one DECLARATIVE statement with actual content.
+    # A response that is only a question back ("What is X?"), a bare retort
+    # ("why not", "idk bro"), or otherwise carries no contentful declarative
+    # clause is not an answer. This is grounding-independent and general — it
+    # replaces case-by-case keyword blocklists. A declarative clause "counts"
+    # when it has at least 3 content (non-function) words; questions never count. ──
+    _sentence_parts = [s for s in re.split(r"(?<=[.!?])\s+", raw) if s.strip()] or [raw]
+    def _content_word_count(sentence: str) -> int:
+        return sum(1 for t in _tokens(sentence) if t not in _FUNCTION_WORDS and len(t) > 1)
+    has_substantive_clause = any(
+        not s.strip().endswith("?") and _content_word_count(s) >= 3
+        for s in _sentence_parts
+    )
+    if not has_substantive_clause:
+        reasons.append("no_substantive_content")
+
     penalty = 0.0
     if fwr < 0.12:
         penalty = max(penalty, 0.9)
     elif fwr < 0.18:
         penalty = max(penalty, 0.4)
-    if any(r in reasons for r in ("control_characters", "markup", "code_or_query", "non_linguistic")):
+    if any(r in reasons for r in ("control_characters", "markup", "code_or_query", "non_linguistic", "no_substantive_content")):
         penalty = max(penalty, 0.9)
     if comma_density >= 0.12 and fwr < 0.20:
         penalty = max(penalty, 0.7)

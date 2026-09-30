@@ -1,0 +1,13 @@
+{
+  "layout_mode": "single_column",
+  "layout_confidence_min": 0.9,
+  "span_count_min": 6,
+  "hyperlink_count": 0,
+  "expected_span_order_contains": [
+    "Acme Corp, Senior Engineer",
+    "- Led migration of the billing platform.",
+    "- Reduced latency by 40% via caching.",
+    "- Coordinated with three downstream teams.",
+    "- Mentored two junior engineers."
+  ]
+}

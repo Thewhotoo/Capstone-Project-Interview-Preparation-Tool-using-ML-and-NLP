@@ -1,0 +1,50 @@
+{
+  "dataset_version": "v_experiment_3_relabeled_dimensions",
+  "parent_dataset_version": "v_experiment_2_scaled_library",
+  "source_dataset_path": "main_cap/cap/artifacts/experiment_2/dataset.jsonl",
+  "source_split_path": "main_cap/cap/artifacts/experiment_2/split.json",
+  "generation_mechanism": "deterministic relabeling only -- zero new text generation, zero new API calls, zero new sampling. Every relabeled score is a pure function of data GenerationRecipe already sampled and serialized onto each TrainingExample.synthetic field when Experiment 2 was generated.",
+  "code_that_produced_this_dataset": {
+    "entry_point_script": "main_cap/cap/run_dataset_relabel.py",
+    "entry_point_command": "python run_dataset_relabel.py relabel",
+    "core_logic_module": "main_cap/cap/dataset_relabeling.py",
+    "upstream_modules_read_but_not_modified": [
+      "main_cap/cap/generation_recipe.py",
+      "main_cap/cap/training_example_assembler.py",
+      "main_cap/cap/reasoning_dimension_relevance.py"
+    ]
+  },
+  "git_provenance": {
+    "note": "The code that produced THIS package's dataset (dataset_relabeling.py with both the completeness-fallback fix and the proportional-severity-mapping fix) was uncommitted at the time this package was generated. Commit before relying on this provenance record for long-term audit -- these hashes pin the exact file content used, independent of git state.",
+    "last_commit_before_these_fixes": {
+      "hash": "5e53458af9cb4190e3fa3cc34341fc18ba5e71ce",
+      "message": "Attempting to better the dataset.",
+      "date": "2026-08-07T03:32:24+05:30",
+      "note": "This commit added the ORIGINAL (pre-fix) Stage 1A relabeling code: dataset_relabeling.py, run_dataset_relabel.py, test_dataset_relabeling.py. It does NOT include Fix 1 (completeness reasoning-target fallback) or Fix 2 (proportional severity mapping) -- those are uncommitted changes on top of this commit as of this package's generation."
+    },
+    "working_tree_state_at_generation_time": "modified (not committed): main_cap/cap/dataset_relabeling.py, main_cap/cap/test_dataset_relabeling.py"
+  },
+  "file_content_hashes_sha256": {
+    "note": "Hashes of the exact file content that produced this dataset. If dataset_relabeling.py's hash doesn't match at reproduction time, the output will differ from what's documented in this package.",
+    "dataset_relabeling.py": "903dd59169079914fa6f828a5610e59690d0c0f1fb13d74deaca9c507fdd33fb",
+    "run_dataset_relabel.py": "bd06a232ca4141dbc54e70cf1efaf5f7c19f9b9fab81d9d97e3fd7c03c5ee484",
+    "generation_recipe.py": "51694806c0f65775e0c83dda29ddbc8d6e23211a57a45eef2a424889d592201e",
+    "training_example_assembler.py": "6d1af800360898039c42f017061f47badacaf00e45a4438437aa7323e66ff5da",
+    "reasoning_dimension_relevance.py": "dba227c0983bbb87d841b20c885e2dea3db8c908f06a86c3aa0b570474103250"
+  },
+  "determinism_guarantee": {
+    "mechanism": "Every relabeled score is derived via pure functions of example.synthetic (intended_reasoning_category_targets, intended_concept_inclusion), which were themselves sampled deterministically at Experiment 2 generation time via zlib.crc32-keyed pseudo-randomness (generation_recipe.sample_recipe). Relabeling introduces zero new randomness -- re-running run_dataset_relabel.py against an unchanged artifacts/experiment_2/dataset.jsonl with an unchanged dataset_relabeling.py will always produce byte-identical output.",
+    "verified_this_session": "Re-ran run_dataset_relabel.py after implementing both fixes; output example_id set and split were sanity-checked to exactly match the source (script's own built-in blockers would have failed the run otherwise)."
+  },
+  "example_count": 2479,
+  "split_reused_unchanged_from": "main_cap/cap/artifacts/experiment_2/split.json",
+  "split_sizes": {"train": 1738, "val": 379, "test": 362},
+  "test_suite_result_at_generation_time": {
+    "relabeling_tests": "main_cap/cap/test_dataset_relabeling.py -- 19/19 passed (15 original Stage 1A + 4 new for the two fixes)",
+    "full_repository_suite": "1213 passed, 21 subtests passed, 0 failed (prior baseline 1209 + 4 new tests, zero regressions)"
+  },
+  "environment": {
+    "python_version": "3.13.7",
+    "platform": "win32"
+  }
+}

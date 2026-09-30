@@ -1,0 +1,12 @@
+{
+  "expected_labels_in_order": ["contact", "experience"],
+  "min_confidence_by_label": {
+    "experience": 0.3
+  },
+  "max_confidence_by_label": {
+    "experience": 0.5
+  },
+  "reason_must_contain": {
+    "experience": "embedding_fallback"
+  }
+}

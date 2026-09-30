@@ -1,0 +1,65 @@
+# Introduction
+Network edge and access networks | network edge, access networks, DSL, cable, home network
+Packet switching vs circuit switching | packet switching, circuit switching, store-and-forward
+Network delays | transmission delay, propagation delay, queuing delay, processing delay
+Throughput and bottleneck link | throughput, bandwidth, bottleneck
+OSI model | seven layers, OSI reference model
+TCP/IP model | TCP/IP protocol stack, OSI vs TCP/IP
+Encapsulation and PDUs | encapsulation, decapsulation, frame, packet, segment, message
+Network devices | hub, repeater, switch, bridge, router, gateway, modem
+Collision and broadcast domains | collision domain, broadcast domain, hub vs switch
+
+# Physical and data link layer
+Transmission media | guided media, unguided media, twisted pair, coaxial, fiber optic
+Multiplexing | FDM, TDM, frequency division, time division
+Error detection | parity, checksum, CRC, cyclic redundancy check
+Principles of reliable data transfer | rdt 2.0, rdt 2.1, rdt 3.0, ACK, NAK, sequence numbers
+Stop-and-wait protocol | stop and wait ARQ
+Go-Back-N and Selective Repeat | sliding window, Go-Back-N, selective repeat
+Multiple access protocols | ALOHA, slotted ALOHA, random access
+CSMA/CD and CSMA/CA | carrier sense, collision detection, collision avoidance
+Ethernet | Ethernet frame, IEEE 802.3
+MAC addressing | MAC address, physical address
+ARP | address resolution protocol, ARP request, ARP reply
+Switching and VLANs | switch forwarding table, self-learning, VLAN
+IEEE 802.11 wireless LANs | WiFi, access point, 802.11 standards
+
+# Network layer
+IPv4 addressing | IP address, classful addressing, address classes
+Private and public IP addresses | private IP, public IP
+Subnetting | what's a subnet, subnet part and host part, subnet mask, network ID, host ID
+CIDR | classless inter-domain routing, prefix, supernetting
+IPv4 datagram format | IP header, TTL, fragmentation
+IPv6 | IPv6 address, IPv4 vs IPv6
+NAT | network address translation
+DHCP | DHCP, DORA, dynamic IP
+ICMP | ICMP, ping, traceroute
+Forwarding vs routing | forwarding table, routing algorithm
+Router architecture | input ports, switching fabric, output ports, what's inside a router
+Distance vector routing | distance vector, Bellman-Ford, count to infinity, RIP
+Link state routing | link state, Dijkstra, OSPF
+Firewalls | firewall, packet filtering
+
+# Transport layer
+Transport layer services | process-to-process delivery, ports, sockets, multiplexing, demultiplexing
+UDP | user datagram protocol, UDP header, connectionless
+TCP vs UDP | TCP vs UDP, reliable vs unreliable
+TCP segment structure | TCP header, sequence number, acknowledgment number
+TCP connection establishment | before exchanging data sender/receiver handshake,three-way handshake, SYN, SYN-ACK, ACK
+TCP connection termination | four-way handshake, FIN, TIME_WAIT
+TCP reliable data transfer | retransmission, timeout, cumulative ACK
+TCP flow control | receive window, sliding window, flow control
+TCP congestion control | slow start, congestion avoidance, AIMD, fast retransmit, fast recovery
+
+# Application layer
+Client-server vs peer-to-peer | client-server architecture, P2P architecture
+Socket programming | TCP socket, UDP socket, client and server sockets
+DNS | domain name system, DNS hierarchy, recursive query, iterative query, DNS records
+HTTP | HTTP request, HTTP response, methods, status codes
+Persistent vs non-persistent HTTP | persistent connection, non-persistent connection, RTT
+Cookies | cookies, state management, stateless protocol
+Web caching | proxy server, web cache, conditional GET
+HTTPS and TLS | HTTPS, SSL, TLS handshake, certificates
+Email protocols | SMTP, POP3, IMAP
+FTP | file transfer protocol, control connection, data connection
+URL to webpage flow | what happens when you type a URL, a day in the life of a web request

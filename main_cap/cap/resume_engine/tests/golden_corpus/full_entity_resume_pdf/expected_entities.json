@@ -1,0 +1,24 @@
+{
+  "contact": {
+    "entity_count": 1,
+    "expected_fields": {
+      "candidate_name": "Jordan Example",
+      "email": "jordan.example@test.invalid",
+      "phone": "(555) 010-1234",
+      "location": "San Francisco"
+    }
+  },
+  "experience": {
+    "entity_count": 2,
+    "expected_roles": ["Senior Engineer", "Software Engineer"],
+    "expected_companies": ["Acme Corp", "Beta Inc"]
+  },
+  "projects": {
+    "entity_count": 2,
+    "expected_titles": ["AI SOC Analyst", "Task Tracker"],
+    "technologies_contains": {
+      "AI SOC Analyst": ["Python", "Redis", "Docker"],
+      "Task Tracker": ["React", "Node.js"]
+    }
+  }
+}

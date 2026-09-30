@@ -1,0 +1,14 @@
+{
+  "layout_mode": "ambiguous",
+  "layout_confidence_min": 0.3,
+  "span_count_min": 10,
+  "hyperlink_count": 0,
+  "expected_span_order_contains": [
+    "Acme Corp, Senior Engineer",
+    "2021 - Present",
+    "Led migration of the billing platform to microservices.",
+    "Beta Inc, Software Engineer",
+    "2018 - 2021",
+    "Built the customer-facing analytics dashboard."
+  ]
+}

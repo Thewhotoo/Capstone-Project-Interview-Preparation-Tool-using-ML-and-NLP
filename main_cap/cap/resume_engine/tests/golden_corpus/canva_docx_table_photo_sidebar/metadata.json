@@ -1,0 +1,14 @@
+{
+  "fixture_id": "canva_docx_table_photo_sidebar",
+  "layout_type": "ambiguous",
+  "document_type": "docx",
+  "template_style": "canva",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "hard",
+  "known_edge_cases": [
+    "a 3-column DOCX table (photo cell, skills sidebar, main experience column) -- three-or-more columns are an explicit non-goal per architecture doc Section 4.2",
+    "confirms graceful degradation: classified 'ambiguous' (confidence 0.35), not force-guessed into a wrong two_column split; reading order happens to stay correct because extraction visits table cells in column-major order already"
+  ],
+  "notes": "Validation-pass fixture (2026-08). This is WORKING AS INTENDED, not a bug -- included to demonstrate the non-goal degrades safely rather than silently mis-parsing.",
+  "added_in_milestone": 1
+}

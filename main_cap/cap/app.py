@@ -1,0 +1,1100 @@
+"""
+Capstone Interview System - Flask API
+Integrates with existing UI and all components
+"""
+
+from flask import Flask, request, jsonify, render_template
+from dotenv import load_dotenv
+import os
+import sys
+import logging
+
+# Must run before anything imports huggingface_hub / sentence_transformers.
+import model_warmup
+model_warmup.use_local_models_only()
+
+import conversation_engine
+import deployment_evaluator
+import discussion_engine
+
+# Load .env file (if it exists)
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# ── Startup note: GEMINI_API_KEY ────────────────────────────────────────────
+# Post-Milestone-7-cutover: resume upload (`/api/classify-resume`) runs the
+# deterministic Resume Intelligence Engine and does NOT require
+# GEMINI_API_KEY. Gemini remains wired into candidate_profile_generator.py
+# only for Shadow Mode dev tooling (resume_engine/devtools/), which is
+# never imported from this file and never reachable from a real request --
+# so an unset key here is expected in a normal deployment, not an error.
+if not os.environ.get("GEMINI_API_KEY", "").strip():
+    logger.info(
+        "GEMINI_API_KEY not set -- fine for normal operation (resume "
+        "parsing uses the deterministic engine); only needed for the "
+        "Shadow Mode dev-comparison tooling."
+    )
+
+# ── Startup wiring: production evaluator (trained model, falls back to
+# HeuristicEvaluator automatically -- see deployment_evaluator.py) ──────────
+deployment_evaluator.bootstrap_production_evaluator()
+
+app = Flask(__name__, template_folder="templates", static_folder="static")
+
+# ── Accounts: SQLite database, login, profiles, resume storage ─────────────
+# (see account_routes.py). Applies pending migrations on startup.
+from account_routes import init_accounts
+from flask_login import current_user
+import session_history
+from session_routes import sessions_bp
+init_accounts(app)
+app.register_blueprint(sessions_bp)
+
+# No live interview survives a restart (their state is in memory), so any
+# session the database still shows as in progress is now abandoned.
+with app.app_context():
+    _abandoned = session_history.abandon_all_open_sessions()
+    if _abandoned:
+        logger.info("Marked %d unfinished interview session(s) as abandoned after restart.", _abandoned)
+
+# Every API route needs a logged-in user, except signing up and logging in.
+# The page itself ("/") stays public -- it shows the login screen.
+_PUBLIC_API_PATHS = {"/api/auth/login", "/api/auth/signup"}
+
+
+@app.before_request
+def _require_login_for_api():
+    path = request.path
+    if (path.startswith("/api/")
+            and path not in _PUBLIC_API_PATHS
+            and not current_user.is_authenticated):
+        return jsonify({"error": "Please log in to continue."}), 401
+
+# Base paths
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.join(BASE_DIR, "../..")
+
+# Add resume_classifier to path for real parsing and classification
+RESUME_CLASSIFIER_DIR = os.path.join(PROJECT_ROOT, "resume_classifier")
+if RESUME_CLASSIFIER_DIR not in sys.path:
+    sys.path.insert(0, RESUME_CLASSIFIER_DIR)
+
+# ── RAG Integration (legacy quiz only) ───────────────────────────────────────
+# Only the old /api/next_question route uses it, and the UI no longer calls
+# that route, so it is imported on first use instead of at startup (the
+# import alone took ~4.6 s of every server start).
+_rag_state = {"loaded": False, "generator": None}
+
+
+def _rag_generator():
+    """The legacy RAG question generator, or None if unavailable."""
+    if not _rag_state["loaded"]:
+        _rag_state["loaded"] = True
+        try:
+            from rag_integration import rag_generator as gen
+            if gen.rag_available and gen.get_available_subjects():
+                _rag_state["generator"] = gen
+        except ImportError:
+            pass
+        # Ensure resume_classifier stays at top of sys.path (RAG path may have shadowed it)
+        if RESUME_CLASSIFIER_DIR in sys.path:
+            sys.path.remove(RESUME_CLASSIFIER_DIR)
+        sys.path.insert(0, RESUME_CLASSIFIER_DIR)
+    return _rag_state["generator"]
+
+# Module-level RAG question cache for /api/next_question
+_rag_question_pool = []      # list of question dicts
+_rag_question_counter = 0    # auto-incrementing ID for RAG questions
+_asked_rag_ids = set()       # IDs already asked
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# WEB UI ROUTES
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.route("/", methods=["GET"])
+def home():
+    """Serve the web UI"""
+    return render_template("index.html")
+
+@app.route("/health", methods=["GET"])
+def health():
+    """Health check"""
+    return jsonify({"status": "ok"}), 200
+
+@app.route("/api/get-resume-discussion", methods=["POST"])
+def get_resume_discussion():
+    """
+    Generate Resume Discussion questions from the Candidate Profile.
+
+    Request:
+        {"session_id": "...", "domain": "...", "skills": [...]}
+
+    If session_id maps to a stored Candidate Profile, questions are derived
+    from projects, interview_seeds, experience, technologies, and skills.
+
+    Falls back to hardcoded MCQ banks when no profile is available.
+    """
+    try:
+        data = request.get_json() or {}
+        session_id = data.get("session_id", "")
+        domain = data.get("domain", "Software Engineer")
+
+        # Try to load the Candidate Profile (single source of truth)
+        profile = _candidate_profiles.get(session_id) if session_id else None
+
+        if profile:
+            questions = _generate_resume_discussion_questions(profile)
+            return jsonify({
+                "status": "success",
+                "mode": "resume_discussion",
+                "domain": domain,
+                "total_questions": len(questions),
+                "questions": questions,
+            }), 200
+
+        # Fallback: hardcoded MCQs when no profile available
+        fallback_questions = _hardcoded_fallback(domain)
+        return jsonify({
+            "status": "success",
+            "mode": "fallback",
+            "domain": domain,
+            "total_questions": len(fallback_questions),
+            "questions": fallback_questions,
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        return jsonify({"error": str(e)}), 400
+
+
+def _generate_resume_discussion_questions(profile: dict, num_questions: int = 10):
+    """
+    Build open-ended Resume Discussion questions from the Candidate Profile.
+
+    Priority order:
+        1. interview_seeds (from projects)
+        2. project titles / summaries
+        3. experience entries
+        4. technologies (from projects)
+        5. skills
+
+    Returns a list of dicts compatible with the existing discussion renderer:
+        {question, options, answer, difficulty, _discussion: True}
+    """
+    import random
+
+    questions: list[dict] = []
+    used_seeds: set[str] = set()
+
+    # ── 1. Questions from interview_seeds ──────────────────────────────
+    for project in profile.get("projects", []):
+        title = project.get("title", "your project")
+        for seed in project.get("interview_seeds", []):
+            if seed.lower() in used_seeds:
+                continue
+            used_seeds.add(seed.lower())
+            q_text = f"Regarding {title}: {seed}"
+            questions.append({
+                "question": q_text,
+                "options": [
+                    "I'd like to discuss this in detail",
+                    "Let me explain my approach",
+                ],
+                "answer": 0,
+                "difficulty": "Medium",
+                "_discussion": True,
+            })
+
+    # ── 2. Questions about project technologies ────────────────────────
+    for project in profile.get("projects", []):
+        title = project.get("title", "your project")
+        techs = project.get("technologies", [])
+        if techs:
+            tech_str = ", ".join(techs[:3])
+            q_text = f"I see {tech_str} listed under {title}. Can you walk me through how you used them?"
+            questions.append({
+                "question": q_text,
+                "options": [
+                    "I'd like to discuss this in detail",
+                    "Let me explain my approach",
+                ],
+                "answer": 0,
+                "difficulty": "Medium",
+                "_discussion": True,
+            })
+
+    # ── 3. Questions from experience ───────────────────────────────────
+    for exp in profile.get("experience", []):
+        role = exp.get("role", "")
+        company = exp.get("company", "")
+        if role and company:
+            q_text = (
+                f"Tell me about your time as {role} at {company}. "
+                "What were the most technically challenging aspects?"
+            )
+            questions.append({
+                "question": q_text,
+                "options": [
+                    "I'd like to discuss this in detail",
+                    "Let me explain my approach",
+                ],
+                "answer": 0,
+                "difficulty": "Medium",
+                "_discussion": True,
+            })
+
+    # ── 4. Technology-specific questions ───────────────────────────────
+    all_techs: list[str] = []
+    for project in profile.get("projects", []):
+        all_techs.extend(project.get("technologies", []))
+    for tech in list(dict.fromkeys(all_techs))[:4]:
+        q_text = (
+            f"I notice {tech} in your projects. "
+            f"Why did you choose {tech}, and what alternatives did you consider?"
+        )
+        questions.append({
+            "question": q_text,
+            "options": [
+                "I'd like to discuss this in detail",
+                "Let me explain my approach",
+            ],
+            "answer": 0,
+            "difficulty": "Medium",
+            "_discussion": True,
+        })
+
+    # ── 5. Skill-based questions ───────────────────────────────────────
+    skills = profile.get("skills", [])
+    if skills:
+        q_text = (
+            f"You list {skills[0]} as a key skill. "
+            "Can you describe a project where you applied it in production?"
+        )
+        questions.append({
+            "question": q_text,
+            "options": [
+                "I'd like to discuss this in detail",
+                "Let me explain my approach",
+            ],
+            "answer": 0,
+            "difficulty": "Medium",
+            "_discussion": True,
+        })
+
+    # ── Shuffle and cap ────────────────────────────────────────────────
+    random.shuffle(questions)
+    return questions[:num_questions]
+
+
+def _hardcoded_fallback(domain):
+    """Return the static question bank for a domain."""
+    all_questions = {
+            "Software Engineer": [
+                # EASY
+                {"question": "What does OOP stand for?", "options": ["Object Oriented Programming", "Object Organization Protocol", "Online Operating Process", "Object Output Parameter"], "answer": 0, "difficulty": "Easy"},
+                {"question": "Which of these is NOT a SOLID principle?", "options": ["Single Responsibility", "Open/Closed", "Liskov Substitution", "Interface Inheritance"], "answer": 3, "difficulty": "Easy"},
+                {"question": "What is version control primarily used for?", "options": ["Encrypting data", "Tracking code changes and collaboration", "Compiling code", "Hosting websites"], "answer": 1, "difficulty": "Easy"},
+                
+                # MEDIUM
+                {"question": "What is the difference between a class and an interface?", "options": ["Interfaces define contracts; classes implement behavior", "They are the same", "Classes are for data; interfaces are for methods", "Interfaces cannot have methods"], "answer": 0, "difficulty": "Medium"},
+                {"question": "Explain the Single Responsibility Principle (SRP):", "options": ["A class should do many things", "Each class should have one reason to change", "Classes should inherit from one parent", "Functions should be very long"], "answer": 1, "difficulty": "Medium"},
+                {"question": "What is the purpose of design patterns in software development?", "options": ["To make code slower", "To provide reusable solutions for common problems", "To replace frameworks", "To eliminate functions"], "answer": 1, "difficulty": "Medium"},
+                
+                # HARD
+                {"question": "In SOLID principles, the Liskov Substitution Principle states that:", "options": ["Objects should be open for extension but closed for modification", "Subclasses should be substitutable for their base classes without breaking the system", "High-level modules should not depend on low-level modules", "Depend on abstractions, not concrete implementations"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is the primary difference between composition and inheritance in OOP?", "options": ["Inheritance is faster than composition", "Composition provides flexibility and avoids tight coupling; inheritance creates an 'is-a' relationship", "They are functionally identical", "Inheritance is only for interfaces"], "answer": 1, "difficulty": "Hard"},
+                {"question": "In a microservices architecture, what is the primary challenge with distributed transactions?", "options": ["They are slower than monolithic transactions", "ACID guarantees don't hold across services; need eventual consistency and saga pattern", "Microservices don't support transactions", "They require a central database"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is the difference between REST and GraphQL?", "options": ["GraphQL always requires more bandwidth", "REST uses multiple endpoints; GraphQL uses single endpoint with flexible queries", "They are identical", "REST cannot query nested data"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain the difference between mutable and immutable objects in programming:", "options": ["They have no difference", "Mutable can be changed; immutable cannot; immutability aids concurrency and debugging", "Mutable objects are always slower", "Immutable objects cannot be created"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is a deadlock in concurrent programming and how do you prevent it?", "options": ["A type of lock statement", "Situation where threads wait indefinitely; prevent by lock ordering, timeouts, or deadlock detection", "A hardware issue", "Cannot be prevented"], "answer": 1, "difficulty": "Hard"},
+            ],
+            
+            "Network Engineer": [
+                # EASY
+                {"question": "What does TCP stand for?", "options": ["Transfer Control Protocol", "Transmission Control Protocol", "Transfer Communication Process", "Temporary Connectivity Protocol"], "answer": 1, "difficulty": "Easy"},
+                {"question": "How many layers does the OSI model have?", "options": ["5", "6", "7", "8"], "answer": 2, "difficulty": "Easy"},
+                {"question": "What is the primary function of a router?", "options": ["To encrypt data", "To forward packets between networks", "To store files", "To display web pages"], "answer": 1, "difficulty": "Easy"},
+                
+                # MEDIUM
+                {"question": "What is the difference between UDP and TCP?", "options": ["UDP is connection-oriented and reliable; TCP is connectionless and fast", "TCP is connection-oriented and reliable; UDP is connectionless and fast", "They are identical", "UDP is used for web browsing"], "answer": 1, "difficulty": "Medium"},
+                {"question": "What is DHCP used for?", "options": ["Encryption", "Automatic IP address assignment", "Domain management", "Packet filtering"], "answer": 1, "difficulty": "Medium"},
+                {"question": "Explain the purpose of a firewall:", "options": ["To speed up networks", "To filter and control traffic based on security rules", "To increase bandwidth", "To replace routers"], "answer": 1, "difficulty": "Medium"},
+                
+                # HARD
+                {"question": "What is the main purpose of the TCP window size in congestion control?", "options": ["To display network graphs", "To control how much data can be in flight before acknowledgment is needed", "To encrypt packets", "To route packets"], "answer": 1, "difficulty": "Hard"},
+                {"question": "In BGP (Border Gateway Protocol), what is an AS (Autonomous System)?", "options": ["A single server", "A collection of IP networks under common administration following a single routing policy", "A type of firewall", "An encryption algorithm"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is the difference between a stateless and stateful firewall?", "options": ["Stateless is more secure", "Stateless filters packets independently; stateful tracks connection states and context", "They are the same", "Stateful is only for routers"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain the concept of subnetting and CIDR notation:", "options": ["A way to encrypt networks", "A method to divide networks into smaller subnets using prefix notation", "A type of firewall", "Only for IPv6"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is the difference between NAT and PAT in networking?", "options": ["They are the same", "NAT maps IPs; PAT (Port Address Translation) maps IPs and ports for multiple internal hosts to share one external IP", "PAT is faster", "NAT is only for IPv4"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain the three-way handshake in TCP connection establishment:", "options": ["Not necessary for TCP", "SYN -> SYN-ACK -> ACK; establishes connection, exchange of sequence numbers", "Only used in UDP", "Happens automatically without packets"], "answer": 1, "difficulty": "Hard"},
+            ],
+            
+            "Data Scientist": [
+                # EASY
+                {"question": "What is the purpose of train/test split in machine learning?", "options": ["To save storage", "To evaluate model performance on unseen data", "To increase model speed", "To reduce data collection costs"], "answer": 1, "difficulty": "Easy"},
+                {"question": "What does 'overfitting' mean?", "options": ["Model is too small", "Model performs well on training data but poorly on test data", "Model is very fast", "Model has too few parameters"], "answer": 1, "difficulty": "Easy"},
+                {"question": "What is supervised learning?", "options": ["Learning without labels", "Learning from labeled data to predict outputs", "Learning without a teacher", "Learning only from images"], "answer": 1, "difficulty": "Easy"},
+                
+                # MEDIUM
+                {"question": "Explain the purpose of feature scaling/normalization:", "options": ["To make data smaller", "To bring features to similar scale, improving model performance and training speed", "To remove outliers", "To reduce dimensionality"], "answer": 1, "difficulty": "Medium"},
+                {"question": "What is cross-validation and why is it important?", "options": ["Validating multiple models", "Dividing data into k folds to get robust performance estimate", "Testing on all data", "Only for deep learning"], "answer": 1, "difficulty": "Medium"},
+                {"question": "What is the difference between precision and recall?", "options": ["They are the same", "Precision: correct positives/predicted positives; Recall: correct positives/actual positives", "Recall is always higher", "Precision is only for regression"], "answer": 1, "difficulty": "Medium"},
+                
+                # HARD
+                {"question": "What is the difference between bagging and boosting in ensemble methods?", "options": ["Bagging is faster; boosting is more accurate", "Bagging uses parallel training; boosting trains sequentially on misclassified samples", "They produce identical results", "Boosting can only be used for regression"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain the vanishing gradient problem in deep neural networks:", "options": ["Learning rate too high", "Gradients become exponentially small during backpropagation, preventing weight updates in early layers", "Loss function is missing", "No gradients exist"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is the purpose of batch normalization in neural networks?", "options": ["To make model smaller", "To normalize layer inputs per batch, reducing internal covariate shift and allowing higher learning rates", "To reduce parameters", "To encrypt data"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain the difference between L1 and L2 regularization:", "options": ["They are the same", "L1 (Lasso) uses absolute values for feature selection; L2 (Ridge) uses squared values for weight shrinkage", "L1 is slower", "L2 cannot handle sparse data"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is a ROC curve and what does AUC represent?", "options": ["Chart of costs", "Curve plotting True Positive Rate vs False Positive Rate; AUC measures overall classification performance", "Only for regression", "Used only in clustering"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain the difference between parametric and non-parametric models:", "options": ["Parametric is faster", "Parametric assumes fixed structure; non-parametric is flexible and data-driven", "They require same data size", "Non-parametric cannot make predictions"], "answer": 1, "difficulty": "Hard"},
+            ],
+            
+            "Database Engineer": [
+                # EASY
+                {"question": "What does ACID stand for in databases?", "options": ["Atomicity, Consistency, Isolation, Durability", "Assessment, Configuration, Integration, Data", "Automatic, Control, Input, Database", "Analysis, Compression, Indexing, Distribution"], "answer": 0, "difficulty": "Easy"},
+                {"question": "What is a primary key?", "options": ["A key that opens the database", "A unique identifier for each row in a table", "The most important column", "A type of password"], "answer": 1, "difficulty": "Easy"},
+                {"question": "What is the purpose of a foreign key?", "options": ["To encrypt data", "To establish relationships between tables", "To store large files", "To speed up queries"], "answer": 1, "difficulty": "Easy"},
+                
+                # MEDIUM
+                {"question": "Explain normalization in database design:", "options": ["Making data alphabetical", "Organizing data to minimize redundancy and improve data integrity", "Removing all columns", "Making all columns the same size"], "answer": 1, "difficulty": "Medium"},
+                {"question": "What is the difference between INNER JOIN and LEFT JOIN?", "options": ["INNER JOIN includes unmatched rows; LEFT JOIN only matched", "INNER JOIN only matched rows; LEFT JOIN includes all left table rows plus matches", "They are identical", "LEFT JOIN is always faster"], "answer": 1, "difficulty": "Medium"},
+                {"question": "What is denormalization and when is it used?", "options": ["Removing a database", "Intentionally introducing redundancy for performance; used when read performance is critical", "Only for small databases", "Makes queries slower"], "answer": 1, "difficulty": "Medium"},
+                
+                # HARD
+                {"question": "What is the difference between a clustered and non-clustered index?", "options": ["Clustered is faster; non-clustered is slower", "Clustered determines physical row order (one per table); non-clustered is separate structure (multiple allowed)", "They are identical", "Non-clustered can only be on strings"], "answer": 1, "difficulty": "Hard"},
+                {"question": "In NoSQL databases, what is eventual consistency?", "options": ["Database is always consistent", "After write, reads may return stale data but will eventually reflect the write", "NoSQL has no consistency", "All nodes update simultaneously"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain the CAP theorem in distributed databases:", "options": ["It has no relevance", "Only Consistency, Availability, OR Partition tolerance can be guaranteed simultaneously; choose two", "All three can be achieved", "Only for relational databases"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is a write-heavy vs read-heavy database optimization trade-off?", "options": ["No trade-off exists", "Write-heavy prioritizes insert/update speed; read-heavy uses indexing and denormalization for fast queries", "Write-heavy is always better", "Only applies to SQL databases"], "answer": 1, "difficulty": "Hard"},
+                {"question": "Explain sharding and when it is used:", "options": ["A type of password", "Horizontal partitioning of data across multiple servers; used when data is too large for single server", "Deleting old data", "Compressing database files"], "answer": 1, "difficulty": "Hard"},
+                {"question": "What is the difference between pessimistic and optimistic locking?", "options": ["They are the same", "Pessimistic locks before access; optimistic assumes no conflict and checks at commit; optimistic better for low contention", "Pessimistic is always better", "Only for specific databases"], "answer": 1, "difficulty": "Hard"},
+            ]
+        }
+
+    return all_questions.get(domain, all_questions["Software Engineer"])
+
+# ── In-memory Candidate Profile store ────────────────────────────────────────
+# Keyed by session: stores the full Candidate Profile generated by the
+# deterministic Resume Intelligence Engine so downstream modules
+# (discussion, interview, quiz) never need to re-parse the resume.
+_candidate_profiles = {}   # session_id -> Candidate Profile dict
+_profile_owners = {}       # session_id -> (user_id, resume_id), set by _start_profile_session
+
+
+def _map_local_level_to_profile_level(level: str) -> str:
+    """Map local classifier levels (Junior/Mid/Senior) to profile levels."""
+    mapping = {
+        "Junior": "Beginner",
+        "Mid": "Intermediate",
+        "Senior": "Advanced",
+    }
+    return mapping.get(level, "Intermediate")
+
+
+def _build_local_candidate_profile(resume_text: str, parsed_resume: dict) -> dict:
+    """
+    Deterministic profile built from local parser/classifier outputs.
+    """
+    from src.features import extract_features
+
+    predicted_domain = "Software Engineering"
+    confidence = 0.5
+
+    features = extract_features(resume_text)
+
+    experience_info = features.get("total_experience", {}) or {}
+    profile_level = _map_local_level_to_profile_level(experience_info.get("level", "Unknown"))
+
+    skills = features.get("skills", []) or []
+
+    # Deterministic local domain heuristic from extracted skills/text.
+    text_lower = (resume_text or "").lower()
+    skills_lower = [str(s).lower() for s in skills]
+    domain_hints = {
+        "Software Engineering": ["python", "java", "javascript", "react", "node", "flask", "django", "api"],
+        "Data Science": ["machine learning", "tensorflow", "pytorch", "pandas", "numpy", "scikit", "data science"],
+        "Cybersecurity": ["cybersecurity", "siem", "soc", "penetration", "vulnerability", "security"],
+        "Product Management": ["product management", "roadmap", "stakeholder", "go-to-market"],
+        "Mechanical Engineering": ["cad", "solidworks", "ansys", "mechanical", "thermodynamics"],
+    }
+
+    domain_scores = {domain: 0 for domain in domain_hints}
+    for domain, hints in domain_hints.items():
+        for hint in hints:
+            in_skills = any(hint in s for s in skills_lower)
+            in_text = hint in text_lower
+            if in_skills:
+                domain_scores[domain] += 2
+            elif in_text:
+                domain_scores[domain] += 1
+
+    best_domain = max(domain_scores, key=domain_scores.get)
+    best_score = domain_scores.get(best_domain, 0)
+    if best_score > 0:
+        predicted_domain = best_domain
+        confidence = min(0.95, 0.5 + (best_score * 0.05))
+
+    experience_entries = []
+    for job in features.get("job_experiences", []) or []:
+        experience_entries.append({
+            "company": str(job.get("company", "") or ""),
+            "role": str(job.get("title", "") or ""),
+            "duration": str(job.get("date_range", "") or ""),
+            "summary": str(job.get("primary_focus", "") or ""),
+        })
+
+    education_entries = []
+    for edu in features.get("education", []) or []:
+        grad = edu.get("graduation_year")
+        education_entries.append({
+            "degree": str(edu.get("degree", "") or ""),
+            "major": str(edu.get("major", "") or ""),
+            "institution": str(edu.get("institution", "") or ""),
+            "graduation_year": str(grad if grad is not None else ""),
+        })
+
+    summary_text = " ".join((resume_text or "").split())
+
+    return {
+        "candidate_name": parsed_resume.get("name") or "",
+        "contact_details": {
+            "email": parsed_resume.get("email") or "",
+            "phone": parsed_resume.get("phone") or "",
+            "linkedin": "",
+            "location": "",
+        },
+        "skills": skills,
+        "education": education_entries,
+        "experience": experience_entries,
+        "projects": [],
+        "certifications": [],
+        "predicted_domain": predicted_domain,
+        "experience_level": profile_level,
+        "confidence": max(0.0, min(1.0, confidence)),
+        "interview_blueprint": {
+            "resume_verification_topics": [],
+            "technical_topics": skills[:8],
+            "starting_difficulty": "intermediate",
+            "estimated_strengths": skills[:3],
+            "estimated_weaknesses": [],
+        },
+        "resume_summary": summary_text[:500],
+    }
+
+
+def _start_profile_session(resume) -> dict:
+    """Put a saved resume's parsed Candidate Profile into the in-memory
+    store the discussion/interview routes read, and return it in the exact
+    format the frontend already expects (plus `session_id` and `resume`)."""
+    import uuid
+
+    from candidate_profile_generator import profile_to_frontend_format
+
+    profile = resume.parsed_profile
+    session_id = f"profile_{uuid.uuid4().hex[:12]}"
+    _candidate_profiles[session_id] = profile
+    _profile_owners[session_id] = (current_user.id, resume.id)
+
+    result = profile_to_frontend_format(profile)
+    result["session_id"] = session_id
+    result["resume"] = resume.to_dict()
+    logger.info("Candidate profile session %s from resume %s: domain=%s",
+                session_id, resume.id, result.get("predicted_domain"))
+    return result
+
+
+@app.route("/api/classify-resume", methods=["POST"])
+def classify_resume():
+    """
+    Upload a resume from the main page: it is parsed by the deterministic
+    Resume Intelligence Engine (no LLM/API call) and saved to the user's
+    account as their current resume -- so it is what they see next time,
+    on any device -- then loaded for this session exactly like a saved
+    resume (see `use_saved_resume`).
+
+    Gemini-based parsing (`candidate_profile_generator.generate_candidate_
+    profile`) still exists in that module for Shadow Mode's own use
+    (`resume_engine/devtools/`, dev-only) but is not reachable from here.
+    """
+    from account_routes import add_resume_for_user
+    from resume_store import ResumeUploadError
+
+    try:
+        resume = add_resume_for_user(current_user, request.files.get("file"))
+    except ResumeUploadError as e:
+        logger.warning("Resume upload rejected: %s", e)
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        logger.error(f"Resume classification error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+    return jsonify(_start_profile_session(resume)), 200
+
+
+@app.route("/api/resumes/<int:resume_id>/use", methods=["POST"])
+def use_saved_resume(resume_id):
+    """Start from a resume already saved on the account (no upload, no
+    re-parsing). Same response shape as /api/classify-resume."""
+    from account_routes import own_resume
+
+    resume = own_resume(resume_id)
+    if resume is None:
+        return jsonify({"error": "Resume not found."}), 404
+    return jsonify(_start_profile_session(resume)), 200
+
+
+@app.route("/api/candidate-profile/<session_id>", methods=["GET"])
+def get_candidate_profile(session_id):
+    """
+    Retrieve a stored Candidate Profile by session ID.
+    Downstream modules use this instead of re-parsing the resume.
+    """
+    profile = _candidate_profiles.get(session_id)
+    if not profile:
+        return jsonify({"error": "Profile not found or session expired"}), 404
+    return jsonify(profile), 200
+
+# ═══════════════════════════════════════════════════════════════════════════
+# API ENDPOINTS FOR UI
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Sample data for testing
+SAMPLE_QUESTIONS = [
+    {
+        "sample_id": 1,
+        "question": "Explain the three-way handshake in TCP.",
+        "reference_answer": "The three-way handshake is a process where the client sends a SYN packet, the server responds with a SYN-ACK packet, and the client sends an ACK packet back. This establishes a TCP connection.",
+        "topic": "TCP",
+        "difficulty": "medium",
+        "fill_mask": {"question": "What is the first packet sent in TCP handshake?", "answer": "SYN"}
+    },
+    {
+        "sample_id": 2,
+        "question": "What is the purpose of DNS?",
+        "reference_answer": "DNS (Domain Name System) translates domain names into IP addresses. It allows users to access websites using human-readable names instead of IP addresses.",
+        "topic": "DNS",
+        "difficulty": "easy",
+        "fill_mask": {"question": "DNS translates ___ into IP addresses", "answer": "domain names"}
+    },
+    {
+        "sample_id": 3,
+        "question": "Explain IP routing and how packets are forwarded.",
+        "reference_answer": "IP routing is the process of forwarding packets from one network to another based on IP addresses. Routers use routing tables to determine the next hop for each packet.",
+        "topic": "IP Routing",
+        "difficulty": "hard",
+        "fill_mask": {"question": "Routers use ___ to determine packet routing", "answer": "routing tables"}
+    },
+    {
+        "sample_id": 4,
+        "question": "What is UDP and how is it different from TCP?",
+        "reference_answer": "UDP (User Datagram Protocol) is a connectionless protocol that does not establish a connection before sending data. Unlike TCP, UDP is faster but less reliable.",
+        "topic": "UDP",
+        "difficulty": "medium",
+        "fill_mask": {"question": "UDP is a ___ protocol", "answer": "connectionless"}
+    },
+    {
+        "sample_id": 5,
+        "question": "Explain the concept of network congestion control.",
+        "reference_answer": "Congestion control is a mechanism that prevents network overload by regulating the rate at which data is sent. TCP uses algorithms like Reno and Cubic for congestion control.",
+        "topic": "Congestion Control",
+        "difficulty": "hard",
+        "fill_mask": {"question": "TCP uses ___ algorithm for congestion control", "answer": "Reno"}
+    }
+]
+
+@app.route("/api/next_question", methods=["POST"])
+def next_question():
+    """
+    Get next question for the interview.
+    Tries RAG open-ended questions first (if available), falls back to hardcoded.
+    Request: {"asked_ids": [], "difficulty": "medium", "topic": "All"}
+    """
+    global _rag_question_counter
+
+    try:
+        data = request.get_json() or {}
+        asked_ids = data.get("asked_ids", [])
+        target_difficulty = data.get("difficulty", "medium")
+        target_topic = data.get("topic", "All")
+
+        # ── Seed RAG question pool on first call (if available) ───────────
+        _rag_gen = _rag_generator() if not _rag_question_pool else None
+        if _rag_gen is not None:
+            try:
+                _rag_question_counter = 0
+                for topic in ["TCP", "DNS", "IP Routing", "UDP", "Congestion Control"]:
+                    rags = _rag_gen.generate_open_questions("cn_unit1", topic, num_questions=2)
+                    for r in rags:
+                        _rag_question_counter += 1
+                        # Build a fill_mask from the reference_answer
+                        fill_mask = _make_fill_mask(r.get("reference_answer", ""))
+                        _rag_question_pool.append({
+                            "sample_id": 1000 + _rag_question_counter,
+                            "question": r["question"],
+                            "reference_answer": r.get("reference_answer", ""),
+                            "topic": r.get("topic", topic),
+                            "difficulty": "medium",
+                            "fill_mask": fill_mask,
+                            "_source": "rag",
+                        })
+                logger.info(f"Seeded {len(_rag_question_pool)} RAG questions")
+            except Exception as e:
+                logger.warning(f"RAG pool seeding failed: {e}")
+
+        # ── Try RAG questions first ───────────────────────────────────────
+        if _rag_question_pool:
+            available_rag = [
+                q for q in _rag_question_pool
+                if q["sample_id"] not in _asked_rag_ids
+                and q["sample_id"] not in asked_ids
+                and (target_difficulty == "All" or q.get("difficulty") == target_difficulty)
+                and (target_topic == "All" or target_topic in q.get("topic", ""))
+            ]
+            if not available_rag:
+                # Relax difficulty/topic filter, just avoid already-asked
+                available_rag = [
+                    q for q in _rag_question_pool
+                    if q["sample_id"] not in _asked_rag_ids
+                    and q["sample_id"] not in asked_ids
+                ]
+            if available_rag:
+                import random as _rng
+                chosen = _rng.choice(available_rag)
+                _asked_rag_ids.add(chosen["sample_id"])
+                return jsonify({"status": "success", "data": chosen}), 200
+
+        # ── Fallback: hardcoded questions ─────────────────────────────────
+        available = [
+            q for q in SAMPLE_QUESTIONS
+            if q["sample_id"] not in asked_ids
+            and (target_difficulty == "All" or q.get("difficulty") == target_difficulty)
+            and (target_topic == "All" or target_topic in q.get("topic", ""))
+        ]
+        if not available:
+            available = [q for q in SAMPLE_QUESTIONS if q["sample_id"] not in asked_ids]
+        if not available:
+            return jsonify({"status": "completed"}), 200
+
+        import random
+        question = random.choice(available)
+        return jsonify({"status": "success", "data": question}), 200
+
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        return jsonify({"error": str(e)}), 400
+
+
+def _make_fill_mask(reference_answer):
+    """
+    Create a fill-in-the-blank question from a reference answer.
+    Picks the longest meaningful word (>5 chars) and blanks it out.
+    """
+    import re as _re
+    words = _re.findall(r"[A-Za-z\-]+", reference_answer)
+    technical = [w for w in words if len(w) > 5 and w.lower() not in
+                 {"system", "network", "process", "protocol", "processes", "between", "before", "establish", "connection", "mechanism", "through", "different", "without", "requests", "response"}]
+    if not technical:
+        technical = [w for w in words if len(w) > 5]
+    if not technical:
+        technical = words[-2:] if len(words) >= 2 else [words[0]] if words else ["this"]
+
+    key_term = technical[0]
+    # Blank it out in the first sentence
+    first_sentence = _re.split(r"[.!?]", reference_answer)[0]
+    blanked = first_sentence.replace(key_term, "___", 1)
+    if blanked == first_sentence:
+        # If word not in first sentence, prepend a prompt
+        blanked = f"Complete: ... {key_term} ..."
+
+    return {"question": blanked, "answer": key_term}
+
+@app.route("/api/evaluate", methods=["POST"])
+def evaluate():
+    """
+    Evaluate user's answer with STRICT gibberish detection and LENIENT proper answers
+    Request: {"user_answer": "...", "reference_answer": "...", "question": "...", "user_fill_mask": "...", "reference_fill_mask": "...", "fill_question": "..."}
+    """
+    try:
+        data = request.get_json() or {}
+        user_answer = data.get("user_answer", "").strip().lower()
+        ref_answer = data.get("reference_answer", "").strip().lower()
+        question = data.get("question", "").strip().lower()
+        user_fill = data.get("user_fill_mask", "").strip().lower()
+        ref_fill = data.get("reference_fill_mask", "").strip().lower()
+
+        # ═══════════════════════════════════════════════════════════════
+        # MAIN ANSWER EVALUATION (STRICT with gibberish, LENIENT with correct)
+        # ═══════════════════════════════════════════════════════════════
+        
+        def is_gibberish(text):
+            """Detect if answer is gibberish/nonsense"""
+            import re
+
+            if len(text) < 5:
+                return True
+
+            gibberish_patterns = [
+                "routing packet",  # Wrong answer for TCP handshake
+                "xxxx", "asdf", "qwerty", "zzzzz",  # keyboard gibberish
+                "blah", "bla bla", "idk", "dunno", "no idea",
+                "random", "whatever", "test", "hello world",
+            ]
+
+            # Whole-word/whole-phrase match only, so legitimate technical
+            # answers containing these as substrings of a longer word
+            # (e.g. "test suite", "randomized", "whatever alternative")
+            # aren't misflagged -- \b anchors each pattern to word
+            # boundaries rather than matching anywhere in the string.
+            for pattern in gibberish_patterns:
+                if re.search(r"\b" + re.escape(pattern) + r"\b", text):
+                    return True
+
+            # Check if answer has too many random/unrelated words
+            if any(re.search(r"\b" + re.escape(word) + r"\b", text) for word in ["lol", "haha", "wtf", "omg"]):
+                return True
+
+            return False
+        
+        def extract_key_concepts(answer_text):
+            """Extract important technical terms from answer"""
+            words = set(answer_text.split())
+            return words
+        
+        def semantic_score(user_text, ref_text, question_text):
+            """Calculate semantic relevance score"""
+            user_concepts = extract_key_concepts(user_text)
+            ref_concepts = extract_key_concepts(ref_text)
+            question_concepts = extract_key_concepts(question_text)
+            
+            # Check overlap with reference answer
+            ref_overlap = len(user_concepts & ref_concepts)
+            
+            # Check overlap with question (should mention related concepts)
+            question_overlap = len(user_concepts & question_concepts)
+            
+            # Total unique meaningful words in user answer
+            answer_quality = len(user_text.split())
+            
+            # Calculate base score
+            if ref_overlap >= 3:
+                # Good overlap with reference - LENIENT
+                base_score = 0.85 + (ref_overlap * 0.05)
+            elif ref_overlap == 2:
+                # Some overlap - MEDIUM
+                base_score = 0.70
+            elif ref_overlap == 1:
+                # Minimal overlap
+                base_score = 0.50
+            elif question_overlap >= 2 and answer_quality > 10:
+                # Related to question but not perfectly matching reference
+                base_score = 0.65
+            else:
+                # No meaningful overlap - STRICT
+                base_score = 0.20
+            
+            # Adjust for answer length (proper answers are detailed)
+            if answer_quality < 5:
+                base_score *= 0.6  # Too short
+            elif answer_quality > 50:
+                base_score *= 1.05  # Detailed
+            
+            return min(0.99, base_score)
+        
+        # Evaluate main answer
+        if is_gibberish(user_answer):
+            score = 0.0
+            feedback = "❌ Gibberish answer detected. Please provide a meaningful technical response."
+        elif not user_answer:
+            score = 0.0
+            feedback = "❌ No answer provided."
+        elif len(user_answer) < 8:
+            score = 0.25
+            feedback = "⚠️ Answer too brief. Provide more technical detail."
+        else:
+            score = semantic_score(user_answer, ref_answer, question)
+            
+            if score >= 0.85:
+                feedback = "✅ Excellent answer! Strong technical understanding demonstrated."
+            elif score >= 0.70:
+                feedback = "✓ Good answer. Core concepts are correct, though some details could be expanded."
+            elif score >= 0.50:
+                feedback = "△ Partially correct. You've identified some key concepts, but missed important details."
+            elif score >= 0.25:
+                feedback = "⚠️ Weak answer. The response shows minimal understanding of the concept."
+            else:
+                feedback = "❌ Incorrect. Answer does not match expected technical response."
+        
+        # ═══════════════════════════════════════════════════════════════
+        # FILL-IN-THE-BLANK EVALUATION (Flexible with synonyms/variations)
+        # ═══════════════════════════════════════════════════════════════
+        
+        def flexible_fill_match(user, reference):
+            """Flexible matching for fill-in-the-blank with synonyms"""
+            # Exact match
+            if user.lower() == reference.lower():
+                return True, 1.0
+            
+            # Abbreviation/acronym matching
+            acronym_map = {
+                "syn": "synchronize",
+                "ack": "acknowledge",
+                "fin": "finish",
+                "rst": "reset",
+                "syn-ack": "synchronize-acknowledge",
+                "synack": "synchronize-acknowledge",
+                "synack packet": "synchronize-acknowledge packet",
+                "syn packet": "synchronize packet",
+                "synchronize packet": "syn packet",
+                "tcp": "transmission control protocol",
+                "ip": "internet protocol",
+                "dns": "domain name system",
+                "dhcp": "dynamic host configuration protocol",
+                "bgp": "border gateway protocol",
+                "ospf": "open shortest path first",
+            }
+            
+            # Check if either is a key for the other
+            for short, long in acronym_map.items():
+                if (user.lower() == short and reference.lower() == long) or \
+                   (user.lower() == long and reference.lower() == short):
+                    return True, 1.0
+            
+            # Partial match (contains reference)
+            if reference.lower() in user.lower():
+                return True, 0.95
+            
+            if user.lower() in reference.lower():
+                return True, 0.90
+            
+            # Word overlap
+            user_words = set(user.lower().split())
+            ref_words = set(reference.lower().split())
+            if user_words == ref_words:
+                return True, 0.95
+            
+            # Key word match
+            if len(user_words & ref_words) >= 2:
+                return True, 0.85
+            
+            return False, 0.0
+        
+        fill_correct, fill_score = flexible_fill_match(user_fill, ref_fill)
+        
+        fill_feedback = ""
+        if fill_correct:
+            if fill_score == 1.0:
+                fill_feedback = "✅ Perfect! Exact answer."
+            else:
+                fill_feedback = "✓ Correct! (Accepted variation)"
+        else:
+            fill_feedback = f"❌ Incorrect. Expected: '{ref_fill}' but got '{user_fill}'"
+        
+        # ═══════════════════════════════════════════════════════════════
+        # COMBINE SCORES
+        # ═══════════════════════════════════════════════════════════════
+        
+        # Main answer accounts for 70%, fill-in-the-blank for 30%
+        combined_score = (score * 0.7) + (fill_score * 0.3)
+        marks = round(combined_score * 10)
+
+        # Adjust marks based on fill correctness
+        if fill_correct and score >= 0.7:
+            marks = min(10, marks + 1)  # Bonus for both correct
+
+        result = {
+            "score": round(combined_score, 2),
+            "marks": marks,
+            "feedback": feedback,
+            "fill_feedback": fill_feedback,
+            "fill_correct": fill_correct,
+            "main_score": round(score, 2),
+            "fill_score": round(fill_score, 2),
+        }
+
+        # Part of a saved Technical Interview session: record this question.
+        if data.get("session_id") is not None:
+            tech_session = session_history.own_in_progress_technical_session(data["session_id"], current_user.id)
+            if tech_session is not None:
+                session_history.record_technical_turn(tech_session, data, result)
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        return jsonify({"error": str(e)}), 400
+
+# ═══════════════════════════════════════════════════════════════════════════
+# RESUME DISCUSSION ENGINE (Conversational Interview)
+# ═══════════════════════════════════════════════════════════════════════════
+
+@app.route("/api/resume-discussion/start", methods=["POST"])
+def resume_discussion_start():
+    """
+    Start a conversational Resume Discussion session.
+
+    Delegates to discussion_engine.start_session — see that module for the
+    Gemini-driven question decision + heuristic fallback logic.
+    """
+    try:
+        data = request.get_json() or {}
+        profile_session_id = data.get("session_id", "")
+
+        profile = _candidate_profiles.get(profile_session_id)
+        if not profile:
+            return jsonify({"error": "Candidate Profile not found. Upload a resume first."}), 404
+
+        result, status = discussion_engine.start_session(profile, profile_session_id)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion start error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/resume-discussion/reply", methods=["POST"])
+def resume_discussion_reply():
+    """
+    Submit an answer and receive evaluation + next question.
+
+    Delegates to discussion_engine.reply.
+    """
+    try:
+        data = request.get_json() or {}
+        disc_session_id = data.get("session_id", "")
+        answer = data.get("answer", "").strip()
+
+        result, status = discussion_engine.reply(disc_session_id, answer)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion reply error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/resume-discussion/end", methods=["POST"])
+def resume_discussion_end():
+    """
+    End a Resume Discussion session and return the full summary.
+
+    Delegates to discussion_engine.end_session.
+    """
+    try:
+        data = request.get_json() or {}
+        disc_session_id = data.get("session_id", "")
+
+        result, status = discussion_engine.end_session(disc_session_id)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion end error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# RESUME DISCUSSION — CONVERSATION ENGINE (Phase 2 planning/realization,
+# Phase 3 evaluation)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Additive, parallel entry points using the Phase 2 planning + realization
+# pipeline (Planner -> QuestionRealizer -> InterviewQuestion,
+# conversation_engine.py) instead of discussion_engine.py's legacy
+# dict-based phrasing. Deliberately versioned (/resume-discussion-v2/...)
+# and does not touch the existing /api/resume-discussion/* routes above —
+# those remain exactly as Phase 1.5 left them, still backed by
+# discussion_engine.py (via legacy_topic_pool_adapter.py) and its existing
+# evaluator/decision policy. As of Phase 3, this engine DOES evaluate every
+# answer -- conversation_engine.py resolves the process's active evaluator
+# once per session (evaluator_registry.get_active_evaluator(), the same
+# HybridEvaluator deployment_evaluator.bootstrap_production_evaluator()
+# registers at app startup) and appends each turn's EvaluationResult to the
+# session's Evaluation Ledger. Adaptive probing/skipping based on that
+# evaluation is still out of scope (the Adaptive Controller's job) --
+# every specification is still presented exactly once, in the Planner's
+# own deterministic order -- only the "no evaluator at all" characterization
+# is out of date.
+
+@app.route("/api/resume-discussion-v2/start", methods=["POST"])
+def resume_discussion_v2_start():
+    """Start a Phase 2 Conversation Engine session against a real,
+    previously-generated Candidate Profile (the same `_candidate_profiles`
+    store the v1 routes and the resume-upload flow already use)."""
+    try:
+        data = request.get_json() or {}
+        profile_session_id = data.get("session_id", "")
+
+        profile = _candidate_profiles.get(profile_session_id)
+        owner = _profile_owners.get(profile_session_id)
+        if not profile or owner is None or owner[0] != current_user.id:
+            return jsonify({"error": "Candidate Profile not found. Upload a resume first."}), 404
+
+        result, status = conversation_engine.start_conversation(profile)
+        if status == 200:
+            # Saved to the user's session history from the first question on.
+            session_history.begin_resume_discussion(
+                result["conversation_id"], current_user.id, owner[1], result["question"],
+            )
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion v2 start error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/resume-discussion-v2/reply", methods=["POST"])
+def resume_discussion_v2_reply():
+    """Submit an answer and receive the next InterviewQuestion plus that
+    turn's evaluation (Phase 3) -- scoring exists; adaptive probing/
+    skipping based on the score does not (still out of scope)."""
+    try:
+        data = request.get_json() or {}
+        conversation_id = data.get("session_id", "")
+        answer = data.get("answer", "").strip()
+        if not session_history.owns_conversation(conversation_id, current_user.id):
+            return jsonify({"error": "Invalid or expired conversation"}), 404
+
+        result, status = conversation_engine.advance_conversation(conversation_id, answer)
+        if status == 200:
+            session_history.record_resume_discussion_turn(conversation_id, answer, result)
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion v2 reply error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/resume-discussion-v2/end", methods=["POST"])
+def resume_discussion_v2_end():
+    """End a conversation and return its summary: Phase 2's evaluation-free
+    ConversationMemory fields, plus (Phase 3) the full Evaluation Ledger as
+    a separate section -- see conversation_engine.end_conversation."""
+    try:
+        data = request.get_json() or {}
+        conversation_id = data.get("session_id", "")
+        if not session_history.owns_conversation(conversation_id, current_user.id):
+            return jsonify({"error": "Invalid or expired conversation"}), 404
+
+        result, status = conversation_engine.end_conversation(
+            conversation_id, integrity=data.get("integrity"),
+        )
+        if status == 200:
+            session_history.finish_resume_discussion(conversation_id, result, data.get("attention_metrics"))
+        return jsonify(result), status
+
+    except Exception as e:
+        logger.error(f"Resume discussion v2 end error: {e}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# RUN
+# ═══════════════════════════════════════════════════════════════════════════
+
+if __name__ == "__main__":
+    logger.info("Models: %s", "local cache only (no update checks)" if os.environ.get("HF_HUB_OFFLINE") == "1"
+                else "may download / check huggingface.co")
+    # Load every model now, in the background, so no user action waits for one.
+    model_warmup.start_background_warmup()
+    logger.info("Open your browser: http://localhost:5000")
+    app.run(debug=False, port=5000, threaded=True, use_reloader=False)

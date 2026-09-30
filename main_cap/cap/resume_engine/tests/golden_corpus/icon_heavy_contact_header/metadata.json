@@ -1,0 +1,14 @@
+{
+  "fixture_id": "icon_heavy_contact_header",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "icon_heavy",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "medium",
+  "known_edge_cases": [
+    "five separate icon glyphs in a row (phone/email/linkedin/github/portfolio), each its own hyperlink annotation with no visible URL text",
+    "stress test for hyperlink-count capture and for the icon glyphs not being misread as a column boundary (they're all on one line, not a separate right-hand band)"
+  ],
+  "notes": "Validation-pass fixture (2026-08). More icon links in one row than hyperlinked_contact_icons_pdf (2) -- tests whether volume of same-line icon glyphs changes anything.",
+  "added_in_milestone": 1
+}

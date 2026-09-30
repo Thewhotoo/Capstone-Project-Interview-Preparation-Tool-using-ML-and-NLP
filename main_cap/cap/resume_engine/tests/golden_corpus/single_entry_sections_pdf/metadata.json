@@ -1,0 +1,13 @@
+{
+  "fixture_id": "single_entry_sections_pdf",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "ats_plain",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "hard",
+  "known_edge_cases": [
+    "a Projects section with exactly ONE entry -- CONFIRMED RESIDUAL LIMITATION (named in advance in the Milestone 3 plan's design for pipeline._absorb_repeated_unknown_entries): the entry's own bold title line ('Task Tracker') is classified 'unknown' by Section Detection (no confident gazetteer/embedding match, same as any free-text title) and, being a SINGLE isolated 'unknown' hit rather than 2+ consecutive ones, is indistinguishable from a genuine standalone ambiguous section (e.g. ambiguous_header_pdf's 'Languages') -- so it is correctly NOT absorbed, and ProjectParser sees an empty 'projects' section."
+  ],
+  "notes": "Milestone 3 fixture (2026-08). Deliberately included, not hidden: demonstrates the honestly-documented limitation from the pipeline absorption fix rather than only showing fixtures where it works. The multi-entry case (full_entity_resume_pdf) is unaffected -- this limitation is specific to sections with exactly one entry, where there's only one data point and no way to distinguish 'repeating entry pattern' from 'one-off ambiguous section' by geometry alone.",
+  "added_in_milestone": 3
+}

@@ -1,0 +1,13 @@
+{
+  "fixture_id": "hyperlinked_contact_icons_pdf",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "medium",
+  "known_edge_cases": [
+    "LinkedIn/GitHub contact links with no visible URL text -- only a hyperlink annotation over an icon glyph",
+    "exercises page.get_links() hyperlink capture independent of visible span text"
+  ],
+  "notes": "Direct regression fixture for the gap named in architecture doc Section 4.1: today's Gemini pipeline drops icon-only hyperlinks entirely since it only ever sees flattened text.",
+  "added_in_milestone": 1
+}

@@ -1,0 +1,13 @@
+{
+  "fixture_id": "missing_sections_pdf",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "ats_plain",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "easy",
+  "known_edge_cases": [
+    "only Contact and Experience present -- Summary/Projects/Education/Skills/Certifications must simply be absent, never fabricated or crash"
+  ],
+  "notes": "Milestone 2 fixture (2026-08). Direct regression for the 'never fabricate a missing section' invariant (architecture doc Section 4.3 failure modes).",
+  "added_in_milestone": 2
+}

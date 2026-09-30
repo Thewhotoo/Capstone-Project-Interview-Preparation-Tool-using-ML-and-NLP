@@ -41,6 +41,7 @@ change what happens next.
 
 from __future__ import annotations
 
+import re
 import uuid as _uuid
 
 import question_realizer
@@ -241,9 +242,15 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
             and memory.turn_count() < RESUME_DISCUSSION_QUESTION_BUDGET
             and _answer_warrants_followup(result)):
         session["followups_by_source"][source_id] = followups_for_project + 1
-        focus = (current_question.specification.text_seed
-                 or current_question.project_reference
-                 or current_question.specification.source_id)
+        # The probe template embeds this as a noun phrase ("What more can you tell
+        # me about {focus}?"), so it must be a short SUBJECT, never a full question
+        # or sentence -- passing a sentence seed here produced garbled probes like
+        # "...about Why did you use X in this project??". Use the project title's
+        # head (e.g. "LinkLens -- URL Shortener..." -> "LinkLens"); when there is no
+        # project reference, pass None and let realize_followup fall back to its own
+        # safe generic ("that part of your work") rather than risk a sentence seed.
+        ref = (current_question.project_reference or "").strip()
+        focus = re.split(r"\s[—–-]\s", ref)[0].strip().rstrip("?.:,").strip() or None
         followup_turn_number = memory.turn_count() + 1
         followup_q, followup_variant = question_realizer.realize_followup(
             current_question.specification, memory, followup_turn_number,

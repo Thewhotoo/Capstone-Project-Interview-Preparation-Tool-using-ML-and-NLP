@@ -207,7 +207,7 @@ def main():
         # Find original filename from the copy mapping (we stored it at copy time)
         # Reconstruct from the naming convention we used
         original_map = {
-            "001": "MayuranResume.pdf",
+            "001": "resume0.pdf",
             "002": "resume1.pdf",
             "003": "resume2.pdf",
             "004": "resume3.pdf",
@@ -216,7 +216,7 @@ def main():
             "007": "resume6.pdf",
             "008": "resume7.pdf",
             "009": "resume8.pdf",
-            "010": "Shubham-Mookim-Resume.pdf",
+            "010": "resume9.pdf",
         }
         original = original_map.get(resume_id, filename)
 

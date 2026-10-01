@@ -318,10 +318,10 @@ class TestProfileToFrontendFormat(unittest.TestCase):
 
     def _full_profile_dict(self) -> dict:
         return CandidateProfile(
-            candidate_name="Shubham Mookim",
+            candidate_name="Jordan Mookexample",
             contact_details=ContactDetails(
-                email="shubhammookim@gmail.com",
-                phone="+918296461220",
+                email="jordan.example@test.invalid",
+                phone="+919000044444",
             ),
             predicted_domain="Software Engineering",
             experience_level="Intermediate",
@@ -365,9 +365,9 @@ class TestProfileToFrontendFormat(unittest.TestCase):
     def test_basic_mapping(self):
         f = profile_to_frontend_format(self._full_profile_dict())
         self.assertEqual(f["status"], "success")
-        self.assertEqual(f["name"], "Shubham Mookim")
-        self.assertEqual(f["email"], "shubhammookim@gmail.com")
-        self.assertEqual(f["phone"], "+918296461220")
+        self.assertEqual(f["name"], "Jordan Mookexample")
+        self.assertEqual(f["email"], "jordan.example@test.invalid")
+        self.assertEqual(f["phone"], "+919000044444")
         self.assertEqual(f["predicted_domain"], "Software Engineering")
         self.assertEqual(f["discussion_domain"], "Software Engineer")
         self.assertEqual(f["confidence"], 0.87)

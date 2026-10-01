@@ -1,0 +1,71 @@
+# Algorithm analysis
+Time and space complexity | time complexity, space complexity, basic operation count, input size
+Best, worst and average case | best case, worst case, average case, sequential search analysis
+Asymptotic notations | Big-O, Big-Omega, Big-Theta, little-o, order of growth, efficiency classes
+Recurrence relations | recurrence relation, backward substitution, master theorem, Tower of Hanoi
+
+# Stacks and queues
+Stack operations | push, pop, peek, overflow, underflow, array and linked list implementation
+Infix to postfix conversion | infix, postfix, prefix, operator precedence
+Postfix expression evaluation | evaluate postfix, operand stack
+Parenthesis matching | balanced parentheses, bracket matching
+Stacks and recursion | recursion, function call stack, activation record, nested functions
+Simple queue | queue, enqueue, dequeue, front, rear, FIFO, linked list implementation
+Circular queue | circular queue, drawback of simple queue
+Double-ended queue | deque, doubly linked list implementation
+Priority queue | priority queue, array implementation, heap implementation, ascending, descending
+Queue applications | Josephus problem, CPU scheduling using queue
+
+# Trees
+Tree terminology | root, leaf, degree, depth, height, level, forest
+Binary tree properties | full binary tree, complete binary tree, number of nodes
+N-ary tree to binary tree conversion | n-ary tree, forest to binary tree, left child right sibling
+Recursive tree traversals | preorder, inorder, postorder
+Iterative tree traversals | iterative inorder, iterative preorder, iterative postorder, stack
+Binary search tree operations | BST insertion, search, BST definition
+Binary search tree deletion | BST deletion, inorder successor, inorder predecessor
+Threaded binary search tree | threaded BST, inorder threads
+Expression trees | expression tree construction, expression tree evaluation
+
+# Heaps
+Heap construction | max heap, min heap, bottom-up, top-down heap construction, heapify
+Heap sort | heapsort, root deletion
+
+# Hashing and other structures
+Hash functions | hashing, hash table, hash function, load factor
+Separate chaining | separate chaining, open hashing
+Open addressing | linear probing, quadratic probing, double hashing, collision resolution
+Tries | trie, prefix tree, trie insertion, trie search, trie deletion
+Suffix tries and suffix trees | suffix trie, compressed trie, suffix tree, substring search
+Skip lists | skip list, perfect skip list, randomized skip list
+
+# Graphs
+Graph terminology | directed, undirected, weighted graph, degree, path, cycle
+Graph representation | adjacency matrix, adjacency list
+Depth-first search | DFS, DFS using stack
+Breadth-first search | BFS, BFS using queue
+Graph connectivity and path finding | connected components, all paths from source to destination
+Topological sorting | topological sort, DAG, source removal
+
+# Algorithm design techniques
+Brute force sorting | selection sort, bubble sort
+Exhaustive search | travelling salesman problem, knapsack problem, assignment problem
+Insertion sort | insertion sort, decrease by one
+Generating permutations and subsets | Johnson-Trotter, lexicographic permutations, subsets, decrease and conquer | low
+Binary search | binary search, decrease by constant factor
+Merge sort | merge sort, divide and conquer
+Quick sort | quicksort, partitioning, pivot
+Sorting by counting | comparison counting sort, distribution counting
+Horspool and Boyer-Moore string matching | shift table, input enhancement, bad-symbol shift, good-suffix shift
+
+# Greedy algorithms
+Greedy technique | greedy choice, change-making problem, coin change
+Prim's algorithm | minimum spanning tree, MST, Prim
+Kruskal's algorithm | Kruskal, MST, edge sorting
+Disjoint sets and union-find | union-find, disjoint subsets, cycle detection
+Dijkstra's algorithm | single-source shortest path, Dijkstra
+Huffman coding | Huffman tree, prefix code, compression ratio
+
+# Dynamic programming
+Dynamic programming and knapsack | dynamic programming, 0/1 knapsack, binomial coefficient
+Warshall's and Floyd's algorithms | transitive closure, all-pairs shortest paths, Floyd-Warshall

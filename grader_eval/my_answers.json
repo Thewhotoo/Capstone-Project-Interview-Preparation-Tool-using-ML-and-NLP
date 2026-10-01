@@ -1,0 +1,858 @@
+[
+  {
+    "question_id": "cn.tcp_vs_udp.easy1",
+    "subject": "Computer Networks",
+    "question": "Explain one key difference between TCP and UDP in terms of reliability and connection setup.",
+    "key_points": [
+      "TCP requires a connection setup.",
+      "UDP does not provide reliability."
+    ],
+    "answer": "tcp uses 3 way handshake for connection, where as udp uses no handshake mechanism. tcp is connection oriented where as udp is connection-less. tcp is more reliable due its 3 way handshake connection establishment",
+    "overall": 0.8,
+    "labels": [
+      "covered",
+      "partial"
+    ],
+    "followup": {
+      "question": "Does UDP require a handshake before sending data?",
+      "answer": "nope",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.deadlock_avoidance.easy1",
+    "subject": "Operating Systems",
+    "question": "Explain what a safe state is in the context of deadlock avoidance.",
+    "key_points": [
+      "A safe state is not a deadlocked state.",
+      "In a safe state, the OS can avoid unsafe states.",
+      "If a system is in a safe state, there is no deadlock."
+    ],
+    "answer": "a system is said to be in safe state if there exists way in which all processes can attain the required resources to complete their execution",
+    "overall": 0.8,
+    "labels": [
+      "partial",
+      "missing",
+      "partial"
+    ],
+    "followup": {
+      "question": "How does the OS ensure that it remains in a safe state?",
+      "answer": "using the bankers algorithm",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.transport_layer_services.easy1",
+    "subject": "Computer Networks",
+    "question": "Explain what a socket is and how it relates to the transport layer.",
+    "key_points": [
+      "A socket is the interface through which a process sends and receives messages.",
+      "A socket acts like a door, allowing messages to be sent out and received.",
+      "Two sockets are involved in a communication: one on each side of the connection."
+    ],
+    "answer": "socket is like an endpoint for communication between two processes, its the combination of ip address and port number. the transport layer uses sockets to send data from one process to a process on a different host",
+    "overall": 0.75,
+    "labels": [
+      "covered",
+      "partial",
+      "partial"
+    ],
+    "followup": {
+      "question": "What happens if a process doesn't use a socket?",
+      "answer": "then it cant send or receive data over the network, since the socket is the interface between the process and the transport layer",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.ethernet.medium1",
+    "subject": "Computer Networks",
+    "question": "Explain how Ethernet frames are used to support communication between devices on a local network, and why the frame structure is important for reliable data transmission.",
+    "key_points": [
+      "Ethernet frames encapsulate higher-layer data such as IP packets.",
+      "The frame structure includes synchronization patterns to align sender and receiver clocks.",
+      "The frame includes a CRC field for error detection."
+    ],
+    "answer": "ethernet frames carry the data from the network layer i.e. the ip packet, along with the source and destination mac addresses so that the right device on the lan receives it. it also has a crc at the end for error checking",
+    "overall": 0.7,
+    "labels": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "followup": {
+      "question": "Why is it important for Ethernet to encapsulate higher-layer data?",
+      "answer": "so that the data link layer can deliver it to the next device on the lan using mac addresses, the ip layer doesnt deal with that",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.tcp_connection_establishment.medium2",
+    "subject": "Computer Networks",
+    "question": "Why does TCP use a three-way handshake to establish a connection, rather than a two-way handshake?",
+    "key_points": [
+      "TCP uses a three-way handshake to ensure both parties agree to establish the connection.",
+      "A two-way handshake would not guarantee mutual acknowledgment of the connection request."
+    ],
+    "answer": "in a 2 way handshake the server wouldnt know if the client actually received its response, so the connection isnt confirmed from both sides. 3 way handshake i.e. syn, syn-ack, ack makes sure both client and server agree and are ready to communicate",
+    "overall": 0.9,
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "followup": {
+      "question": "What would happen if only one side sent a connection request and the other did not respond?",
+      "answer": "the connection wont be established, the sender will wait for a timeout and retry",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.csma_cd_and_csma_ca.easy1",
+    "subject": "Computer Networks",
+    "question": "Explain how CSMA/CD differs from CSMA/CA in terms of handling collisions.",
+    "key_points": [
+      "CSMA/CD detects collisions during transmission and stops them immediately.",
+      "CSMA/CD is suitable for wired networks due to the ease of collision detection."
+    ],
+    "answer": "csma/cd is used in wired networks like ethernet, it detects a collision while transmitting and stops, then retransmits after a random time. csma/ca is used in wifi, it tries to avoid collisions before they happen since detecting them in wireless is hard",
+    "overall": 0.95,
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "followup": {
+      "question": "What happens if a collision is not detected in CSMA/CD?",
+      "answer": "then the corrupted frame reaches the receiver and the crc check fails, so the frame is discarded",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.icmp.medium2",
+    "subject": "Computer Networks",
+    "question": "How does ICMP support network diagnostics, and what are two specific examples of ICMP messages used in this role?",
+    "key_points": [
+      "The echo request and echo reply messages are used for connectivity testing.",
+      "The time exceeded message helps trace the path of a packet."
+    ],
+    "answer": "icmp is used for error reporting and diagnostics, for eg the ping command uses it to check if a host is reachable or not",
+    "overall": 0.4,
+    "labels": [
+      "partial",
+      "missing"
+    ],
+    "followup": {
+      "question": "What is the purpose of the echo request message in ICMP?",
+      "answer": "to check if the destination host is alive, if it is it sends back an echo reply",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.collision_and_broadcast_domains.medium2",
+    "subject": "Computer Networks",
+    "question": "How does a switch allow multiple simultaneous transmissions without collisions, and what role does the Ethernet protocol play in this?",
+    "key_points": [
+      "Each link is its own collision domain.",
+      "The Ethernet protocol operates in full-duplex mode.",
+      "Switching allows A-to-A’ and B-to-B’ to transmit simultaneously, without collisions."
+    ],
+    "answer": "a switch uses its mac address table to send the frame only to the destination port, hence there are no collisions since the data is not broadcasted to everyone like a hub",
+    "overall": 0.35,
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "followup": {
+      "question": "If a switch had only one collision domain, how would that affect multiple devices transmitting at the same time?",
+      "answer": "then only one device can transmit at a time otherwise there will be collisions, basically like a hub",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.ipv6.medium1",
+    "subject": "Computer Networks",
+    "question": "Explain how IPv6 datagrams can be transmitted across a network that contains both IPv6 and IPv4 routers, and why this is important for network transition.",
+    "key_points": [
+      "IPv6 datagrams can be transmitted across a network with mixed IPv6 and IPv4 routers through tunneling.",
+      "Tunneling allows for gradual migration without requiring all routers to be upgraded simultaneously."
+    ],
+    "answer": "ipv6 packets are converted into ipv4 packets by the routers using NAT so that the ipv4 routers can understand them. this is needed because not all devices support ipv6 yet",
+    "overall": 0.1,
+    "labels": [
+      "missing",
+      "partial"
+    ],
+    "followup": {
+      "question": "What happens if there are no IPv4 routers in the network?",
+      "answer": "im not sure",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "cn.network_devices.medium1",
+    "subject": "Computer Networks",
+    "question": "Explain how a Switch differs from a Hub in terms of network communication and device intelligence.",
+    "key_points": [
+      "Switches operate at the Data Link Layer and use MAC addresses for data forwarding.",
+      "Switches support full-duplex communication, while Hubs only support half-duplex.",
+      "Switches store MAC addresses, allowing them to route data only to the intended destination."
+    ],
+    "answer": "hub broadcasts the data to all the devices connected to it where as switch sends it only to the intended device using the mac address table. hub works at physical layer and switch at data link layer. switch is smarter hence less collisions",
+    "overall": 0.75,
+    "labels": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "followup": {
+      "question": "What happens if a Switch doesn't know the MAC address of the destination device?",
+      "answer": "it floods the frame to all ports except the one it came from, and learns the mac address when the reply comes back",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.cap_theorem.medium2",
+    "subject": "DBMS",
+    "question": "How does the CAP theorem influence the design trade-offs in distributed systems, particularly in the context of SQL versus NoSQL databases?",
+    "key_points": [
+      "The CAP theorem forces a trade-off between consistency, availability, and partition tolerance.",
+      "SQL databases prioritize consistency through ACID properties.",
+      "NoSQL systems often prioritize availability and partition tolerance over strict consistency."
+    ],
+    "answer": "cap theorem says a distributed system can only guarantee 2 out of consistency, availability and partition tolerance. sql dbs like postgres focus on consistency where as nosql dbs like cassandra or mongo focus more on availability and scaling",
+    "overall": 0.75,
+    "labels": [
+      "covered",
+      "partial",
+      "partial"
+    ],
+    "followup": {
+      "question": "What happens if a system tries to guarantee all three properties?",
+      "answer": "its not possible, during a network partition it has to choose between consistency and availability",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.indexing_basics.medium1",
+    "subject": "DBMS",
+    "question": "Explain how indexing improves the performance of SELECT operations, and why it's more efficient than a full table scan.",
+    "key_points": [
+      "Indexing allows the database to use a B-tree index to jump directly to qualifying records.",
+      "Indexing reduces the cost of query execution from O(n) to O(log n).",
+      "Without an index, the database must perform a full table scan, which is inefficient for large tables."
+    ],
+    "answer": "index works like the index of a book, instead of scanning every row the db can directly go to the required rows using the index which is usually a b tree. so the time reduces from O(n) to O(logn)",
+    "overall": 0.9,
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "followup": {
+      "question": "What happens if there is no index on the column used in the WHERE clause?",
+      "answer": "then it does a full table scan i.e. checks every row one by one",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.null_handling_in_sql.easy1",
+    "subject": "DBMS",
+    "question": "Explain how SQL handles comparisons involving NULL values.",
+    "key_points": [
+      "Comparisons involving NULL values result in UNKNOWN.",
+      "NULL represents an unknown or missing value.",
+      "The logical value UNKNOWN is used in SQL for comparisons with NULL."
+    ],
+    "answer": "im not sure exactly, i think comparing with null using = doesnt work and we have to use IS NULL",
+    "overall": 0.2,
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "followup": {
+      "question": "What happens if you compare a value to NULL using the equals operator?",
+      "answer": "it doesnt return true, so that row doesnt come in the result",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.participation_constraints.easy1",
+    "subject": "DBMS",
+    "question": "Explain what total participation means in the context of database relationships.",
+    "key_points": [
+      "Total participation requires every entity in an entity set to participate in at least one relationship.",
+      "Total participation is visually indicated by double lines in the relationship set."
+    ],
+    "answer": "total participation means every entity in the entity set has to participate in the relationship, like every employee must work in some department. its shown by a double line in the er diagram",
+    "overall": 0.95,
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "followup": {
+      "question": "What happens if an entity does not participate in a relationship when total participation is required?",
+      "answer": "then it violates the constraint, that entity cant exist without being part of the relationship",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.first_normal_form_1nf.medium1",
+    "subject": "DBMS",
+    "question": "Explain how First Normal Form (1NF) ensures that a relation is properly structured for relational database systems.",
+    "key_points": [
+      "All attributes must be atomic.",
+      "Composite and multivalued attributes are disallowed.",
+      "1NF is a prerequisite for higher normal forms."
+    ],
+    "answer": "1nf means every column should have atomic values i.e. no multiple values in a single cell",
+    "overall": 0.55,
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "followup": {
+      "question": "What happens if an attribute contains multiple values in a single cell?",
+      "answer": "then its not in 1nf, we have to split it into separate rows or a separate table",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.lossless_decomposition.medium1",
+    "subject": "DBMS",
+    "question": "Explain how lossless decomposition ensures that a relation can be reconstructed without data loss after decomposition.",
+    "key_points": [
+      "Lossless decomposition ensures that a relation can be reconstructed without any loss of data or introduction of spurious tuples.",
+      "The non additive join property is extremely critical and must be achieved at any cost.",
+      "Lossless decomposition is essential for ensuring that the join of decomposed relations results in the original relation."
+    ],
+    "answer": "im not sure",
+    "overall": 0.0,
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "followup": {
+      "question": "What happens if the decomposition is not lossless?",
+      "answer": "im not sure",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.relationships_and_cardinality.medium1",
+    "subject": "DBMS",
+    "question": "Explain how cardinality ratios affect the interpretation of a relationship between two entity sets in a database design.",
+    "key_points": [
+      "Cardinality ratios define the number of entities in one set that can be associated with each entity in another set.",
+      "A one-to-many relationship means one entity in the first set can be associated with many in the second, but each in the second is associated with at most one in the first.",
+      "A many-to-many relationship allows multiple entities in both sets to be associated with each other."
+    ],
+    "answer": "cardinality tells how many entities of one set can be related to entities of the other set, like 1:1, 1:n and m:n. for eg one customer can have many orders but an order belongs to only one customer",
+    "overall": 0.75,
+    "labels": [
+      "covered",
+      "covered",
+      "partial"
+    ],
+    "followup": {
+      "question": "What happens if a relationship allows an entity in one set to be associated with multiple entities in another set?",
+      "answer": "then its a one to many or many to many relationship, and for many to many we need a separate table",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.graph_databases_and_neo4j.medium2",
+    "subject": "DBMS",
+    "question": "Explain how Neo4j handles the flexibility of schema in comparison to traditional relational databases.",
+    "key_points": [
+      "Neo4j allows nodes and relationships to have properties without a predefined structure.",
+      "Neo4j's flexible schema supports dynamic addition of new elements to the graph."
+    ],
+    "answer": "neo4j is a graph database so it stores data as nodes and relationships, its schema less so its more flexible than sql tables",
+    "overall": 0.45,
+    "labels": [
+      "partial",
+      "missing"
+    ],
+    "followup": {
+      "question": "What is the implication of not having a predefined structure for nodes and relationships?",
+      "answer": "we can add new properties or new types of nodes anytime without altering any schema",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.iterative_tree_traversals.easy1",
+    "subject": "Data Structures & Algorithms",
+    "question": "Explain how the iterative preorder traversal works using the code provided.",
+    "key_points": [
+      "The root node is pushed onto the stack first.",
+      "Right child is pushed before the left child."
+    ],
+    "answer": "we use a stack, push the root first, then pop it and print it, then push the right child first and then the left child so that the left one is processed first",
+    "overall": 0.95,
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "followup": {
+      "question": "Why is the root node pushed onto the stack first?",
+      "answer": "because in preorder the root is visited first before its children",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.binary_search.medium1",
+    "subject": "Data Structures & Algorithms",
+    "question": "Explain how binary search uses the decrease-by-a-constant-factor approach to solve a problem efficiently.",
+    "key_points": [
+      "Binary search reduces the problem size by a constant factor at each step.",
+      "Binary search is a recursive algorithm that reduces the problem to smaller instances."
+    ],
+    "answer": "binary search divides the array into half every time by comparing with the middle element, so the problem size reduces by half in each step, hence its O(logn)",
+    "overall": 0.7,
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "followup": {
+      "question": "What happens to the problem size after each step in binary search?",
+      "answer": "it becomes half",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.insertion_sort.medium1",
+    "subject": "Data Structures & Algorithms",
+    "question": "Explain how insertion sort builds a sorted array incrementally and why it is considered a decrease and conquer algorithm.",
+    "key_points": [
+      "Insertion sort builds a sorted array incrementally.",
+      "Insertion sort is a decrease and conquer algorithm.",
+      "The algorithm inserts an element into the correct position in the sorted subarray."
+    ],
+    "answer": "insertion sort takes one element at a time and puts it in the correct position in the already sorted part of the array, like how we sort playing cards in our hand",
+    "overall": 0.6,
+    "labels": [
+      "partial",
+      "missing",
+      "covered"
+    ],
+    "followup": {
+      "question": "What happens to the array as the algorithm progresses?",
+      "answer": "the sorted part on the left keeps growing by one element and the unsorted part reduces",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.asymptotic_notations.easy1",
+    "subject": "Data Structures & Algorithms",
+    "question": "Explain what it means for a function t(n) to be in Ω(g(n)).",
+    "key_points": [
+      "Ω-notation describes a lower bound on the growth rate of a function.",
+      "Ω-notation requires the existence of a positive constant c and a threshold n₀."
+    ],
+    "answer": "omega notation gives the best case of an algorithm i.e. the minimum time it will take",
+    "overall": 0.3,
+    "labels": [
+      "partial",
+      "missing"
+    ],
+    "followup": {
+      "question": "What does it mean for a function to be bounded below by another function?",
+      "answer": "it means the function will always grow at least as fast as the other function after some point",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.suffix_tries_and_suffix_trees.medium1",
+    "subject": "Data Structures & Algorithms",
+    "question": "Explain how a suffix tree differs from a suffix trie and why this compression is useful for string operations.",
+    "key_points": [
+      "The compression merges chains of single nodes.",
+      "Suffix trees support efficient pattern matching and prefix matching."
+    ],
+    "answer": "im not sure",
+    "overall": 0.0,
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "followup": {
+      "question": "What is the benefit of merging single-node chains?",
+      "answer": "im not sure",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dsa.binary_tree_properties.medium1",
+    "subject": "Data Structures & Algorithms",
+    "question": "Explain how the relationship between leaf nodes and degree-2 nodes in a binary tree helps us understand the structure of a full binary tree.",
+    "key_points": [
+      "The number of leaf nodes is one more than the number of degree-2 nodes.",
+      "A full binary tree has all leaves at the same level."
+    ],
+    "answer": "in a binary tree number of leaf nodes = number of nodes with 2 children + 1. so in a full binary tree where every node has 0 or 2 children we can find the total nodes as 2*leaves - 1",
+    "overall": 0.65,
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "followup": {
+      "question": "What happens if you have a binary tree with two leaf nodes and one degree-2 node?",
+      "answer": "thats valid, it satisfies n0 = n2 + 1 i.e. 2 = 1 + 1, like a root with two children",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.tries.easy1",
+    "subject": "Data Structures & Algorithms",
+    "question": "Explain what a trie is and how it is used in computer science.",
+    "key_points": [
+      "A trie is a type of search tree used for locating specific keys from within a set.",
+      "Trie nodes are linked by individual characters, not the entire key.",
+      "Tries are used in applications such as dictionary storage and auto-complete features."
+    ],
+    "answer": "trie is a tree used for storing strings where each node represents a character. its used in autocomplete and spell check since searching by prefix is fast",
+    "overall": 0.85,
+    "labels": [
+      "partial",
+      "covered",
+      "covered"
+    ],
+    "followup": {
+      "question": "What kind of data is typically stored in a trie?",
+      "answer": "strings mostly, like the words of a dictionary",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.time_and_space_complexity.easy1",
+    "subject": "Data Structures & Algorithms",
+    "question": "Explain what time complexity and space complexity mean in the context of algorithm performance.",
+    "key_points": [
+      "Time complexity measures the time required for an algorithm to run as a function of input size.",
+      "Space complexity measures the memory required for an algorithm to execute.",
+      "Time and space complexity are key criteria for evaluating algorithm performance."
+    ],
+    "answer": "time complexity is how the running time of an algorithm increases as the input size increases, space complexity is how much extra memory it needs. both are used to compare algorithms, usually written in big o",
+    "overall": 0.9,
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "followup": {
+      "question": "What determines how long an algorithm takes to run?",
+      "answer": "the number of times the basic operation runs, which depends on the input size",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.builder_pattern.easy1",
+    "subject": "Object-Oriented Analysis & Design",
+    "question": "Explain what the Builder pattern is, and why it is useful in object-oriented design.",
+    "key_points": [
+      "The Builder pattern is a creational design pattern that deals with the construction of complex objects.",
+      "The Builder pattern separates the instantiation process from the object's representation.",
+      "The Builder pattern allows for the creation of different representations of the same object."
+    ],
+    "answer": "builder pattern is used when an object has lot of optional fields, instead of a big constructor we build the object step by step using methods like setName().setAge().build(). lombok has @Builder for this",
+    "overall": 0.55,
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "followup": {
+      "question": "What is the main purpose of the Builder pattern?",
+      "answer": "to make creating complex objects easier and more readable",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.coupling_and_cohesion.easy1",
+    "subject": "Object-Oriented Analysis & Design",
+    "question": "Explain what high cohesion means and why it is important in software design.",
+    "key_points": [
+      "High cohesion means that the responsibilities of a class are strongly related and focused.",
+      "High cohesion makes the class easier to understand, maintain, and reuse.",
+      "High cohesion reduces complexity and improves the overall design of the system."
+    ],
+    "answer": "high cohesion means a class does only one thing and all its methods are related to that. it makes the code easier to maintain and test",
+    "overall": 0.85,
+    "labels": [
+      "covered",
+      "covered",
+      "partial"
+    ],
+    "followup": {
+      "question": "What happens if a class has many unrelated responsibilities?",
+      "answer": "then it has low cohesion and becomes hard to maintain, like a god class",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.indirection_and_pure_fabrication.easy1",
+    "subject": "Object-Oriented Analysis & Design",
+    "question": "Explain what pure fabrication is and when it is used.",
+    "key_points": [
+      "Pure fabrication is used when assigning responsibility to domain classes causes design issues.",
+      "Pure fabrication involves creating artificial or convenience classes.",
+      "Pure fabrication promotes modularity and reusability."
+    ],
+    "answer": "im not sure",
+    "overall": 0.0,
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "followup": {
+      "question": "What happens if you assign responsibilities directly to domain classes?",
+      "answer": "im not sure",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.constructors.medium2",
+    "subject": "Object-Oriented Analysis & Design",
+    "question": "How does the use of a parameterized constructor differ from a default constructor in Java, and what are the implications for object initialization?",
+    "key_points": [
+      "A parameterized constructor allows you to pass arguments to initialize an object's instance variables with specific values.",
+      "The default constructor provides default values to the object's instance variables.",
+      "Defining a parameterized constructor affects the availability of the default constructor."
+    ],
+    "answer": "default constructor doesnt take any arguments and assigns default values like 0 or null, parameterized constructor takes arguments so we can initialize the object with specific values at the time of creation",
+    "overall": 0.7,
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "followup": {
+      "question": "What happens if you don't use a parameterized constructor and instead rely on the default constructor?",
+      "answer": "then all the fields will have default values and we have to set them later using setters",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.low_level_design_approach.medium2",
+    "subject": "Object-Oriented Analysis & Design",
+    "question": "How does the low-level design approach ensure that the system remains flexible and extensible, and what role does the analysis model play in this process?",
+    "key_points": [
+      "Low-level design ensures flexibility and extensibility by focusing on data structures and algorithms.",
+      "The analysis model provides a foundation for the low-level design.",
+      "The system can evolve while maintaining its core functionality."
+    ],
+    "answer": "low level design focuses on the classes, methods and how they interact, so if its designed properly with interfaces the system can be extended easily. analysis model tells what the system should do",
+    "overall": 0.55,
+    "labels": [
+      "partial",
+      "covered",
+      "partial"
+    ],
+    "followup": {
+      "question": "Why is it important for the system to be flexible and extensible during implementation?",
+      "answer": "because requirements keep changing so we should be able to add features without rewriting existing code",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.chain_of_responsibility_pattern.medium1",
+    "subject": "Object-Oriented Analysis & Design",
+    "question": "Explain how the Chain of Responsibility pattern allows for dynamic decision-making in handling requests, and why this is important for loose coupling.",
+    "key_points": [
+      "The Chain of Responsibility pattern allows multiple objects to handle a request.",
+      "The chain can be decided dynamically at runtime.",
+      "The pattern promotes loose coupling between the sender and the receiver."
+    ],
+    "answer": "chain of responsibility passes the request through a chain of handlers till one of them handles it, like middleware in express or filters in spring security. the sender doesnt know which handler will handle it so its loosely coupled",
+    "overall": 0.8,
+    "labels": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "followup": {
+      "question": "What happens if no object in the chain is able to handle the request?",
+      "answer": "then the request reaches the end of the chain unhandled, usually we return an error or a default response",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.facade_and_proxy_patterns.medium2",
+    "subject": "Object-Oriented Analysis & Design",
+    "question": "How does the Proxy Design Pattern support the Open/Closed Principle, and what trade-off does it introduce in terms of system complexity?",
+    "key_points": [
+      "The Proxy Design Pattern supports the Open/Closed Principle by allowing new proxies to be introduced without changing the service or clients.",
+      "The Proxy Design and its additional layer between client and real subject increases code complexity.",
+      "The Proxy Pattern may delay responses due to the additional request forwarding between client and real subject."
+    ],
+    "answer": "proxy acts as a middle layer between the client and the actual object, like for caching or access control. it follows open closed since we dont modify the actual class",
+    "overall": 0.55,
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "followup": {
+      "question": "What happens if you need to add a new type of access control without changing existing code?",
+      "answer": "we can create a new proxy class that checks the access before calling the real object",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.polymorphism.medium2",
+    "subject": "Object-Oriented Analysis & Design",
+    "question": "Explain how polymorphism allows objects of different classes to be treated as objects of a common superclass, and why this is important for software design.",
+    "key_points": [
+      "Polymorphism allows objects of different classes to be treated as objects of a common superclass.",
+      "Polymorphism enables a single interface to work with objects of different types.",
+      "Polymorphism supports dynamic method dispatch, which determines the method to call at runtime."
+    ],
+    "answer": "polymorphism means one thing having many forms, like a parent class reference can point to a child class object, eg Animal a = new Dog(); and when we call a.sound() it calls the dog's method at runtime",
+    "overall": 0.85,
+    "labels": [
+      "covered",
+      "partial",
+      "covered"
+    ],
+    "followup": {
+      "question": "Can you give an example of how a base class reference can point to a derived class object?",
+      "answer": "List<String> list = new ArrayList<>(); here List is the interface and ArrayList is the implementation",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.fifo_page_replacement.easy1",
+    "subject": "Operating Systems",
+    "question": "Explain how the FIFO page replacement algorithm works in the context of page faults and memory frames.",
+    "key_points": [
+      "FIFO uses a queue to track the order of pages in memory.",
+      "FIFO can lead to Belady’s Anomaly."
+    ],
+    "answer": "fifo replaces the page that came first into the memory i.e. the oldest page, using a queue. it can cause beladys anomaly where increasing the frames increases the page faults",
+    "overall": 1.0,
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "followup": {
+      "question": "What is the purpose of using a queue in FIFO page replacement?",
+      "answer": "to keep track of the order in which pages came so we know which one is the oldest",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.page_faults.medium1",
+    "subject": "Operating Systems",
+    "question": "Explain how the operating system handles a page fault and how it manages the page-fault frequency to avoid thrashing.",
+    "key_points": [
+      "The operating system first checks if the page reference is invalid or not in memory.",
+      "The system finds a free frame and swaps the required page into memory.",
+      "The system adjusts the number of frames allocated to a process based on its page-fault rate.",
+      "Managing page-fault frequency helps avoid thrashing."
+    ],
+    "answer": "when a page fault happens the os brings the page from the disk into a free frame in memory and updates the page table, then restarts the instruction. if too many page faults happen its called thrashing",
+    "overall": 0.45,
+    "labels": [
+      "missing",
+      "covered",
+      "missing",
+      "partial"
+    ],
+    "followup": {
+      "question": "What happens if the page reference is invalid?",
+      "answer": "then the process is terminated",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.schedulers.easy1",
+    "subject": "Operating Systems",
+    "question": "Explain what the short-term scheduler does in an operating system.",
+    "key_points": [
+      "The short-term scheduler selects a process from the ready queue.",
+      "The ready queue may be ordered in various ways.",
+      "The records in the queue are PCBs of the processes."
+    ],
+    "answer": "short term scheduler or cpu scheduler selects which process from the ready queue gets the cpu next, it runs very frequently",
+    "overall": 0.55,
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "followup": {
+      "question": "What happens if there are no processes in the ready queue?",
+      "answer": "then the cpu stays idle or runs the idle process",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.file_allocation_methods.easy1",
+    "subject": "Operating Systems",
+    "question": "Explain what contiguous allocation is and why it is considered simple.",
+    "key_points": [
+      "Contiguous allocation is a method where each file occupies a set of contiguous blocks.",
+      "Contiguous allocation is considered simple because only the starting location and length are required.",
+      "Contiguous allocation supports both sequential and direct access."
+    ],
+    "answer": "in contiguous allocation each file is stored in consecutive blocks on the disk, its simple since we just need the starting block and the length. but it causes external fragmentation",
+    "overall": 0.8,
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "followup": {
+      "question": "What makes contiguous allocation easier to manage compared to other methods?",
+      "answer": "we only store the starting address and length, and reading is fast since the blocks are next to each other",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.multilevel_queue_scheduling.medium2",
+    "subject": "Operating Systems",
+    "question": "Explain how the multilevel feedback queue scheduling mechanism ensures that higher-priority processes are executed before lower-priority ones, and how this affects process preemption.",
+    "key_points": [
+      "Higher-priority queues are executed before lower-priority ones.",
+      "A process in a higher queue can preempt a process in a lower queue.",
+      "Processes are moved between queues based on their behavior."
+    ],
+    "answer": "in multilevel queue each queue has a different priority and the higher priority queues run first. processes cannot move between queues once they are assigned",
+    "overall": 0.3,
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "followup": {
+      "question": "What happens if a process in a lower-priority queue is running when a higher-priority process arrives?",
+      "answer": "the lower one gets preempted and the higher priority process gets the cpu",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.multilevel_page_tables.medium1",
+    "subject": "Operating Systems",
+    "question": "Explain how hierarchical page tables reduce memory usage compared to a flat page table, and what trade-offs they introduce.",
+    "key_points": [
+      "Hierarchical page tables break up the logical address space into multiple page tables.",
+      "Hierarchical page tables reduce memory usage by only allocating entries for used address ranges.",
+      "Hierarchical page tables introduce increased translation time due to multiple levels of access."
+    ],
+    "answer": "hierarchical paging divides the page table into multiple levels so that we dont need one huge page table in memory, only the parts which are used are kept",
+    "overall": 0.6,
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "followup": {
+      "question": "What happens if a process uses a large contiguous address space?",
+      "answer": "im not sure",
+      "correct": false
+    }
+  }
+]

@@ -102,17 +102,17 @@ def test_contact_parser_keeps_phone_country_code_across_word_level_spans(
     make_section, make_text_span, make_document_model
 ):
     """Regression test -- Phase 1 real-world evaluation: a phone number
-    split across separate word-level spans ("+91" / " " / "9972425152")
+    split across separate word-level spans ("+91" / " " / "9000011111")
     joined with an extra space per whitespace-only span must not lose its
     country code to the phone regex's single-character separator
     tolerance."""
-    spans = _word_level_row(make_text_span, y=90.0, words=[("+91", 10.0), ("9972425152", 10.0)])
+    spans = _word_level_row(make_text_span, y=90.0, words=[("+91", 10.0), ("9000011111", 10.0)])
     section = make_section(label="contact", raw_header_text="", spans=spans)
     doc = make_document_model(spans=spans)
 
     result = ContactParser().parse({"contact": section}, doc)
 
-    assert result.entities[0]["phone"] == "+91 9972425152"
+    assert result.entities[0]["phone"] == "+91 9000011111"
 
 
 def test_contact_parser_reconstructs_a_multi_word_location_from_word_level_spans(
@@ -143,7 +143,7 @@ def test_contact_parser_extracts_location_from_a_pipe_delimited_horizontal_line(
     whole-line email/phone skip must not discard the location segment
     printed alongside them on the same line."""
     span = make_text_span(
-        text="+91 9122604819 | Kolkata, India | jordan.example@test.invalid",
+        text="+91 9000022222 | Kolkata, India | jordan.example@test.invalid",
         bbox=(72.0, 90.0, 400.0, 100.0),
         font_size=10.0,
     )

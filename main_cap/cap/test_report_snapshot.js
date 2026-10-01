@@ -63,10 +63,10 @@ assert.strictEqual(typeof rdBuildSnapshot, "function", "rdBuildSnapshot not extr
 // (not a reimplementation) to confirm it still branches on typeof row.value
 // before calling .toFixed() and falls back to row.note for non-numeric rows
 // -- generic defensive coding, independent of Concept Coverage specifically.
-const renderLine = src.slice(
-    src.indexOf('<span class="rd-snapshot-value">'),
-    src.indexOf("</span>", src.indexOf('<span class="rd-snapshot-value">')),
-);
+// Anchored on `const snapshotHtml`: other report sections (e.g. the full
+// interview's Round 2 rows) reuse the rd-snapshot-value class.
+const snapshotRenderStart = src.indexOf('<span class="rd-snapshot-value">', src.indexOf("const snapshotHtml = (data.snapshot"));
+const renderLine = src.slice(snapshotRenderStart, src.indexOf("</span>", snapshotRenderStart));
 assert.ok(
     renderLine.includes('typeof row.value === "number"'),
     "render loop must branch on typeof row.value before calling toFixed()",

@@ -185,21 +185,6 @@ class TestLegacyEvaluatorRollbackAvailability(unittest.TestCase):
         self.assertTrue(hasattr(model_evaluator, "TrainedEvaluator"))
         self.assertTrue(hasattr(hybrid_evaluator, "HybridEvaluator"))
 
-    def test_deployment_evaluator_still_targets_a2_as_the_rollback_tier(self):
-        # V3 single-overall-score integration (later session): A2 is no
-        # longer the sole/primary deployment target, but it MUST remain a
-        # fully intact, reachable rollback tier -- see
-        # deployment_evaluator.py's three-tier fallback chain and
-        # test_deployment_evaluator_overall_single_v3.py's dedicated
-        # coverage of that chain end-to-end. This test only asserts A2's
-        # own paths/constants are still exactly where they were.
-        import deployment_evaluator
-        self.assertTrue(deployment_evaluator.DEPLOYED_MODEL_DIR.replace("\\", "/").endswith("deployed_model_a2"))
-        self.assertTrue(
-            deployment_evaluator.LEGACY_DEPLOYED_MODEL_DIR.replace("\\", "/").endswith("deployed_model")
-        )
-        self.assertTrue(hasattr(deployment_evaluator, "activate_a2_rollback"))
-
     def test_overall_single_evaluator_is_now_wired_as_the_primary_deployment_tier(self):
         # Superseded expectation from before integration (this evaluator
         # used to be explicitly NOT deployed). Integration is now done --

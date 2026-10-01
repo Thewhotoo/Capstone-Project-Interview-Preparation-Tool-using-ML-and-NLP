@@ -32,7 +32,7 @@ from resume_engine.location_gazetteer import LOCATIONS
 _EMAIL_PATTERN = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
 # Kept for compatibility (the strict North-American shape). Phone EXTRACTION
 # now uses the more permissive `_PHONE_SEARCH` below, which also handles
-# international groupings like "+91 88617 74950" (5-5) that the strict 3-3-4
+# international groupings like "+91 90000 12345" (5-5) that the strict 3-3-4
 # pattern silently missed; digit-count validation guards against false hits.
 _PHONE_PATTERN = re.compile(r"(\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b")
 _PHONE_SEARCH = re.compile(r"\(?\+?\d[\d\s().\-]{8,15}\d")
@@ -115,12 +115,18 @@ def _extract_phone(text: str) -> str:
     """Finds the first phone-number-shaped substring and validates it by
     digit count (10-13, optionally including a country code). More permissive
     than the strict 3-3-4 `_PHONE_PATTERN` so international groupings like
-    "+91 88617 74950" (5-5) are recovered, while the digit-count check keeps
+    "+91 90000 12345" (5-5) are recovered, while the digit-count check keeps
     it from matching years, IDs, or roll numbers."""
     for match in _PHONE_SEARCH.finditer(text):
         candidate = match.group(0).strip()
         digits = re.sub(r"\D", "", candidate)
         if 10 <= len(digits) <= 13:
+            # A short number group after a space that isn't needed to reach 10
+            # digits is the start of the next field (an address: "123-456-7890
+            # 123 Anywhere St." -> "123-456-7890"), not part of the phone.
+            tail = re.match(r"^(.*\d)\s+\d{1,3}$", candidate)
+            if tail and len(re.sub(r"\D", "", tail.group(1))) >= 10:
+                candidate = tail.group(1)
             return candidate
     return ""
 
@@ -216,7 +222,7 @@ def _extract_location(lines: list[str]) -> tuple[str, float]:
 def _residual_after_contact(text: str) -> str:
     """Strips email/phone/URL/linkedin substrings out of a line, leaving
     only the residual prose -- so a line that carries the NAME alongside a
-    phone number ("M S Nandagopal  +91-96061175244") still yields the name
+    phone number ("M S Example  +91-90000333333") still yields the name
     for scoring instead of being discarded wholesale (the prior behavior,
     which excluded any line containing contact info and so missed a name
     printed on the same line as the phone)."""
@@ -231,6 +237,11 @@ def _residual_after_contact(text: str) -> str:
     # non-name-like junk token. Keeps letters, digits, spaces, and the
     # punctuation that legitimately appears in names.
     residual = re.sub(r"[^A-Za-z0-9 .,&'/\-]", " ", residual)
+    # A document-title suffix/prefix on the name line ("Jordan Example -
+    # Resume", "Resume - Jordan Example", "Jordan Example CV") is not part of
+    # the name; left in, it disqualified the whole line.
+    residual = re.sub(r"\s*[-–—|:,]?\s*\b(?:resume|cv|curriculum\s+vitae)\s*$", "", residual, flags=re.IGNORECASE)
+    residual = re.sub(r"^\s*(?:resume|cv|curriculum\s+vitae)\b\s*(?:of\b)?\s*[-–—|:,]?\s*", "", residual, flags=re.IGNORECASE)
     return re.sub(r"\s+", " ", residual).strip()
 
 
@@ -305,6 +316,15 @@ def _infer_candidate_name(lines_with_font_size: list[tuple[str, float]]) -> str:
             i = max(j, i + 1)
         else:
             i += 1
+
+    # Last resort, letter-spaced banner names ("J U L I A N A S I L V A"): the
+    # PDF gives no reliable word boundary, so return the letters as printed --
+    # the old engine's output -- rather than no name at all.
+    if not best_text:
+        for index, residual, size in residuals:
+            tokens = residual.split()
+            if len(tokens) >= 4 and all(len(t) == 1 and t.isalpha() and t.isupper() for t in tokens):
+                _consider(residual, (size, -index))
     return best_text
 
 

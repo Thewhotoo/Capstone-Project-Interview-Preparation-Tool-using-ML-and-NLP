@@ -1,255 +1,169 @@
-# 🎓 AI-Powered Resume Discussion & Interview Prep Tool
+# AI Resume-Grounded Interview Preparation Platform
 
-## 📌 Quick Summary
+A proctored mock-interview platform built around the candidate's **own resume**. It asks about the projects and jobs you actually list, then tests your core CS fundamentals, and gives you an explainable report. Everything runs **locally**: no paid API is needed at interview time.
 
-This is an **AI-powered interview preparation tool** built around a candidate's own resume. Its core flow:
-
-1. **Resume Upload** — a PDF/DOCX/DOC/TXT resume is parsed and turned into a structured **Candidate Profile** by a single Gemini call.
-2. **Resume Discussion** — a 10-question conversational interview is planned and asked directly against that profile (projects, experience, skills), not a generic question bank.
-3. **Evaluation** — each answer is scored by a trained **DeBERTa** evaluator (with an automatic heuristic fallback if the trained model isn't available), producing per-dimension scores, strengths/weaknesses, and an **Improved Answer** (a strengthened rewrite of the candidate's own response).
-4. **Dashboard** — a results dashboard summarizes scores, concept coverage, and the discussion timeline.
-5. **Attention & Gaze Monitoring** — real-time webcam attention monitoring with gaze and head-pose tracking powered by client-side MediaPipe Face Landmarker.
-
-The repo also contains supporting/exploratory subsystems that ship alongside the main app but are not wired into its primary UI flow: a RAG-based question generator (`rag_system/`), a standalone resume domain classifier (`resume_classifier/`), and a RoBERTa multitask question-classification model (`Roberta/`).
-
-## 👥 Team Workflow
-
-This repo is organized so the team can work in parallel without stepping on each other:
-
-- `main` stays as the stable integration branch.
-- Use feature branches for each change and merge back through pull requests.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the branch workflow and review process.
+> Full technical documentation: [`PROJECT_DOCUMENTATION.md`](PROJECT_DOCUMENTATION.md) · New machine? Read [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md) first.
 
 ---
 
-## 🚀 Getting Started (5 minutes)
+## Features
 
-### 1. Install Dependencies
+- **Accounts and history.** Sign up with your academic details, a resume and an optional profile photo. Home shows your stats, score trend, a "Focus next" list of recurring weaknesses and recent sessions; every past interview can be reopened with its full report.
+- **Full Interview (two proctored rounds).**
+  1. **Round 1 · Resume Discussion:** 10 questions, each traceable to a specific project, job, certification or skill on your resume. Answers are scored across named dimensions (technical depth, completeness, ownership, communication…) with strengths, gaps and coaching.
+  2. **Round 2 · Technical:** 8 concept questions across **Computer Networks, DBMS, DSA, OOAD and Operating Systems**, with a follow-up or clarification request when an answer is unclear or misses a key point.
+  3. A combined final report.
+- **Technical Interview:** the technical round on its own (10 questions).
+- **Resume Intelligence Engine:** a local, deterministic 8-stage resume parser (PDF/DOCX/DOC/TXT) that builds a structured Candidate Profile.
+- **422-question technical bank** generated offline from the faculty lecture slides. Every key point is backed by a verified slide quote. Each question carries a confidence rank, a hand-assigned quality score and an interview-frequency tier, so interviews draw the strongest questions on the most-asked topics first.
+- **Answer evaluation.**
+  - Round 1: a fine-tuned **DeBERTa-v3** evaluator blended with a deterministic heuristic evaluator (automatic heuristic-only fallback if the model file is absent), plus a non-answer filter so "idk" or keyword dumps can't score well.
+  - Round 2: an **NLI grader** (`cross-encoder/nli-deberta-v3-base` + MiniLM) that marks each key point covered / partial / missing, with no LLM or GPU needed at interview time.
+- **Proctoring.** Camera setup check before the rules, webcam attention and gaze monitoring, head-turn liveness checks, a warning when a second person is in frame or the picture is too dark or blurry (all with MediaPipe Face Landmarker, in the browser), and zero-tolerance full-screen / no-tab-switch / no-copy-paste rules.
 
-The main application only needs its own requirements file:
+---
 
-```bash
-cd main_cap/cap
-pip install -r requirements.txt
-```
+## Project modules
 
-The other subsystems (RAG, resume classifier, RoBERTa) are optional and only needed if you're working on those components directly:
+| # | Module | Owner |
+|---|---|---|
+| 1 | Resume Intelligence & Resume Discussion: resume parsing, Candidate Profile, Round 1 questions | Mayuran |
+| 2 | RAG, Technical Interview & Answer Evaluation: slide RAG, question bank, NLI grader, DeBERTa evaluator | Ninad |
+| 3 | Webcam Monitoring & Proctoring: camera check, gaze/attention, liveness, session rules | Surya |
+| 4 | Accounts, Data & User Interface: login, database, session history, dashboards and reports | Nandu |
 
-```bash
-# RAG system (optional — powers open-ended question variety in /api/next_question)
-cd rag_system/rag_tester
-pip install -r requirements.txt
+Details, main files and LOC per module: [`PROJECT_DOCUMENTATION.md` §1.1](PROJECT_DOCUMENTATION.md#11-the-four-main-modules).
 
-# Resume classifier (optional — standalone domain classifier, separate from the
-# Gemini-based Candidate Profile parser the main app uses)
-cd resume_classifier
-pip install -r requirements.txt
+---
 
-# RoBERTa multitask model (optional — powers the /roberta and /adaptive endpoints)
-cd Roberta/roberta-multitask-model
-pip install -r requirements.txt
-```
+## Quick start
 
-### 2. Configure environment variables
-
-The main app needs a Gemini API key to parse resumes and run the Resume Discussion flow. Create `main_cap/cap/.env`:
-
-```
-GEMINI_API_KEY=your_key_here
-```
-
-Without it, resume upload and the Resume Discussion flow will not work; the app still starts and logs a clear warning.
-
-### 3. Start the Server
+**Requirements:** Python 3.12, about 8 GB RAM, Chrome or Edge with a webcam, and internet on the first run. Node.js only for the frontend tests. A GPU is **not** needed to run the app. Full list (disk space, models, the weights file, browser permissions): [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
 
 ```bash
+pip install -r Requirements_Global.txt
 cd main_cap/cap
 python app.py
 ```
 
-Server runs on: `http://localhost:5000`
+Open **http://localhost:5000**, sign up with a resume, and start an interview from Home.
 
-On startup the app tries to load the deployed DeBERTa checkpoint from `main_cap/cap/deployed_model/` (checkpoint metadata + weights). If it loads and is promotion-approved, the app activates a `HybridEvaluator` that runs both the DeBERTa model and the deterministic heuristic evaluator on every turn — the heuristic remains authoritative for every candidate-facing score, strength/weakness, and recommendation, while DeBERTa's agreement with it adjusts only the reported confidence, and its raw output is logged for future retraining. If the weights file (`best_checkpoint_weights.pt`) isn't present or fails to load, the app automatically falls back to the deterministic `HeuristicEvaluator` alone — the app never fails to start because of this. Check the startup logs to see which evaluator is actually active.
+- The SQLite database and its migrations are created automatically on first start (`main_cap/cap/instance/`, not in git).
+- The first start downloads the Hugging Face models the graders use; later starts load them offline in a background thread (~2 s to a running server).
 
-### 4. Use the app
+### Round 1 evaluator weights (Git LFS)
 
-Open `http://localhost:5000` in a browser:
+The trained Round 1 evaluator's weights (`best_checkpoint_weights.pt`, ~735 MB) are stored with **Git LFS**. Install Git LFS and run `git lfs install` **before cloning**, or run `git lfs pull` afterwards. Without Git LFS you get a small pointer file instead of the model. Details, and the monthly download allowance: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
 
-1. Upload a resume (PDF/DOCX/DOC/TXT).
-2. Start the Resume Discussion — answer up to 10 questions generated from your own resume.
-3. View the results dashboard, including per-answer feedback, Concept Coverage, and Improved Answer suggestions.
+```
+main_cap/cap/deployed_model_overall_single_v5_1088/best_checkpoint_weights.pt
+```
 
-There is also a separate, simpler quiz-style flow (topic/difficulty MCQs + fill-in-the-blank) available from the same UI, backed by `/api/next_question` and `/api/evaluate`.
+Without the real file the app still runs: Round 1 falls back to the heuristic evaluator (the startup log says which evaluator is active).
 
 ---
 
-## 📂 Folder Structure
+## Configuration
+
+All optional; set as environment variables.
+
+| Variable | Default | Effect |
+|---|---|---|
+| `CAP_DATABASE_URL` | `sqlite:///main_cap/cap/instance/app.db` | Database (any SQLAlchemy URL) |
+| `CAP_UPLOAD_DIR` | `main_cap/cap/instance/uploads` | Where uploaded resumes are stored |
+| `CAP_SECRET_KEY` | generated once into `instance/secret_key` | Flask session secret; set explicitly in production |
+| `CAP_TRAINED_EVALUATOR` | on | `0` forces the heuristic Round 1 evaluator |
+| `CAP_CURATED_ONLY` | `1` | Technical interviews use the hand-reviewed top tier of the bank; `0` widens to every active question |
+| `CAP_GRADER_ENRICHMENT` | `replies` | How much of the offline bank enrichment the technical grader uses (`off` / `replies` / `all`) |
+| `CAP_QUESTION_BANK_DIR` | `rag_system/rag_tester/question_bank` | Where the question bank is read from |
+| `CAP_MODEL_WARMUP` | on | `0` disables background model loading at startup |
+| `GEMINI_API_KEY` | unset | Only for optional developer tooling (parser shadow mode, experiment scripts); **not** needed to run the app |
+
+The server port is 5000 (set in `app.run` at the bottom of `main_cap/cap/app.py`).
+
+---
+
+## Tests
+
+```bash
+cd main_cap/cap
+python -m pytest --ignore=resume_engine/tests -q     # app: 1241 passed, 17 skipped
+python -m pytest resume_engine/tests -q              # resume engine: 511 passed
+for f in test_*.js; do node "$f"; done               # frontend: 9 test files
+
+cd ../../rag_system/rag_tester
+python -m pytest slide_rag/tests -q                  # slide pipeline: 19 passed
+```
+
+Some grader tests load the real models; set `CAP_SKIP_MODEL_TESTS=1` to skip them.
+
+Evaluation scripts:
+- `grader_eval/`: technical grader vs hand-labelled answers.
+- `integration_checks/`: resume engine, non-answer filter and Round 1 evaluator comparisons.
+
+---
+
+## Repository layout
 
 ```
 .
-├── main_cap/                          Main Flask application (the app you run)
-│   └── cap/
-│       ├── app.py                     Flask entrypoint + all HTTP routes
-│       ├── conversation_engine.py     Resume Discussion session orchestration (v2 — used by the UI)
-│       ├── discussion_engine.py       Earlier Resume Discussion implementation (legacy, still present)
-│       ├── planner.py / topic_pool.py Question planning over the Candidate Profile
-│       ├── question_realizer.py       Turns a planned specification into question text
-│       ├── evaluation_engine.py       Builds evaluation requests and dispatches to the active evaluator
-│       ├── model_evaluator.py         Trained DeBERTa evaluator
-│       ├── heuristic_evaluator.py     Deterministic evaluator -- authoritative for every candidate-facing score
-│       ├── hybrid_evaluator.py        Runs both evaluators; heuristic scores, DeBERTa adjusts confidence + logs diagnostics
-│       ├── deployment_evaluator.py    Startup wiring: loads DeBERTa, activates HybridEvaluator, falls back to bare heuristic
-│       ├── deployed_model/            Deployed checkpoint metadata + weights (weights are large and git-ignored)
-│       ├── concept_analysis.py        Shared lexical concept-coverage detector
-│       ├── strong_answer.py           Improved Answer generator (deterministic, grounded in concept_analysis)
-│       ├── candidate_profile_generator.py  Resume → Candidate Profile via Gemini
-│       ├── rag_integration.py         Optional RAG wrapper used by /api/next_question
-│       └── templates/index.html       Web UI
-│
-├── rag_system/                        RAG question generation (optional subsystem)
-│   └── rag_tester/
-│       ├── knowledge_base/            Vector indices for PDFs
-│       ├── ingestor.py                PDF → FAISS indexing
-│       ├── retrieval.py               Semantic search
-│       └── generate.py                Question generation
-│
-├── resume_classifier/                 Standalone resume domain classifier (optional subsystem)
-│   └── src/
-│       ├── parser.py                  Text extraction (also used by the main app for DOCX/DOC/TXT)
-│       ├── features.py                Skill/experience extraction
-│       └── models.py                  Domain classification models
-│
-├── Roberta/roberta-multitask-model/   Question classification + adaptive session engine (optional subsystem)
-│   ├── inference/                     Prediction modules (intent, difficulty, topic)
-│   └── adaptive/                      Adaptive session/profile tracking
-│
-└── docs/architecture/                 Design docs for the Resume Discussion pipeline
+├── main_cap/cap/                  Flask app (the thing you run)
+│   ├── app.py                     Entry point and HTTP routes
+│   ├── account_routes.py          Sign up / login / profile / resumes / profile photo
+│   ├── session_routes.py          Session history + technical interview API
+│   ├── conversation_engine.py     Round 1 orchestration (planner → question → evaluation → feedback)
+│   ├── planner.py, topic_pool.py, question_realizer.py, discussion_policy.py   Round 1 question planning
+│   ├── resume_engine/             Local 8-stage resume parser
+│   ├── evaluation_engine.py, answer_gate.py, averaged_evaluator.py,
+│   │   overall_single_evaluator.py, heuristic_evaluator.py                   Round 1 answer evaluation
+│   ├── interview_feedback.py      End-of-session feedback text
+│   ├── tech_interview/            Technical interview: bank, selector, NLI grader, follow-ups, session
+│   ├── deployed_model_overall_single_v5_1088/   Trained Round 1 evaluator (weights via Git LFS)
+│   ├── templates/index.html       The whole web UI (incl. proctoring and webcam monitoring)
+│   └── static/models/             MediaPipe Face Landmarker model
+├── rag_system/rag_tester/
+│   ├── slide_rag/                 Offline slide pipeline + question-bank generation, ranking, enrichment
+│   └── question_bank/             The technical question bank (one JSON per subject) + quality review
+├── grader_eval/                   Technical grader evaluation sets and scripts
+├── integration_checks/            Before/after comparison scripts and data
+├── resume_classifier/             Resume text extraction for DOCX/DOC/TXT
+├── parser_tests/                  Parser benchmark scripts (the test resumes themselves are not in git)
+└── docs/architecture/             Earlier design documents
+```
+
+Not in git (see `.gitignore`): the database and uploads, the lecture slides and the search indexes built from them, generation caches, and personal test resumes.
+
+---
+
+## Rebuilding the question bank (optional, offline)
+
+Only needed to change the bank; the app just reads `question_bank/*.json`. Requires the lecture slides locally and [Ollama](https://ollama.com) with `qwen3:8b` (GPU recommended). From `rag_system/rag_tester`:
+
+```bash
+python -m slide_rag.build                 # slides → knowledge_base_v2
+python -m slide_rag.qbank                 # generate questions (resumable)
+python -m slide_rag.rank_bank             # rank and activate
+python -m slide_rag.enrich_bank           # follow-up replies for the grader
+python -m slide_rag.interview_priority    # interview-frequency tiers
 ```
 
 ---
 
-## 📡 API Endpoints
+## Documentation
 
-Endpoints actually used by the shipped web UI:
+- [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md): everything a new machine needs (system, models, weights file, browser, question-bank rebuild).
+- [`PROJECT_DOCUMENTATION.md`](PROJECT_DOCUMENTATION.md): architecture, every subsystem, design decisions, measured results, limitations and a glossary.
+- [`resumeParser_integration.md`](resumeParser_integration.md): how the improved resume engine and trained evaluator were integrated and measured.
+- [`rag_system/rag_tester/question_bank/quality_review.md`](rag_system/rag_tester/question_bank/quality_review.md): per-question quality scores and the topics still to cover.
+- [`mcq_tobedone.md`](mcq_tobedone.md): the planned 30-question MCQ test.
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/` | GET | Serve the web UI |
-| `/health` | GET | Health check |
-| `/api/classify-resume` | POST | Upload a resume, get back a Candidate Profile + session ID |
-| `/api/resume-discussion-v2/start` | POST | Start a Resume Discussion session for a Candidate Profile |
-| `/api/resume-discussion-v2/reply` | POST | Submit an answer, get evaluation + the next question (or completion) |
-| `/api/resume-discussion-v2/end` | POST | End the session and get the full summary/report |
-| `/api/next_question` | POST | Get the next quiz-style question (RAG-backed if available, else hardcoded bank) |
-| `/api/evaluate` | POST | Score a quiz-style answer + fill-in-the-blank |
+## Team workflow
 
-Additional endpoints exist for optional/exploratory subsystems and are not called by the shipped UI:
+`main` is the stable branch; work on feature branches and merge through pull requests. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/get-resume-discussion` | POST | Legacy MCQ-style resume discussion (superseded by v2 above) |
-| `/api/resume-discussion/{start,reply,end}` | POST | Legacy (v1) Resume Discussion engine, kept for reference |
-| `/api/candidate-profile/<session_id>` | GET | Fetch a stored Candidate Profile by session ID |
-| `/roberta/classify` | POST | Classify a question via the RoBERTa multitask model |
-| `/adaptive/{session,next,evaluate}` | POST | Adaptive question selection driven by the RoBERTa model |
+## Troubleshooting
 
----
-
-## 🧠 System Components Explained
-
-### Candidate Profile Generation
-- **Input**: Resume (PDF/DOCX/DOC/TXT)
-- **Process**: Text extraction (PyMuPDF for PDF, the `resume_classifier` parser for other formats) → a single Gemini call that produces a structured Candidate Profile (projects, experience, skills, technologies, interview seeds)
-- **Output**: Candidate Profile, stored in-memory for the session and reused by every downstream module (discussion, evaluation, dashboard) so the resume is never re-parsed
-
-### Resume Discussion (v2 — Conversation Engine)
-- **Planner** (`planner.py` / `topic_pool.py`) selects the next discussion unit from the Candidate Profile in priority order.
-- **Question Realizer** (`question_realizer.py`) turns that unit into natural question text.
-- The session is capped at **10 questions** (`conversation_engine.RESUME_DISCUSSION_QUESTION_BUDGET`).
-- Each answer is evaluated (see below) and recorded to an in-session **Evaluation Ledger**; evaluation does not currently change which question comes next.
-
-### Answer Evaluation
-- **Production evaluator**: `HybridEvaluator` (`hybrid_evaluator.py`), active whenever a deployed DeBERTa checkpoint is available. It runs both evaluators on every turn:
-  - `HeuristicEvaluator` (`heuristic_evaluator.py`) is **authoritative** for every candidate-facing field: `overall_score`, grade, every per-dimension score, strengths, weaknesses, missing-reasoning, suggested improvements, recommended topics, and concept coverage. Scores and blends are never averaged between the two evaluators.
-  - The trained **DeBERTa-v3** classifier (`model_evaluator.py`) genuinely participates, but its influence is scoped to two things: it can only *lower* (never raise) the reported `confidence` when its per-dimension scores disagree with the heuristic's beyond a threshold, and its raw output plus the computed agreement score are logged to a local diagnostics file (`hybrid_diagnostics.jsonl`, git-ignored) for future retraining. This is a deliberate design choice (see `docs/architecture` — Hybrid Evaluator design review), not a stopgap: the trained checkpoint was validated only on synthetic template data and never completed shadow-testing against real traffic, so it isn't trusted with the primary score yet.
-- **Automatic fallback**: if the deployed checkpoint is missing, corrupted, or not promotion-approved, the app activates a bare `HeuristicEvaluator` instead — the app never crashes because of a missing or unavailable model.
-- **Known limitation of the trained checkpoint** (documented, not a bug): it was trained on synthetic template answers and scores natural interview answers more harshly than templated ones — a train/serve domain gap. This is exactly why it's scoped to confidence-adjustment and diagnostics rather than the primary score.
-
-### Improved Answer
-- A deterministic (no-LLM) rewrite of the candidate's **own** answer: repetition removed, plus grounded first-person additions naming the specific missing concepts and weak reasoning areas the evaluator flagged.
-- Shares a single lexical concept detector (`concept_analysis.py`) with the dashboard's Concept Coverage %, so the two can never disagree.
-- Hidden when the candidate's answer is already strong or when there's nothing concrete to add.
-
-### RAG-Backed Quiz Questions (optional)
-- **Input**: Topic + a pre-indexed PDF knowledge base (`rag_system/rag_tester/knowledge_base/`)
-- **Output**: Open-ended interview questions with reference answers, consumed by `/api/next_question`
-- If the RAG system isn't available or configured, `/api/next_question` falls back to a small hardcoded question bank per domain.
-
-### RoBERTa Multitask Model (optional)
-- **Input**: Interview question text
-- **Output**: Intent (definition/explanation/etc.), difficulty, topics — used by `/roberta/classify` and the `/adaptive/*` endpoints for adaptive question selection.
-
-### Webcam & Attention Monitoring
-- **Input**: Candidate webcam video stream (client-side in browser)
-- **Process**: Real-time facial landmark detection and gaze / head-orientation tracking using MediaPipe FaceMesh / Face Landmarker
-- **Output**: Non-intrusive attention telemetry, real-time gaze warnings, and a calibrated session Attention Score in the assessment report.
-
----
-
-## 🔧 Configuration
-
-### Deploy a different DeBERTa checkpoint
-Replace the three files in `main_cap/cap/deployed_model/`:
-- `best_checkpoint.json` — checkpoint metadata
-- `best_checkpoint_weights.pt` — model weights (large; not tracked in git)
-- `final_promotion_decision.json` — promotion decision record
-
-These are exactly what `run_experiment_2_train_tuned.py` produces. If all three are present and the promotion decision is `approved`, the checkpoint is wrapped in a `HybridEvaluator` alongside the heuristic (see Answer Evaluation above) rather than replacing it. If any file is missing or the promotion decision isn't `approved`, the app falls back to a bare `HeuristicEvaluator` automatically.
-
-### Add New PDF Knowledge Bases (RAG)
-Place a PDF in `rag_system/rag_tester/samples/` and index it using the ingestion tooling in `rag_system/rag_tester/ingestor.py` (see `rag_system/rag_tester/README.md` and `SETUP_GUIDE.md`).
-
-### Adjust Interview Parameters
-- Question budget for Resume Discussion: `RESUME_DISCUSSION_QUESTION_BUDGET` in `main_cap/cap/conversation_engine.py`
-- Quiz-style question selection: `/api/next_question` in `main_cap/cap/app.py`
-
----
-
-## 📖 Documentation
-
-- `docs/architecture/ResumeDiscussion_v2.md` — Resume Discussion pipeline design
-- `WORKFLOW_INTEGRATION_GUIDE.md` — earlier integration notes (some content predates the current architecture; prefer this README + the docs above for anything that conflicts)
-- `resume_classifier/README.md` — resume classifier details
-- `Roberta/roberta-multitask-model/README.md` — RoBERTa model info
-- `rag_system/rag_tester/README.md` — RAG system documentation
-
----
-
-## 🚨 Troubleshooting
-
-### GEMINI_API_KEY not set
-Resume upload and Resume Discussion will not work. Set `GEMINI_API_KEY` in `main_cap/cap/.env` and restart.
-
-### Port 5000 already in use
-`app.py` runs on a fixed port (5000). Either stop the process using that port, or edit the `app.run(...)` call at the bottom of `main_cap/cap/app.py`.
-
-### Trained evaluator not participating
-Check the startup logs for `Production evaluator ACTIVE: ...`. If it reports the bare `HeuristicEvaluator` fallback (not `hybrid-v1`), verify all three files exist under `main_cap/cap/deployed_model/` and that the promotion decision is `approved`. When `hybrid-v1` is active, DeBERTa is genuinely running every turn even though it never sets the primary score — see Answer Evaluation above, or inspect `hybrid_diagnostics.jsonl` for per-turn evidence it ran.
-
-### RAG system errors
-- Check PDF files exist in `rag_system/rag_tester/samples/`
-- Ensure `rag_system/rag_tester/knowledge_base/` exists and is writable
-- If RAG isn't configured, `/api/next_question` still works via its hardcoded fallback bank
-
-### Resume parser failing
-- Verify the resume is a valid PDF/DOCX/DOC/TXT
-- Minimum 50 characters of extractable text required
-
----
-
-## ⭐ Support & Feedback
-
-For issues, suggestions, or improvements:
-1. Check `docs/architecture/ResumeDiscussion_v2.md` and the component-specific READMEs
-2. Check Flask app logs (`python app.py`)
+- **Port 5000 in use:** stop the other process, or change the port in `app.run` in `main_cap/cap/app.py`.
+- **Round 1 shows the heuristic evaluator:** the weights file is missing or is only an LFS pointer (run `git lfs pull`), or `CAP_TRAINED_EVALUATOR=0` is set. Check the startup line `Production evaluator ACTIVE: ...`.
+- **Slow first start:** the models are downloading; later starts load them offline.
+- **Camera check fails:** allow camera access in the browser and press Retry; the interview can't start without a camera.

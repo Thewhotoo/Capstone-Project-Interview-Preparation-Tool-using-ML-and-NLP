@@ -30,7 +30,10 @@ _MONTH = (
     r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|"
     r"Jul(?:y)?|Aug(?:ust)?|Sep(?:t|tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
 )
-_MONTH_YEAR = rf"{_MONTH}\.?\s+\d{{4}}"
+# An optional comma after the month ("March, 2022"): common in Canva-style
+# templates; without it the whole range went unrecognized and stayed inside
+# the role text ("Software Developer March, 2022" at "March, 2025").
+_MONTH_YEAR = rf"{_MONTH}\.?,?\s+\d{{4}}"
 # Numeric day-month-year (or month-day-year) with '-' or '/' separators,
 # e.g. "17-7-2024", "02/08/2024". Listed before the bare-year alternative so
 # a full DMY token is matched whole rather than partially (which previously

@@ -124,7 +124,7 @@ def test_normalizer_is_a_noop_pass_through_for_unrecognized_entity_types():
 
 
 # ── clean_text: bullet/glyph leakage fix (multi-resume validation) ─────────
-# Real cases reproduced from Shubham-Mookim-Resume.pdf and
+# Real cases reproduced from a real candidate's resume and
 # ops_saikarthik_resume-1.pdf's raw pymupdf spans, plus the negative cases
 # that prove this is NOT a broad Unicode blacklist -- dashes, accents, and
 # mid-string bullets must all survive untouched.
@@ -138,7 +138,7 @@ def test_clean_text_strips_leading_sub_bullet():
 
 
 def test_clean_text_strips_embedded_control_character():
-    # The real \x80 icon-font-glyph artifact found in Shubham-Mookim-Resume.pdf.
+    # The real \x80 icon-font-glyph artifact found in a real candidate's resume.
     assert clean_text("[ \x80 ]") == "[ ]"
 
 

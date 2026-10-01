@@ -1,68 +1,85 @@
-"""Fast, model-free tests for interview_feedback.build_feedback — the honest,
-data-driven end-of-session feedback that replaces the fixed frontend templates."""
+"""
+interview_feedback.build_feedback (adapted from a teammate's module) and its
+hook in conversation_engine.end_conversation.
+"""
 
-from __future__ import annotations
+import unittest
 
-import os
-import sys
-
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from interview_feedback import build_feedback
-
-
-def _ev(overall, tc=0.0, depth=0.0, relv=0.0, grnd=0.0):
-    return {"overall_score": overall, "grade": "poor", "dimensions": [
-        {"name": "technical_correctness", "raw_score": tc},
-        {"name": "depth_specificity", "raw_score": depth},
-        {"name": "relevance_completeness", "raw_score": relv},
-        {"name": "grounding_ownership", "raw_score": grnd},
-    ]}
+import conversation_engine
+from candidate_profile_generator import CandidateProfile, ProjectEntry
+from interview_feedback import DEPTH, GROUNDING, RELEVANCE, SCOPE_NOTE, build_feedback
 
 
-def test_all_idk_feedback_is_accurate_not_generic():
-    evals = [_ev(0.1, relv=0.3) for _ in range(10)]  # ten non-substantive turns
-    fb = build_feedback(evals)
-    assert "weren't really answered" in fb["headline"].lower() or "weren't" in fb["headline"]
-    assert "10 of 10" in fb["summary"]
-    # It must NOT claim technical claims were inaccurate (there were no claims).
-    assert "didn't hold up" not in fb["summary"].lower()
-    assert "correctness" in fb["scope_note"].lower()
-    assert fb["stats"]["non_substantive"] == 10
-    assert fb["stats"]["substantively_answered"] == 0
+def _ev(overall, depth=None, completeness=None, ownership=None, grounding=None):
+    dims = []
+    for name, v in (("technical_depth", depth), ("completeness", completeness),
+                    ("ownership", ownership), ("resume_grounding", grounding), ("communication", 0.7)):
+        if v is not None:
+            dims.append({"name": name, "raw_score": v, "confidence": 0.8, "contributes_to_overall": True})
+    return {"overall_score": overall, "dimensions": dims}
 
 
-def test_strong_session_feedback():
-    evals = [_ev(0.8, tc=0.8, depth=0.75, relv=0.85, grnd=0.7) for _ in range(8)]
-    fb = build_feedback(evals)
-    assert "strong" in fb["headline"].lower()
-    assert fb["stats"]["strong_answers"] == 8
-    assert fb["strengths"]  # names what went well
+class TestBuildFeedback(unittest.TestCase):
+    def test_reads_our_dimension_names_and_never_zero_fills(self):
+        # completeness is reported for only one answer: its mean must be that one value, not diluted by zeros
+        fb = build_feedback([_ev(0.8, depth=0.9, ownership=0.8, grounding=0.6),
+                             _ev(0.7, depth=0.7, completeness=0.9, ownership=0.6)])
+        means = fb["stats"]["dimension_means"]
+        self.assertAlmostEqual(means[DEPTH], 0.8, places=3)
+        self.assertAlmostEqual(means[RELEVANCE], 0.9, places=3)
+        self.assertAlmostEqual(means[GROUNDING], (0.7 + 0.6) / 2, places=3)
+        self.assertEqual(fb["headline"], "Strong session — specific, grounded answers.")
+        self.assertEqual(fb["scope_note"], SCOPE_NOTE)
+
+    def test_mostly_non_answers(self):
+        fb = build_feedback([_ev(0.1, depth=0.1), _ev(0.05, depth=0.1), _ev(0.1), _ev(0.7, depth=0.7)])
+        self.assertEqual(fb["headline"], "Most questions weren't really answered.")
+        self.assertEqual(fb["stats"]["non_substantive"], 3)
+
+    def test_mixed_session_names_the_weakest_area(self):
+        fb = build_feedback([_ev(0.7, depth=0.2, completeness=0.8, ownership=0.7),
+                             _ev(0.45, depth=0.3, completeness=0.7, ownership=0.6),
+                             _ev(0.5, depth=0.25, completeness=0.75, ownership=0.65)])
+        self.assertEqual(fb["headline"], "A mixed session with clear room to go deeper.")
+        self.assertIn("go a level deeper", fb["summary"])
+        self.assertEqual([f["dimension"] for f in fb["focus_areas"]], [DEPTH])
+
+    def test_non_answers_never_earn_strengths(self):
+        # gated junk keeps high dimension scores; they must not turn into praise
+        fb = build_feedback([_ev(0.1, depth=0.9, ownership=0.9, grounding=0.9) for _ in range(5)])
+        self.assertEqual(fb["headline"], "Most questions weren't really answered.")
+        self.assertEqual(fb["strengths"], [])
+        self.assertEqual(fb["stats"]["dimension_means"], {})
+
+    def test_empty_session(self):
+        self.assertEqual(build_feedback([])["stats"]["questions"], 0)
 
 
-def test_mixed_session_feedback():
-    evals = [_ev(0.8, depth=0.7, relv=0.8, grnd=0.7)] * 3 + [_ev(0.1, relv=0.2)] * 3
-    fb = build_feedback(evals)
-    assert "mixed" in fb["headline"].lower()
-    assert 0 < fb["stats"]["strong_answers"] < fb["stats"]["questions"]
+class TestEndConversationCarriesFeedback(unittest.TestCase):
+    def setUp(self):
+        # don't depend on whatever evaluator an earlier test left active
+        import evaluator_registry
+        from heuristic_evaluator import HeuristicEvaluator
+        evaluator_registry._registry.clear()
+        evaluator_registry._active_name = None
+        evaluator_registry.register_evaluator(HeuristicEvaluator(), make_active=True)
+
+    def test_summary_has_feedback(self):
+        profile = CandidateProfile(
+            candidate_name="Test", skills=["Python", "Flask"],
+            projects=[ProjectEntry(title="Interview Coach", summary="A Flask app.", technologies=["Python", "Flask"])],
+        ).model_dump()
+        payload, _ = conversation_engine.start_conversation(profile)
+        cid = payload["conversation_id"]
+        conversation_engine.advance_conversation(
+            cid, "I built the answer storage myself in SQLite so a restart lost nothing, and added an index on "
+                 "the session id when the history page got slow.")
+        summary, status = conversation_engine.end_conversation(cid)
+        self.assertEqual(status, 200)
+        self.assertIn("headline", summary["feedback"])
+        self.assertEqual(summary["feedback"]["stats"]["questions"], 1)
+        self.assertTrue(summary["feedback"]["stats"]["dimension_means"])   # our dimensions were found
 
 
-def test_focus_areas_target_weak_dimensions():
-    evals = [_ev(0.4, depth=0.1, relv=0.5, grnd=0.5) for _ in range(5)]  # depth is the weak spot
-    fb = build_feedback(evals)
-    dims = [f["dimension"] for f in fb["focus_areas"]]
-    assert "depth_specificity" in dims
-
-
-def test_empty_session():
-    fb = build_feedback([])
-    assert fb["stats"]["questions"] == 0
-    assert "no answers" in fb["headline"].lower()
-
-
-def test_feedback_never_asserts_verified_correctness():
-    for evals in ([_ev(0.1) for _ in range(4)], [_ev(0.8, tc=0.9, depth=0.8, relv=0.8, grnd=0.8) for _ in range(4)]):
-        fb = build_feedback(evals)
-        blob = (fb["headline"] + " " + fb["summary"] + " " + fb["scope_note"]).lower()
-        assert "verify" in fb["scope_note"].lower() or "does not" in fb["scope_note"].lower()
-        assert "technically correct" not in blob and "factually correct" not in blob
+if __name__ == "__main__":
+    unittest.main()

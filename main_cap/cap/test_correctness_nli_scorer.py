@@ -224,10 +224,10 @@ def test_registry_returns_key_for_seeded_question_and_none_otherwise():
     assert lookup(question_text="a totally unregistered question about llamas") is None
 
 
-def test_evaluation_engine_lookup_answer_key_wires_registry():
-    import types
-    from evaluation_engine import _lookup_answer_key
-    seeded = "Why is TCP reliable while UDP is not?"
-    key = _lookup_answer_key(types.SimpleNamespace(id="unmatched_spec"), seeded)
-    assert key is not None and key.has_key_points
-    assert _lookup_answer_key(types.SimpleNamespace(id="unmatched_spec"), "unknown question") is None
+# NOTE: a prior test here asserted that `evaluation_engine._lookup_answer_key`
+# wired this registry into the live build_request path. In the integrated
+# project the live Round 1 path uses the central `answer_gate` instead, and the
+# NLI correctness evaluator remains an isolated, not-deployed capability, so
+# `evaluation_engine` intentionally does NOT import the registry. The registry
+# itself is still exercised directly by the test above; the removed test tested
+# an integration that the merged project deliberately does not have.

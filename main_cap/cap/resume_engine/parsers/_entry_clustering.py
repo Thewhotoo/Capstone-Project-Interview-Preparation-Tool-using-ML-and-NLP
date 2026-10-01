@@ -28,10 +28,13 @@ from resume_engine.text_normalization import (
     contains_year,
     is_bare_date_line,
     is_open_list_end,
+    is_page_marker,
     looks_like_title,
+    reads_as_sentence,
     starts_with_action_verb,
     starts_with_bullet,
     starts_with_non_title_label,
+    strip_date_ranges,
     strip_leading_bullet,
     strip_leading_enumeration,
 )
@@ -189,6 +192,9 @@ def _line_role(
     # some real work here." reads as title-like and can hijack the entry.
     if analysis.rstrip().endswith("."):
         return "content"
+    # A running page footer/header ("Page 1") is layout furniture, not an entry.
+    if is_page_marker(analysis):
+        return "content"
 
     # Measure "titleishness" on the part BEFORE any "|" technology tail: a
     # real title like "Foo Platform | React, Node, Express" is short, but the
@@ -219,6 +225,14 @@ def _line_role(
     # "- Migrated a billing module to microservices,") would be mistaken for a
     # new entry. ──
     if starts_with_bullet(text):
+        return "content"
+    # A title-looking line that is really a sentence: a bullet's first line
+    # ("Performed system analysis, debugging, and ...", "Conducted a test for
+    # software bugs and speed" wrapping into "in its operation, ...") or a
+    # wrapped continuation ("SQL knowledge required; deployed to ..."). Only
+    # checked on this weak tier -- strong headers keep their formatting/date
+    # evidence -- and only sentence-case lines qualify (see reads_as_sentence).
+    if reads_as_sentence(text, prev_line_text, next_line_text):
         return "content"
     return "title"
 
@@ -267,7 +281,11 @@ def _title_separator(text: str) -> str:
     such separator. Used purely as a parallel-structure signal (do adjacent
     title lines share a separator shape?), never to alter the displayed
     title. A comma is deliberately NOT a title separator (it delimits list
-    items, not title/description)."""
+    items, not title/description). The dash inside a date range ("March,
+    2022 - March, 2025") is not a separator either: otherwise a job header
+    with a date range and the address line under it ("Gravity Tech - 123
+    Anywhere St.") share a "-" shape and split into two entries."""
+    text = strip_date_ranges(text)
     if "|" in text:
         return "|"
     if _TITLE_SEP_DASH_RE.search(text):
@@ -312,7 +330,10 @@ def _entry_start_flags(lines: list[_Line], body_font_size: float) -> list[bool]:
         role = roles[i]
         if role == "content":
             start = False
-            if open_entry:
+            # A glyph-only line (a lone "•" the PDF emitted on its own line)
+            # is not body text: counting it split "PES University" / "B.Tech
+            # -- ..." into two education entries.
+            if open_entry and any(ch.isalnum() for ch in lines[i].text):
                 body_since_start = True
         else:  # "strong_header" or "title"
             if not open_entry:

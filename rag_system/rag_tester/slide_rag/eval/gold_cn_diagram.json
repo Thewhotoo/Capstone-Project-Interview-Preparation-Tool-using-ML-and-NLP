@@ -1,0 +1,22 @@
+[
+  {"query": "What fields are in the UDP segment header?", "pages": [334]},
+  {"query": "What fields are in a TCP segment header?", "pages": [400]},
+  {"query": "What are the main parts inside a router?", "pages": [463]},
+  {"query": "Compare the data rates and range of WiFi, 5G and Bluetooth links", "pages": [766]},
+  {"query": "How do the sender and receiver windows look in Selective Repeat?", "pages": [389]},
+  {"query": "How is end-to-end throughput limited along a path?", "pages": [71, 72]},
+  {"query": "What are the layers of the OSI reference model?", "pages": [85]},
+  {"query": "How do the TCP/IP protocol suite layers map to the OSI model?", "pages": [86, 87, 88, 89, 90, 91, 93]},
+  {"query": "How does a server use cookies across multiple visits?", "pages": [192]},
+  {"query": "How does CIDR prefix length split an address into subnet and host parts?", "pages": [508, 509, 516]},
+  {"query": "How does NAT rewrite addresses in a translation table?", "pages": [533, 535]},
+  {"query": "What does the IPv6 datagram header contain?", "pages": [594]},
+  {"query": "How does rdt3.0 behave when a packet or ACK is lost?", "pages": [370]},
+  {"query": "How does the TCP window grow from slow start into congestion avoidance?", "pages": [448]},
+  {"query": "How does a switch build its forwarding table by self-learning?", "pages": [721]},
+  {"query": "How does CSMA/CD handle a collision on the medium?", "pages": [675]},
+  {"query": "What does a MAC address look like and how is it different from an IP address?", "pages": [680]},
+  {"query": "How does switching via memory work inside a router?", "pages": [477]},
+  {"query": "How does switching via a bus work inside a router?", "pages": [478]},
+  {"query": "What happens during a DHCP client-server exchange?", "pages": [575]}
+]

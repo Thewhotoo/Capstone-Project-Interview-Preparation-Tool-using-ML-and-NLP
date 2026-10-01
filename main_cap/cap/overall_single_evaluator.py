@@ -45,7 +45,6 @@ import torch
 from evaluation_request import EvaluationRequest
 from evaluation_result import EvaluationResult
 from heuristic_diagnostics import CANONICAL_DIMENSION_KEYS, HeuristicDiagnosticsEngine
-from correctness_nli_scorer import degeneracy
 from model_backbone import BackboneConfig, build_dimension_pair, bounded_grounding_to_text, tokenize_pair
 from model_heads import coral_confidence, coral_predict
 from overall_score_model import OverallScoreModel
@@ -160,9 +159,12 @@ class OverallSingleEvaluator:
             # Non-answer fairness gate (deterministic): a non-answer / degenerate
             # reply must not ride the grounding to a decent score. Downward-only;
             # never rescues or raises a real answer's learned score.
-            gated_non_answer = _is_non_answer(request.answer_text) or degeneracy(request.answer_text).is_degenerate
-            if gated_non_answer:
-                overall_score = min(overall_score, 0.1)
+            # (Integration, 2026-09-30) The model-internal non-answer gate is
+            # disabled here: every Round 1 result already passes the central
+            # answer_gate.gate (evaluation_engine.evaluate), which catches the
+            # same junk without zeroing genuine answers -- this version's
+            # substring/keyword rules zeroed 42 of 628 genuine answers
+            # ("pass through", "a SELECT ... from", "return the").
 
             grade = _grade_from_score(overall_score)
 
@@ -171,16 +173,6 @@ class OverallSingleEvaluator:
             # by HeuristicDiagnosticsEngine itself); nothing below this
             # point is allowed to change overall_score/grade. ──
             dimensions = self.diagnostics_engine.compute(request)
-            # A non-substantive response (deflection like "What is chart.js?",
-            # gibberish, keyword-dump, one-liner) has no real technical accuracy
-            # or depth — the similarity/marker heuristics otherwise report absurd
-            # values (e.g. 100% technical_correctness for a counter-question that
-            # merely names the tech). Floor the DIAGNOSTIC dimensions to match the
-            # gated overall so the report is coherent. Real answers are untouched.
-            if gated_non_answer:
-                dimensions = tuple(
-                    d.model_copy(update={"raw_score": min(d.raw_score, 0.1)}) for d in dimensions
-                )
             strengths, weaknesses = self.diagnostics_engine.claims(dimensions)
 
             reasoning = (

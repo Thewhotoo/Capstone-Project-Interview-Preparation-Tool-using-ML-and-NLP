@@ -12,6 +12,7 @@ import os
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -49,13 +50,9 @@ def _write_fixture_deployment(deploy_dir: str, approved: bool) -> None:
     open(os.path.join(deploy_dir, "best_checkpoint_weights.pt"), "wb").close()
 
 
-def _tiny_model_loader(path, backbone_config, **kwargs):
-    """Stand-in for model_checkpoint_io.load_checkpoint_artifact -- ignores
-    every argument (including the A2 cutover's `dimension_names=
-    CANONICAL_DIMENSION_KEYS`/`use_private_mlp`/`mlp_hidden_dim`/
-    `mlp_dropout` kwargs deployment_evaluator.py now passes at its call
-    site -- accepted here via **kwargs purely so this stand-in stays
-    call-compatible, not exercised), returns a fresh tiny-random
+def _tiny_model_loader(path, backbone_config):
+    """Stand-in for model_checkpoint_io.load_checkpoint_artifact -- same
+    signature, ignores both arguments, returns a fresh tiny-random
     MultiTaskModel so the bootstrap control-flow under test never touches
     the real pretrained deberta-v3-base backbone."""
     backbone = build_tiny_random_encoder(_TOKENIZER, hidden_size=16)
@@ -65,20 +62,7 @@ def _tiny_model_loader(path, backbone_config, **kwargs):
 class _PatchedDeploymentPaths:
     """Context manager: monkeypatches deployment_evaluator's module-level
     path constants to point at a fixture directory, restoring the real
-    ones afterward -- never mutates the actual deployed_model/ paths.
-
-    Also points TIER 1 (v5_1088 single-overall-score, deployment_evaluator.
-    DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V5_1088) AND TIER 2 (v3
-    single-overall-score, deployment_evaluator.
-    DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V3) at EMPTY sibling directories so
-    both deterministically fail and `bootstrap_production_evaluator()`
-    falls through to tier 3 (A2, patched here to `deploy_dir`) -- this
-    suite exists specifically to test tier 3/4 behavior in isolation from
-    whatever tier 1/tier 2 checkpoint happens to be present on the real,
-    live `deployed_model_overall_single_v5_1088/`/`deployed_model_overall_
-    single_v3/` on disk (both of which, post v5_1088-cutover, may contain a
-    real, loadable checkpoint and would otherwise win every time, defeating
-    these tests' whole point)."""
+    ones afterward -- never mutates the actual deployed_model/ paths."""
 
     def __init__(self, deploy_dir):
         self.deploy_dir = deploy_dir
@@ -91,34 +75,16 @@ class _PatchedDeploymentPaths:
             "DEPLOYED_CHECKPOINT_PATH": deployment_evaluator.DEPLOYED_CHECKPOINT_PATH,
             "DEPLOYED_PROMOTION_DECISION_PATH": deployment_evaluator.DEPLOYED_PROMOTION_DECISION_PATH,
             "load_checkpoint_artifact": deployment_evaluator.load_checkpoint_artifact,
-            "DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V5_1088": deployment_evaluator.DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V5_1088,
-            "_OVERALL_SINGLE_V5_1088_WEIGHTS_PATH": deployment_evaluator._OVERALL_SINGLE_V5_1088_WEIGHTS_PATH,
-            "_OVERALL_SINGLE_V5_1088_CHECKPOINT_PATH": deployment_evaluator._OVERALL_SINGLE_V5_1088_CHECKPOINT_PATH,
-            "_OVERALL_SINGLE_V5_1088_PROMOTION_DECISION_PATH": deployment_evaluator._OVERALL_SINGLE_V5_1088_PROMOTION_DECISION_PATH,
-            "DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V3": deployment_evaluator.DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V3,
-            "_OVERALL_SINGLE_V3_WEIGHTS_PATH": deployment_evaluator._OVERALL_SINGLE_V3_WEIGHTS_PATH,
-            "_OVERALL_SINGLE_V3_CHECKPOINT_PATH": deployment_evaluator._OVERALL_SINGLE_V3_CHECKPOINT_PATH,
-            "_OVERALL_SINGLE_V3_PROMOTION_DECISION_PATH": deployment_evaluator._OVERALL_SINGLE_V3_PROMOTION_DECISION_PATH,
+            # these tests cover the legacy tiers; the v5 averaged tier is covered in
+            # test_averaged_evaluator.py, so skip it here even if its model is installed
+            "_try_activate_averaged_v5": deployment_evaluator._try_activate_averaged_v5,
         }
+        deployment_evaluator._try_activate_averaged_v5 = lambda: False
         deployment_evaluator.DEPLOYED_MODEL_DIR = self.deploy_dir
         deployment_evaluator.DEPLOYED_WEIGHTS_PATH = os.path.join(self.deploy_dir, "best_checkpoint_weights.pt")
         deployment_evaluator.DEPLOYED_CHECKPOINT_PATH = os.path.join(self.deploy_dir, "best_checkpoint.json")
         deployment_evaluator.DEPLOYED_PROMOTION_DECISION_PATH = os.path.join(self.deploy_dir, "final_promotion_decision.json")
         deployment_evaluator.load_checkpoint_artifact = _tiny_model_loader
-
-        empty_tier1_dir = os.path.join(self.deploy_dir, "_empty_tier1_for_isolation")
-        os.makedirs(empty_tier1_dir, exist_ok=True)
-        deployment_evaluator.DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V5_1088 = empty_tier1_dir
-        deployment_evaluator._OVERALL_SINGLE_V5_1088_WEIGHTS_PATH = os.path.join(empty_tier1_dir, "best_checkpoint_weights.pt")
-        deployment_evaluator._OVERALL_SINGLE_V5_1088_CHECKPOINT_PATH = os.path.join(empty_tier1_dir, "best_checkpoint.json")
-        deployment_evaluator._OVERALL_SINGLE_V5_1088_PROMOTION_DECISION_PATH = os.path.join(empty_tier1_dir, "final_promotion_decision.json")
-
-        empty_tier2_dir = os.path.join(self.deploy_dir, "_empty_tier2_for_isolation")
-        os.makedirs(empty_tier2_dir, exist_ok=True)
-        deployment_evaluator.DEPLOYED_MODEL_DIR_OVERALL_SINGLE_V3 = empty_tier2_dir
-        deployment_evaluator._OVERALL_SINGLE_V3_WEIGHTS_PATH = os.path.join(empty_tier2_dir, "best_checkpoint_weights.pt")
-        deployment_evaluator._OVERALL_SINGLE_V3_CHECKPOINT_PATH = os.path.join(empty_tier2_dir, "best_checkpoint.json")
-        deployment_evaluator._OVERALL_SINGLE_V3_PROMOTION_DECISION_PATH = os.path.join(empty_tier2_dir, "final_promotion_decision.json")
         return self
 
     def __exit__(self, *exc_info):
@@ -168,6 +134,31 @@ class TestBootstrapFallback(unittest.TestCase):
             with _PatchedDeploymentPaths(tmpdir):
                 deployment_evaluator.bootstrap_production_evaluator()
 
+            self.assertEqual(evaluator_registry.active_evaluator_name(), "heuristic-v1")
+
+    def test_missing_weights_skip_loading_the_model_entirely(self):
+        """A fresh clone has the JSON files but no weights: nothing heavy
+        (tokenizer download, backbone load) may run in that case."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            _write_fixture_deployment(tmpdir, approved=True)
+            os.remove(os.path.join(tmpdir, "best_checkpoint_weights.pt"))
+            with _PatchedDeploymentPaths(tmpdir), \
+                    mock.patch.object(deployment_evaluator, "build_tokenizer") as tokenizer, \
+                    mock.patch.object(deployment_evaluator, "load_checkpoint_artifact") as loader:
+                deployment_evaluator.bootstrap_production_evaluator()
+
+            tokenizer.assert_not_called()
+            loader.assert_not_called()
+            self.assertEqual(evaluator_registry.active_evaluator_name(), "heuristic-v1")
+
+    def test_unapproved_promotion_skips_loading_the_model(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            _write_fixture_deployment(tmpdir, approved=False)
+            with _PatchedDeploymentPaths(tmpdir), \
+                    mock.patch.object(deployment_evaluator, "load_checkpoint_artifact") as loader:
+                deployment_evaluator.bootstrap_production_evaluator()
+
+            loader.assert_not_called()
             self.assertEqual(evaluator_registry.active_evaluator_name(), "heuristic-v1")
 
     def test_falls_back_to_bare_heuristic_when_promotion_not_approved(self):

@@ -19,6 +19,7 @@ from resume_engine.certification_gazetteer import CERTIFICATIONS
 from resume_engine.confidence import Confidence
 from resume_engine.interfaces import ParserResult
 from resume_engine.parsers._entry_clustering import _group_into_lines, strip_section_header_line
+from resume_engine.text_normalization import reads_as_sentence, starts_with_action_verb, strip_leading_bullet
 from resume_engine.validation import Observation
 
 # Validation-derived, tunable, same discipline as the other parsers' match
@@ -49,6 +50,35 @@ def _is_credential_noise(text: str) -> bool:
     return bool(_CREDENTIAL_ID_PATTERN.search(stripped))
 
 
+_COMPANY_SUFFIX_RE = re.compile(r"\b(?:inc|ltd|llc|llp|co|corp|corporation|company|pvt|plc|gmbh)\.?$", re.IGNORECASE)
+_DANGLING_END_RE = re.compile(r"\b(?:to|and|or|of|the|a|an|for|with|in|on|at|by|using|new|from|into)$", re.IGNORECASE)
+
+
+def _is_not_a_certification_name(text: str, next_text: str = "") -> bool:
+    """True for a line inside a Certifications section that cannot be a
+    certification's NAME (integration fix, resumeParser_integration.md §2):
+      - a date-only line ("01 Jun 2052- present", "2021 - 2022");
+      - an issuer/company line ("Giggling Platypus Co.", "Acme Inc.");
+      - a fragment of a description sentence: opens lowercase, opens with an
+        action verb, ends on a dangling connector ("...a new", "...Borcelle to"),
+        or reads as a sentence (reads_as_sentence).
+    Real certification names are short noun phrases ("AWS Certified Cloud
+    Practitioner", "Cloud Certified"), which none of these rules match."""
+    stripped = strip_leading_bullet(text).strip()
+    if not stripped:
+        return True
+    letters_left = re.sub(r"(?i)\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?|\b(?:present|current|now|to)\b|[\d\W_]", " ", stripped)
+    if not letters_left.strip():
+        return True
+    if stripped[0].islower() or starts_with_action_verb(stripped):
+        return True
+    if _COMPANY_SUFFIX_RE.search(stripped.rstrip(" ,")):
+        return True
+    if _DANGLING_END_RE.search(stripped.rstrip(" ,")):
+        return True
+    return reads_as_sentence(stripped, "", next_text)
+
+
 def _lines_from_spans(spans) -> list[str]:
     """One entry per VISUAL line/bullet, not one entry per span.
 
@@ -66,14 +96,17 @@ def _lines_from_spans(spans) -> list[str]:
     exactly like it already would for a PDF whose extractor happens to
     produce one span per line."""
     lines_grouped = _group_into_lines(list(spans))
+    texts = [line.text.strip(" \t•·-") for line in lines_grouped]
     seen: set[str] = set()
     lines: list[str] = []
-    for line in lines_grouped:
-        text = line.text.strip(" \t•·-")
+    for i, text in enumerate(texts):
+        next_text = texts[i + 1] if i + 1 < len(texts) else ""
         # Phase 1: drop credential/certificate ID lines and bare numeric
         # fragments -- they are metadata, not certification names, and were
-        # being counted as separate certifications.
-        if text and text not in seen and not _is_credential_noise(text):
+        # being counted as separate certifications. Integration fix: also
+        # dates, issuer/company lines and description-sentence fragments.
+        if (text and text not in seen and not _is_credential_noise(text)
+                and not _is_not_a_certification_name(text, next_text)):
             seen.add(text)
             lines.append(text)
     return lines

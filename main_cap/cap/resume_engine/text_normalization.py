@@ -221,6 +221,59 @@ def contains_year(text: str) -> bool:
     return bool(_YEAR_RE.search(text or ""))
 
 
+# ── Integration fixes (2026-09-30, see resumeParser_integration.md §2) ──────
+_PAGE_MARKER_RE = re.compile(r"^\s*(?:page\s*)?\d{1,2}\s*(?:(?:/|of)\s*\d{1,2})?\s*$|^\s*page\s+\d{1,2}\b.*$", re.IGNORECASE)
+_MONTH = r"(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?,?"
+_DATE_POINT = rf"(?:{_MONTH}\s*)?(?:\d{{1,2}}\s*)?(?:19|20)\d{{2}}"
+_DATE_RANGE_RE = re.compile(rf"{_DATE_POINT}\s*[-–—]+\s*(?:{_DATE_POINT}|present|current|now|ongoing)", re.IGNORECASE)
+_TERMINAL_PUNCT_RE = re.compile(r"[.!?:;]\s*$")
+
+
+def is_page_marker(text: str) -> bool:
+    """A running page footer/header ("Page 1", "Page 2 of 3", "1/2") -- layout
+    furniture, never an entry title."""
+    return bool(_PAGE_MARKER_RE.match(clean_text(text)))
+
+
+def strip_date_ranges(text: str) -> str:
+    """Removes date ranges ("March, 2022 - March, 2025", "2019 – Present") so
+    the dash inside a date range is never mistaken for a title separator."""
+    return _DATE_RANGE_RE.sub(" ", text or "")
+
+
+def reads_as_sentence(text: str, prev_line_text: str = "", next_line_text: str = "") -> bool:
+    """A title-LOOKING line that is really part of a sentence -- a bullet's
+    first line or a wrapped continuation -- rather than an entry title.
+
+    Requires sentence case (5+ words, most words after the first lowercase;
+    real entry titles are short or Title Case) PLUS one sentence signal:
+      - a comma or semicolon inside it;
+      - a past-tense lead verb ("Performed", "Conducted", "Rechecked": the
+        action-verb lexicon can never be complete);
+      - the next line starts lowercase (this line wraps into it);
+      - the previous line is an unfinished sentence (no terminal punctuation)
+        of 5+ words, so this line is its continuation.
+    A short or Title-Case line ("Chat App", "Hotel Booking Website") never
+    matches, which keeps dateless/boldless project lists splitting correctly."""
+    stripped = strip_leading_bullet(strip_leading_enumeration(text or "")).strip()
+    words = stripped.split()
+    if len(words) < 5:
+        return False
+    rest = [w for w in words[1:] if w[:1].isalpha()]
+    if not rest or sum(w[0].islower() for w in rest) / len(rest) < 0.6:
+        return False
+    if re.search(r"[,;]", stripped):
+        return True
+    first = re.sub(r"[^A-Za-z]", "", words[0]).lower()
+    if len(first) > 4 and first.endswith("ed"):
+        return True
+    nxt = strip_leading_bullet(next_line_text or "").strip()
+    if nxt[:1].islower():
+        return True
+    prev = (prev_line_text or "").strip()
+    return bool(prev) and len(prev.split()) >= 5 and not _TERMINAL_PUNCT_RE.search(prev)
+
+
 def is_bare_date_line(text: str) -> bool:
     """True if the whole line is essentially just a year or year-range
     (e.g. "2026", "2023 - Present", "2023 – 2027") — the date printed on
@@ -240,6 +293,10 @@ def split_title_and_tech_tail(title: str) -> tuple[str, list[str]]:
     if "|" not in title:
         return title.strip(), []
     head, _, tail = title.partition("|")
+    # A bracketed group lists sub-technologies: "Transformers (DeBERTa-v3,
+    # Qwen2.5)" -> "Transformers", "DeBERTa-v3", "Qwen2.5" -- not split at its
+    # inner comma into "Transformers (DeBERTa-v3" and "Qwen2.5)".
+    tail = re.sub(r"\s*\(([^()]*)\)", r", \1", tail)
     techs = []
     for raw in re.split(r"[,/;]| and ", tail):
         # Drop decorative/icon glyphs (Font-Awesome contact/skill icons that

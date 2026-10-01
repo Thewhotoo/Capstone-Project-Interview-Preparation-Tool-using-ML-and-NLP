@@ -41,6 +41,7 @@ change what happens next.
 
 from __future__ import annotations
 
+import logging
 import re
 import uuid as _uuid
 
@@ -88,6 +89,38 @@ def _answer_warrants_followup(result) -> bool:
     / one-liner) is floored to <= 0.10 by the evaluator's substance gate and so
     falls below this band; in both cases the interview simply moves on."""
     return 0.15 < result.overall_score < 0.60
+
+
+logger = logging.getLogger(__name__)
+
+# Session-integrity rules (full screen, no tab/window switching, no
+# copy/cut/paste) are enforced in the browser -- a web page can detect a
+# violation but never prevent one. The client reports the outcome on
+# /end; these are the only violation types it can send.
+INTEGRITY_VIOLATION_TYPES = frozenset({
+    "tab_switch", "window_switch", "fullscreen_exit", "copy", "cut", "paste", "drop",
+})
+
+
+def sanitize_integrity(raw) -> dict:
+    """Keep only known fields of the client-reported integrity record, so a
+    malformed or tampered payload can't put arbitrary data into the
+    session summary."""
+    if not isinstance(raw, dict) or raw.get("terminated") is not True:
+        return {"terminated": False}
+    violation_type = raw.get("type")
+    if violation_type not in INTEGRITY_VIOLATION_TYPES:
+        violation_type = "unknown"
+    at_turn = raw.get("at_turn")
+    if isinstance(at_turn, bool) or not isinstance(at_turn, int) or at_turn < 0:
+        at_turn = None
+    return {
+        "terminated": True,
+        "type": violation_type,
+        "label": str(raw.get("label") or "")[:120],
+        "at_turn": at_turn,
+        "occurred_at": str(raw.get("occurred_at") or "")[:40],
+    }
 
 
 def _question_payload(question: InterviewQuestion) -> dict:
@@ -168,6 +201,16 @@ def start_conversation(profile: ProfileLike, enable_adaptive_followups: bool = F
         "question": _question_payload(question),
         "total_questions": min(planner.total(), RESUME_DISCUSSION_QUESTION_BUDGET),
     }, 200
+
+
+def evaluator_info(conversation_id: str) -> tuple[str, str] | None:
+    """(name, version) of the evaluator pinned to this conversation, for
+    session history — scores from different evaluators aren't comparable."""
+    session = _conversations.get(conversation_id)
+    if session is None:
+        return None
+    evaluator = session["evaluator"]
+    return evaluator.name, evaluator.version
 
 
 def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
@@ -343,12 +386,17 @@ def _result_payload(result) -> dict:
     }
 
 
-def end_conversation(conversation_id: str) -> tuple[dict, int]:
+def end_conversation(conversation_id: str, integrity: dict | None = None) -> tuple[dict, int]:
     """End a conversation and return a structured summary: Chapter 13's
     evaluation-free memory contents, PLUS (Phase 3) the full Evaluation
     Ledger — kept as two clearly separate sections of the payload, never
     merged, so the ConversationMemory-derived fields stay exactly as
-    evaluation-free as Phase 2 approved."""
+    evaluation-free as Phase 2 approved.
+
+    `integrity` is the client's session-integrity record (see
+    `sanitize_integrity`); a terminated session is ended exactly like a
+    completed one -- the session is discarded, so no further replies are
+    accepted -- and the termination is recorded in the summary."""
     session = _conversations.get(conversation_id)
     if session is None:
         return {"error": "Invalid or expired conversation"}, 404
@@ -375,11 +423,17 @@ def end_conversation(conversation_id: str) -> tuple[dict, int]:
             for t in memory.timeline
         ],
         "evaluations": [_result_payload(r) for r in ledger.all()],
+        "integrity": sanitize_integrity(integrity),
     }
     # Honest, data-driven end-of-session feedback derived from the actual per-turn
     # results (replaces the frontend's fixed narrative templates). No evaluation
     # logic here — pure summarization of results already computed.
     from interview_feedback import build_feedback
     summary["feedback"] = build_feedback(summary["evaluations"], summary["timeline"])
+    if summary["integrity"]["terminated"]:
+        logger.warning(
+            "Conversation %s terminated for an integrity violation: %s at turn %s",
+            conversation_id, summary["integrity"]["type"], summary["integrity"]["at_turn"],
+        )
     _conversations.pop(conversation_id, None)
     return summary, 200

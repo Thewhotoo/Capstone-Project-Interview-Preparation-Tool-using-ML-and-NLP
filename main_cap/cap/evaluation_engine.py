@@ -87,21 +87,7 @@ def build_request(
         conversation_context=context,
         evaluation_focus=evaluation_focus,
         expected_concepts=_lookup_expected_concepts(spec),
-        answer_key=_lookup_answer_key(spec, interview_question.question_text),
     )
-
-
-def _lookup_answer_key(spec, question_text: str):
-    """Deterministic AnswerKey lookup for the reference-anchored evaluator —
-    never predicted, never invented, never generated at answer time (same
-    discipline as `_lookup_expected_concepts`). Consults `answer_key_registry`
-    by specification id first, then normalized question text. Returns None when
-    no entry matches — graceful degradation; the evaluator then makes the
-    "correctness not fully evaluated" fallback explicit rather than assuming a
-    full correctness judgment. Kept entirely inside this orchestration layer;
-    the Planning layer is untouched."""
-    from answer_key_registry import lookup as _lookup
-    return _lookup(question_text=question_text or "", spec_id=getattr(spec, "id", None))
 
 
 def _lookup_expected_concepts(spec) -> tuple[str, ...]:
@@ -161,8 +147,14 @@ def _lookup_expected_concepts(spec) -> tuple[str, ...]:
 def evaluate(evaluator: Evaluator, request: EvaluationRequest) -> EvaluationResult:
     """Thin, explicit call-through — exists so every evaluation call in the
     system goes through one named function, not a scattered
-    `evaluator.evaluate(...)` call at every call site."""
-    return evaluator.evaluate(request)
+    `evaluator.evaluate(...)` call at every call site.
+
+    Every result then passes the non-answer gate (`answer_gate.gate`): "idk",
+    two-word replies, keyword dumps, gibberish and pasted code are capped at a
+    poor score whichever evaluator is active; real answers pass unchanged."""
+    from answer_gate import gate
+
+    return gate(request, evaluator.evaluate(request))
 
 
 class EvaluationLedger:

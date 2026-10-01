@@ -1,0 +1,68 @@
+# OOP basics
+OOP vs procedural programming | object-oriented, procedural, advantages of OOP
+Classes and objects | class, object, instance, blueprint
+Object memory allocation | stack vs heap, object creation, new keyword
+Encapsulation | encapsulation, data hiding, getters, setters
+Access modifiers | public, private, protected, default
+Abstraction | abstraction, hiding implementation details
+Abstraction vs encapsulation | abstraction vs encapsulation
+Abstract classes | abstract class, abstract method
+Interfaces | interface, default methods, implementing interfaces
+Abstract class vs interface | abstract class vs interface
+
+# Inheritance and polymorphism
+Inheritance | inheritance, parent class, child class, extends
+Types of inheritance | single, multilevel, hierarchical, multiple, hybrid inheritance
+Polymorphism | polymorphism, compile-time polymorphism, runtime polymorphism
+Method overloading | overloading, method signature
+Method overriding | overriding, @Override, overriding rules
+Overloading vs overriding | overloading vs overriding
+
+# Class members and lifecycle
+Constructors | default constructor, parameterized constructor, constructor overloading
+Copy constructor | copy constructor
+Destructors and garbage collection | destructor, garbage collection, finalize
+this and super keywords | this keyword, super keyword
+Static members | static variable, static method, static block, class members
+final keyword | final variable, final method, final class, const
+
+# Object relationships
+Association | association, uses-a relationship
+Aggregation vs composition | aggregation, composition, has-a relationship
+IS-A vs HAS-A relationship | is-a, has-a
+Composition over inheritance | favor composition over inheritance
+Coupling and cohesion | loose coupling, tight coupling, high cohesion
+
+# GRASP and architecture
+Information Expert | GRASP, information expert, assigning responsibilities
+Creator (GRASP) | creator principle, who creates an object
+Controller (GRASP) | controller pattern, system events
+Indirection and pure fabrication | indirection, pure fabrication
+Protected variations | protected variation, stable interfaces
+Model-View-Controller | MVC, model, view, controller
+
+# Design principles
+Single responsibility principle | SRP, SOLID
+Open-closed principle | OCP, open for extension, closed for modification
+Liskov substitution principle | LSP, substitutability
+Interface segregation principle | ISP, fat interfaces
+Dependency inversion principle | DIP, dependency injection
+
+# Design patterns
+Singleton pattern | singleton, thread-safe singleton, lazy initialization
+Factory pattern | factory method, abstract factory
+Builder pattern | builder pattern
+Adapter pattern | adapter, wrapper
+Facade and proxy patterns | facade, proxy
+Design pattern categories | creational, structural, behavioral patterns
+Prototype pattern | prototype, cloning objects
+Iterator pattern | iterator, traversing a collection
+Command pattern | command, invoker, receiver
+Chain of responsibility pattern | chain of responsibility, handler
+Anti-patterns | software development anti-patterns, architecture anti-patterns, project management anti-patterns
+
+# Other
+Java Object class | Object class, toString, equals, hashCode
+Java collections and List interface | List interface, ArrayList, LinkedList, collections
+Parameter passing in Java | pass by value, passing objects to methods
+Low-level design approach | object-oriented design, identifying classes, requirements to classes

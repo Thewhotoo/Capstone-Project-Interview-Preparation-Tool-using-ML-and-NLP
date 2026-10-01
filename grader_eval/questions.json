@@ -1,0 +1,1276 @@
+[
+  {
+    "question_id": "cn.tcp_connection_establishment.medium2",
+    "subject": "Computer Networks",
+    "topic": "TCP connection establishment",
+    "difficulty": "medium",
+    "question": "Why does TCP use a three-way handshake to establish a connection, rather than a two-way handshake?",
+    "reference_answer": "TCP uses a three-way handshake to ensure both the sender and receiver agree to establish the connection and to synchronize their initial sequence numbers. A two-way handshake would not guarantee that both parties are ready to communicate, which could lead to lost data or failed connections. The three-way handshake allows each side to confirm the other's willingness to connect and to exchange initial sequence numbers, ensuring reliable communication.",
+    "key_points": [
+      "TCP uses a three-way handshake to ensure both parties agree to establish the connection.",
+      "A two-way handshake would not guarantee mutual acknowledgment of the connection request."
+    ]
+  },
+  {
+    "question_id": "cn.tcp_vs_udp.easy1",
+    "subject": "Computer Networks",
+    "topic": "TCP vs UDP",
+    "difficulty": "easy",
+    "question": "Explain one key difference between TCP and UDP in terms of reliability and connection setup.",
+    "reference_answer": "TCP provides reliable transport and requires a connection setup between client and server, while UDP does not provide reliability and has no connection setup. This means TCP guarantees data delivery and order, whereas UDP sends datagrams without ensuring they arrive or are in the correct sequence.",
+    "key_points": [
+      "TCP requires a connection setup.",
+      "UDP does not provide reliability."
+    ]
+  },
+  {
+    "question_id": "cn.network_edge_and_access_networks.medium2",
+    "subject": "Computer Networks",
+    "topic": "Network edge and access networks",
+    "difficulty": "medium",
+    "question": "Explain how the structure of access networks affects the performance of a home network.",
+    "reference_answer": "The structure of access networks directly influences the performance of a home network by determining the available bandwidth, the type of connection (shared or dedicated), and the physical medium used. For example, a DSL connection provides asymmetric access with higher downstream speeds than upstream, which can impact how data is transferred from the internet to local devices. Additionally, the presence of a router and firewall in the home network can affect latency and security, shaping the overall user experience.",
+    "key_points": [
+      "The physical medium and transmission rates of the access network determine the available bandwidth for the home network.",
+      "Shared or dedicated access among users affects the consistency of performance in a home network."
+    ]
+  },
+  {
+    "question_id": "cn.ftp.easy1",
+    "subject": "Computer Networks",
+    "topic": "FTP",
+    "difficulty": "easy",
+    "question": "Explain what FTP is and how it is used in networking.",
+    "reference_answer": "FTP, or File Transfer Protocol, is used to exchange large files on the internet using TCP. It is invoked from the command prompt or a GUI and allows users to update files on a server, such as deleting, renaming, or copying them. FTP uses two separate connections: a control connection on port 21 and a data connection on port 20.",
+    "key_points": [
+      "FTP is used to exchange large files on the internet using TCP.",
+      "FTP allows users to update files on a server.",
+      "FTP uses two separate connections: control and data."
+    ]
+  },
+  {
+    "question_id": "cn.ipv6.medium1",
+    "subject": "Computer Networks",
+    "topic": "IPv6",
+    "difficulty": "medium",
+    "question": "Explain how IPv6 datagrams can be transmitted across a network that contains both IPv6 and IPv4 routers, and why this is important for network transition.",
+    "reference_answer": "IPv6 datagrams can be transmitted across a network with mixed IPv6 and IPv4 routers through tunneling, where the IPv6 datagram is encapsulated within an IPv4 datagram. This allows IPv6 traffic to traverse IPv4-only segments of the network. This is important for network transition because it enables gradual migration without requiring all routers to be upgraded simultaneously, avoiding the need for a 'flag day' that could disrupt existing services.",
+    "key_points": [
+      "IPv6 datagrams can be transmitted across a network with mixed IPv6 and IPv4 routers through tunneling.",
+      "Tunneling allows for gradual migration without requiring all routers to be upgraded simultaneously."
+    ]
+  },
+  {
+    "question_id": "cn.distance_vector_routing.medium1",
+    "subject": "Computer Networks",
+    "topic": "Distance vector routing",
+    "difficulty": "medium",
+    "question": "Explain how the Bellman-Ford algorithm ensures that distance vector routing converges to the correct least-cost paths, and why it is important that nodes update their distance vectors based on their neighbors' information.",
+    "reference_answer": "The Bellman-Ford algorithm ensures convergence by iteratively updating each node’s distance vector using the minimum cost from its neighbors, as described by the equation Dx(y) = minv {cx,v + Dv(y)}. This process allows each node to refine its estimate of the least-cost path over time. It is important that nodes update their distance vectors based on their neighbors' information because this enables the propagation of accurate cost updates across the network, allowing all nodes to eventually agree on the shortest paths.",
+    "key_points": [
+      "Each node updates its distance vector using the minimum cost from its neighbors.",
+      "The algorithm relies on the exchange of distance vectors between neighbors to propagate correct cost information."
+    ]
+  },
+  {
+    "question_id": "cn.ipv4_addressing.medium2",
+    "subject": "Computer Networks",
+    "topic": "IPv4 addressing",
+    "difficulty": "medium",
+    "question": "Explain how the default subnet mask for a Class C network is derived from its classful addressing structure.",
+    "reference_answer": "The default subnet mask for a Class C network is derived from its classful addressing structure, where the first 24 bits are reserved for the network ID and the remaining 8 bits are for the host ID. This results in a subnet mask of 255.255.255.0. The subnet mask defines which portion of the IP address is the network and which is the host, enabling proper routing and communication within the network.",
+    "key_points": [
+      "The subnet mask is derived from the division of the IP address into network and host portions.",
+      "The subnet mask is used to determine the network and host portions of an IP address."
+    ]
+  },
+  {
+    "question_id": "cn.arp.medium1",
+    "subject": "Computer Networks",
+    "topic": "ARP",
+    "difficulty": "medium",
+    "question": "Explain how a device determines the MAC address of another device on the same LAN when it only knows the IP address of that device.",
+    "reference_answer": "A device uses ARP to find the MAC address of another device on the same LAN. When it doesn't have the MAC address in its ARP table, it broadcasts an ARP query with the target IP address. The device with the matching IP address responds with its MAC address. The requesting device then adds this IP-MAC mapping to its ARP table for future use.",
+    "key_points": [
+      "ARP is used to find the MAC address of a device when only the IP address is known.",
+      "ARP queries are broadcasted to all devices on the LAN.",
+      "The ARP table stores IP-MAC mappings with a Time To Live (TTL) value."
+    ]
+  },
+  {
+    "question_id": "cn.icmp.medium2",
+    "subject": "Computer Networks",
+    "topic": "ICMP",
+    "difficulty": "medium",
+    "question": "How does ICMP support network diagnostics, and what are two specific examples of ICMP messages used in this role?",
+    "reference_answer": "ICMP supports network diagnostics by allowing hosts and routers to communicate network-layer issues. One example is the echo request and echo reply messages, used by the ping utility to check connectivity. Another example is the time exceeded message, which helps trace the path of a packet by indicating when its TTL has expired.",
+    "key_points": [
+      "The echo request and echo reply messages are used for connectivity testing.",
+      "The time exceeded message helps trace the path of a packet."
+    ]
+  },
+  {
+    "question_id": "cn.transport_layer_services.easy1",
+    "subject": "Computer Networks",
+    "topic": "Transport layer services",
+    "difficulty": "easy",
+    "question": "Explain what a socket is and how it relates to the transport layer.",
+    "reference_answer": "A socket is the interface through which a process sends and receives messages. It acts like a door, allowing a sending process to shove a message out and relying on the transport infrastructure to deliver it to the receiving socket. The transport layer uses sockets to manage communication between processes across different hosts.",
+    "key_points": [
+      "A socket is the interface through which a process sends and receives messages.",
+      "A socket acts like a door, allowing messages to be sent out and received.",
+      "Two sockets are involved in a communication: one on each side of the connection."
+    ]
+  },
+  {
+    "question_id": "cn.go_back_n_and_selective_repeat.medium2",
+    "subject": "Computer Networks",
+    "topic": "Go-Back-N and Selective Repeat",
+    "difficulty": "medium",
+    "question": "Explain how the sender and receiver manage retransmissions and window advancement in Selective Repeat, and why this approach is more efficient than Go-Back-N in certain scenarios.",
+    "reference_answer": "In Selective Repeat, the sender retransmits only the unacknowledged packets individually, while the receiver acknowledges each correctly received packet individually. This allows the sender to advance the window base only when the smallest unacknowledged packet is acknowledged, which improves efficiency in cases of partial packet loss. The receiver buffers out-of-order packets and delivers them in order once the sequence is complete, which reduces the need for retransmitting multiple packets in case of a single lost packet.",
+    "key_points": [
+      "The sender retransmits only the unacknowledged packets individually.",
+      "The receiver acknowledges each correctly received packet individually.",
+      "The sender advances the window base only when the smallest unacknowledged packet is acknowledged."
+    ]
+  },
+  {
+    "question_id": "cn.network_devices.medium1",
+    "subject": "Computer Networks",
+    "topic": "Network devices",
+    "difficulty": "medium",
+    "question": "Explain how a Switch differs from a Hub in terms of network communication and device intelligence.",
+    "reference_answer": "A Switch operates at the Data Link Layer and uses MAC addresses to forward data packets to the appropriate destination ports, whereas a Hub operates at the Physical Layer and broadcasts data to all connected devices. Switches can operate in full-duplex mode, enabling simultaneous data transmission and reception, while Hubs only support half-duplex communication. Switches store MAC addresses of connected devices, allowing them to route communication only to the intended destination, reducing collisions, whereas Hubs cannot store MAC addresses and transmit all data to all connected devices without filtering.",
+    "key_points": [
+      "Switches operate at the Data Link Layer and use MAC addresses for data forwarding.",
+      "Switches support full-duplex communication, while Hubs only support half-duplex.",
+      "Switches store MAC addresses, allowing them to route data only to the intended destination."
+    ]
+  },
+  {
+    "question_id": "cn.ethernet.medium1",
+    "subject": "Computer Networks",
+    "topic": "Ethernet",
+    "difficulty": "medium",
+    "question": "Explain how Ethernet frames are used to support communication between devices on a local network, and why the frame structure is important for reliable data transmission.",
+    "reference_answer": "Ethernet frames encapsulate higher-layer data, such as IP packets, to ensure proper delivery across the network. The frame structure includes synchronization patterns, source and destination MAC addresses, a type field for protocol identification, and a CRC for error detection. These elements ensure that devices can correctly receive, interpret, and validate the data being transmitted.",
+    "key_points": [
+      "Ethernet frames encapsulate higher-layer data such as IP packets.",
+      "The frame structure includes synchronization patterns to align sender and receiver clocks.",
+      "The frame includes a CRC field for error detection."
+    ]
+  },
+  {
+    "question_id": "cn.collision_and_broadcast_domains.medium2",
+    "subject": "Computer Networks",
+    "topic": "Collision and broadcast domains",
+    "difficulty": "medium",
+    "question": "How does a switch allow multiple simultaneous transmissions without collisions, and what role does the Ethernet protocol play in this?",
+    "reference_answer": "A switch allows multiple simultaneous transmissions without collisions because each link is its own collision domain, and the Ethernet protocol operates in full-duplex mode. This means that each connection between a switch and a host can transmit and receive data simultaneously without interference. The Ethernet protocol ensures that collisions are avoided on each individual link, which is why a switch can support multiple simultaneous transmissions without issues.",
+    "key_points": [
+      "Each link is its own collision domain.",
+      "The Ethernet protocol operates in full-duplex mode.",
+      "Switching allows A-to-A’ and B-to-B’ to transmit simultaneously, without collisions."
+    ]
+  },
+  {
+    "question_id": "cn.csma_cd_and_csma_ca.easy1",
+    "subject": "Computer Networks",
+    "topic": "CSMA/CD and CSMA/CA",
+    "difficulty": "easy",
+    "question": "Explain how CSMA/CD differs from CSMA/CA in terms of handling collisions.",
+    "reference_answer": "CSMA/CD is used in wired networks and detects collisions by monitoring the channel during transmission. If a collision is detected, the transmission is stopped immediately. CSMA/CA, on the other hand, is used in wireless networks and avoids collisions by requiring stations to wait for a random backoff time before transmitting, even if the channel appears idle.",
+    "key_points": [
+      "CSMA/CD detects collisions during transmission and stops them immediately.",
+      "CSMA/CD is suitable for wired networks due to the ease of collision detection."
+    ]
+  },
+  {
+    "question_id": "cn.https_and_tls.easy1",
+    "subject": "Computer Networks",
+    "topic": "HTTPS and TLS",
+    "difficulty": "easy",
+    "question": "Explain how HTTPS ensures secure communication between a browser and a server.",
+    "reference_answer": "HTTPS ensures secure communication by using TLS to encrypt all data exchanged between the browser and the server. This encryption is bi-directional, meaning both the client and server encrypt and decrypt data. The process involves the use of public and private keys, where the server's public key is used to encrypt a symmetric key that is then used for efficient data encryption during the session.",
+    "key_points": [
+      "HTTPS uses TLS to encrypt all communications between the browser and the server.",
+      "HTTPS relies on public and private key pairs for secure communication."
+    ]
+  },
+  {
+    "question_id": "cn.network_devices.hard2",
+    "subject": "Computer Networks",
+    "topic": "Network devices",
+    "difficulty": "hard",
+    "question": "Consider a scenario where a network administrator is deciding between using a Repeater and a Switch to connect two segments of a network. What are the key differences in their operation and how might these differences affect network performance?",
+    "reference_answer": "A Repeater operates at the Physical Layer and regenerates signals to extend the reach of a network, while a Switch operates at the Data Link Layer and uses MAC addresses to forward data directly to the intended device. The Repeater broadcasts all data to all connected devices, which can lead to increased collisions and reduced network efficiency. In contrast, a Switch reduces collisions by only forwarding data to the intended recipient, improving overall network performance. These differences mean that a Repeater is suitable for extending a single segment, whereas a Switch is better for managing multiple devices in a more intelligent and efficient manner.",
+    "key_points": [
+      "A Repeater regenerates signals to extend the reach of a network.",
+      "A Repeater broadcasts all data to all connected devices.",
+      "A Switch uses MAC addresses to forward data directly to the intended device.",
+      "A Switch reduces collisions by only forwarding data to the intended recipient."
+    ]
+  },
+  {
+    "question_id": "cn.tcp_connection_establishment.easy1",
+    "subject": "Computer Networks",
+    "topic": "TCP connection establishment",
+    "difficulty": "easy",
+    "question": "Explain what happens during the TCP connection establishment process.",
+    "reference_answer": "During TCP connection establishment, the sender and receiver perform a handshake to agree to establish a connection and to agree on connection parameters such as starting sequence numbers. This handshake ensures both sides are ready to communicate. The process begins with the sender sending a SYN segment to the receiver.",
+    "key_points": [
+      "TCP connection establishment involves a handshake to agree to establish a connection.",
+      "TCP connection establishment includes agreement on connection parameters such as starting sequence numbers."
+    ]
+  },
+  {
+    "question_id": "cn.tcp_vs_udp.medium2",
+    "subject": "Computer Networks",
+    "topic": "TCP vs UDP",
+    "difficulty": "medium",
+    "question": "How do TCP and UDP differ in their handling of network congestion and throughput guarantees?",
+    "reference_answer": "TCP provides congestion control and guarantees minimum throughput by throttling the sender when the network is overloaded. UDP does not provide congestion control or throughput guarantees, allowing the sender to transmit data at full speed regardless of network conditions. This makes TCP suitable for applications that require stable and predictable data transfer, while UDP is better suited for applications that prioritize speed over reliability.",
+    "key_points": [
+      "TCP provides congestion control to throttle the sender when the network is overloaded.",
+      "TCP guarantees minimum throughput under congestion.",
+      "UDP does not provide congestion control or throughput guarantees."
+    ]
+  },
+  {
+    "question_id": "cn.icmp.easy1",
+    "subject": "Computer Networks",
+    "topic": "ICMP",
+    "difficulty": "easy",
+    "question": "Explain what ICMP is used for in computer networks.",
+    "reference_answer": "ICMP is used by hosts and routers to communicate network-layer issues. It is commonly used for error reporting, such as when a destination is unreachable. ICMP messages are carried as IP packets and include various types and codes to indicate specific conditions.",
+    "key_points": [
+      "ICMP is used by hosts and routers to communicate network-layer issues.",
+      "ICMP is commonly used for error reporting."
+    ]
+  },
+  {
+    "question_id": "dbms.integrity_constraints.medium1",
+    "subject": "DBMS",
+    "topic": "Integrity constraints",
+    "difficulty": "medium",
+    "question": "Explain how referential integrity constraints work in SQL and why they are important for maintaining data consistency.",
+    "reference_answer": "Referential integrity constraints ensure that foreign key values in a table must match existing primary key values in another table, or be null. This prevents orphaned records and maintains consistency between related tables. These constraints are important because they enforce logical relationships between tables, ensuring that data remains accurate and consistent across the database.",
+    "key_points": [
+      "Referential integrity constraints ensure that foreign key values must match existing primary key values or be null.",
+      "Referential integrity constraints help maintain logical relationships between tables.",
+      "Referential integrity constraints can be modified with referential triggered actions like CASCADE, SET NULL, or SET DEFAULT."
+    ]
+  },
+  {
+    "question_id": "dbms.cap_theorem.medium2",
+    "subject": "DBMS",
+    "topic": "CAP theorem",
+    "difficulty": "medium",
+    "question": "How does the CAP theorem influence the design trade-offs in distributed systems, particularly in the context of SQL versus NoSQL databases?",
+    "reference_answer": "The CAP theorem influences design trade-offs by forcing system designers to prioritize two out of the three properties—consistency, availability, and partition tolerance. In traditional SQL databases, consistency is prioritized through ACID properties, ensuring strong consistency. In contrast, NoSQL systems often prioritize availability and partition tolerance, accepting weaker consistency levels such as eventual consistency. This reflects a fundamental design choice between strict consistency and system availability in the face of network partitions.",
+    "key_points": [
+      "The CAP theorem forces a trade-off between consistency, availability, and partition tolerance.",
+      "SQL databases prioritize consistency through ACID properties.",
+      "NoSQL systems often prioritize availability and partition tolerance over strict consistency."
+    ]
+  },
+  {
+    "question_id": "dbms.null_handling_in_sql.easy1",
+    "subject": "DBMS",
+    "topic": "NULL handling in SQL",
+    "difficulty": "easy",
+    "question": "Explain how SQL handles comparisons involving NULL values.",
+    "reference_answer": "In SQL, comparisons involving NULL values result in UNKNOWN. This is because NULL represents an unknown or missing value, and it cannot be determined whether the comparison is true or false. For example, the expression (1 < NULL) evaluates to UNKNOWN. Similarly, NOT(1 < NULL) also evaluates to UNKNOWN. This behavior is part of SQL's approach to handling NULL values in logical operations.",
+    "key_points": [
+      "Comparisons involving NULL values result in UNKNOWN.",
+      "NULL represents an unknown or missing value.",
+      "The logical value UNKNOWN is used in SQL for comparisons with NULL."
+    ]
+  },
+  {
+    "question_id": "dbms.relationships_and_cardinality.medium1",
+    "subject": "DBMS",
+    "topic": "Relationships and cardinality",
+    "difficulty": "medium",
+    "question": "Explain how cardinality ratios affect the interpretation of a relationship between two entity sets in a database design.",
+    "reference_answer": "Cardinality ratios define the number of entities in one set that can be associated with each entity in another set. For example, a one-to-many relationship means one entity in the first set can be associated with many in the second, but each in the second is associated with at most one in the first. This affects how data is structured and how relationships are enforced in the database. A many-to-many relationship allows multiple entities in both sets to be associated with each other, which often requires an intermediary relationship table.",
+    "key_points": [
+      "Cardinality ratios define the number of entities in one set that can be associated with each entity in another set.",
+      "A one-to-many relationship means one entity in the first set can be associated with many in the second, but each in the second is associated with at most one in the first.",
+      "A many-to-many relationship allows multiple entities in both sets to be associated with each other."
+    ]
+  },
+  {
+    "question_id": "dbms.deadlocks_in_dbms.easy1",
+    "subject": "DBMS",
+    "topic": "Deadlocks in DBMS",
+    "difficulty": "easy",
+    "question": "Explain what a deadlock is in the context of database transactions.",
+    "reference_answer": "A deadlock occurs when two or more transactions are waiting for each other to release locks, creating a cycle where none can proceed. In such a situation, neither transaction can make progress. One of the transactions must be rolled back to resolve the deadlock. Deadlocks are a common issue in lock-based protocols where transactions hold locks and request new ones in a conflicting order.",
+    "key_points": [
+      "A deadlock is a situation where two or more transactions are waiting for each other to release locks.",
+      "Deadlock results in a cycle where no transaction can make progress.",
+      "Deadlock resolution requires one transaction to be rolled back."
+    ]
+  },
+  {
+    "question_id": "dbms.first_normal_form_1nf.medium1",
+    "subject": "DBMS",
+    "topic": "First normal form (1NF)",
+    "difficulty": "medium",
+    "question": "Explain how First Normal Form (1NF) ensures that a relation is properly structured for relational database systems.",
+    "reference_answer": "First Normal Form (1NF) ensures that all attributes in a relation are atomic, meaning they contain only single, indivisible values. This prevents composite, multivalued, or nested attributes from being part of the relation. By enforcing atomicity, 1NF aligns with the fundamental definition of a relation in relational databases. Most RDBMSs only allow relations that are in 1NF, which ensures data can be efficiently stored and queried.",
+    "key_points": [
+      "All attributes must be atomic.",
+      "Composite and multivalued attributes are disallowed.",
+      "1NF is a prerequisite for higher normal forms."
+    ]
+  },
+  {
+    "question_id": "dbms.graph_databases_and_neo4j.medium2",
+    "subject": "DBMS",
+    "topic": "Graph databases and Neo4j",
+    "difficulty": "medium",
+    "question": "Explain how Neo4j handles the flexibility of schema in comparison to traditional relational databases.",
+    "reference_answer": "Neo4j provides a flexible schema by allowing nodes and relationships to have properties without requiring predefined structures. In contrast, traditional relational databases require a fixed schema with predefined tables and columns. This flexibility enables Neo4j to easily accommodate new nodes, relationships, or properties without altering the existing data model. This is particularly useful in applications where data models evolve over time.",
+    "key_points": [
+      "Neo4j allows nodes and relationships to have properties without a predefined structure.",
+      "Neo4j's flexible schema supports dynamic addition of new elements to the graph."
+    ]
+  },
+  {
+    "question_id": "dbms.nested_and_correlated_subqueries.hard2",
+    "subject": "DBMS",
+    "topic": "Nested and correlated subqueries",
+    "difficulty": "hard",
+    "question": "What is the significance of using EXISTS or NOT EXISTS with correlated subqueries, and how does it influence the evaluation of the outer query?",
+    "reference_answer": "The EXISTS and NOT EXISTS operators are Boolean functions that check whether the result of a nested query is empty or not. When used with correlated subqueries, they allow the outer query to determine whether a condition is met based on the existence of tuples in the nested query. This can lead to more efficient query execution because the nested query stops evaluating as soon as a matching tuple is found, which can reduce unnecessary computation.",
+    "key_points": [
+      "The EXISTS function in SQL is used to check whether the result of a nested query is empty (contains no tuples) or not.",
+      "The result of EXISTS is True if the nested query result contains at least one tuple, and False if the nested query result contains no tuples.",
+      "EXISTS and NOT EXISTS are typically used in conjunction with a correlated nested query."
+    ]
+  },
+  {
+    "question_id": "dbms.lossless_decomposition.medium1",
+    "subject": "DBMS",
+    "topic": "Lossless decomposition",
+    "difficulty": "medium",
+    "question": "Explain how lossless decomposition ensures that a relation can be reconstructed without data loss after decomposition.",
+    "reference_answer": "Lossless decomposition ensures that when decomposed relations are joined back together, the original relation can be perfectly reconstructed without any loss of data or introduction of spurious tuples. This is critical because it guarantees that no information is lost during the decomposition process. The decomposition must satisfy the non additive join property, which is extremely critical and must be achieved at any cost. This property ensures that the join of the decomposed relations results in the original relation without any extraneous data.",
+    "key_points": [
+      "Lossless decomposition ensures that a relation can be reconstructed without any loss of data or introduction of spurious tuples.",
+      "The non additive join property is extremely critical and must be achieved at any cost.",
+      "Lossless decomposition is essential for ensuring that the join of decomposed relations results in the original relation."
+    ]
+  },
+  {
+    "question_id": "dbms.set_operations_in_sql.medium2",
+    "subject": "DBMS",
+    "topic": "Set operations in SQL",
+    "difficulty": "medium",
+    "question": "How does the INTERSECT operator differ from the UNION operator in SQL, and what implications does this have for the data being combined?",
+    "reference_answer": "The INTERSECT operator returns only the tuples that are present in both relations, whereas the UNION operator returns all tuples from both relations, eliminating duplicates. This difference means that INTERSECT requires the relations to be union compatible, just like UNION, but it also enforces that the result must contain only the common tuples. This has implications for data redundancy and the uniqueness of results.",
+    "key_points": [
+      "INTERSECT returns only the tuples that are present in both relations.",
+      "INTERSECT and UNION both require the relations to be union compatible.",
+      "INTERSECT enforces uniqueness in the result, similar to UNION."
+    ]
+  },
+  {
+    "question_id": "dbms.denormalization.easy1",
+    "subject": "DBMS",
+    "topic": "Denormalization",
+    "difficulty": "easy",
+    "question": "Explain what denormalization is and why it might be used in a database.",
+    "reference_answer": "Denormalization is a database optimization technique where redundant data is added to one or more tables to avoid costly joins. It is used when retrieving data is prioritized over update efficiency, and when the cost of joins becomes a performance bottleneck. This approach allows for simpler queries and faster data retrieval, but at the expense of increased storage and potential data inconsistency.",
+    "key_points": [
+      "Denormalization is a database optimization technique where redundant data is added to one or more tables.",
+      "Denormalization is used when retrieving data is prioritized over update efficiency.",
+      "Denormalization allows for simpler queries and faster data retrieval."
+    ]
+  },
+  {
+    "question_id": "dbms.vector_databases_and_embeddings.hard2",
+    "subject": "DBMS",
+    "topic": "Vector databases and embeddings",
+    "difficulty": "hard",
+    "question": "What trade-off does the use of Approximate Nearest Neighbor (ANN) algorithms in vector databases introduce, and how does it affect the system's performance?",
+    "reference_answer": "The use of ANN algorithms in vector databases introduces a trade-off between search accuracy and computational efficiency. These algorithms prioritize speed and scalability for large, high-dimensional datasets by approximating the nearest neighbors rather than finding exact matches. This trade-off allows vector databases to handle massive data volumes and real-time queries more effectively, though it may slightly reduce the precision of similarity search results.",
+    "key_points": [
+      "ANN algorithms prioritize speed and scalability over exact search accuracy.",
+      "ANN algorithms are suitable for large, high-dimensional data.",
+      "The trade-off affects the precision of similarity search results."
+    ]
+  },
+  {
+    "question_id": "dbms.foreign_key.medium2",
+    "subject": "DBMS",
+    "topic": "Foreign key",
+    "difficulty": "medium",
+    "question": "How do the `ON DELETE CASCADE` and `ON UPDATE CASCADE` options affect the child table when changes are made to the parent table?",
+    "reference_answer": "The `ON DELETE CASCADE` option automatically deletes corresponding rows in the child table when a row in the parent table is deleted. The `ON UPDATE CASCADE` option automatically updates corresponding rows in the child table when a row in the parent table is updated. Both options ensure that the child table remains consistent with the parent table by propagating the changes.",
+    "key_points": [
+      "The `ON DELETE CASCADE` option deletes corresponding rows in the child table when a row in the parent table is deleted.",
+      "The `ON UPDATE CASCADE` option updates corresponding rows in the child table when a row in the parent table is updated."
+    ]
+  },
+  {
+    "question_id": "dbms.equivalence_of_sets_of_fds.easy1",
+    "subject": "DBMS",
+    "topic": "Equivalence of sets of FDs",
+    "difficulty": "easy",
+    "question": "Explain what it means for two sets of functional dependencies to be equivalent.",
+    "reference_answer": "Two sets of functional dependencies E and F are equivalent if E+ = F+, meaning every FD in E can be inferred from F and every FD in F can be inferred from E. This implies that both sets cover each other, which is the definition of equivalence. To determine this, we check if each set covers the other by comparing closures of attributes.",
+    "key_points": [
+      "Equivalence requires that both sets cover each other.",
+      "Covering is determined by comparing closures of attributes."
+    ]
+  },
+  {
+    "question_id": "dbms.er_to_relational_mapping.medium2",
+    "subject": "DBMS",
+    "topic": "ER to relational mapping",
+    "difficulty": "medium",
+    "question": "How does the mapping of a many-to-many relationship differ from that of a one-to-many relationship in ER to relational mapping?",
+    "reference_answer": "In ER to relational mapping, a many-to-many relationship is mapped to a separate relation schema that includes foreign keys referencing both participating entity sets. This is because a many-to-many relationship cannot be directly represented as a single relation without creating an intermediate entity. In contrast, a one-to-many relationship is handled by adding a foreign key to the 'many' side of the relationship, without requiring a new relation schema.",
+    "key_points": [
+      "A many-to-many relationship requires a separate relation schema with foreign keys to both entity sets.",
+      "A one-to-many relationship is handled by adding a foreign key to the 'many' side without a new relation schema.",
+      "The distinction between these two types of relationships affects how they are represented in the relational schema."
+    ]
+  },
+  {
+    "question_id": "dbms.transaction_states.medium2",
+    "subject": "DBMS",
+    "topic": "Transaction states",
+    "difficulty": "medium",
+    "question": "Explain how a transaction can transition from the failed state to the terminated state, and what are the implications of each path.",
+    "reference_answer": "A transaction can transition from the failed state to the terminated state either by being killed or by being restarted. If a transaction is killed, it is permanently terminated and its changes are rolled back. If it is restarted, it is treated as a new transaction and may proceed from the active state again. The implications of these paths are that killing a transaction prevents any further processing, while restarting allows for potential recovery and reexecution.",
+    "key_points": [
+      "A transaction can transition from the failed state to the terminated state by being killed.",
+      "A transaction can transition from the failed state to the terminated state by being restarted.",
+      "Restarting a transaction allows for potential recovery and reexecution."
+    ]
+  },
+  {
+    "question_id": "dbms.weak_entity_sets.hard2",
+    "subject": "DBMS",
+    "topic": "Weak entity sets",
+    "difficulty": "hard",
+    "question": "Suppose we have a weak entity set that is identified by more than one strong entity set. How does this affect the primary key of the weak entity set, and what implications does this have for the design of the database schema?",
+    "reference_answer": "The primary key of a weak entity set consists of the union of the primary keys of the identifying entity sets, plus the discriminator of the weak entity set. This ensures that each instance of the weak entity is uniquely identified by the combination of its identifying entities and its own discriminator. This design allows for a more precise and flexible representation of relationships where a weak entity depends on multiple strong entities for its existence.",
+    "key_points": [
+      "The primary key of a weak entity set includes the primary keys of all identifying entity sets.",
+      "A weak entity set can be identified by more than one strong entity set.",
+      "The design of the database schema must reflect the combination of identifying entities and the discriminator."
+    ]
+  },
+  {
+    "question_id": "dbms.indexing_basics.medium1",
+    "subject": "DBMS",
+    "topic": "Indexing basics",
+    "difficulty": "medium",
+    "question": "Explain how indexing improves the performance of SELECT operations, and why it's more efficient than a full table scan.",
+    "reference_answer": "Indexing improves the performance of SELECT operations by allowing the database to use a B-tree index to jump directly to qualifying records, rather than scanning the entire table. This reduces the cost from O(n) to O(log n), as only relevant blocks are read. Without an index, the database must check every record, which is slower for large tables.",
+    "key_points": [
+      "Indexing allows the database to use a B-tree index to jump directly to qualifying records.",
+      "Indexing reduces the cost of query execution from O(n) to O(log n).",
+      "Without an index, the database must perform a full table scan, which is inefficient for large tables."
+    ]
+  },
+  {
+    "question_id": "dbms.triggers.hard2",
+    "subject": "DBMS",
+    "topic": "Triggers",
+    "difficulty": "hard",
+    "question": "What happens if a trigger is defined as BEFORE INSERT and the same table is modified in a cascading foreign key constraint?",
+    "reference_answer": "If a trigger is defined as BEFORE INSERT on a table and the same table is modified via a cascading foreign key constraint, the trigger will execute before the insert operation is applied. The trigger code will run for each row affected by the insert, including those inserted due to the cascade. However, if the trigger raises an error, it will prevent the entire operation, including the cascading inserts, from completing.",
+    "key_points": [
+      "The trigger executes before the insert operation is applied.",
+      "The trigger code runs for each row affected by the insert, including cascading inserts.",
+      "Raising an error in the trigger will prevent the entire operation, including cascading inserts."
+    ]
+  },
+  {
+    "question_id": "dbms.participation_constraints.easy1",
+    "subject": "DBMS",
+    "topic": "Participation constraints",
+    "difficulty": "easy",
+    "question": "Explain what total participation means in the context of database relationships.",
+    "reference_answer": "Total participation means that every entity in an entity set must participate in at least one relationship in a relationship set. This is often required by business rules, such as a university requiring every student to have at least one advisor. Total participation is indicated by double lines in the relationship set, showing that no student can exist without being associated with an advisor.",
+    "key_points": [
+      "Total participation requires every entity in an entity set to participate in at least one relationship.",
+      "Total participation is visually indicated by double lines in the relationship set."
+    ]
+  },
+  {
+    "question_id": "dsa.asymptotic_notations.easy1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Asymptotic notations",
+    "difficulty": "easy",
+    "question": "Explain what it means for a function t(n) to be in Ω(g(n)).",
+    "reference_answer": "When a function t(n) is in Ω(g(n)), it means that t(n) is bounded below by some constant multiple of g(n) for all sufficiently large n. This indicates that t(n) grows at least as fast as g(n). The definition requires the existence of a positive constant c and a nonnegative integer n₀ such that t(n) ≥ c·g(n) for all n ≥ n₀. This notation is used to describe the lower bound of the growth rate of a function.",
+    "key_points": [
+      "Ω-notation describes a lower bound on the growth rate of a function.",
+      "Ω-notation requires the existence of a positive constant c and a threshold n₀."
+    ]
+  },
+  {
+    "question_id": "dsa.circular_queue.easy1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Circular queue",
+    "difficulty": "easy",
+    "question": "Explain how a circular queue solves the problem of wasted space in a simple queue.",
+    "reference_answer": "A circular queue solves the problem of wasted space by allowing the rear pointer to wrap around to the beginning of the array once it reaches the end. This enables the queue to reuse the space that was previously occupied by removed elements. In a simple queue, once the queue is full, no new elements can be inserted even if some elements are removed, but in a circular queue, this space is made available again by moving the rear pointer to the start of the queue.",
+    "key_points": [
+      "A circular queue allows the rear pointer to wrap around to the beginning of the array.",
+      "A circular queue reuses space that was previously occupied by removed elements.",
+      "A circular queue behaves like a circular data structure."
+    ]
+  },
+  {
+    "question_id": "dsa.recurrence_relations.medium1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Recurrence relations",
+    "difficulty": "medium",
+    "question": "Explain how the Master Theorem determines the time complexity of a recurrence relation based on the relationship between a, b, and d.",
+    "reference_answer": "The Master Theorem evaluates the time complexity of a recurrence relation by comparing the function f(n) to n^d. If f(n) is Θ(n^d), then the theorem uses the relative sizes of a and b^d to determine the dominant term. When a < b^d, the complexity is dominated by f(n), resulting in Θ(n^d). When a = b^d, the complexity includes a logarithmic factor, leading to Θ(n^d log n). When a > b^d, the recursive part dominates, resulting in Θ(n^{log_b a}).",
+    "key_points": [
+      "The Master Theorem determines time complexity by comparing f(n) to n^d.",
+      "When a < b^d, the time complexity is dominated by f(n).",
+      "When a = b^d, the time complexity includes a logarithmic factor."
+    ]
+  },
+  {
+    "question_id": "dsa.brute_force_sorting.hard2",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Brute force sorting",
+    "difficulty": "hard",
+    "question": "Explain how selection sort ensures that elements are placed in their final positions during each pass, and what this implies about the algorithm's behavior.",
+    "reference_answer": "Selection sort ensures that elements are placed in their final positions during each pass by finding the smallest element in the unsorted portion of the array and swapping it with the element at the current pass index. This means that after each pass, the smallest unsorted element is moved to its correct position in the sorted portion of the array. The implication is that the algorithm progressively builds the sorted array from left to right, with each pass fixing one element in its final place.",
+    "key_points": [
+      "Selection sort ensures that elements are placed in their final positions during each pass.",
+      "During each pass, the smallest element in the unsorted portion is identified and moved to its correct position.",
+      "The algorithm progressively builds the sorted array from left to right."
+    ]
+  },
+  {
+    "question_id": "dsa.iterative_tree_traversals.easy1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Iterative tree traversals",
+    "difficulty": "easy",
+    "question": "Explain how the iterative preorder traversal works using the code provided.",
+    "reference_answer": "In the iterative preorder traversal, the root node is pushed onto the stack first. Then, nodes are popped from the stack, printed, and their right child is pushed before the left child, ensuring the left subtree is processed first. This order mimics the recursive preorder traversal, where the node is visited before its children. The traversal continues until the stack is empty.",
+    "key_points": [
+      "The root node is pushed onto the stack first.",
+      "Right child is pushed before the left child."
+    ]
+  },
+  {
+    "question_id": "dsa.time_and_space_complexity.easy1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Time and space complexity",
+    "difficulty": "easy",
+    "question": "Explain what time complexity and space complexity mean in the context of algorithm performance.",
+    "reference_answer": "Time complexity refers to the time required for an algorithm to run as a function of input size, while space complexity refers to the memory required. These are key criteria for evaluating algorithm performance. Time efficiency is analyzed by counting the number of repetitions of the basic operation, and space efficiency is about the memory needed for the algorithm to execute.",
+    "key_points": [
+      "Time complexity measures the time required for an algorithm to run as a function of input size.",
+      "Space complexity measures the memory required for an algorithm to execute.",
+      "Time and space complexity are key criteria for evaluating algorithm performance."
+    ]
+  },
+  {
+    "question_id": "dsa.double_ended_queue.medium1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Double-ended queue",
+    "difficulty": "medium",
+    "question": "Explain how the delete operations in a double-ended queue differ between array and doubly linked list implementations.",
+    "reference_answer": "In the array implementation, delete operations require checking for empty conditions and managing wrap-around indices, while in the doubly linked list implementation, deletions are handled by updating pointers of adjacent nodes. Both implementations must handle edge cases like single-element queues. The array implementation uses index arithmetic, whereas the linked list approach uses pointer manipulation. These differences reflect the structural differences between the two data representations.",
+    "key_points": [
+      "In the array implementation, delete operations require checking for empty conditions and managing wrap-around indices.",
+      "In the doubly linked list implementation, deletions are handled by updating pointers of adjacent nodes."
+    ]
+  },
+  {
+    "question_id": "dsa.tries.easy1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Tries",
+    "difficulty": "easy",
+    "question": "Explain what a trie is and how it is used in computer science.",
+    "reference_answer": "A trie is a type of search tree used for locating specific keys from within a set. These keys are most often strings, with links between nodes defined not by the entire key, but by individual characters. Tries are used in applications such as dictionary storage and auto-complete features because they allow for efficient search, insert, and delete operations based on string prefixes.",
+    "key_points": [
+      "A trie is a type of search tree used for locating specific keys from within a set.",
+      "Trie nodes are linked by individual characters, not the entire key.",
+      "Tries are used in applications such as dictionary storage and auto-complete features."
+    ]
+  },
+  {
+    "question_id": "dsa.dijkstra_s_algorithm.medium2",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Dijkstra's algorithm",
+    "difficulty": "medium",
+    "question": "Explain how the selection of the next vertex in Dijkstra’s algorithm depends on the structure of the graph and the current state of the algorithm.",
+    "reference_answer": "Dijkstra’s algorithm selects the next vertex based on the smallest tentative distance from the source, which is computed as dv + w(v,u). This value depends on the current shortest path to vertex v and the weight of the edge from v to u. The algorithm ensures that once a vertex is added to the tree, its shortest path is finalized, which affects how the remaining vertices are processed.",
+    "key_points": [
+      "The next vertex is selected based on the smallest dv + w(v,u).",
+      "Once a vertex is added to the tree, its shortest path is finalized."
+    ]
+  },
+  {
+    "question_id": "dsa.stacks_and_recursion.medium2",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Stacks and recursion",
+    "difficulty": "medium",
+    "question": "How does the order of function completion in nested function calls relate to the structure of the stack?",
+    "reference_answer": "The order of function completion in nested function calls follows the last-in, first-out (LIFO) principle, which is the defining characteristic of a stack. This is because each function call adds an activation record to the top of the stack, and when a function completes, its activation record is removed from the top. As a result, the most recently called function is the first to complete, ensuring that the stack maintains the correct execution order.",
+    "key_points": [
+      "The sequence of function completion follows the LIFO principle.",
+      "Each function call adds an activation record to the top of the stack.",
+      "The stack ensures that the most recent function call is the first to complete."
+    ]
+  },
+  {
+    "question_id": "dsa.binary_search.medium1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Binary search",
+    "difficulty": "medium",
+    "question": "Explain how binary search uses the decrease-by-a-constant-factor approach to solve a problem efficiently.",
+    "reference_answer": "Binary search uses the decrease-by-a-constant-factor approach by dividing the problem size by two at each step. This is reflected in the recurrence T(n) = aT(n/b) + f(n), where a = 1, b = 2. The algorithm exploits the relationship between a solution to a given instance and a smaller instance by comparing the target with the middle element, thereby reducing the problem size by half each time.",
+    "key_points": [
+      "Binary search reduces the problem size by a constant factor at each step.",
+      "Binary search is a recursive algorithm that reduces the problem to smaller instances."
+    ]
+  },
+  {
+    "question_id": "dsa.disjoint_sets_and_union_find.medium1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Disjoint sets and union-find",
+    "difficulty": "medium",
+    "question": "Explain how the union and find operations maintain disjoint subsets in the union-find data structure, and why the structure is useful for tracking elements in multiple sets.",
+    "reference_answer": "The union operation merges two disjoint sets into one, while the find operation identifies the representative of a set. This allows the data structure to efficiently track which elements belong to the same subset. The structure is useful because it supports dynamic merging of sets and quick lookup of set representatives, which is essential for algorithms like Kruskal’s for minimum spanning trees.",
+    "key_points": [
+      "The union operation merges two disjoint sets into one.",
+      "The find operation identifies the representative of a set.",
+      "The structure is useful for tracking elements in multiple sets."
+    ]
+  },
+  {
+    "question_id": "dsa.graph_connectivity_and_path_finding.hard2",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Graph connectivity and path finding",
+    "difficulty": "hard",
+    "question": "What happens to the graph's connectivity if we remove all edges that are part of any path from a source to a destination in a connected graph?",
+    "reference_answer": "Removing all edges that are part of any path from a source to a destination in a connected graph can potentially disconnect the graph. If the source and destination are the only nodes connected by those edges, the graph becomes disconnected. However, if there are alternative paths between other nodes, the graph might remain connected. The core idea is that the removal of edges that support a specific path can affect the overall connectivity of the graph.",
+    "key_points": [
+      "Removing all edges that are part of any path from a source to a destination can disconnect the graph.",
+      "The removal of edges can affect the overall connectivity of the graph, even if other paths remain.",
+      "The connectivity of a graph is determined by the existence of paths between all pairs of nodes."
+    ]
+  },
+  {
+    "question_id": "dsa.suffix_tries_and_suffix_trees.medium1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Suffix tries and suffix trees",
+    "difficulty": "medium",
+    "question": "Explain how a suffix tree differs from a suffix trie and why this compression is useful for string operations.",
+    "reference_answer": "A suffix tree is a compressed version of a suffix trie, which reduces the number of nodes by merging chains of single nodes. This compression makes the suffix tree more efficient in terms of space and allows for faster string operations. The suffix tree stores all suffixes of a text, enabling efficient pattern matching and prefix matching queries.",
+    "key_points": [
+      "The compression merges chains of single nodes.",
+      "Suffix trees support efficient pattern matching and prefix matching."
+    ]
+  },
+  {
+    "question_id": "dsa.open_addressing.medium1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Open addressing",
+    "difficulty": "medium",
+    "question": "Explain how quadratic probing differs from linear probing in open addressing, and why one might be preferred over the other in certain scenarios.",
+    "reference_answer": "Quadratic probing uses a formula of (h(key) + i²) % tableSize to resolve collisions, while linear probing uses (h(key) + i) % tableSize. This difference leads to a more even distribution of keys in quadratic probing, reducing primary clustering. Linear probing is simpler to implement but can lead to clustering, making quadratic probing more efficient in scenarios with high collision rates.",
+    "key_points": [
+      "Quadratic probing uses the formula (h(key) + i²) % tableSize to resolve collisions.",
+      "Linear probing uses the formula (h(key) + i) % tableSize to resolve collisions."
+    ]
+  },
+  {
+    "question_id": "dsa.binary_tree_properties.medium1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Binary tree properties",
+    "difficulty": "medium",
+    "question": "Explain how the relationship between leaf nodes and degree-2 nodes in a binary tree helps us understand the structure of a full binary tree.",
+    "reference_answer": "In a non-empty binary tree, the number of leaf nodes is always one more than the number of nodes with two children. This property is a fundamental characteristic of binary trees and helps in understanding how nodes are distributed. A full binary tree, which has all leaves at the same level, follows this rule and has a total number of nodes that is 2^(d+1) - 1, where d is the depth. This relationship ensures that the tree is balanced and fully populated at every level.",
+    "key_points": [
+      "The number of leaf nodes is one more than the number of degree-2 nodes.",
+      "A full binary tree has all leaves at the same level."
+    ]
+  },
+  {
+    "question_id": "dsa.expression_trees.medium2",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Expression trees",
+    "difficulty": "medium",
+    "question": "Explain how the construction of an expression tree using a postfix notation ensures that the resulting tree can be evaluated correctly.",
+    "reference_answer": "The construction of an expression tree using postfix notation ensures correct evaluation by leveraging the stack-based approach. When an operator is encountered, the two most recent operands are popped from the stack and used as children of the new operator node. This ensures that the operator is applied to the correct operands in the correct order. The final root of the tree represents the entire expression, allowing for a straightforward evaluation from the leaves up to the root.",
+    "key_points": [
+      "The stack is used to temporarily store operand nodes during the construction of the expression tree.",
+      "The final node on the stack becomes the root of the expression tree."
+    ]
+  },
+  {
+    "question_id": "dsa.insertion_sort.medium1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Insertion sort",
+    "difficulty": "medium",
+    "question": "Explain how insertion sort builds a sorted array incrementally and why it is considered a decrease and conquer algorithm.",
+    "reference_answer": "Insertion sort builds a sorted array incrementally by expanding the sorted portion of the array one element at a time. It sorts the subarray A[0..i-1] and then inserts A[i] into its correct position in the sorted subarray. This aligns with the decrease and conquer approach, where the problem is reduced to a smaller instance by sorting a smaller subarray and then extending the solution to the larger problem.",
+    "key_points": [
+      "Insertion sort builds a sorted array incrementally.",
+      "Insertion sort is a decrease and conquer algorithm.",
+      "The algorithm inserts an element into the correct position in the sorted subarray."
+    ]
+  },
+  {
+    "question_id": "dsa.insertion_sort.hard2",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Insertion sort",
+    "difficulty": "hard",
+    "question": "What happens to the sorted subarray during insertion sort and why is this property important for the algorithm’s performance?",
+    "reference_answer": "During insertion sort, the sorted subarray grows by one element in each iteration. The algorithm maintains the sorted subarray by inserting the current element into its correct position within it. This property is important because it ensures that the algorithm only needs to compare and shift elements within the sorted subarray, which limits the number of operations and makes it efficient for small or nearly sorted arrays.",
+    "key_points": [
+      "The sorted subarray grows by one element in each iteration.",
+      "The algorithm maintains the sorted subarray by inserting the current element into its correct position.",
+      "This property makes insertion sort efficient for small or nearly sorted arrays."
+    ]
+  },
+  {
+    "question_id": "dsa.binary_search.hard2",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Binary search",
+    "difficulty": "hard",
+    "question": "What is the significance of the 'extend solution of smaller instance to obtain solution to original problem' step in the context of binary search?",
+    "reference_answer": "In binary search, the 'extend solution of smaller instance to obtain solution to original problem' step is critical because it allows the algorithm to combine the results of the smaller subproblems into a solution for the original problem. This step is necessary because, after reducing the problem size by half, the algorithm must determine how to use the information from the smaller instance to find the target in the original instance. The process of extending the solution is implicit in the decision to move left or right in the array, based on the comparison with the middle element.",
+    "key_points": [
+      "Binary search uses the result of smaller instances to make decisions about the original problem.",
+      "Binary search is a recursive algorithm that reduces the problem to smaller instances.",
+      "The 'extend solution' step is essential for the algorithm to function correctly."
+    ]
+  },
+  {
+    "question_id": "ooad.creator_grasp.medium2",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Creator (GRASP)",
+    "difficulty": "medium",
+    "question": "In the context of the Creator pattern, how does the responsibility of object creation relate to the interactions between objects in a system?",
+    "reference_answer": "The Creator pattern assigns the responsibility of creating instances of a class to the class that has the most knowledge about when and how to create them. This ensures that the object creation aligns with the interactions between objects, as the creator is typically the one that understands the context in which the object is used. By delegating object creation to the appropriate class, the system maintains loose coupling and promotes encapsulation of initialization logic.",
+    "key_points": [
+      "The responsibility of object creation is assigned to the class that has the most knowledge about when and how to create them.",
+      "Object creation should align with the interactions between objects in a system.",
+      "The Creator pattern promotes loose coupling by decoupling object creation from the classes that use the created objects."
+    ]
+  },
+  {
+    "question_id": "ooad.facade_and_proxy_patterns.medium2",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Facade and proxy patterns",
+    "difficulty": "medium",
+    "question": "How does the Proxy Design Pattern support the Open/Closed Principle, and what trade-off does it introduce in terms of system complexity?",
+    "reference_answer": "The Proxy Design Pattern supports the Open/Closed Principle by allowing new proxies to be introduced without modifying existing service objects or clients. This means the system remains open for extension but closed for modification. However, it introduces a trade-off by adding an extra layer of indirection between the client and the real subject, which increases code complexity and may delay responses due to additional request forwarding.",
+    "key_points": [
+      "The Proxy Design Pattern supports the Open/Closed Principle by allowing new proxies to be introduced without changing the service or clients.",
+      "The Proxy Design and its additional layer between client and real subject increases code complexity.",
+      "The Proxy Pattern may delay responses due to the additional request forwarding between client and real subject."
+    ]
+  },
+  {
+    "question_id": "ooad.chain_of_responsibility_pattern.medium1",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Chain of responsibility pattern",
+    "difficulty": "medium",
+    "question": "Explain how the Chain of Responsibility pattern allows for dynamic decision-making in handling requests, and why this is important for loose coupling.",
+    "reference_answer": "The Chain of Responsibility pattern allows for dynamic decision-making by letting the client decide at runtime which objects form the chain and the order in which they handle requests. This is important for loose coupling because it decouples the sender of a request from its receiver, allowing multiple objects to handle the request without the sender needing to know which one will ultimately do so.",
+    "key_points": [
+      "The Chain of Responsibility pattern allows multiple objects to handle a request.",
+      "The chain can be decided dynamically at runtime.",
+      "The pattern promotes loose coupling between the sender and the receiver."
+    ]
+  },
+  {
+    "question_id": "ooad.method_overloading.hard2",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Method overloading",
+    "difficulty": "hard",
+    "question": "What happens if two overloaded methods differ only in their return types, and how does this affect the compiler's ability to resolve the correct method call?",
+    "reference_answer": "If two overloaded methods differ only in their return types, the compiler will not be able to resolve which method to call, resulting in a compilation error. This is because the return type is not part of the method signature used for overloading. The compiler relies solely on the method name and parameter list to determine which method to invoke. This highlights that return type cannot be used to distinguish between overloaded methods.",
+    "key_points": [
+      "The return type is not part of the method signature used for method overloading.",
+      "A difference in return type alone does not allow the compiler to resolve which method to call.",
+      "Method overloading relies solely on the method name and parameter list, not the return type."
+    ]
+  },
+  {
+    "question_id": "ooad.abstract_classes.hard2",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Abstract classes",
+    "difficulty": "hard",
+    "question": "What are the implications of an abstract class being unable to be instantiated, and how does this affect its role in an inheritance hierarchy?",
+    "reference_answer": "An abstract class cannot be instantiated, which means you cannot create objects of its type directly. This reinforces its role as a template for subclasses, as it is designed to be extended rather than used as a standalone class. The inability to instantiate an abstract class ensures that subclasses must provide the necessary implementation for abstract methods, thereby enforcing a contract. This also prevents misuse of the class as a concrete type, ensuring that the abstraction remains intact. The fact that an abstract class can have both abstract and concrete methods allows for partial implementation, which is useful in defining a common framework for subclasses.",
+    "key_points": [
+      "An abstract class cannot be instantiated.",
+      "An abstract class enforces a contract for subclasses.",
+      "An abstract class allows for partial implementation."
+    ]
+  },
+  {
+    "question_id": "ooad.object_memory_allocation.easy1",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Object memory allocation",
+    "difficulty": "easy",
+    "question": "Explain what it means for an object to have its own memory in Java.",
+    "reference_answer": "In Java, when an object is created using the new keyword, it has its own memory. This means that each object instance is allocated a separate memory space. This allows multiple objects to be created from the same class, each with their own set of instance variables. The object can access class attributes and methods using the dot operator, which works because each object has its own memory to store its state.",
+    "key_points": [
+      "Each object has its own memory space.",
+      "Objects are created using the new keyword.",
+      "Objects can access class attributes and methods using the dot operator."
+    ]
+  },
+  {
+    "question_id": "ooad.parameter_passing_in_java.medium1",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Parameter passing in Java",
+    "difficulty": "medium",
+    "question": "In Java, what is the difference between how primitive types and objects are passed as parameters, and what are the implications of this behavior?",
+    "reference_answer": "In Java, all parameters are passed by value. For primitive types, this means a copy of the value is made, and changes to the parameter do not affect the original value in the caller. For objects, a copy of the reference is passed, meaning the method can modify the object's state, but cannot change the reference itself to point to a different object. This distinction is important because it affects how data is manipulated and shared between methods.",
+    "key_points": [
+      "In Java, all parameters are passed by value.",
+      "Changes to primitive parameters do not affect the original value in the caller.",
+      "For objects, a copy of the reference is passed, not the object itself."
+    ]
+  },
+  {
+    "question_id": "ooad.builder_pattern.easy1",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Builder pattern",
+    "difficulty": "easy",
+    "question": "Explain what the Builder pattern is, and why it is useful in object-oriented design.",
+    "reference_answer": "The Builder pattern is a creational design pattern that deals with the construction of complex objects. It separates the instantiation process from the object's representation, allowing for the creation of different representations of the same object. This pattern is useful because it simplifies the creation of complex objects by encapsulating the construction process in a separate builder object, making the code more readable and maintainable.",
+    "key_points": [
+      "The Builder pattern is a creational design pattern that deals with the construction of complex objects.",
+      "The Builder pattern separates the instantiation process from the object's representation.",
+      "The Builder pattern allows for the creation of different representations of the same object."
+    ]
+  },
+  {
+    "question_id": "ooad.low_level_design_approach.medium2",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Low-level design approach",
+    "difficulty": "medium",
+    "question": "How does the low-level design approach ensure that the system remains flexible and extensible, and what role does the analysis model play in this process?",
+    "reference_answer": "This allows for the system to be modified or extended without requiring major rework. The analysis model provides a precise abstraction of what the system must do, which serves as a foundation for the low-level design. By aligning the implementation with the analysis model, the system can evolve while maintaining its core functionality. This alignment ensures that changes in requirements or new features can be incorporated without disrupting existing components.",
+    "key_points": [
+      "Low-level design ensures flexibility and extensibility by focusing on data structures and algorithms.",
+      "The analysis model provides a foundation for the low-level design.",
+      "The system can evolve while maintaining its core functionality."
+    ]
+  },
+  {
+    "question_id": "ooad.anti_patterns.medium2",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Anti-patterns",
+    "difficulty": "medium",
+    "question": "Explain how Vendor Lock-In is an AntiPattern in software architecture, and why it affects both development and management.",
+    "reference_answer": "Vendor Lock-In is an AntiPattern because it creates a situation where a software project becomes completely dependent on a vendor's implementation, leading to maintenance challenges and schedule slips. This affects development because it increases the complexity and difficulty of managing the application system architecture. It also affects management because it ties the application software maintenance cycle to commercial product upgrades, which can delay or prevent the delivery of desired features.",
+    "key_points": [
+      "Vendor Lock-In ties the application maintenance cycle to product upgrades.",
+      "Vendor Lock-In increases the complexity of the application system architecture."
+    ]
+  },
+  {
+    "question_id": "ooad.controller_grasp.medium1",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Controller (GRASP)",
+    "difficulty": "medium",
+    "question": "Explain how the Controller pattern in GRASP helps reduce coupling between GUI components and system operation classes.",
+    "reference_answer": "The Controller pattern helps minimize the dependency between GUI components and system operation classes by acting as an intermediary. When a request comes from a UI layer object, the Controller determines which object should receive the message and delegates the work to it. This separation ensures that the GUI does not directly interact with the system operation classes, reducing tight coupling and improving maintainability.",
+    "key_points": [
+      "The Controller pattern helps minimize the dependency between GUI components and system operation classes.",
+      "The Controller acts as an intermediary between the UI and domain objects.",
+      "The Controller delegates work to other objects rather than performing it itself."
+    ]
+  },
+  {
+    "question_id": "ooad.open_closed_principle.medium2",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Open-closed principle",
+    "difficulty": "medium",
+    "question": "How does the Open-Closed Principle help in minimizing the risk of failure when adding new features to existing code?",
+    "reference_answer": "The Open-Closed Principle helps in minimizing the risk of failure by encouraging the extension of existing code rather than modifying it. This is because modifying existing code can lead to unexpected behavior. By using OOP features like inheritance and interfaces, new features can be added without changing the existing code, which reduces the chance of introducing bugs.",
+    "key_points": [
+      "Modifying existing code can lead to unexpected behavior.",
+      "New features should be added through extension, not modification.",
+      "OOP features like inheritance and interfaces support the principle."
+    ]
+  },
+  {
+    "question_id": "ooad.polymorphism.medium2",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Polymorphism",
+    "difficulty": "medium",
+    "question": "Explain how polymorphism allows objects of different classes to be treated as objects of a common superclass, and why this is important for software design.",
+    "reference_answer": "Polymorphism allows objects of different classes to be treated as objects of a common superclass, which is essential for writing flexible and reusable code. This is achieved through inclusion polymorphism, also known as subtyping, where derived classes can be used through base class references. This enables a single interface to work with objects of different types, allowing for dynamic method dispatch and making it easier to replace one implementation with another without changing the client code.",
+    "key_points": [
+      "Polymorphism allows objects of different classes to be treated as objects of a common superclass.",
+      "Polymorphism enables a single interface to work with objects of different types.",
+      "Polymorphism supports dynamic method dispatch, which determines the method to call at runtime."
+    ]
+  },
+  {
+    "question_id": "ooad.single_responsibility_principle.medium1",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Single responsibility principle",
+    "difficulty": "medium",
+    "question": "Explain how the Single Responsibility Principle improves software design, using the example of the Order class and its responsibilities.",
+    "reference_answer": "The Single Responsibility Principle improves software design by ensuring that each class has only one reason to change. In the example, the Order class was responsible for managing order details, processing payments, and sending notifications, which made it hard to maintain. By splitting these into separate classes like PaymentProcessor and NotificationService, the system becomes more modular, easier to test, and less coupled. This aligns with the principle that each class should have responsibility for only one part of the software’s functionality.",
+    "key_points": [
+      "A class should have one, and only one, reason to change.",
+      "Each class only does one thing.",
+      "Code becomes easier to test and maintain."
+    ]
+  },
+  {
+    "question_id": "ooad.classes_and_objects.hard2",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Classes and objects",
+    "difficulty": "hard",
+    "question": "How does the concept of a class as a blueprint influence the creation and behavior of objects in Java, and what role does the Object class play in this context?",
+    "reference_answer": "A class serves as a blueprint that defines the structure and behavior of objects, which are instances of that class. The Object class, being the root of the class hierarchy, ensures that all objects in Java inherit common methods like equals(), hashCode(), and toString(). This inheritance allows for a consistent interface across all objects, enabling polymorphism and uniform handling of objects through a reference of type Object.",
+    "key_points": [
+      "A class is a blueprint that defines the structure and behavior of objects.",
+      "The Object class provides a common interface for all objects in Java.",
+      "Inheritance from Object ensures all objects have basic functionality."
+    ]
+  },
+  {
+    "question_id": "ooad.constructors.medium2",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Constructors",
+    "difficulty": "medium",
+    "question": "How does the use of a parameterized constructor differ from a default constructor in Java, and what are the implications for object initialization?",
+    "reference_answer": "A parameterized constructor allows you to pass arguments to initialize an object's instance variables with specific values, while a default constructor provides default values. The parameterized constructor is used when you want to set initial values during object creation, whereas the default constructor is used when no specific values are needed. When you define a parameterized constructor, the default constructor is no longer available, which means you must explicitly define it if needed. This affects how objects are initialized and can influence design decisions when multiple initialization scenarios are required.",
+    "key_points": [
+      "A parameterized constructor allows you to pass arguments to initialize an object's instance variables with specific values.",
+      "The default constructor provides default values to the object's instance variables.",
+      "Defining a parameterized constructor affects the availability of the default constructor."
+    ]
+  },
+  {
+    "question_id": "ooad.indirection_and_pure_fabrication.easy1",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Indirection and pure fabrication",
+    "difficulty": "easy",
+    "question": "Explain what pure fabrication is and when it is used.",
+    "reference_answer": "Pure fabrication is a design principle used when assigning responsibility to domain classes causes design issues. It involves creating artificial or convenience classes to encapsulate complex or non-natural responsibilities, promoting modularity and reusability. This approach helps maintain high cohesion and low coupling by isolating responsibilities from core domain objects.",
+    "key_points": [
+      "Pure fabrication is used when assigning responsibility to domain classes causes design issues.",
+      "Pure fabrication involves creating artificial or convenience classes.",
+      "Pure fabrication promotes modularity and reusability."
+    ]
+  },
+  {
+    "question_id": "ooad.liskov_substitution_principle.hard2",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Liskov substitution principle",
+    "difficulty": "hard",
+    "question": "Consider a scenario where a subclass overrides a method from its superclass. What is the potential violation of the Liskov Substitution Principle, and how does this relate to the behavior of programs that depend on the superclass?",
+    "reference_answer": "The Liskov Substitution Principle states that objects of a superclass should be replaceable with objects of its subclasses without altering the correctness of the program. If a subclass overrides a method and changes its behavior in a way that violates the expectations of the superclass, this can break the principle. For example, if a superclass method guarantees a certain outcome, and the subclass method does not uphold that guarantee, it can lead to incorrect behavior in programs that rely on the superclass's behavior.",
+    "key_points": [
+      "The Liskov Substitution Principle requires that derived types must be completely substitutable for their base types.",
+      "A child class should never change the characteristics of its parent class.",
+      "Derived classes should never do less than their base class."
+    ]
+  },
+  {
+    "question_id": "ooad.coupling_and_cohesion.easy1",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Coupling and cohesion",
+    "difficulty": "easy",
+    "question": "Explain what high cohesion means and why it is important in software design.",
+    "reference_answer": "High cohesion means that the responsibilities of a class are strongly related and focused. This makes the class easier to understand, maintain, and reuse. When a class has high cohesion, it performs a single, well-defined task, which reduces complexity and improves the overall design of the system.",
+    "key_points": [
+      "High cohesion means that the responsibilities of a class are strongly related and focused.",
+      "High cohesion makes the class easier to understand, maintain, and reuse.",
+      "High cohesion reduces complexity and improves the overall design of the system."
+    ]
+  },
+  {
+    "question_id": "ooad.singleton_pattern.easy1",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Singleton pattern",
+    "difficulty": "easy",
+    "question": "Explain how the Singleton pattern ensures that only one instance of a class is created in Java.",
+    "reference_answer": "The Singleton pattern ensures that only one instance of a class is created by making the constructor private and providing a static method to access the instance. This method either creates the instance on first use or returns the existing one. The pattern also prevents external instantiation by restricting access to the constructor.",
+    "key_points": [
+      "The Singleton pattern ensures that only one instance of a class is created.",
+      "The constructor is made private to prevent external instantiation.",
+      "A static method provides a global access point to the instance."
+    ]
+  },
+  {
+    "question_id": "os.file_allocation_methods.easy1",
+    "subject": "Operating Systems",
+    "topic": "File allocation methods",
+    "difficulty": "easy",
+    "question": "Explain what contiguous allocation is and why it is considered simple.",
+    "reference_answer": "Contiguous allocation is a method where each file occupies a set of contiguous blocks. This method is considered simple because only the starting location (block #) and length (number of blocks) are required to describe the file. This simplicity makes it easy to manage and access the file data sequentially or directly.",
+    "key_points": [
+      "Contiguous allocation is a method where each file occupies a set of contiguous blocks.",
+      "Contiguous allocation is considered simple because only the starting location and length are required.",
+      "Contiguous allocation supports both sequential and direct access."
+    ]
+  },
+  {
+    "question_id": "os.file_system_concepts.hard2",
+    "subject": "Operating Systems",
+    "topic": "File system concepts",
+    "difficulty": "hard",
+    "question": "What is the role of the file control block (FCB) in a file system, and how does it contribute to the system's ability to manage files efficiently?",
+    "reference_answer": "The file control block (FCB) is a storage structure that contains information about a file, including ownership, permissions, and the location of the file contents. This allows the file system to track and manage files by providing essential metadata needed for access control and data retrieval. The FCB is critical for maintaining the integrity and security of files, as it holds the necessary details for both user permissions and physical storage mapping.",
+    "key_points": [
+      "The FCB contains information about a file, including ownership and permissions.",
+      "The FCB holds the location of the file contents, which is essential for data retrieval.",
+      "The FCB is a key component in maintaining file system integrity and security."
+    ]
+  },
+  {
+    "question_id": "os.optimal_and_lru_page_replacement.medium1",
+    "subject": "Operating Systems",
+    "topic": "Optimal and LRU page replacement",
+    "difficulty": "medium",
+    "question": "Explain how the Optimal and LRU page replacement algorithms differ in their approach to page replacement, and why one might be considered better than the other in certain scenarios.",
+    "reference_answer": "The Optimal algorithm replaces the page that will not be used for the longest time in the future, making it theoretically the best possible algorithm. In contrast, LRU replaces the page that has not been used for the longest time in the past. While LRU is generally good and widely used, it cannot predict the future, which is why it performs worse than Optimal in some cases. However, LRU is easier to implement, while Optimal is not practical for real systems because it requires knowledge of the future.",
+    "key_points": [
+      "Optimal replaces the page that will not be used for the longest time in the future.",
+      "LRU replaces the page that has not been used for the longest time in the past."
+    ]
+  },
+  {
+    "question_id": "os.page_faults.medium1",
+    "subject": "Operating Systems",
+    "topic": "Page faults",
+    "difficulty": "medium",
+    "question": "Explain how the operating system handles a page fault and how it manages the page-fault frequency to avoid thrashing.",
+    "reference_answer": "When a page fault occurs, the operating system first checks if the reference is invalid. If not, it finds a free frame, swaps in the required page, updates the page tables, and restarts the instruction. To manage page-fault frequency, the system adjusts the number of frames allocated to a process based on its actual page-fault rate. If the rate is too low, the process loses a frame; if too high, it gains a frame. This helps control thrashing by balancing memory allocation with usage patterns.",
+    "key_points": [
+      "The operating system first checks if the page reference is invalid or not in memory.",
+      "The system finds a free frame and swaps the required page into memory.",
+      "The system adjusts the number of frames allocated to a process based on its page-fault rate.",
+      "Managing page-fault frequency helps avoid thrashing."
+    ]
+  },
+  {
+    "question_id": "os.context_switching.hard2",
+    "subject": "Operating Systems",
+    "topic": "Context switching",
+    "difficulty": "hard",
+    "question": "How does the size of a process affect the time required for a context switch, and what mechanisms can mitigate this impact?",
+    "reference_answer": "The size of a process directly affects the time required for a context switch, especially when swapping is involved. Larger processes take longer to swap in and out, as demonstrated by the example of a 3GB process requiring 60 seconds for swapping. However, the system can mitigate this impact by reducing the amount of memory swapped through mechanisms like `request_memory()` and `release_memory()`, which allow the OS to track and manage memory usage more precisely.",
+    "key_points": [
+      "Larger processes increase context switch time due to swapping overhead.",
+      "Swapping time is proportional to the size of the process being moved.",
+      "Memory management mechanisms can reduce the amount of memory swapped."
+    ]
+  },
+  {
+    "question_id": "os.free_space_management.hard2",
+    "subject": "Operating Systems",
+    "topic": "Free-space management",
+    "difficulty": "hard",
+    "question": "What are the limitations of using a bit vector for free-space management, and how do these limitations affect the design of disk allocation strategies in operating systems?",
+    "reference_answer": "The bit vector approach is efficient for finding free blocks but becomes impractical for large disks due to memory constraints. Keeping the entire bit vector in main memory is only feasible for smaller disks. For larger disks, this approach requires significant memory, which can limit scalability. These limitations influence the design of disk allocation strategies, such as using alternative free-space management techniques like linked lists or grouping blocks into clusters to reduce the overhead of tracking individual blocks.",
+    "key_points": [
+      "The bit vector is inefficient unless the entire vector is kept in main memory.",
+      "Keeping the bit vector in main memory is only feasible for smaller disks.",
+      "The bit vector approach requires significant memory for large disks."
+    ]
+  },
+  {
+    "question_id": "os.multilevel_page_tables.medium1",
+    "subject": "Operating Systems",
+    "topic": "Multilevel page tables",
+    "difficulty": "medium",
+    "question": "Explain how hierarchical page tables reduce memory usage compared to a flat page table, and what trade-offs they introduce.",
+    "reference_answer": "Hierarchical page tables break up the logical address space into multiple page tables, reducing memory usage by only allocating page table entries for used address ranges. This avoids the need for a single large flat page table, which would require storing all possible entries even for unused address space. However, this approach introduces a trade-off: while memory usage is reduced, the time to translate a virtual address increases because multiple levels of page tables must be accessed.",
+    "key_points": [
+      "Hierarchical page tables break up the logical address space into multiple page tables.",
+      "Hierarchical page tables reduce memory usage by only allocating entries for used address ranges.",
+      "Hierarchical page tables introduce increased translation time due to multiple levels of access."
+    ]
+  },
+  {
+    "question_id": "os.signals.medium2",
+    "subject": "Operating Systems",
+    "topic": "Signals",
+    "difficulty": "medium",
+    "question": "How do SIGINT and SIGALRM differ in their use and behavior when delivered to a process?",
+    "reference_answer": "SIGINT is generated when a user presses Control-C and is used to terminate a program from the terminal. SIGALRM is generated when a timer set by the alarm function goes off. These signals differ in their origin and purpose: SIGINT is user-initiated and typically used for graceful termination, while SIGALRM is system-initiated and used for timing events. Both are asynchronous, but their handling can be customized by the process.",
+    "key_points": [
+      "SIGINT is user-initiated and used for program termination.",
+      "SIGALRM is system-initiated and used for timing events.",
+      "Both signals are asynchronous but have different use cases."
+    ]
+  },
+  {
+    "question_id": "os.deadlock_detection_and_recovery.easy1",
+    "subject": "Operating Systems",
+    "topic": "Deadlock detection and recovery",
+    "difficulty": "easy",
+    "question": "Explain how a wait-for graph is used to detect deadlocks in a system.",
+    "reference_answer": "A wait-for graph is used to detect deadlocks by representing the waiting relationships between processes. The graph is derived from the resource-allocation graph by removing resource nodes and collapsing edges. A deadlock exists if and only if the wait-for graph contains a cycle. This cycle indicates that a set of processes are waiting for each other to release resources, forming a circular dependency. The presence of a cycle is the only condition under which a deadlock can occur in this model.",
+    "key_points": [
+      "The wait-for graph is derived from the resource-allocation graph by removing resource nodes and collapsing edges.",
+      "An edge from Pi to Pj in the wait-for graph indicates that Pi is waiting for Pj to release a resource."
+    ]
+  },
+  {
+    "question_id": "os.mutex_locks.medium2",
+    "subject": "Operating Systems",
+    "topic": "Mutex locks",
+    "difficulty": "medium",
+    "question": "Why are spinlocks considered problematic in real-time systems, and how does this relate to the use of busy waiting?",
+    "reference_answer": "Spinlocks are considered problematic in real-time systems because they involve busy waiting, which wastes CPU cycles. Busy waiting means that a process repeatedly checks the lock status instead of yielding the CPU, which can prevent other processes from executing. This is inefficient in real-time systems where predictable and timely execution is critical.",
+    "key_points": [
+      "Spinlocks involve busy waiting, which wastes CPU cycles.",
+      "Spinlocks are problematic in real-time systems due to their inefficiency.",
+      "Busy waiting is a characteristic of spinlocks and not of other locking mechanisms."
+    ]
+  },
+  {
+    "question_id": "os.pthreads.medium1",
+    "subject": "Operating Systems",
+    "topic": "Pthreads",
+    "difficulty": "medium",
+    "question": "Explain how the Pthreads API supports both user-level and kernel-level implementations of thread libraries, and why this distinction matters for thread scheduling.",
+    "reference_answer": "The Pthreads API is a POSIX standard that specifies the behavior of thread libraries, but it does not dictate whether the implementation is user-level or kernel-level. This distinction matters because user-level thread libraries handle thread management entirely in user space, while kernel-level libraries involve the operating system. The scheduling scope in Pthreads, such as PTHREAD_SCOPE_PROCESS or PTHREAD_SCOPE_SYSTEM, reflects this distinction by determining whether threads are scheduled within a process or across the entire system.",
+    "key_points": [
+      "The Pthreads API is a POSIX standard (IEEE 1003.1c) API for thread creation and synchronization.",
+      "Pthreads may be provided either as user-level or kernel-level.",
+      "The scheduling scope in Pthreads reflects the distinction between user-level and kernel-level implementations."
+    ]
+  },
+  {
+    "question_id": "os.linux_and_windows_scheduling.easy1",
+    "subject": "Operating Systems",
+    "topic": "Linux and Windows scheduling",
+    "difficulty": "easy",
+    "question": "Explain how the Completely Fair Scheduler (CFS) in Linux determines which task to run next.",
+    "reference_answer": "The Completely Fair Scheduler (CFS) in Linux determines which task to run next by selecting the task with the lowest virtual run time. This virtual run time is calculated based on the task's priority and includes a decay factor. CFS maintains all runnable tasks in a balanced binary search tree, ordered by their vruntime values. The task at the leftmost node of the tree is selected for execution. This ensures that tasks with higher priority (lower nice values) or those that have been waiting longer are given precedence.",
+    "key_points": [
+      "CFS selects the task with the lowest virtual run time.",
+      "CFS maintains runnable tasks in a balanced binary search tree.",
+      "Tasks with lower nice values have higher priority."
+    ]
+  },
+  {
+    "question_id": "os.contiguous_memory_allocation.medium1",
+    "subject": "Operating Systems",
+    "topic": "Contiguous memory allocation",
+    "difficulty": "medium",
+    "question": "Explain how contiguous memory allocation strategies like first-fit, best-fit, and worst-fit impact memory fragmentation and efficiency, and why some are preferred over others.",
+    "reference_answer": "Contiguous memory allocation strategies impact fragmentation and efficiency differently. First-fit is generally faster and better than worst-fit in terms of storage utilization. Best-fit minimizes leftover space but requires searching the entire list, which can be slower. Worst-fit, while producing the largest leftover hole, is less efficient in memory usage. External fragmentation is a concern in all strategies, but compaction can help reduce it if relocation is dynamic.",
+    "key_points": [
+      "First-fit is generally faster and better than worst-fit in terms of storage utilization.",
+      "Best-fit minimizes leftover space but requires searching the entire list, which can be slower.",
+      "Worst-fit produces the largest leftover hole, which is less efficient in memory usage.",
+      "External fragmentation is a concern in all strategies, but compaction can help reduce it if relocation is dynamic."
+    ]
+  },
+  {
+    "question_id": "os.resource_allocation_graph.medium2",
+    "subject": "Operating Systems",
+    "topic": "Resource allocation graph",
+    "difficulty": "medium",
+    "question": "How does the resource allocation graph algorithm detect deadlocks in a system with a single instance of each resource type?",
+    "reference_answer": "The resource allocation graph algorithm detects deadlocks by periodically checking for cycles in the graph. A cycle in the graph indicates a deadlock because it means there is a set of processes and resources where each process is waiting for a resource held by another process in the set. The algorithm searches for cycles, which requires an order of n² operations, where n is the number of vertices in the graph. This approach ensures that any deadlock is detected by identifying such cycles in the resource allocation graph.",
+    "key_points": [
+      "The algorithm detects deadlocks by checking for cycles in the resource allocation graph.",
+      "A cycle in the graph indicates a deadlock because processes are waiting for resources held by each other.",
+      "The algorithm requires an order of n² operations to search for cycles in the graph."
+    ]
+  },
+  {
+    "question_id": "os.deadlock_prevention.hard2",
+    "subject": "Operating Systems",
+    "topic": "Deadlock prevention",
+    "difficulty": "hard",
+    "question": "What happens to a process if it is preempted for a resource, and how does this relate to deadlock prevention?",
+    "reference_answer": "If a process is preempted for a resource, it must release all resources it currently holds. This is part of the 'no preemption' condition, which is one of the four necessary conditions for deadlock. By enforcing no preemption, the system ensures that a process cannot hold resources while waiting for others, thereby preventing deadlock. The preempted resources are added to the process's waiting list, and the process will be restarted only when it can regain all its previously held resources and the new ones it is requesting.",
+    "key_points": [
+      "A process must release all resources it currently holds if it is preempted.",
+      "Preemption is a mechanism used to prevent deadlock by breaking the 'hold and wait' condition.",
+      "The preempted resources are added to the process's waiting list."
+    ]
+  },
+  {
+    "question_id": "os.fragmentation.medium2",
+    "subject": "Operating Systems",
+    "topic": "Fragmentation",
+    "difficulty": "medium",
+    "question": "Explain how external fragmentation affects memory allocation and why compaction is a solution, but has limitations.",
+    "reference_answer": "External fragmentation occurs when the total memory space exists to satisfy a request, but it is not contiguous. Compaction is a solution because it shuffles memory contents to place all free memory together in one large block. However, compaction has limitations because it requires relocation to be dynamic and is done at execution time, which can cause I/O problems by latching a job in memory during I/O operations.",
+    "key_points": [
+      "External fragmentation is when the total memory space exists to satisfy a request, but it is not contiguous.",
+      "Compaction is a solution to external fragmentation by consolidating free memory into a single block.",
+      "Compaction has limitations due to I/O problems and the need for dynamic relocation."
+    ]
+  },
+  {
+    "question_id": "os.multilevel_queue_scheduling.medium2",
+    "subject": "Operating Systems",
+    "topic": "Multilevel queue scheduling",
+    "difficulty": "medium",
+    "question": "Explain how the multilevel feedback queue scheduling mechanism ensures that higher-priority processes are executed before lower-priority ones, and how this affects process preemption.",
+    "reference_answer": "In a multilevel feedback queue, higher-priority queues are executed before lower-priority ones, ensuring that processes in higher queues get CPU time first. This is because each queue has absolute priority over lower-priority queues. A process in a higher queue can preempt a process in a lower queue, which means the lower-priority process is interrupted and moved to a lower queue. This mechanism allows for dynamic prioritization based on process behavior and resource needs.",
+    "key_points": [
+      "Higher-priority queues are executed before lower-priority ones.",
+      "A process in a higher queue can preempt a process in a lower queue.",
+      "Processes are moved between queues based on their behavior."
+    ]
+  },
+  {
+    "question_id": "os.inter_process_communication.medium1",
+    "subject": "Operating Systems",
+    "topic": "Inter-process communication",
+    "difficulty": "medium",
+    "question": "Explain how message passing differs from shared memory in terms of how processes communicate and synchronize.",
+    "reference_answer": "Message passing allows processes to communicate without using shared variables, relying instead on send and receive operations. Shared memory, on the other hand, involves direct access to a common memory space. These differences impact how processes synchronize and manage data, with message passing often requiring explicit coordination to avoid race conditions.",
+    "key_points": [
+      "Message passing uses send and receive operations to communicate.",
+      "Message passing does not rely on shared variables."
+    ]
+  },
+  {
+    "question_id": "os.fifo_page_replacement.easy1",
+    "subject": "Operating Systems",
+    "topic": "FIFO page replacement",
+    "difficulty": "easy",
+    "question": "Explain how the FIFO page replacement algorithm works in the context of page faults and memory frames.",
+    "reference_answer": "The FIFO page replacement algorithm uses a queue to track the order in which pages were loaded into memory. When a page fault occurs and there are no available frames, the page that has been in memory the longest is replaced. This is based on the idea that pages that were loaded earlier are less likely to be needed soon. However, this approach can sometimes lead to Belady’s Anomaly, where adding more frames can increase the number of page faults.",
+    "key_points": [
+      "FIFO uses a queue to track the order of pages in memory.",
+      "FIFO can lead to Belady’s Anomaly."
+    ]
+  },
+  {
+    "question_id": "os.schedulers.easy1",
+    "subject": "Operating Systems",
+    "topic": "Schedulers",
+    "difficulty": "easy",
+    "question": "Explain what the short-term scheduler does in an operating system.",
+    "reference_answer": "The short-term scheduler selects from among the processes in the ready queue and allocates the CPU to one of them. This selection process determines which process gets to run next. The queue may be ordered in various ways, such as FIFO, priority, or other structures. The records in the queue are PCBs of the processes. This scheduler is responsible for making the CPU allocation decision at the moment a process is ready to run.",
+    "key_points": [
+      "The short-term scheduler selects a process from the ready queue.",
+      "The ready queue may be ordered in various ways.",
+      "The records in the queue are PCBs of the processes."
+    ]
+  }
+]

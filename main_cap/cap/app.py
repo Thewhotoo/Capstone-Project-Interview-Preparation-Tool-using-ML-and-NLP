@@ -9,10 +9,13 @@ import os
 import sys
 import logging
 
+# Must run before anything imports huggingface_hub / sentence_transformers.
+import model_warmup
+model_warmup.use_local_models_only()
+
 import conversation_engine
 import deployment_evaluator
 import discussion_engine
-import heuristic_evaluator
 
 # Load .env file (if it exists)
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
@@ -39,13 +42,36 @@ if not os.environ.get("GEMINI_API_KEY", "").strip():
 # HeuristicEvaluator automatically -- see deployment_evaluator.py) ──────────
 deployment_evaluator.bootstrap_production_evaluator()
 
-# ── Latency fix: warm the heuristic diagnostics' lazy SentenceTransformer/
-# CrossEncoder singletons at boot instead of on a real candidate's first
-# answer (see heuristic_evaluator.warm_up_models's docstring -- this is the
-# ~6s one-time cost previously paid inline on the first /reply call). ──────
-heuristic_evaluator.warm_up_models()
-
 app = Flask(__name__, template_folder="templates", static_folder="static")
+
+# ── Accounts: SQLite database, login, profiles, resume storage ─────────────
+# (see account_routes.py). Applies pending migrations on startup.
+from account_routes import init_accounts
+from flask_login import current_user
+import session_history
+from session_routes import sessions_bp
+init_accounts(app)
+app.register_blueprint(sessions_bp)
+
+# No live interview survives a restart (their state is in memory), so any
+# session the database still shows as in progress is now abandoned.
+with app.app_context():
+    _abandoned = session_history.abandon_all_open_sessions()
+    if _abandoned:
+        logger.info("Marked %d unfinished interview session(s) as abandoned after restart.", _abandoned)
+
+# Every API route needs a logged-in user, except signing up and logging in.
+# The page itself ("/") stays public -- it shows the login screen.
+_PUBLIC_API_PATHS = {"/api/auth/login", "/api/auth/signup"}
+
+
+@app.before_request
+def _require_login_for_api():
+    path = request.path
+    if (path.startswith("/api/")
+            and path not in _PUBLIC_API_PATHS
+            and not current_user.is_authenticated):
+        return jsonify({"error": "Please log in to continue."}), 401
 
 # Base paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -56,54 +82,34 @@ RESUME_CLASSIFIER_DIR = os.path.join(PROJECT_ROOT, "resume_classifier")
 if RESUME_CLASSIFIER_DIR not in sys.path:
     sys.path.insert(0, RESUME_CLASSIFIER_DIR)
 
-# ── RAG Integration ───────────────────────────────────────────────────────────
-try:
-    from rag_integration import rag_generator as _rag_gen
-    _rag_available = _rag_gen.rag_available and bool(_rag_gen.get_available_subjects())
-except ImportError:
-    _rag_available = False
-    _rag_gen = None
+# ── RAG Integration (legacy quiz only) ───────────────────────────────────────
+# Only the old /api/next_question route uses it, and the UI no longer calls
+# that route, so it is imported on first use instead of at startup (the
+# import alone took ~4.6 s of every server start).
+_rag_state = {"loaded": False, "generator": None}
 
-# Ensure resume_classifier stays at top of sys.path (RAG path may have shadowed it)
-if RESUME_CLASSIFIER_DIR in sys.path:
-    sys.path.remove(RESUME_CLASSIFIER_DIR)
-sys.path.insert(0, RESUME_CLASSIFIER_DIR)
 
-# ── RoBERTa Multitask Model ───────────────────────────────────────────────────
-ROBERTA_DIR = os.path.join(PROJECT_ROOT, "Roberta", "roberta-multitask-model")
-if ROBERTA_DIR not in sys.path:
-    sys.path.insert(0, ROBERTA_DIR)
-
-_roberta_predictors = None
-
-def _get_roberta_predictors():
-    """Lazy-load the three RoBERTa prediction functions."""
-    global _roberta_predictors
-    if _roberta_predictors is None:
+def _rag_generator():
+    """The legacy RAG question generator, or None if unavailable."""
+    if not _rag_state["loaded"]:
+        _rag_state["loaded"] = True
         try:
-            from inference.predict_intent import predict_intent
-            from inference.predict_difficulty import predict_difficulty
-            from inference.predict_topic import predict_topic
-            _roberta_predictors = {
-                "intent": predict_intent,
-                "difficulty": predict_difficulty,
-                "topic": predict_topic,
-            }
-            logger.info("RoBERTa inference pipeline loaded (rule-based fallback)")
-        except ImportError as e:
-            logger.warning(f"RoBERTa inference unavailable: {e}")
-            _roberta_predictors = False
-    return _roberta_predictors if _roberta_predictors is not False else None
+            from rag_integration import rag_generator as gen
+            if gen.rag_available and gen.get_available_subjects():
+                _rag_state["generator"] = gen
+        except ImportError:
+            pass
+        # Ensure resume_classifier stays at top of sys.path (RAG path may have shadowed it)
+        if RESUME_CLASSIFIER_DIR in sys.path:
+            sys.path.remove(RESUME_CLASSIFIER_DIR)
+        sys.path.insert(0, RESUME_CLASSIFIER_DIR)
+    return _rag_state["generator"]
 
 # Module-level RAG question cache for /api/next_question
 _rag_question_pool = []      # list of question dicts
 _rag_question_counter = 0    # auto-incrementing ID for RAG questions
 _asked_rag_ids = set()       # IDs already asked
 
-# Module-level adaptive session storage
-_adaptive_sessions = {}      # session_id -> session state dict
-
-import time
 
 # ═══════════════════════════════════════════════════════════════════════════
 # WEB UI ROUTES
@@ -375,6 +381,7 @@ def _hardcoded_fallback(domain):
 # deterministic Resume Intelligence Engine so downstream modules
 # (discussion, interview, quiz) never need to re-parse the resume.
 _candidate_profiles = {}   # session_id -> Candidate Profile dict
+_profile_owners = {}       # session_id -> (user_id, resume_id), set by _start_profile_session
 
 
 def _map_local_level_to_profile_level(level: str) -> str:
@@ -478,92 +485,64 @@ def _build_local_candidate_profile(resume_text: str, parsed_resume: dict) -> dic
     }
 
 
+def _start_profile_session(resume) -> dict:
+    """Put a saved resume's parsed Candidate Profile into the in-memory
+    store the discussion/interview routes read, and return it in the exact
+    format the frontend already expects (plus `session_id` and `resume`)."""
+    import uuid
+
+    from candidate_profile_generator import profile_to_frontend_format
+
+    profile = resume.parsed_profile
+    session_id = f"profile_{uuid.uuid4().hex[:12]}"
+    _candidate_profiles[session_id] = profile
+    _profile_owners[session_id] = (current_user.id, resume.id)
+
+    result = profile_to_frontend_format(profile)
+    result["session_id"] = session_id
+    result["resume"] = resume.to_dict()
+    logger.info("Candidate profile session %s from resume %s: domain=%s",
+                session_id, resume.id, result.get("predicted_domain"))
+    return result
+
+
 @app.route("/api/classify-resume", methods=["POST"])
 def classify_resume():
     """
-    Parse an uploaded resume with the deterministic Resume Intelligence
-    Engine (Milestones 0-7) -- no LLM/API call, no GEMINI_API_KEY required
-    for this route. The generated Candidate Profile is stored in memory
-    for the lifetime of the session so that dashboard, discussion, and
-    interview modules consume it directly without re-parsing.
+    Upload a resume from the main page: it is parsed by the deterministic
+    Resume Intelligence Engine (no LLM/API call) and saved to the user's
+    account as their current resume -- so it is what they see next time,
+    on any device -- then loaded for this session exactly like a saved
+    resume (see `use_saved_resume`).
 
-    Post-cutover: this is the ONLY resume-parsing path in production.
     Gemini-based parsing (`candidate_profile_generator.generate_candidate_
     profile`) still exists in that module for Shadow Mode's own use
-    (`resume_engine/devtools/`, dev-only, never imported from here) but is
-    no longer reachable from any real user request.
-
-    Returns the profile in the exact format the frontend already expects.
+    (`resume_engine/devtools/`, dev-only) but is not reachable from here.
     """
-    import tempfile
-    import uuid
-
-    from resume_engine.extractor import ExtractionFailure
+    from account_routes import add_resume_for_user
+    from resume_store import ResumeUploadError
 
     try:
-        if "file" not in request.files:
-            return jsonify({"error": "No file provided"}), 400
-
-        file = request.files["file"]
-        if file.filename == "":
-            return jsonify({"error": "No file selected"}), 400
-
-        # Validate extension
-        ext = os.path.splitext(file.filename)[1].lower()
-
-        from candidate_profile_generator import engine_supports_format
-
-        if not engine_supports_format(ext):
-            return jsonify({
-                "error": f"Unsupported file format '{ext}'. Please upload a PDF, DOCX, or TXT resume."
-            }), 400
-
-        # Save to a temp file so the engine's extractor can read it from disk
-        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-            file.save(tmp.name)
-            tmp_path = tmp.name
-
-        try:
-            from candidate_profile_generator import (
-                generate_candidate_profile_via_engine,
-                profile_to_frontend_format,
-            )
-
-            # The engine does its own extraction internally -- no separate
-            # text-extraction step needed.
-            profile = generate_candidate_profile_via_engine(tmp_path)
-
-            # Store in memory (keyed by a generated session ID)
-            session_id = f"profile_{uuid.uuid4().hex[:12]}"
-            _candidate_profiles[session_id] = profile
-
-            # Convert to frontend format and attach session_id
-            result = profile_to_frontend_format(profile)
-            result["session_id"] = session_id
-
-            logger.info(
-                "Candidate profile generated for session %s: domain=%s",
-                session_id,
-                result.get("predicted_domain"),
-            )
-            return jsonify(result), 200
-
-        finally:
-            # Clean up temp file
-            try:
-                if os.path.exists(tmp_path):
-                    os.remove(tmp_path)
-            except Exception as e:
-                logger.warning(f"Failed to cleanup temp file: {e}")
-
-    except ExtractionFailure as e:
-        # Corrupt/scanned/password-protected/unreadable file -- a client
-        # error (bad input), not a server error.
-        logger.warning("Resume extraction failed: %s", e)
+        resume = add_resume_for_user(current_user, request.files.get("file"))
+    except ResumeUploadError as e:
+        logger.warning("Resume upload rejected: %s", e)
         return jsonify({"error": str(e)}), 400
     except Exception as e:
         logger.error(f"Resume classification error: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
+    return jsonify(_start_profile_session(resume)), 200
+
+
+@app.route("/api/resumes/<int:resume_id>/use", methods=["POST"])
+def use_saved_resume(resume_id):
+    """Start from a resume already saved on the account (no upload, no
+    re-parsing). Same response shape as /api/classify-resume."""
+    from account_routes import own_resume
+
+    resume = own_resume(resume_id)
+    if resume is None:
+        return jsonify({"error": "Resume not found."}), 404
+    return jsonify(_start_profile_session(resume)), 200
 
 
 @app.route("/api/candidate-profile/<session_id>", methods=["GET"])
@@ -641,7 +620,8 @@ def next_question():
         target_topic = data.get("topic", "All")
 
         # ── Seed RAG question pool on first call (if available) ───────────
-        if _rag_available and not _rag_question_pool:
+        _rag_gen = _rag_generator() if not _rag_question_pool else None
+        if _rag_gen is not None:
             try:
                 _rag_question_counter = 0
                 for topic in ["TCP", "DNS", "IP Routing", "UDP", "Congestion Control"]:
@@ -918,12 +898,12 @@ def evaluate():
         # Main answer accounts for 70%, fill-in-the-blank for 30%
         combined_score = (score * 0.7) + (fill_score * 0.3)
         marks = round(combined_score * 10)
-        
+
         # Adjust marks based on fill correctness
         if fill_correct and score >= 0.7:
             marks = min(10, marks + 1)  # Bonus for both correct
-        
-        return jsonify({
+
+        result = {
             "score": round(combined_score, 2),
             "marks": marks,
             "feedback": feedback,
@@ -931,246 +911,19 @@ def evaluate():
             "fill_correct": fill_correct,
             "main_score": round(score, 2),
             "fill_score": round(fill_score, 2),
-        }), 200
-    
+        }
+
+        # Part of a saved Technical Interview session: record this question.
+        if data.get("session_id") is not None:
+            tech_session = session_history.own_in_progress_technical_session(data["session_id"], current_user.id)
+            if tech_session is not None:
+                session_history.record_technical_turn(tech_session, data, result)
+
+        return jsonify(result), 200
+
     except Exception as e:
         logger.error(f"Error: {e}")
         return jsonify({"error": str(e)}), 400
-
-@app.route("/roberta/classify", methods=["POST"])
-def roberta_classify():
-    """
-    Classify a question using the RoBERTa multitask model (or rule-based fallback).
-    Request: {"text": "What is deadlock?"}
-    Returns: {intent, difficulty, topics, confidence, source}
-    """
-    try:
-        data = request.get_json() or {}
-        text = data.get("text", "").strip()
-
-        if not text:
-            return jsonify({"error": "Text required"}), 400
-
-        predictors = _get_roberta_predictors()
-
-        if not predictors:
-            return jsonify({"error": "RoBERTa inference pipeline not available"}), 503
-
-        intent_result = predictors["intent"](text)
-        difficulty_result = predictors["difficulty"](text)
-        topic_result = predictors["topic"](text)
-
-        # Normalize: topic can be list or single label
-        topics = topic_result.get("labels", [])
-        if not topics and isinstance(topic_result.get("scores"), dict):
-            # Pick the top-scoring topic
-            scores = topic_result["scores"]
-            if scores:
-                topics = [max(scores, key=scores.get)]
-
-        return jsonify({
-            "intent": intent_result.get("label", "unknown"),
-            "difficulty": difficulty_result.get("label", "unknown"),
-            "topics": topics,
-            "confidence": round(
-                (intent_result.get("confidence", 0) + difficulty_result.get("confidence", 0)) / 2, 2
-            ),
-            "intent_confidence": round(intent_result.get("confidence", 0), 2),
-            "difficulty_confidence": round(difficulty_result.get("confidence", 0), 2),
-            "source": intent_result.get("source", "rule"),
-        }), 200
-
-    except Exception as e:
-        logger.error(f"RoBERTa classify error: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/adaptive/session", methods=["POST"])
-def adaptive_session():
-    """
-    Start an adaptive interview session using the RoBERTa adaptive engine.
-    Request: {"user_id": "...", "num_questions": 5}
-    Returns: profile summary + first question
-    """
-    try:
-        data = request.get_json() or {}
-        user_id = data.get("user_id", "guest")
-        num_questions = int(data.get("num_questions", 5))
-
-        predictors = _get_roberta_predictors()
-        if not predictors:
-            return jsonify({"error": "RoBERTa inference pipeline not available"}), 503
-
-        from adaptive.user_profile import UserProfileManager
-        from adaptive.adaptive_selector import AdaptiveSelector, QuestionDataset
-
-        dataset_path = os.path.join(ROBERTA_DIR, "data", "dataset.json")
-        dataset = QuestionDataset(dataset_path=dataset_path)
-        if not dataset.questions:
-            return jsonify({"error": "Question dataset not loaded"}), 500
-
-        profile_manager = UserProfileManager()
-        profile = profile_manager.get_or_create_profile(user_id)
-        selector = AdaptiveSelector(dataset)
-
-        # Pick first question
-        question = selector.select_next_question(profile)
-        if not question:
-            return jsonify({"error": "No questions available"}), 500
-
-        # Store session state in-memory
-        session_id = f"session_{user_id}_{int(time.time())}"
-        _adaptive_sessions[session_id] = {
-            "user_id": user_id,
-            "profile": profile,
-            "profile_manager": profile_manager,
-            "selector": selector,
-            "dataset": dataset,
-            "num_questions": num_questions,
-            "asked": [],
-            "scores": [],
-        }
-
-        return jsonify({
-            "status": "success",
-            "session_id": session_id,
-            "profile": {
-                "user_id": user_id,
-                "level": profile.current_level,
-                "overall_accuracy": round(profile.overall_accuracy, 1),
-                "total_attempted": profile.total_attempted,
-                "weak_topics": profile.get_weak_topics(),
-            },
-            "question": {
-                "text": question.text,
-                "intent": question.intent,
-                "difficulty": question.difficulty,
-                "topics": question.topics,
-            },
-            "num_questions": num_questions,
-        }), 200
-
-    except Exception as e:
-        logger.error(f"Adaptive session error: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/adaptive/next", methods=["POST"])
-def adaptive_next():
-    """
-    Get next question in an adaptive session.
-    Request: {"session_id": "..."}
-    """
-    try:
-        data = request.get_json() or {}
-        session_id = data.get("session_id", "")
-
-        session = _adaptive_sessions.get(session_id)
-        if not session:
-            return jsonify({"error": "Invalid or expired session"}), 404
-
-        if len(session["asked"]) >= session["num_questions"]:
-            return jsonify({"status": "completed"}), 200
-
-        question = session["selector"].select_next_question(session["profile"])
-        if not question:
-            return jsonify({"status": "completed"}), 200
-
-        return jsonify({
-            "status": "success",
-            "question": {
-                "text": question.text,
-                "intent": question.intent,
-                "difficulty": question.difficulty,
-                "topics": question.topics,
-            },
-            "question_num": len(session["asked"]) + 1,
-            "total_questions": session["num_questions"],
-        }), 200
-
-    except Exception as e:
-        logger.error(f"Adaptive next error: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/adaptive/evaluate", methods=["POST"])
-def adaptive_evaluate():
-    """
-    Evaluate user's answer in an adaptive session and update profile.
-    Request: {"session_id": "...", "question_text": "...", "user_answer": "..."}
-    """
-    try:
-        data = request.get_json() or {}
-        session_id = data.get("session_id", "")
-        question_text = data.get("question_text", "")
-        user_answer = data.get("user_answer", "")
-
-        session = _adaptive_sessions.get(session_id)
-        if not session:
-            return jsonify({"error": "Invalid or expired session"}), 404
-
-        predictors = _get_roberta_predictors()
-        if not predictors:
-            return jsonify({"error": "RoBERTa inference pipeline not available"}), 503
-
-        # Classify the question
-        q_intent = predictors["intent"](question_text)
-        q_difficulty = predictors["difficulty"](question_text)
-        q_topic_result = predictors["topic"](question_text)
-        q_topics = q_topic_result.get("labels", ["General"])
-
-        # Evaluate answer using intent/topic overlap + length heuristics
-        a_intent = predictors["intent"](user_answer)
-        a_topic_result = predictors["topic"](user_answer)
-        a_topics = a_topic_result.get("labels", [])
-
-        # Score components
-        topic_overlap = len(set(q_topics) & set(a_topics))
-        topic_score = min(1.0, topic_overlap / max(len(q_topics), 1))
-
-        intent_match = 1.0 if a_intent.get("label") == q_intent.get("label") else 0.3
-        comprehensiveness = min(1.0, len(user_answer.split()) / 30)
-
-        score = round((topic_score * 0.5 + intent_match * 0.25 + comprehensiveness * 0.25) * 100, 1)
-        is_correct = score >= 60
-
-        # Record in session
-        session["asked"].append(question_text)
-        session["scores"].append(score)
-
-        # Update profile
-        profile = session["profile"]
-        for topic in q_topics:
-            profile.record_attempt(
-                score=score,
-                topic=topic,
-                intent=q_intent.get("label", "unknown"),
-                difficulty=q_difficulty.get("label", "medium"),
-            )
-        session["profile_manager"].save_profile(profile)
-
-        # Grade
-        if score >= 85:
-            grade = "excellent"
-        elif score >= 65:
-            grade = "mostly_correct"
-        elif score >= 40:
-            grade = "partially_correct"
-        else:
-            grade = "blatantly_wrong"
-
-        return jsonify({
-            "status": "success",
-            "score": score,
-            "grade": grade,
-            "is_correct": is_correct,
-            "feedback": f"Score: {score}/100 ({grade})",
-            "question_num": len(session["asked"]),
-            "total_questions": session["num_questions"],
-        }), 200
-
-    except Exception as e:
-        logger.error(f"Adaptive evaluate error: {e}", exc_info=True)
-        return jsonify({"error": str(e)}), 500
 
 # ═══════════════════════════════════════════════════════════════════════════
 # RESUME DISCUSSION ENGINE (Conversational Interview)
@@ -1272,10 +1025,16 @@ def resume_discussion_v2_start():
         profile_session_id = data.get("session_id", "")
 
         profile = _candidate_profiles.get(profile_session_id)
-        if not profile:
+        owner = _profile_owners.get(profile_session_id)
+        if not profile or owner is None or owner[0] != current_user.id:
             return jsonify({"error": "Candidate Profile not found. Upload a resume first."}), 404
 
         result, status = conversation_engine.start_conversation(profile, enable_adaptive_followups=True)
+        if status == 200:
+            # Saved to the user's session history from the first question on.
+            session_history.begin_resume_discussion(
+                result["conversation_id"], current_user.id, owner[1], result["question"],
+            )
         return jsonify(result), status
 
     except Exception as e:
@@ -1292,8 +1051,12 @@ def resume_discussion_v2_reply():
         data = request.get_json() or {}
         conversation_id = data.get("session_id", "")
         answer = data.get("answer", "").strip()
+        if not session_history.owns_conversation(conversation_id, current_user.id):
+            return jsonify({"error": "Invalid or expired conversation"}), 404
 
         result, status = conversation_engine.advance_conversation(conversation_id, answer)
+        if status == 200:
+            session_history.record_resume_discussion_turn(conversation_id, answer, result)
         return jsonify(result), status
 
     except Exception as e:
@@ -1309,8 +1072,14 @@ def resume_discussion_v2_end():
     try:
         data = request.get_json() or {}
         conversation_id = data.get("session_id", "")
+        if not session_history.owns_conversation(conversation_id, current_user.id):
+            return jsonify({"error": "Invalid or expired conversation"}), 404
 
-        result, status = conversation_engine.end_conversation(conversation_id)
+        result, status = conversation_engine.end_conversation(
+            conversation_id, integrity=data.get("integrity"),
+        )
+        if status == 200:
+            session_history.finish_resume_discussion(conversation_id, result, data.get("attention_metrics"))
         return jsonify(result), status
 
     except Exception as e:
@@ -1323,5 +1092,9 @@ def resume_discussion_v2_end():
 # ═══════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
+    logger.info("Models: %s", "local cache only (no update checks)" if os.environ.get("HF_HUB_OFFLINE") == "1"
+                else "may download / check huggingface.co")
+    # Load every model now, in the background, so no user action waits for one.
+    model_warmup.start_background_warmup()
     logger.info("Open your browser: http://localhost:5000")
     app.run(debug=False, port=5000, threaded=True, use_reloader=False)

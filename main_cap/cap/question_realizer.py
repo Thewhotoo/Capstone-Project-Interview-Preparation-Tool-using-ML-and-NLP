@@ -29,6 +29,7 @@ identical output."
 
 from __future__ import annotations
 
+import re
 import zlib
 from typing import Optional
 
@@ -175,6 +176,28 @@ def _render(spec: QuestionSpecification, family: str, memory: ConversationMemory
     return text, variant_idx
 
 
+_TITLE_CUT_RE = re.compile(r"\s+[—–-]\s+|\s*[:|(]")
+
+
+def _short_project_name(title: str) -> str:
+    """The name part of a project title: "Patient OS v2 — Multi-Source Health
+    AI Copilot" -> "Patient OS v2"; capped at 6 words."""
+    name = _TITLE_CUT_RE.split(title or "", maxsplit=1)[0].strip()
+    return " ".join(name.split()[:6])
+
+
+def _name_the_project(seed: str, spec: QuestionSpecification) -> str:
+    """seed_synthesis writes seeds as "... in this project?". Once questions
+    move between projects, "this project" no longer says which one ("Why did
+    you use Python in this project?" asked about two projects reads as the
+    same question twice), so name it: "... in FairEdge Data Agent?"."""
+    project = spec.grounding.project
+    name = _short_project_name(project.title) if project is not None else ""
+    if not name:
+        return seed
+    return re.sub(r"\bthis project\b", name, seed, count=1)
+
+
 def realize(spec: QuestionSpecification, memory: ConversationMemory, turn_number: int) -> InterviewQuestion:
     """Realize a fresh (non-follow-up) turn for `spec`. Returns the
     InterviewQuestion; the caller must call `memory.record_turn(question,
@@ -201,11 +224,16 @@ def realize(spec: QuestionSpecification, memory: ConversationMemory, turn_number
     (never sentence-shaped), EXPERIENCE, CERTIFICATION, and PROJECT_OVERVIEW.
     """
     is_first_touch_on_source = memory.times_source_touched(spec.source_id) == 0
-    use_verbatim_seed = _is_candidate_facing_question_seed(spec) and not is_first_touch_on_source
+    # Integration fix: never two verbatim seed questions back to back -- a run
+    # of "Why did you use X in ...?" reads as a checklist; alternating with the
+    # family templates keeps the conversation varied.
+    previous_was_seed = memory.last_family() == _SEED_VERBATIM_FAMILY
+    use_verbatim_seed = (_is_candidate_facing_question_seed(spec) and not is_first_touch_on_source
+                         and not previous_was_seed)
 
     if use_verbatim_seed:
         family = _SEED_VERBATIM_FAMILY
-        text = spec.text_seed.strip()
+        text = _name_the_project(spec.text_seed.strip(), spec)
         reasoning_type = _SEED_VERBATIM_REASONING_TYPE
         variant_idx = 0
     else:

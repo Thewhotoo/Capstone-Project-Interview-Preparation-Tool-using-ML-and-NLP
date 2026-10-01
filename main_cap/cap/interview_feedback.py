@@ -1,83 +1,105 @@
 """
-Interview Feedback — data-driven, honest end-of-session feedback.
+Interview Feedback — data-driven end-of-session feedback for the Resume Discussion.
 
-Replaces the frontend's fixed narrative templates (e.g. "This was a steady
-discussion... a few technical claims didn't hold up") with feedback DERIVED from
-the actual per-turn evaluation signals: how many questions were substantively
-answered, which evidence dimensions were weak/strong, and what to do about it.
+Replaces the frontend's fixed per-grade narrative ("This was a steady
+discussion...") with text derived from the actual per-turn results: how many
+questions were substantively answered, which evidence dimensions were weak or
+strong, and what to do about it. Deterministic, no model. It only speaks to what
+the evaluator measures (relevance/completeness, depth/specificity, grounding/
+ownership) and says plainly that it does not verify factual correctness.
 
-Deterministic and model-free (no LLM, no API — consistent with this project's
-constraints). HONEST BY DESIGN: it only speaks to what the evaluator can
-actually measure — relevance, specificity/depth, and résumé-grounding/ownership
-of the answers — and it explicitly does NOT claim to have verified the factual
-correctness of technical claims (there is no per-question answer key for
-experiential résumé questions; see resume_evidence_evaluator / correctness_nli_scorer).
+Adapted from a teammate's `interview_feedback.py` (resumeParser_integration.md
+step 6). His version read his evaluator's four canonical dimensions; ours reads
+the heuristic evaluator's dimensions (which the averaged evaluator keeps), mapped:
 
-Consumes the same per-turn payloads `conversation_engine._result_payload`
-already produces (overall_score, grade, dimensions[{name, raw_score}]); adds a
-single `feedback` block to `end_conversation`'s summary. No evaluation logic and
-no scoring changes here — pure summarization of results already computed.
+    depth / specificity        <- technical_depth
+    relevance / completeness   <- completeness
+    grounding / ownership      <- ownership, resume_grounding
+Each is averaged only over the answers where the evaluator reported it (it
+reports only the dimensions relevant to each question type), never zero-filled.
+
+`conversation_engine.end_conversation` adds the result as `summary["feedback"]`;
+it is saved with the session and rendered by the Round 1 report.
 """
 
 from __future__ import annotations
 
 import math
 
-_TECH = "technical_correctness"
-_DEPTH = "depth_specificity"
-_RELV = "relevance_completeness"
-_GRND = "grounding_ownership"
+DEPTH = "depth_specificity"
+RELEVANCE = "relevance_completeness"
+GROUNDING = "grounding_ownership"
 
-# Actionable guidance per evidence dimension (what to DO), not a canned verdict.
+# our dimension names -> evidence dimension
+_SOURCE_DIMENSIONS = {
+    DEPTH: ("technical_depth",),
+    RELEVANCE: ("completeness",),
+    GROUNDING: ("ownership", "resume_grounding"),
+}
+
+NON_SUBSTANTIVE_MAX = 0.15   # a gated non-answer scores <= 0.1 (answer_gate)
+STRONG_MIN = 0.60
+WEAK_DIMENSION_MAX = 0.40
+STRONG_DIMENSION_MIN = 0.60
+
 _ADVICE = {
-    _RELV: "Answer exactly what each question asks before adding extra — several responses drifted off the question.",
-    _DEPTH: "Go a level deeper: name the specific mechanism, the components, and concrete numbers, not just what the system does.",
-    _GRND: "Speak in the first person about YOUR specific decisions and what you personally built, rather than generic \"we did X\".",
+    RELEVANCE: "Answer exactly what each question asks before adding extra — several responses drifted off the question.",
+    DEPTH: "Go a level deeper: name the specific mechanism, the components, and concrete numbers, not just what the system does.",
+    GROUNDING: "Speak in the first person about YOUR specific decisions and what you personally built, rather than generic \"we did X\".",
 }
 _STRENGTH_LABEL = {
-    _RELV: "answers stayed on-topic and addressed the question",
-    _DEPTH: "answers included concrete, specific detail",
-    _GRND: "answers were grounded in your own work and decisions",
+    RELEVANCE: "answers stayed on-topic and addressed the question",
+    DEPTH: "answers included concrete, specific detail",
+    GROUNDING: "answers were grounded in your own work and decisions",
 }
-_SCOPE_NOTE = (
+SCOPE_NOTE = (
     "This report reflects how relevant, specific, and grounded your answers were. It does not "
     "independently verify the factual correctness of individual technical claims."
 )
 
 
-def _dim(ev: dict, name: str) -> float:
-    for d in ev.get("dimensions", []):
-        if d.get("name") == name:
-            return float(d.get("raw_score", 0.0))
-    return 0.0
+def _evidence_scores(evaluation: dict) -> dict[str, float]:
+    """This answer's score per evidence dimension (only those it reported)."""
+    by_name = {d.get("name"): d.get("raw_score") for d in evaluation.get("dimensions", [])}
+    out = {}
+    for evidence, sources in _SOURCE_DIMENSIONS.items():
+        values = [float(by_name[s]) for s in sources if isinstance(by_name.get(s), (int, float))]
+        if values:
+            out[evidence] = sum(values) / len(values)
+    return out
 
 
 def build_feedback(evaluations: list[dict], timeline: list[dict] | None = None) -> dict:
-    """Build an honest, data-driven feedback block from the per-turn evaluation
-    payloads. Returns a dict the UI can render directly (headline, summary,
-    strengths, focus_areas, scope_note, stats)."""
+    """Headline, summary, strengths, focus areas, scope note and stats from the
+    per-turn evaluation payloads (`conversation_engine._result_payload`)."""
     n = len(evaluations)
     if n == 0:
         return {"headline": "No answers were evaluated.",
                 "summary": "The session ended before any answer could be assessed.",
-                "strengths": [], "focus_areas": [], "scope_note": _SCOPE_NOTE,
+                "strengths": [], "focus_areas": [], "scope_note": SCOPE_NOTE,
                 "stats": {"questions": 0}}
 
     overalls = [float(e.get("overall_score", 0.0)) for e in evaluations]
-    mean_overall = sum(overalls) / n
-    dim_means = {d: sum(_dim(e, d) for e in evaluations) / n for d in (_DEPTH, _RELV, _GRND)}
+    per_dimension: dict[str, list[float]] = {d: [] for d in _SOURCE_DIMENSIONS}
+    for e, overall in zip(evaluations, overalls):
+        # A non-answer's dimension scores are meaningless (answer_gate caps its
+        # overall score but not its dimensions -- a keyword dump still "reads"
+        # as grounded), so strengths/weaknesses come from real answers only.
+        if overall <= NON_SUBSTANTIVE_MAX:
+            continue
+        for d, v in _evidence_scores(e).items():
+            per_dimension[d].append(v)
+    dim_means = {d: sum(v) / len(v) for d, v in per_dimension.items() if v}
 
-    non_substantive = sum(1 for o in overalls if o <= 0.15)   # gated non-answers / degenerate
-    strong = sum(1 for o in overalls if o >= 0.60)
-    weak_dims = {d: m for d, m in dim_means.items() if m < 0.40}
-    strong_dims = {d: m for d, m in dim_means.items() if m >= 0.60}
-    # dominant weakness = the lowest-scoring evidence dimension (correctness excluded — unverified)
-    worst_dim = min(dim_means, key=dim_means.get)
+    non_substantive = sum(1 for o in overalls if o <= NON_SUBSTANTIVE_MAX)
+    strong = sum(1 for o in overalls if o >= STRONG_MIN)
+    weak_dims = {d: m for d, m in dim_means.items() if m < WEAK_DIMENSION_MAX}
+    strong_dims = {d: m for d, m in dim_means.items() if m >= STRONG_DIMENSION_MIN}
+    worst_dim = min(dim_means, key=dim_means.get) if dim_means else DEPTH
 
     focus_areas = [{"dimension": d, "tip": _ADVICE[d]} for d in sorted(weak_dims, key=weak_dims.get)]
     strengths = [_STRENGTH_LABEL[d] for d in sorted(strong_dims, key=strong_dims.get, reverse=True)]
 
-    # ── headline + summary, chosen from the ACTUAL data ──
     if non_substantive >= math.ceil(0.6 * n):
         headline = "Most questions weren't really answered."
         summary = (
@@ -88,30 +110,28 @@ def build_feedback(evaluations: list[dict], timeline: list[dict] | None = None) 
         )
     elif strong >= math.ceil(0.6 * n):
         headline = "Strong session — specific, grounded answers."
-        tip = _ADVICE[worst_dim] if dim_means[worst_dim] < 0.6 else "Keep pushing for concrete numbers and trade-offs."
-        summary = (
-            f"You answered {strong} of {n} questions with relevant, concrete detail. To go from good to "
-            f"excellent: {tip.lower()}"
-        )
+        tip = (_ADVICE[worst_dim] if dim_means.get(worst_dim, 1.0) < STRONG_DIMENSION_MIN
+               else "Keep pushing for concrete numbers and trade-offs.")
+        summary = (f"You answered {strong} of {n} questions with relevant, concrete detail. "
+                   f"To go from good to excellent: {tip[0].lower() + tip[1:]}")
     else:
         headline = "A mixed session with clear room to go deeper."
         pieces = [f"{strong} of {n} answers were solid" if strong else "few answers landed as strong"]
         if non_substantive:
             pieces.append(f"{non_substantive} weren't substantively answered")
-        summary = (
-            ". ".join(p.capitalize() for p in pieces) + ". "
-            + f"Your biggest opportunity: {_ADVICE[worst_dim].lower()}"
-        )
+        advice = _ADVICE[worst_dim]
+        summary = (". ".join(p[0].upper() + p[1:] for p in pieces) + ". "
+                   + f"Your biggest opportunity: {advice[0].lower() + advice[1:]}")
 
     return {
         "headline": headline,
         "summary": summary,
         "strengths": strengths,
         "focus_areas": focus_areas,
-        "scope_note": _SCOPE_NOTE,
+        "scope_note": SCOPE_NOTE,
         "stats": {
             "questions": n,
-            "mean_overall": round(mean_overall, 3),
+            "mean_overall": round(sum(overalls) / n, 3),
             "substantively_answered": n - non_substantive,
             "non_substantive": non_substantive,
             "strong_answers": strong,

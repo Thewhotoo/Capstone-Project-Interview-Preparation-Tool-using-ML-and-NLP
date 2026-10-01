@@ -1,0 +1,484 @@
+# Question bank enrichment (slide_rag/enrich_bank.py)
+
+Prompt v4. {"generated": 278, "cached": 4, "failed": 0, "skipped": 0, "variants_kept": 3994, "variants_dropped": 650, "variants_contradicting": 330, "variants_generic": 338, "variants_not_same": 0, "replies_wrong_polarity": 3, "core_points": 277, "core_gaps": 138}. 78.8 min.
+
+## Main ideas the bank's own answer does NOT state (likely gaps; check these first)
+
+The main idea (core_point) is an extra route to credit in the grader, never a penalty.
+
+- **cn.error_detection.medium1**: Explain how CRC codes ensure that burst errors are detected, and why this is important for network communication.
+  - main idea: CRC codes use polynomial division to detect burst errors by comparing received data with expected remainders.
+- **cn.transport_layer_services.medium2**: How does the transport layer ensure that data sent from one process reaches the correct process on the receiving end?
+  - main idea: The transport layer ensures data reaches the correct process through port numbers.
+- **cn.collision_and_broadcast_domains.medium2**: How does a switch allow multiple simultaneous transmissions without collisions, and what role does the Ethernet protocol play in this?
+  - main idea: a switch allows multiple simultaneous transmissions by using store-and-forward switching to isolate collision domains.
+- **cn.icmp.easy1**: Explain what ICMP is used for in computer networks.
+  - main idea: ICMP is used to send error messages and operational information between network devices.
+- **cn.csma_cd_and_csma_ca.easy1**: Explain how CSMA/CD differs from CSMA/CA in terms of handling collisions.
+  - main idea: CSMA/CD detects collisions electrically, while CSMA/CA detects them through acknowledgment.
+- **cn.link_state_routing.easy1**: Explain what a link-state routing algorithm is and how it differs from other routing methods.
+  - main idea: a link-state routing algorithm is when each router maintains a complete map of the network topology and uses it to compute shortest paths.
+- **cn.network_edge_and_access_networks.easy1**: Explain how a DSL modem connects a home network to the Internet.
+  - main idea: A DSL modem connects a home network to the Internet via a dedicated phone line using frequency-division multiplexing.
+- **cn.tcp_connection_establishment.easy1**: Explain what happens during the TCP connection establishment process.
+  - main idea: TCP connection establishment uses a three-way handshake to synchronize and confirm communication between hosts.
+- **cn.network_devices.hard2**: Consider a scenario where a network administrator is deciding between using a Repeater and a Switch to connect two segments of a network. What are the key differences in their operation and how might these differences affect network performance?
+  - main idea: a repeater forwards bits across segments without learning addresses, while a switch forwards frames based on address tables.
+- **cn.cidr.medium1**: Explain how CIDR allows for more efficient allocation of IP addresses compared to traditional class-based addressing.
+  - main idea: CIDR allows more efficient allocation by aggregating multiple IP networks into a single block.
+- **cn.network_edge_and_access_networks.medium2**: Explain how the structure of access networks affects the performance of a home network.
+  - main idea: The structure of access networks affects the performance of a home network by determining the bandwidth and latency available to connected devices.
+- **cn.tcp_connection_termination.medium1**: Explain how TCP handles the termination of a connection when both the client and server send FIN segments at the same time.
+  - main idea: TCP uses the simultaneous close mechanism to terminate the connection when both sides send FIN segments at the same time.
+- **cn.tcp_flow_control.medium1**: Explain how TCP flow control prevents the sender from overwhelming the receiver's buffer.
+  - main idea: TCP flow control prevents the sender from overwhelming the receiver's buffer by using the receiver's advertised window size to limit the amount of data that can be in flight.
+- **cn.persistent_vs_non_persistent_http.medium1**: Explain how persistent HTTP improves the response time for downloading multiple objects compared to non-persistent HTTP.
+  - main idea: Persistent HTTP improves response time by reusing a single TCP connection for multiple objects, reducing connection setup overhead.
+- **cn.mac_addressing.medium2**: How does the uniqueness of MAC addresses ensure that data is delivered correctly within a LAN?
+  - main idea: MAC addresses uniquely identify devices, ensuring data is sent to the correct LAN node.
+- **cn.distance_vector_routing.medium1**: Explain how the Bellman-Ford algorithm ensures that distance vector routing converges to the correct least-cost paths, and why it is important that nodes update their distance vectors based on their neighbors' information.
+  - main idea: Bellman-Ford ensures convergence by relaxing all edges iteratively until shortest paths are found.
+- **cn.icmp.medium2**: How does ICMP support network diagnostics, and what are two specific examples of ICMP messages used in this role?
+  - main idea: ICMP supports network diagnostics by enabling error reporting and operational information exchange between hosts and routers.
+- **cn.tcp_congestion_control.medium2**: How does TCP congestion control balance between underutilizing bandwidth and causing congestion collapse?
+  - main idea: TCP congestion control uses additive increase and multiplicative decrease to balance underutilization and congestion collapse.
+- **dbms.grant_and_revoke_privileges.easy1**: Explain what the REVOKE statement does in the context of database privileges.
+  - main idea: The REVOKE statement removes specified privileges from database users or roles.
+- **dbms.stored_procedures_and_functions.easy1**: Explain what a stored procedure is and why it is useful in a database system.
+  - main idea: A stored procedure is a precompiled SQL routine stored in the database that can be executed by name.
+- **dbms.transaction_states.easy1**: Explain what happens when a transaction reaches the partially committed state.
+  - main idea: a transaction reaches partially committed when its local changes are committed and the commit message is sent but not yet acknowledged.
+- **dbms.aggregate_functions_and_group_by.easy1**: Explain what aggregate functions do and how they are used in SQL queries.
+  - main idea: Aggregate functions compute a single result from multiple input rows in SQL queries.
+- **dbms.inner_join.easy1**: Can you explain what an Inner Join does in SQL, based on what you've learned?
+  - main idea: An inner join combines rows from two tables where the join condition matches values in both tables.
+- **dbms.null_handling_in_sql.easy1**: Explain how SQL handles comparisons involving NULL values.
+  - main idea: SQL treats comparisons with NULL as unknown, yielding no rows unless using IS NULL or IS NOT NULL.
+- **dbms.relational_algebra_joins_and_division.easy1**: Explain what a natural join is in relational algebra.
+  - main idea: A natural join is a binary operation that combines two relations based on all common attributes with the same name and domain.
+- **dbms.relational_model.medium1**: Explain how the relational model represents relationships between data and how this affects the design of a database schema.
+  - main idea: The relational model represents relationships between data through tables and foreign keys, which directly affect schema design by enforcing referential integrity.
+- **dbms.having_vs_where.medium1**: Explain how the HAVING clause differs from the WHERE clause in terms of when they are applied and what they filter.
+  - main idea: The HAVING clause filters groups after aggregation, while the WHERE clause filters rows before aggregation.
+- **dbms.outer_joins.medium1**: Explain how a Full Outer Join differs from a Left or Right Outer Join, and why it might be useful in a database query.
+  - main idea: A full outer join combines all rows from both tables, matching where possible, and includes unmatched rows as nulls.
+- **dbms.window_functions.medium2**: How do ranking window functions like RANK(), DENSE_RANK(), and ROW_NUMBER() differ in their behavior when there are ties in the data?
+  - main idea: Ranking window functions differ by how they handle ties in data.
+- **dbms.transaction_states.medium2**: Explain how a transaction can transition from the failed state to the terminated state, and what are the implications of each path.
+  - main idea: A transaction transitions from the failed state to the terminated state through recovery mechanisms that roll back its changes and release its locks.
+- **dbms.cap_theorem.medium2**: How does the CAP theorem influence the design trade-offs in distributed systems, particularly in the context of SQL versus NoSQL databases?
+  - main idea: The CAP theorem dictates that a distributed system can only guarantee two of consistency, availability, or partition tolerance at any given time.
+- **dbms.vector_databases_and_embeddings.medium1**: Explain how vector databases enable efficient similarity searches compared to traditional databases.
+  - main idea: Vector databases enable efficient similarity searches by indexing vectors for approximate nearest neighbor queries.
+- **dbms.common_table_expressions_cte.medium1**: Explain how a recursive CTE works and why it is useful for hierarchical data.
+  - main idea: A recursive CTE works by repeatedly joining its result to itself until no new rows are added.
+- **dbms.denormalization.medium2**: How does denormalization affect the balance between query performance and data consistency in a database?
+  - main idea: Denormalization improves query performance by reducing joins but risks data inconsistency through redundant storage.
+- **dbms.set_operations_in_sql.medium2**: How does the INTERSECT operator differ from the UNION operator in SQL, and what implications does this have for the data being combined?
+  - main idea: The INTERSECT operator returns only the distinct rows common to both queries, while the UNION operator returns all distinct rows from both queries.
+- **dbms.deadlocks_in_dbms.medium2**: How does the Two-Phase Locking (2PL) protocol contribute to deadlock prevention, and what are the limitations of this approach?
+  - main idea: Two-Phase Locking (2PL) prevents deadlocks by ensuring all locks are acquired before any are released.
+- **dbms.functional_dependency.medium1**: Explain how Armstrong’s Axioms can be used to infer new functional dependencies from a given set of dependencies.
+  - main idea: Armstrong’s Axioms allow deriving new functional dependencies by applying reflexivity, augmentation, and transitivity to existing ones.
+- **dbms.update_anomalies.medium2**: Explain how update anomalies can occur in a database schema and why they are problematic.
+  - main idea: Update anomalies occur when a single update to a tuple affects multiple tuples due to redundant data storage.
+- **dbms.equivalence_of_sets_of_fds.easy1**: Explain what it means for two sets of functional dependencies to be equivalent.
+  - main idea: Two sets of functional dependencies are equivalent if they derive the same set of functional dependencies.
+- **dbms.weak_entity_sets.hard2**: Suppose we have a weak entity set that is identified by more than one strong entity set. How does this affect the primary key of the weak entity set, and what implications does this have for the design of the database schema?
+  - main idea: The primary key of the weak entity set includes the primary keys of all identifying strong entity sets.
+- **dbms.isolation_levels.hard2**: How does the SERIALIZABLE isolation level address the phantom record problem compared to REPEATABLE READ?
+  - main idea: Serializable isolation level addresses the phantom record problem by enforcing strict serializability through locking or versioning.
+- **dbms.nested_and_correlated_subqueries.hard2**: What is the significance of using EXISTS or NOT EXISTS with correlated subqueries, and how does it influence the evaluation of the outer query?
+  - main idea: The outer query evaluates the correlated subquery only for relevant rows.
+- **dbms.full_text_search.medium1**: Explain how full-text search in MySQL differs from a simple string search like LIKE or REGEXP, and why full-text search is more effective for certain tasks.
+  - main idea: Full-text search in MySQL uses a specialized index to find words in documents, while LIKE and REGEXP perform pattern matching on raw strings.
+- **dbms.lock_based_concurrency_control.medium2**: Explain how the lock-compatibility matrix determines whether two transactions can hold locks on the same data item simultaneously.
+  - main idea: The lock-compatibility matrix determines whether two transactions can hold locks on the same data item by specifying which lock modes are compatible.
+- **dbms.nested_and_correlated_subqueries.medium1**: Explain how correlated subqueries differ from regular nested queries in terms of execution and their impact on query results.
+  - main idea: a correlated subquery executes repeatedly for each row of the outer query, while a regular nested query executes once and returns a single result set.
+- **dsa.expression_trees.easy1**: Explain what an expression tree is and how it represents an arithmetic expression.
+  - main idea: an expression tree is a binary tree where each leaf node represents an operand and each internal node represents an operator.
+- **dsa.sorting_by_counting.easy1**: Explain how Distribution Counting Sorting works based on the information provided.
+  - main idea: Distribution counting sort sorts integers by counting occurrences and placing elements in order based on frequency.
+- **dsa.kruskal_s_algorithm.easy1**: Explain how Kruskal’s algorithm builds a minimum spanning tree.
+  - main idea: Kruskal’s algorithm builds a minimum spanning tree by adding edges in order of increasing weight while avoiding cycles.
+- **dsa.circular_queue.easy1**: Explain how a circular queue solves the problem of wasted space in a simple queue.
+  - main idea: A circular queue solves the problem of wasted space in a simple queue by reusing the front space once all elements are dequeued.
+- **dsa.tries.medium2**: How does a trie support efficient prefix-based searches, such as in auto-complete features?
+  - main idea: A trie supports efficient prefix-based searches by organizing words in a tree structure where each node represents a character, allowing shared prefixes to be traversed once.
+- **dsa.depth_first_search.medium1**: Explain how depth-first search explores nodes and why it uses a stack-like behavior.
+  - main idea: depth-first search explores nodes by recursively visiting the deepest unvisited node first, using a stack-like behavior to track the traversal path.
+- **dsa.merge_sort.medium2**: How does the merge step in merge sort ensure that the final merged array is sorted in the worst case?
+  - main idea: The merge step ensures the final array is sorted by combining two sorted subarrays into one sorted array.
+- **dsa.horspool_and_boyer_moore_string_matching.medium1**: Explain how the Boyer-Moore algorithm uses the concept of bad-symbol shift to improve string matching efficiency compared to Horspool’s algorithm.
+  - main idea: The Boyer-Moore algorithm uses bad-symbol shift to skip characters by comparing the current character with the last occurrence in the pattern.
+- **dsa.disjoint_sets_and_union_find.medium1**: Explain how the union and find operations maintain disjoint subsets in the union-find data structure, and why the structure is useful for tracking elements in multiple sets.
+  - main idea: The union and find operations maintain disjoint subsets by merging trees and finding roots, ensuring each element belongs to exactly one set.
+- **dsa.postfix_expression_evaluation.medium2**: Explain how the postfix expression evaluation algorithm ensures that operators are applied to the correct operands.
+  - main idea: The postfix expression evaluation algorithm uses a stack to store operands and applies operators to the most recent operands in reverse order.
+- **dsa.parenthesis_matching.medium1**: Explain how the parenthesis matching algorithm ensures that the parentheses are properly nested and matched.
+  - main idea: the parenthesis matching algorithm uses a stack to ensure each opening parenthesis has a corresponding closing parenthesis in the correct order.
+- **dsa.breadth_first_search.easy1**: Can you explain what breadth-first search does in terms of node exploration?
+  - main idea: Breadth-first search explores nodes level by level, starting from the root and visiting all nodes at the current depth before moving to nodes at the next depth level.
+- **dsa.dijkstra_s_algorithm.easy1**: Explain how Dijkstra’s algorithm finds the shortest paths in a weighted graph.
+  - main idea: Dijkstra’s algorithm finds shortest paths by always selecting the node with the smallest known distance from the source.
+- **dsa.skip_lists.easy1**: Explain how a skip list maintains the order of elements across different levels.
+  - main idea: A skip list maintains order by ensuring each node's key is less than or equal to the next node's key at every level.
+- **dsa.binary_tree_properties.hard2**: Consider a complete binary tree. How does the structure of the tree ensure that the number of nodes at the last level is always odd, and what does this imply about the relationship between the depth and the number of nodes?
+  - main idea: A complete binary tree ensures the last level's nodes are odd by filling leftmost positions first, making the depth directly related to the total node count through this parity constraint.
+- **dsa.iterative_tree_traversals.easy1**: Explain how the iterative preorder traversal works using the code provided.
+  - main idea: Iterative preorder traversal processes nodes by visiting the current node, then recursively processing the left subtree, then the right subtree.
+- **dsa.binary_search_tree_deletion.easy1**: Explain how to delete a node from a binary search tree that has two children.
+  - main idea: Deleting a node from a binary search tree with two children requires replacing it with its in-order predecessor or successor and then removing that node.
+- **dsa.binary_search.hard2**: What is the significance of the 'extend solution of smaller instance to obtain solution to original problem' step in the context of binary search?
+  - main idea: The extend solution of smaller instance to obtain solution to original problem step ensures the binary search algorithm correctly scales the solution from a subproblem to the full problem.
+- **dsa.insertion_sort.hard2**: What happens to the sorted subarray during insertion sort and why is this property important for the algorithm’s performance?
+  - main idea: Insertion sort maintains a sorted subarray by inserting each element into its correct position within it.
+- **dsa.brute_force_sorting.hard2**: Explain how selection sort ensures that elements are placed in their final positions during each pass, and what this implies about the algorithm's behavior.
+  - main idea: selection sort places each element in its final position by finding the minimum in the unsorted subarray and swapping it with the first unsorted element.
+- **dsa.asymptotic_notations.medium2**: Explain how Ω-notation and Θ-notation differ in their use for analyzing the growth rate of functions.
+  - main idea: Ω-notation provides a lower bound on a function's growth rate, while Θ-notation tightly bounds it with both upper and lower limits.
+- **dsa.circular_queue.medium2**: Explain how the structure of a circular queue allows it to avoid the issue of space being locked in the front of the queue.
+  - main idea: A circular queue uses modular arithmetic to wrap around the end of the array, allowing the front to reuse freed space.
+- **dsa.iterative_tree_traversals.medium2**: Explain how the iterative postorder traversal handles the order of processing nodes using the code provided.
+  - main idea: iterative postorder traversal processes nodes by using two stacks to reverse the order of children and ensure left is processed before right.
+- **dsa.open_addressing.medium1**: Explain how quadratic probing differs from linear probing in open addressing, and why one might be preferred over the other in certain scenarios.
+  - main idea: Quadratic probing uses a quadratic function to compute the probe sequence, while linear probing uses a fixed increment, and quadratic probing reduces primary clustering.
+- **dsa.topological_sorting.medium2**: How does the DFS-based algorithm for topological sorting ensure that the resulting order is valid for a directed acyclic graph?
+  - main idea: The DFS-based algorithm for topological sorting ensures a valid order by finishing nodes in reverse order of their completion in a depth-first search.
+- **dsa.suffix_tries_and_suffix_trees.medium1**: Explain how a suffix tree differs from a suffix trie and why this compression is useful for string operations.
+  - main idea: A suffix tree compresses paths in a suffix trie by merging common prefixes, enabling efficient string operations.
+- **dsa.recurrence_relations.medium1**: Explain how the Master Theorem determines the time complexity of a recurrence relation based on the relationship between a, b, and d.
+  - main idea: The Master Theorem determines time complexity by comparing a, b, and d to classify the recurrence relation into one of three cases.
+- **dsa.binary_tree_properties.medium1**: Explain how the relationship between leaf nodes and degree-2 nodes in a binary tree helps us understand the structure of a full binary tree.
+  - main idea: A full binary tree has every non-leaf node with exactly two children, ensuring a strict one-to-one correspondence between leaf nodes and degree-2 nodes.
+- **dsa.heap_construction.medium1**: Explain how the bottom-up heap construction algorithm ensures that the final array represents a valid max-heap.
+  - main idea: The bottom-up heap construction algorithm ensures that the final array represents a valid max-heap by repeatedly applying the heapify operation from the last non-leaf node to the root.
+- **dsa.binary_search.medium1**: Explain how binary search uses the decrease-by-a-constant-factor approach to solve a problem efficiently.
+  - main idea: binary search uses the decrease-by-a-constant-factor approach by halving the search space at each step to efficiently locate an element.
+- **ooad.interfaces.easy1**: Explain what an interface is in Java, and how it supports abstraction.
+  - main idea: An interface in Java is a contract that defines method signatures without implementation, enabling abstraction by specifying behavior without concrete details.
+- **ooad.indirection_and_pure_fabrication.easy1**: Explain what pure fabrication is and when it is used.
+  - main idea: Pure fabrication is a mechanism used when a process cannot proceed without resources that are currently unavailable.
+- **ooad.command_pattern.easy1**: Can you explain what the Command pattern is and how it works, based on what you've learned?
+  - main idea: The command pattern encapsulates a request as an object, enabling parameterization of clients by commands and supporting undoable operations.
+- **ooad.object_memory_allocation.easy1**: Explain what it means for an object to have its own memory in Java.
+  - main idea: An object in Java has its own memory when it possesses an instance of a class that contains its own data members.
+- **ooad.information_expert.medium1**: Explain how the Information Expert principle helps in assigning responsibilities to objects in object-oriented design.
+  - main idea: The Information Expert principle assigns responsibilities to the class that has the information needed to fulfill the responsibility.
+- **ooad.encapsulation.medium1**: Explain how encapsulation supports data hiding and why it is important for software design.
+  - main idea: Encapsulation binds data and methods into a class, restricting access to only defined interfaces.
+- **ooad.interfaces.medium2**: How do interfaces in Java support multiple inheritance, and what is the difference between a provided interface and a required interface?
+  - main idea: Interfaces in Java support multiple inheritance through method signatures without implementation, allowing a class to implement multiple interfaces.
+- **ooad.types_of_inheritance.medium1**: Explain how hybrid inheritance combines different types of inheritance and why Java uses interfaces to support it.
+  - main idea: Hybrid inheritance combines single and multiple inheritance through interfaces to allow class hierarchies with multiple parent classes.
+- **ooad.this_and_super_keywords.medium1**: Explain how the 'super' keyword is used in constructors and why it must be the first statement in a constructor.
+  - main idea: The 'super' keyword invokes the parent class constructor, ensuring initialization of inherited state before any other code in the subclass constructor.
+- **ooad.composition_over_inheritance.medium1**: Explain how composition differs from inheritance in terms of how they model relationships between objects, and why composition is often preferred in object-oriented design.
+  - main idea: composition models relationships through contained objects, while inheritance models relationships through is-a hierarchies; composition is preferred for flexible, modular design.
+- **ooad.controller_grasp.medium1**: Explain how the Controller pattern in GRASP helps reduce coupling between GUI components and system operation classes.
+  - main idea: The Controller pattern in GRASP mediates requests between GUI components and system operation classes to reduce coupling.
+- **ooad.facade_and_proxy_patterns.medium2**: How does the Proxy Design Pattern support the Open/Closed Principle, and what trade-off does it introduce in terms of system complexity?
+  - main idea: The Proxy Design Pattern supports the Open/Closed Principle by providing a wrapper that decouples interface from implementation.
+- **ooad.chain_of_responsibility_pattern.medium1**: Explain how the Chain of Responsibility pattern allows for dynamic decision-making in handling requests, and why this is important for loose coupling.
+  - main idea: The Chain of Responsibility pattern allows dynamic decision-making by passing requests along a chain of handlers, each deciding to handle or pass it on.
+- **ooad.adapter_pattern.medium1**: Explain how the Adapter pattern enables incompatible classes to work together, and why it is considered a structural design pattern.
+  - main idea: The Adapter pattern enables incompatible classes to work together by wrapping their interfaces in a common one.
+- **ooad.low_level_design_approach.medium2**: How does the low-level design approach ensure that the system remains flexible and extensible, and what role does the analysis model play in this process?
+  - main idea: low-level design ensures flexibility and extensible systems through abstraction and interface definition, with the analysis model providing the foundational structure for these design decisions.
+- **ooad.parameter_passing_in_java.medium1**: In Java, what is the difference between how primitive types and objects are passed as parameters, and what are the implications of this behavior?
+  - main idea: In Java, primitive types are passed by value and objects are passed by reference, meaning changes to primitives are local while changes to objects affect the original.
+- **ooad.polymorphism.medium2**: Explain how polymorphism allows objects of different classes to be treated as objects of a common superclass, and why this is important for software design.
+  - main idea: Polymorphism enables objects of different classes to be treated as objects of a common superclass through method overriding.
+- **ooad.overloading_vs_overriding.medium1**: Explain the difference between method overloading and method overriding, and why they are used in different scenarios.
+  - main idea: Method overloading is resolving method calls at compile time based on parameter types, while method overriding is resolving method calls at runtime based on object type.
+- **ooad.design_pattern_categories.hard2**: What are the implications of grouping design patterns into the three categories—creational, structural, and behavioral—and how does this grouping affect the way we think about object-oriented design?
+  - main idea: grouping design patterns into creational, structural, and behavioral categories organizes them by their purpose and effect on object interactions.
+- **ooad.types_of_inheritance.hard2**: Consider a scenario where a class inherits from two parent classes, one of which also inherits from another class. How does this scenario relate to the concept of inheritance types, and what limitations does Java impose on such a structure?
+  - main idea: Java enforces single inheritance to prevent multiple parent classes from conflicting in a class hierarchy.
+- **ooad.method_overloading.hard2**: What happens if two overloaded methods differ only in their return types, and how does this affect the compiler's ability to resolve the correct method call?
+  - main idea: Overloaded methods with identical return types and parameters are invalid; the compiler cannot distinguish between them.
+- **ooad.liskov_substitution_principle.hard2**: Consider a scenario where a subclass overrides a method from its superclass. What is the potential violation of the Liskov Substitution Principle, and how does this relate to the behavior of programs that depend on the superclass?
+  - main idea: A subclass overriding a method from its superclass violates the Liskov Substitution Principle when the overridden method alters the superclass's contract behavior.
+- **ooad.copy_constructor.medium1**: Explain how a copy constructor prevents unwanted reference sharing and why it's important in object-oriented design.
+  - main idea: A copy constructor creates a deep copy of an object to prevent reference sharing.
+- **ooad.anti_patterns.medium2**: Explain how Vendor Lock-In is an AntiPattern in software architecture, and why it affects both development and management.
+  - main idea: Vendor Lock-In is an AntiPattern where a system's design depends on a single vendor's proprietary technologies, limiting flexibility and increasing dependency.
+- **ooad.abstraction.medium1**: Explain how abstraction in object-oriented programming helps in managing complexity in software design.
+  - main idea: Abstraction in object-oriented programming hides implementation details behind interfaces, allowing focus on essential features.
+- **ooad.model_view_controller.medium2**: How does the Model-View-Controller pattern help in separating the user interface from the application logic, and what are the implications of this separation?
+  - main idea: Model-View-Controller separates user interface from application logic through distinct components that communicate via well-defined interfaces.
+- **os.signals.easy1**: Explain what a signal is in the context of Linux processes.
+  - main idea: a signal is a software-generated asynchronous notification sent to a process by the kernel.
+- **os.deadlock_avoidance.easy1**: Explain what a safe state is in the context of deadlock avoidance.
+  - main idea: A safe state is a state in which some ordering of all processes lets each get its resources and finish.
+- **os.file_allocation_methods.easy1**: Explain what contiguous allocation is and why it is considered simple.
+  - main idea: Contiguous allocation is when a file's data is stored in a single, consecutive block of disk space.
+- **os.logical_vs_physical_address.easy1**: Explain the difference between a logical address and a physical address.
+  - main idea: A logical address is a memory reference used by a program, while a physical address is the actual memory location in the hardware.
+- **os.deadlock_conditions.medium1**: Explain how the four deadlock conditions are interdependent in the occurrence of a deadlock.
+  - main idea: deadlock occurs when all four conditions hold simultaneously: mutual exclusion, hold and wait, no preemption, and circular wait.
+- **os.mutex_locks.easy1**: Explain what a mutex lock is and how it helps solve the critical section problem.
+  - main idea: A mutex lock is a binary semaphore that ensures mutual exclusion by allowing only one process to hold it at a time.
+- **os.dining_philosophers_problem.easy1**: Explain the core idea of the Dining Philosophers problem.
+  - main idea: The Dining Philosophers problem defines a situation where multiple processes compete for shared resources, leading to potential deadlock.
+- **os.disk_scheduling.easy1**: Explain what makes disk scheduling an important part of an operating system.
+  - main idea: Disk scheduling is important because it optimizes the order of I/O requests to minimize seek time and improve throughput.
+- **os.contiguous_memory_allocation.medium1**: Explain how contiguous memory allocation strategies like first-fit, best-fit, and worst-fit impact memory fragmentation and efficiency, and why some are preferred over others.
+  - main idea: Contiguous memory allocation uses first-fit, best-fit, or worst-fit to assign blocks, impacting fragmentation and efficiency based on allocation strategy.
+- **os.context_switching.medium1**: Explain how context switching affects the performance of a process in a round-robin scheduling system, and why the choice of time quantum is important.
+  - main idea: context switching in round-robin scheduling incurs overhead that reduces process throughput, and time quantum size directly impacts this overhead and fairness.
+- **os.bash_shell_and_cron.medium1**: Explain how cron jobs are scheduled and executed in a Unix-like system, and why it's important to understand the crontab format.
+  - main idea: cron jobs are scheduled and executed via crontab files using a time-based format to define when tasks run.
+- **os.preemptive_vs_non_preemptive_scheduling.medium1**: Explain how preemptive scheduling differs from non-preemptive scheduling in terms of when scheduling decisions occur and the implications for system behavior.
+  - main idea: Preemptive scheduling allows the operating system to forcibly take control of the CPU from a running process, while non-preemptive scheduling does not.
+- **os.priority_scheduling.medium1**: Explain how priority scheduling can lead to starvation and what is a common solution to this problem.
+  - main idea: priority scheduling can lead to starvation when lower-priority processes are indefinitely delayed by higher-priority ones.
+- **os.race_condition.medium2**: Explain how a race condition can occur in the context of the `fork` system call and why it's important to use wait functions properly.
+  - main idea: A race condition occurs when a child process completes before its parent, leading to incorrect resource handling.
+- **os.critical_section_problem.medium1**: Explain how the progress condition ensures fairness in the critical section problem, and why it's important to assume that processes execute at a nonzero speed.
+  - main idea: The progress condition ensures fairness by guaranteeing that if a process is ready, it will eventually enter the critical section.
+- **os.peterson_s_solution.medium2**: Explain how the turn variable in Peterson’s solution contributes to the progress of the algorithm.
+  - main idea: The turn variable ensures mutual exclusion by indicating which process can enter its critical section next.
+- **os.resource_allocation_graph.medium2**: How does the resource allocation graph algorithm detect deadlocks in a system with a single instance of each resource type?
+  - main idea: The resource allocation graph algorithm detects deadlocks by identifying cycles in the graph that include all resource nodes and process nodes.
+- **os.translation_lookaside_buffer.medium2**: How does the use of an ASID in a TLB improve system performance, and what trade-offs are involved in its implementation?
+  - main idea: ASID in TLB enables hardware to distinguish between processes' page tables, reducing TLB misses and improving address translation speed.
+- **os.multilevel_page_tables.medium1**: Explain how hierarchical page tables reduce memory usage compared to a flat page table, and what trade-offs they introduce.
+  - main idea: Hierarchical page tables reduce memory usage by sharing common prefixes among multiple processes.
+- **os.swapping.medium1**: Explain how swapping supports priority-based scheduling and why it's important for memory management.
+  - main idea: swapping allows high-priority processes to preempt lower-priority ones by moving them to disk.
+- **os.operating_system_functions.medium2**: Explain how the operating system ensures efficient resource allocation and protection in a multiuser environment.
+  - main idea: The operating system ensures efficient resource allocation and protection in a multiuser environment through process isolation and resource scheduling.
+- **os.file_system_concepts.medium1**: Explain how the file system maps logical file names to physical storage locations on a disk, and why this mapping is important for efficient data access.
+  - main idea: The file system maps logical file names to physical storage locations through a directory structure, enabling direct disk access.
+- **os.deadlock_avoidance.medium2**: How does the concept of a safe state influence the decision-making process when a process requests a resource in a deadlock avoidance system?
+  - main idea: The defining condition is that a safe state ensures there exists an order of resource allocation that allows all processes to complete without deadlock.
+- **os.system_calls.medium2**: How do system calls enable communication between user programs and the operating system, and what role do they play in file manipulation?
+  - main idea: System calls provide a controlled interface for user programs to request OS services, enabling direct interaction with kernel-level file operations.
+- **os.thrashing.medium2**: How does the working-set model help in mitigating the effects of thrashing, and what are the limitations of its approximation using reference bits and interval timers?
+  - main idea: The working-set model helps mitigate thrashing by ensuring a process has enough memory frames to execute without page faults.
+- **os.translation_lookaside_buffer.easy1**: Explain what a Translation Look-aside Buffer (TLB) is and why it is used.
+  - main idea: A translation look-aside buffer is a hardware cache that stores recently used page table entries to speed up virtual-to-physical address translation.
+- **os.context_switching.hard2**: How does the size of a process affect the time required for a context switch, and what mechanisms can mitigate this impact?
+  - main idea: Context switch time increases with process size due to more memory state to save and restore.
+- **os.multilevel_page_tables.hard2**: What is the primary challenge in implementing shared memory with inverted page tables, and how does the structure of the inverted page table contribute to this challenge?
+  - main idea: The primary challenge in implementing shared memory with inverted page tables is ensuring correct mapping of virtual addresses to physical frames across multiple processes.
+- **os.free_space_management.hard2**: What are the limitations of using a bit vector for free-space management, and how do these limitations affect the design of disk allocation strategies in operating systems?
+  - main idea: A bit vector requires contiguous free space to allocate blocks, limiting flexibility in disk allocation strategies.
+- **os.deadlock_prevention.hard2**: What happens to a process if it is preempted for a resource, and how does this relate to deadlock prevention?
+  - main idea: preemption allows a process to be forcibly removed from a resource, preventing deadlock by ensuring resource release before allocation.
+- **os.page_faults.hard2**: What is the role of page-fault frequency in managing memory allocation, and how does it affect the behavior of a process when the system is under memory pressure?
+  - main idea: page-fault frequency signals memory pressure by triggering page replacements when physical memory is insufficient.
+- **os.user_mode_vs_kernel_mode.hard2**: What happens if a user program attempts to execute a privileged instruction, and why is this behavior intentional?
+  - main idea: The system traps the instruction and switches to kernel mode to prevent unauthorized hardware access.
+- **os.producer_consumer_problem.easy1**: Explain what the producer-consumer problem is, and why it is important in operating systems.
+  - main idea: the producer-consumer problem is a synchronization mechanism where producers add items to a buffer and consumers remove them, ensuring mutual exclusion and avoiding race conditions.
+- **os.semaphores.medium1**: Explain how the incorrect use of semaphore operations can lead to deadlock and starvation, and why the implementation of semaphores with busy waiting is problematic.
+  - main idea: Deadlock and starvation occur when semaphores are misused due to improper resource allocation and priority inversion, and busy waiting wastes CPU time.
+- **os.dining_philosophers_problem.medium2**: Explain how the asymmetric solution to the Dining Philosophers problem prevents deadlock.
+  - main idea: asymmetric solution ensures one philosopher always yields first, breaking the circular wait condition.
+- **os.optimal_and_lru_page_replacement.medium1**: Explain how the Optimal and LRU page replacement algorithms differ in their approach to page replacement, and why one might be considered better than the other in certain scenarios.
+  - main idea: Optimal uses future page references to choose the best replacement, while LRU uses past references, making Optimal theoretically better but impractical.
+- **os.deadlock_prevention.medium1**: Explain how the 'circular wait' condition can be prevented in a system with multiple processes and shared resources.
+  - main idea: circular wait is prevented by ensuring no process holds a resource while waiting for another.
+
+## Sample variants (first enriched question per subject)
+
+### cn.transport_layer_services.easy1: Explain what a socket is and how it relates to the transport layer.
+- A socket is the interface through which a process sends and receives messages.
+  - says: a socket is the way a process sends and receives messages
+  - says: processes use sockets to send and receive messages
+  - says: sockets are the interface for sending and receiving messages between processes
+  - says: the transport layer uses sockets to send and receive messages
+  - says: a socket is how a process communicates over the network
+  - says: without a socket, a process can't send or receive messages
+  - follow-up: What happens if a process doesn't use a socket?
+    - reply: nope
+    - reply: it can't send or receive
+    - reply: no communication
+    - reply: it breaks the connection
+    - reply: it can't talk to others
+- A socket acts like a door, allowing messages to be sent out and received.
+  - says: a socket is like a door for messages
+  - says: sockets act as entry and exit points for messages
+  - says: a socket is the gateway for message flow
+  - says: messages go through the socket like through a door
+  - says: sockets are the door to send and receive messages
+  - says: a socket is the door that messages pass through
+  - follow-up: Why is the socket compared to a door?
+    - reply: because it's the entry and exit point
+    - reply: it's the gateway
+    - reply: it's where messages come in and go out
+    - reply: it's the access point
+    - reply: it's the interface
+- Two sockets are involved in a communication: one on each side of the connection.
+  - says: two sockets are needed for communication
+  - says: one socket on each end of the connection
+  - says: communication needs a sending and receiving socket
+  - says: you need two sockets to send and receive
+  - says: each side has its own socket
+  - says: sockets are on both ends of the connection
+  - follow-up: What would happen if only one socket was used?
+    - reply: the message wouldn't be delivered
+    - reply: no receiver
+    - reply: it can't be received
+    - reply: nothing to accept it
+    - reply: it would be lost
+
+### dbms.entities_and_attributes.easy1: Explain what a primary key is in the context of entity sets.
+- A primary key is a set of attributes that distinguish entities within an entity set.
+  - says: a primary key helps tell apart different entities in a set
+  - says: primary key is the way to tell entities apart in a group
+  - says: the primary key is what makes each entity unique in the set
+  - says: you use the primary key to make sure entities are different
+  - says: primary key ensures entities in a set are distinguishable
+  - follow-up: What happens if two entities have the same values for all attributes?
+    - reply: they can't be told apart
+    - reply: it breaks the uniqueness rule
+    - reply: it's a duplicate
+    - reply: violates the primary key constraint
+    - reply: can't distinguish them
+- The primary key of an entity set becomes the primary key of the resulting schema.
+  - says: the primary key becomes part of the schema's structure
+  - says: the schema uses the primary key from the entity set
+  - says: the schema's primary key comes from the entity set
+  - says: the entity set's primary key is used in the schema
+  - says: the schema includes the primary key of the entity set
+  - follow-up: Why is it important for the primary key to be part of the schema?
+    - reply: so you can find and reference each entity
+    - reply: it lets you identify and link entities
+    - reply: it makes data retrieval easier
+    - reply: it's needed for referencing
+    - reply: it ensures unique identification
+- The primary key ensures that no two entities in the set have the same values for all attributes.
+  - says: primary key stops two entities from being the same
+  - says: the primary key makes sure entities are unique
+  - says: no two entities can have the same primary key
+  - says: primary key enforces uniqueness between entities
+  - says: it prevents duplicate entities in the set
+  - says: the primary key ensures entities are distinct
+  - follow-up: What would be an example of a primary key in the university database?
+    - reply: student id
+    - reply: student number
+    - reply: student unique id
+    - reply: student enrollment number
+    - reply: student identifier
+
+### dsa.priority_queue.easy1: Explain what a priority queue is and how it differs between ascending and descending types.
+- A priority queue is a data structure where the intrinsic ordering of elements determines the results of its basic operations.
+  - says: a priority queue is like a regular queue but elements are ordered by priority
+  - says: priority queues work based on the priority of elements, not insertion order
+  - says: in a priority queue, the element with the highest priority is processed first
+  - says: the priority queue's operations depend on the internal order of the elements
+  - says: priority queues use the natural ordering of elements to determine which item comes out next
+  - says: the main difference is that priority queues use priority instead of insertion order
+  - follow-up: What is the main difference between a priority queue and a regular queue?
+    - reply: nope
+    - reply: priority
+    - reply: insertion order
+    - reply: priority determines removal order
+    - reply: it's based on priority, not when it was added
+- An ascending priority queue removes the smallest item.
+  - says: an ascending priority queue pops the smallest element first
+  - says: in ascending priority queues, the smallest item is removed first
+  - says: ascending priority queues remove the minimum element
+  - says: the ascending queue always takes the smallest item out
+  - says: ascending queues prioritize removing the smallest item
+  - follow-up: What would happen if you tried to remove the largest item from an ascending priority queue?
+    - reply: it would break the queue's behavior
+    - reply: it's not allowed
+    - reply: it doesn't follow the queue's rules
+    - reply: the queue is designed to remove the smallest
+    - reply: you can't remove the largest from an ascending queue
+- A descending priority queue removes the largest item.
+  - says: a descending priority queue removes the largest item first
+  - says: in descending queues, the biggest element is taken out first
+  - says: descending priority queues pop the maximum element
+  - says: the descending queue always takes the largest item out
+  - says: descending queues prioritize removing the largest item
+  - follow-up: How would you implement a descending priority queue using an array?
+    - reply: use a max-heap
+    - reply: max-heap
+    - reply: heap structure
+    - reply: you'd use a max-heap
+    - reply: implement it with a max-heap
+
+### ooad.interfaces.easy1: Explain what an interface is in Java, and how it supports abstraction.
+- An interface defines behavior without implementation.
+  - says: interfaces don't have code, just method signatures
+  - says: they describe what a class can do, not how
+  - says: interfaces define behavior without writing any actual code
+  - says: you can use an interface to hide the implementation details
+  - says: interfaces let you focus on what a class does, not how it does it
+  - follow-up: What is the purpose of an interface if it doesn't provide implementation?
+    - reply: to define behavior
+    - reply: enables abstraction
+    - reply: so different classes can implement it
+    - reply: abstracts away implementation
+    - reply: defines what a class must support
+- Interfaces support 100% abstraction.
+  - says: interfaces support 100% abstraction by not having any code
+  - says: interfaces hide the internal details of a class
+  - says: you can use an interface to abstract away implementation
+  - says: interfaces allow you to focus on the contract, not the code
+  - says: they make the implementation details invisible
+  - follow-up: How does an interface help in achieving abstraction?
+    - reply: by hiding implementation
+    - reply: defines the contract
+    - reply: focuses on what the class can do
+    - reply: abstracts the internal details
+    - reply: defines behavior without code
+- Interfaces enable multiple inheritance in Java.
+  - says: interfaces let a class inherit from multiple sources
+  - says: they enable multiple inheritance in java
+  - says: classes can implement multiple interfaces
+  - says: you can have multiple interfaces in one class
+  - says: interfaces allow a class to support multiple behaviors
+  - follow-up: Why is multiple inheritance not possible with classes but possible with interfaces?
+    - reply: because they don't have implementation
+    - reply: no code, so no conflict
+    - reply: they define behavior, not code
+    - reply: no ambiguity in method definitions
+    - reply: only method signatures are shared
+
+### os.schedulers.easy1: Explain what the short-term scheduler does in an operating system.
+- The short-term scheduler selects a process from the ready queue.
+  - says: the short-term scheduler picks a process from the ready queue
+  - says: it chooses which process gets the CPU from the ready queue
+  - says: the scheduler selects a process to run from the ready queue
+  - says: the short-term scheduler is responsible for selecting a process from the ready queue
+  - says: when a process is ready, the scheduler picks one from the ready queue
+  - says: the short-term scheduler selects a process to run next from the ready queue
+  - follow-up: What happens if there are no processes in the ready queue?
+    - reply: cpu is idle
+    - reply: no process to run
+    - reply: it waits for a process
+    - reply: the cpu stays idle
+    - reply: no process in the queue
+- The ready queue may be ordered in various ways.
+  - says: the ready queue can be ordered in different ways
+  - says: processes in the ready queue are ordered in various ways
+  - says: the queue can be sorted using different scheduling algorithms
+  - says: the ready queue might use FIFO, priority, or other ordering methods
+  - says: the queue can be arranged in different structures like a tree or linked list
+  - says: the queue can be ordered using different scheduling policies
+  - follow-up: What are some examples of how the queue might be ordered?
+    - reply: fifo
+    - reply: priority
+    - reply: tree
+    - reply: linked list
+    - reply: priority or fifo
+- The records in the queue are PCBs of the processes.
+  - says: the queue contains pcb records for each process
+  - says: each process in the queue has a pcb
+  - says: the ready queue stores pcb information for processes
+  - says: the scheduler uses pcb data to manage processes
+  - says: the queue holds pcb entries for all ready processes
+  - says: processes in the queue are represented by their pcb
+  - follow-up: What is a PCB and why is it important in scheduling?
+    - reply: data structure
+    - reply: process control block
+    - reply: pcb
+    - reply: stores process info
+    - reply: contains process state

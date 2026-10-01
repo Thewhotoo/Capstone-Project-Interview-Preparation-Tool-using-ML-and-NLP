@@ -242,5 +242,50 @@ class TestStartAdvanceEndLifecycle(unittest.TestCase):
         self.assertEqual(final.get("status"), "completed")
 
 
+class TestSessionIntegrity(unittest.TestCase):
+    def setUp(self):
+        self.profile = _real_profile().model_dump()
+
+    def _start(self):
+        result, status = ce.start_conversation(self.profile)
+        self.assertEqual(status, 200)
+        return result["conversation_id"]
+
+    def test_end_without_integrity_is_not_terminated(self):
+        summary, status = ce.end_conversation(self._start())
+        self.assertEqual(status, 200)
+        self.assertEqual(summary["integrity"], {"terminated": False})
+
+    def test_terminated_session_is_recorded_and_closed(self):
+        conversation_id = self._start()
+        summary, status = ce.end_conversation(conversation_id, integrity={
+            "terminated": True, "type": "tab_switch", "label": "Switched to another tab",
+            "at_turn": 3, "occurred_at": "2026-09-26T10:00:00.000Z",
+        })
+        self.assertEqual(status, 200)
+        self.assertEqual(summary["integrity"], {
+            "terminated": True, "type": "tab_switch", "label": "Switched to another tab",
+            "at_turn": 3, "occurred_at": "2026-09-26T10:00:00.000Z",
+        })
+        # A terminated session accepts no further answers.
+        _, status = ce.advance_conversation(conversation_id, "one more answer")
+        self.assertEqual(status, 404)
+
+    def test_malformed_integrity_payload_is_sanitized(self):
+        summary, _ = ce.end_conversation(self._start(), integrity={
+            "terminated": True, "type": "<script>", "label": "x" * 500,
+            "at_turn": True, "occurred_at": 12345, "extra": "dropped",
+        })
+        integrity = summary["integrity"]
+        self.assertEqual(set(integrity), {"terminated", "type", "label", "at_turn", "occurred_at"})
+        self.assertEqual(integrity["type"], "unknown")
+        self.assertEqual(len(integrity["label"]), 120)
+        self.assertIsNone(integrity["at_turn"])
+
+    def test_non_boolean_terminated_flag_is_not_trusted(self):
+        summary, _ = ce.end_conversation(self._start(), integrity={"terminated": "yes"})
+        self.assertEqual(summary["integrity"], {"terminated": False})
+
+
 if __name__ == "__main__":
     unittest.main()

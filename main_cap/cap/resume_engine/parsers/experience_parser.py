@@ -19,7 +19,7 @@ from resume_engine.dates import parse_date_range
 from resume_engine.interfaces import ParserResult
 from resume_engine.job_title_gazetteer import JOB_TITLES
 from resume_engine.parsers._entry_clustering import cluster_entries, strip_section_header_line
-from resume_engine.text_normalization import strip_leading_bullet
+from resume_engine.text_normalization import strip_date_ranges, strip_leading_bullet
 from resume_engine.validation import Observation
 
 # Validation-derived, tunable, same discipline as layout.py/sections.py.
@@ -148,6 +148,11 @@ class ExperienceParser:
             header_for_split = strip_leading_bullet(entry.header_text)
             if date_range is not None and date_line_index is None:
                 header_for_split = header_for_split.replace(date_range.display, "").strip(" ,-—–")
+                # The printed form often differs from the normalized display
+                # ("March, 2022 - March, 2025"); left in, its dash split the
+                # header into role "Software Developer March, 2022" and
+                # company "March, 2025". Remove the date range as printed too.
+                header_for_split = re.sub(r"\s{2,}", " ", strip_date_ranges(header_for_split)).strip(" ,-—–|")
 
             part_a, part_b = _split_role_company(header_for_split)
             role, company, gazetteer_matched = _disambiguate_role_company(part_a, part_b)

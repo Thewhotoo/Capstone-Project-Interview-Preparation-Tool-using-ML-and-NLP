@@ -96,6 +96,9 @@ function makeSandbox({ fetchImpl }) {
         setTimeout: (fn) => fn(), // cosmetic-only in these two functions (opacity fade)
         parsedResumeData: { session_id: "profile_test" },
         fetch: fetchImpl,
+        // Webcam + session-integrity startup: exercised by their own
+        // tests (test_session_integrity.js), stubbed here.
+        initializeGazeMonitoring() {}, proctorArm() {},
         setSystemLog() {}, rdDisableInput() {}, rdEnableInput() {},
         rdUpdatePositionLabel() {}, rdUpdateChapterRail() {},
         rdShowStageError() {},

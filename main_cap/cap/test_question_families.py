@@ -434,7 +434,7 @@ class TestSentenceShapedSeedDefensiveGuard(unittest.TestCase):
         )
 
     def test_reproduces_and_fixes_the_exact_real_resume_agno_failure(self):
-        """Direct reproduction of the real Shubham-Mookim-Resume.pdf
+        """Direct reproduction of a real candidate's resume
         failure: 'Were there other options you considered for Why did you
         use Agno in this project, and why didn't you go with them?' must
         no longer be producible by the 'tradeoffs' family's second variant

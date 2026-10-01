@@ -45,7 +45,7 @@ function extractBlock(source, startMarker) {
     return source.slice(start, i);
 }
 
-const typeLineSrc = extractBlock(src, "function typeLine(el, text) {");
+const typeLineSrc = extractBlock(src, "function typeLine(el, text, pace = 1) {");
 
 // A fresh sandbox + fake element per test: `setTimeout` pushes onto `queue`
 // instead of actually waiting, so the test drives the exact interleaving.

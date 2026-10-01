@@ -4691,7 +4691,7 @@
             await sleep(60);
 
             setSystemLog("Composing question...");
-            await typeLine(rdQuestionTextEl, question.text);
+            await typeLine(rdQuestionTextEl, question.text, 0.7);   // Round 1 questions type ~30% faster
             setSystemLog("Awaiting your response.");
             rdEnableInput();
         }
@@ -7295,7 +7295,8 @@
         // superseded call's Promise deliberately never resolves: that's
         // what halts its ENTIRE calling async chain (e.g. the rest of
         // rdStartSession) at the `await`, not just this one animation.
-        function typeLine(el, text) {
+        // pace < 1 types faster (1 = the default pace used everywhere else).
+        function typeLine(el, text, pace = 1) {
             const token = (el.__typeToken = (el.__typeToken || 0) + 1);
             return new Promise(resolve => {
                 el.textContent = "";
@@ -7307,8 +7308,8 @@
                         const ch = text[i];
                         el.textContent += ch;
                         i++;
-                        let delay = 46 + (Math.random() * 26 - 13); // ~100-120wpm feel
-                        if (/[,.:;!?]/.test(ch)) delay += 200;
+                        let delay = (46 + (Math.random() * 26 - 13)) * pace; // ~100-120wpm feel at pace 1
+                        if (/[,.:;!?]/.test(ch)) delay += 200 * pace;
                         setTimeout(tick, delay);
                     } else {
                         setTimeout(() => {

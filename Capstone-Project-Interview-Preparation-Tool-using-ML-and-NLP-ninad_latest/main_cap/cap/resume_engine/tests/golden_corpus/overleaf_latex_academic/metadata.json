@@ -1,0 +1,14 @@
+{
+  "fixture_id": "overleaf_latex_academic",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "latex_academic",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "medium",
+  "known_edge_cases": [
+    "serif font (Times-like) throughout, typical of LaTeX/Overleaf CV templates (moderncv, awesome-cv, etc.)",
+    "hanging-indent publication list entries (indented continuation lines under a bold section header)"
+  ],
+  "notes": "Validation-pass fixture (2026-08). Serif typography is a distinct real-world signal from the sans-serif templates the rest of the corpus otherwise favors.",
+  "added_in_milestone": 1
+}

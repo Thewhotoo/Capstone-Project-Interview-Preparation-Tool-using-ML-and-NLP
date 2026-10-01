@@ -1,0 +1,77 @@
+# Fundamentals
+DBMS vs file system | data redundancy, inconsistency, advantages of DBMS
+Three-schema architecture | external, conceptual, internal level
+Data independence | physical data independence, logical data independence
+Relational model | relation, tuple, attribute, domain, degree, cardinality
+Schema vs instance | database schema, database state
+Database architecture | centralized, two-tier, three-tier, client-server architecture
+
+# Keys and constraints
+Super key and candidate key | superkey, minimal superkey
+Primary key | primary key constraint, entity integrity
+Foreign key | referential integrity, ON DELETE CASCADE
+Integrity constraints | NOT NULL, UNIQUE, CHECK, DEFAULT, domain constraint
+
+# ER model
+Entities and attributes | entity set, simple, composite, multivalued, derived attribute
+Relationships and cardinality | one-to-one, one-to-many, many-to-many, mapping cardinality
+Participation constraints | total participation, partial participation
+Weak entity sets | weak entity, identifying relationship, partial key, discriminator
+ER to relational mapping | converting ER diagram to tables
+
+# Relational algebra
+Relational algebra operations | select, project, union, set difference, cartesian product, rename
+Relational algebra joins and division | natural join, theta join, division
+
+# SQL
+SQL command categories | DDL, DML, DCL, TCL
+DELETE vs TRUNCATE vs DROP | delete, truncate, drop table
+SELECT query clauses | WHERE, ORDER BY, DISTINCT, LIKE, BETWEEN, IN
+Aggregate functions and GROUP BY | COUNT, SUM, AVG, MIN, MAX, GROUP BY
+HAVING vs WHERE | HAVING clause, filtering groups
+Inner join | INNER JOIN, equi join
+Outer joins | LEFT JOIN, RIGHT JOIN, FULL OUTER JOIN
+Self join and cross join | self join, cross join, cartesian product
+Nested and correlated subqueries | subquery, correlated subquery, EXISTS, IN, ANY, ALL
+Set operations in SQL | UNION, UNION ALL, INTERSECT, EXCEPT, MINUS
+Common table expressions (CTE) | WITH clause, recursive CTE, CTE vs view
+Window functions | OVER, PARTITION BY, ROW_NUMBER, RANK, DENSE_RANK
+Full-text search | MATCH AGAINST, relevance, natural language mode, boolean mode
+GRANT and REVOKE privileges | GRANT, REVOKE, access privileges
+Views | CREATE VIEW, updatable view
+Stored procedures and functions | stored procedure, user-defined function
+Triggers | BEFORE trigger, AFTER trigger, row-level trigger
+NULL handling in SQL | NULL, IS NULL, three-valued logic, COALESCE
+
+# Normalization
+Functional dependency | FD, trivial dependency, closure, Armstrong's axioms
+Equivalence of sets of FDs | equivalent FD sets, F covers G
+Minimal cover of FDs | minimal cover, canonical cover, extraneous attributes
+Update anomalies | insertion anomaly, deletion anomaly, update anomaly
+First normal form (1NF) | atomic values, repeating groups
+Second normal form (2NF) | partial dependency
+Third normal form (3NF) | transitive dependency
+Boyce-Codd normal form (BCNF) | BCNF, determinant, 3NF vs BCNF
+Lossless decomposition | lossless join, dependency preservation
+Denormalization | denormalize, redundancy for performance
+
+# Transactions and concurrency
+Transactions and ACID properties | atomicity, consistency, isolation, durability
+Transaction states | active, partially committed, committed, failed, aborted
+Schedules and serializability | serial schedule, conflict serializability, precedence graph
+Concurrency anomalies | dirty read, lost update, non-repeatable read, phantom read
+Isolation levels | read uncommitted, read committed, repeatable read, serializable
+Lock-based concurrency control | shared lock, exclusive lock, lock compatibility
+Two-phase locking | 2PL, growing phase, shrinking phase, strict 2PL
+Deadlocks in DBMS | deadlock under locking
+
+# Indexing
+Indexing basics | index, query with and without an index
+Query processing and join algorithms | nested-loop join, index-based join, sort-merge join, hash join
+
+# Beyond relational
+SQL vs NoSQL | NoSQL, document store, key-value store, column store, graph database
+CAP theorem | consistency, availability, partition tolerance
+Key-value stores and Redis | key-value store, Redis data types, Redis commands
+Graph databases and Neo4j | nodes, relationships, properties, labels, Cypher
+Vector databases and embeddings | embeddings, vector search, similarity search

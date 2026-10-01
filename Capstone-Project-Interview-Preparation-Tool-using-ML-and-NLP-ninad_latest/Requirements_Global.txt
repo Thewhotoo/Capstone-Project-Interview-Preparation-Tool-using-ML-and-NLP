@@ -1,0 +1,60 @@
+# Requirements for the whole project. Python 3.12 (tested on 3.12.10, Windows 11).
+#
+#   pip install -r Requirements_Global.txt
+#
+# PyTorch: the line below installs the default build from PyPI. On a machine
+# without an NVIDIA GPU, the smaller CPU-only build is enough to run the app:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+# then install this file. See SETUP_PREREQUISITES.md for everything else a new
+# machine needs (models, disk space, the evaluator weights file, browser, Ollama).
+#
+# Versions: lower bounds; the versions the project was last tested with are in
+# the comments.
+
+# ── Web app, accounts, database ──────────────────────────────────────────────
+flask>=3.0                      # 3.1.3
+flask-sqlalchemy>=3.1           # 3.1.1
+flask-migrate>=4.0              # 4.1.0 (brings alembic)
+flask-login>=0.6                # 0.6.3
+sqlalchemy>=2.0                 # 2.0.54
+python-dotenv>=1.0              # 1.2.3
+pydantic>=2.0                   # 2.13.5
+Pillow>=10.0                    # 12.3.0 — profile photos
+
+# ── Resume parsing (resume_engine, resume_classifier) ────────────────────────
+PyMuPDF>=1.24                   # 1.28.2 — PDF text and layout
+pdfplumber>=0.10                # 0.11.10
+pdfminer.six                    # 20260107
+python-docx>=1.1                # 1.2.0 — DOCX resumes
+lxml                            # 6.1.3
+rapidfuzz>=3.0                  # 3.14.6
+python-dateutil>=2.8            # 2.9.0.post0
+
+# ── Models: Round 1 evaluator, technical grader, embeddings ──────────────────
+torch>=2.2                      # 2.13.0 (see the CPU-only note above)
+transformers>=4.49              # 5.16.1
+sentence-transformers>=2.7      # 6.0.0
+huggingface-hub                 # 1.29.0
+sentencepiece>=0.1.99           # 0.2.2 — DeBERTa-v3 tokenizer
+protobuf>=4.24                  # 7.36.2 — DeBERTa-v3 tokenizer
+tiktoken>=0.4                   # 0.14.0
+keybert>=0.8                    # 0.9.0 — legacy v1 discussion engine (loaded lazily)
+numpy>=1.26                     # 2.5.2
+scikit-learn>=1.4               # 1.9.0
+
+# ── Slide pipeline and question-bank rebuild (offline only; not needed to run the app) ──
+faiss-cpu>=1.7.4                # 1.15.0
+rank-bm25>=0.2.2                # 0.2.2
+rapidocr-onnxruntime>=1.3       # 1.4.4 — OCR for image-only slides
+
+# ── Optional developer tooling (parser shadow mode, experiment scripts) ──────
+google-genai>=1.0               # 2.20.0 — only with GEMINI_API_KEY; the app never needs it
+
+# ── Tests ────────────────────────────────────────────────────────────────────
+pytest>=8.0                     # 8.4.2
+
+# ── Voice: speech-to-text, text-to-speech, tone + reading detection ──────────
+faster-whisper>=1.0             # local Whisper STT (word timestamps, VAD); models download on first use
+scipy>=1.11                     # prosody analysis (already pulled in by scikit-learn)
+pyttsx3>=2.90                   # offline TTS fallback (SAPI5 on Windows); optional
+piper-tts                     # optional neural offline TTS: set CAP_PIPER_MODEL=/path/voice.onnx

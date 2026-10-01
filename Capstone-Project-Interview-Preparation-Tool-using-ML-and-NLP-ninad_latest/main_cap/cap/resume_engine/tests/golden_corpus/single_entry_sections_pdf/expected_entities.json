@@ -1,0 +1,13 @@
+{
+  "contact": {
+    "entity_count": 1,
+    "expected_fields": {
+      "candidate_name": "Jordan Example",
+      "email": "jordan.example@test.invalid"
+    }
+  },
+  "projects": {
+    "entity_count": 0,
+    "notes": "Documented residual limitation -- see metadata.json. The single project entry is fragmented into an 'unknown' section instead of being parsed."
+  }
+}

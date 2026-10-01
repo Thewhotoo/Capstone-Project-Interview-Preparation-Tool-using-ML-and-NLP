@@ -1,0 +1,91 @@
+.venv/
+.vscode/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.DS_Store
+Thumbs.db
+**/__MACOSX/
+**/cache/
+*.log
+.env
+main_cap/cap/debug_candidate_profile*.json
+main_cap/cap/_verify_traceability_cache.json
+
+# --- ML experiment artifacts (generated, reproducible via run_experiment_*.py) ---
+main_cap/cap/artifacts/
+*.pt
+*.pth
+*.safetensors
+*.ckpt
+
+# --- ad hoc debug / dry-run output (not *.log, so not caught above) ---
+main_cap/cap/*dryrun*.txt
+main_cap/cap/*_log.txt
+main_cap/cap/*_log_*.txt
+main_cap/cap/experiment_1_smoketest.txt
+main_cap/cap/segfault_debug.txt
+main_cap/cap/async_load_test.txt
+main_cap/cap/experiment0_validation.txt
+
+# --- AI-assistant session-continuity notes (local only, not project docs) ---
+main_cap/cap/SESSION_HANDOFF.md
+
+# --- runtime-generated app state ---
+main_cap/cap/user_profiles/*.json
+
+# --- HybridEvaluator diagnostics (per-turn heuristic/trained comparison
+# log, for future retraining -- local accumulation, not a repo artifact) ---
+main_cap/cap/hybrid_diagnostics.jsonl
+
+# --- HuggingFace / torch model cache, if ever run locally ---
+.cache/
+**/*.hf_cache/
+
+# --- editor / OS cruft not already covered ---
+*.swp
+.idea/
+
+# Personal Claude session notes
+session_handover.md
+
+# --- deployed-model rollback snapshots (large binary checkpoint backups
+# taken before promoting a new checkpoint -- not reproducible from source,
+# not meant to live in git history) ---
+main_cap/cap/deployed_model_backup_*/
+# --- runtime data: SQLite database, uploaded resumes (PII), Flask secret key ---
+main_cap/cap/instance/
+# --- copyrighted textbook / slide sources for the RAG knowledge base (local only) ---
+rag_system/rag_tester/sources/
+rag_system/rag_tester/samples/*.pdf
+rag_system/rag_tester/.slide_cache/
+rag_system/rag_tester/.vision_cache/
+
+# --- local-only project history: backups, superseded docs, rollback copies ---
+archive/
+
+# --- slide-derived search indexes (contain slide/textbook text; rebuilt by
+# slide_rag from the local-only sources; not needed at runtime, where the
+# interview reads question_bank/) ---
+rag_system/rag_tester/knowledge_base/
+rag_system/rag_tester/knowledge_base_v2/
+
+# --- resumable caches of the offline question generation / enrichment ---
+rag_system/rag_tester/.qbank_cache/
+rag_system/rag_tester/.enrich_cache/
+
+# --- personal data: real resumes and their parsed outputs used for parser testing ---
+parser_tests/resumes/
+parser_tests/baseline/
+parser_tests/metadata/
+
+# --- teammate's training dataset (shared privately, not part of his public branch) ---
+integration_checks/data/overall_v5_1088/
+
+# --- exception: the deployed Round 1 evaluator weights ARE in the repo, via Git LFS
+# (see .gitattributes; clone with Git LFS installed or you get a small pointer file) ---
+!main_cap/cap/deployed_model_overall_single_v5_1088/best_checkpoint_weights.pt

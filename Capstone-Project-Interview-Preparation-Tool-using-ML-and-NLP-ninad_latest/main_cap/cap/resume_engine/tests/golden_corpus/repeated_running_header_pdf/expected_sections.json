@@ -1,0 +1,7 @@
+{
+  "expected_labels_in_order": ["contact", "experience", "unknown"],
+  "min_confidence_by_label": {
+    "experience": 0.85
+  },
+  "notes": "Asserts CURRENT (known-flawed) behavior -- see metadata.json known_edge_cases. The 'unknown' entry is the spurious page-2 running-header section that incorrectly fragments Experience's continuation. This is a locked-in regression target, not a statement that this behavior is correct."
+}

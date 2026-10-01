@@ -1,0 +1,13 @@
+{
+  "fixture_id": "ragged_single_column_pdf",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "hard",
+  "known_edge_cases": [
+    "single-column body text with realistic left-edge variance (occasional bullet indentation), no real column gap",
+    "the false-positive guard named in architecture doc Section 4.2 -- must not be misread as two_column"
+  ],
+  "notes": "Direct regression fixture for Section 4.2's named risk: 'a resume with a single ragged-right paragraph misread as two columns.'",
+  "added_in_milestone": 1
+}

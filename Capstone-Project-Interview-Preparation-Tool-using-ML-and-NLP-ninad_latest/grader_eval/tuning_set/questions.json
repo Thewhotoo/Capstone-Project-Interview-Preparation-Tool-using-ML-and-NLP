@@ -1,0 +1,321 @@
+[
+  {
+    "question_id": "cn.link_state_routing.easy1",
+    "subject": "Computer Networks",
+    "topic": "Link state routing",
+    "difficulty": "easy",
+    "question": "Explain what a link-state routing algorithm is and how it differs from other routing methods.",
+    "reference_answer": "A link-state routing algorithm is a centralized method where all nodes share the same network topology and link costs. This allows each node to compute the least-cost paths to all other nodes independently. Unlike distance-vector routing, link-state routing ensures all nodes have identical information about the network, enabling accurate and consistent path calculations.",
+    "key_points": [
+      "A link-state routing algorithm is centralized.",
+      "Each node computes the least-cost paths to all other nodes."
+    ]
+  },
+  {
+    "question_id": "cn.firewalls.medium1",
+    "subject": "Computer Networks",
+    "topic": "Firewalls",
+    "difficulty": "medium",
+    "question": "Explain how a firewall enforces security rules at different layers of the network stack, and why this matters for network security.",
+    "reference_answer": "A firewall monitors incoming and outgoing network traffic and decides whether to allow or block specific traffic based on a defined set of security rules. It can be used in the transport layer or the application layer, which means it can inspect data at different levels of detail. Using it at the transport layer allows it to make decisions based on port numbers, while at the application layer it can inspect the actual content of the data. This matters for network security because inspecting at a higher layer allows for more precise control over the types of traffic that are allowed or blocked.",
+    "key_points": [
+      "Firewalls can operate at different layers of the network stack.",
+      "Firewalls make decisions based on a defined set of security rules.",
+      "Operating at different layers affects the level of detail the firewall can inspect."
+    ]
+  },
+  {
+    "question_id": "cn.cidr.medium1",
+    "subject": "Computer Networks",
+    "topic": "CIDR",
+    "difficulty": "medium",
+    "question": "Explain how CIDR allows for more efficient allocation of IP addresses compared to traditional class-based addressing.",
+    "reference_answer": "CIDR allows for more efficient allocation of IP addresses by enabling variable-length subnet masks, which means the subnet portion of an address can be of arbitrary length. This flexibility reduces the number of wasted IP addresses that were common with class-based addressing.",
+    "key_points": [
+      "CIDR allows for variable-length subnet masks.",
+      "CIDR addresses are written in the format a.b.c.d/x."
+    ]
+  },
+  {
+    "question_id": "cn.persistent_vs_non_persistent_http.medium1",
+    "subject": "Computer Networks",
+    "topic": "Persistent vs non-persistent HTTP",
+    "difficulty": "medium",
+    "question": "Explain how persistent HTTP improves the response time for downloading multiple objects compared to non-persistent HTTP.",
+    "reference_answer": "Persistent HTTP improves response time by reusing a single TCP connection for multiple objects, reducing the number of round trips needed. In non-persistent HTTP, each object requires a new TCP connection, which adds two RTTs per object. Persistent HTTP allows multiple objects to be sent over a single TCP connection, reducing the total number of RTTs and improving efficiency.",
+    "key_points": [
+      "Persistent HTTP reuses a single TCP connection for multiple objects.",
+      "Non-persistent HTTP requires two RTTs per object."
+    ]
+  },
+  {
+    "question_id": "cn.arp.hard2",
+    "subject": "Computer Networks",
+    "topic": "ARP",
+    "difficulty": "hard",
+    "question": "What happens if a device tries to send a packet to another device on the same LAN, but the target device’s MAC address is not in the sender’s ARP table, and the sender has no prior knowledge of the target’s IP address?",
+    "reference_answer": "The sender will broadcast an ARP query to all devices on the LAN to request the MAC address of the target device. This ARP query includes the target’s IP address and is sent to the broadcast MAC address FF-FF-FF-FF-FF-FF. The target device, upon receiving the ARP query, will respond with its MAC address in an ARP reply. The sender then adds this IP-to-MAC mapping to its ARP table with a Time To Live (TTL) value, ensuring the entry is valid for a limited period.",
+    "key_points": [
+      "The sender broadcasts an ARP query to the broadcast MAC address.",
+      "The ARP query includes the target’s IP address.",
+      "The target device responds with its MAC address in an ARP reply.",
+      "The sender adds the IP-to-MAC mapping to its ARP table with a TTL."
+    ]
+  },
+  {
+    "question_id": "dbms.stored_procedures_and_functions.easy1",
+    "subject": "DBMS",
+    "topic": "Stored procedures and functions",
+    "difficulty": "easy",
+    "question": "Explain what a stored procedure is and why it is useful in a database system.",
+    "reference_answer": "A stored procedure is a collection of pre-compiled SQL statements stored inside the database. It is useful because it allows a database program to be stored at the server and invoked by any application program, reducing duplication of effort and improving software modularity. It also reduces data transfer and communication cost between the client and server in certain situations.",
+    "key_points": [
+      "A stored procedure is a collection of pre-compiled SQL statements stored inside the database.",
+      "Stored procedures reduce duplication of effort and improve software modularity.",
+      "Stored procedures can reduce data transfer and communication cost between the client and server."
+    ]
+  },
+  {
+    "question_id": "dbms.window_functions.medium2",
+    "subject": "DBMS",
+    "topic": "Window functions",
+    "difficulty": "medium",
+    "question": "How do ranking window functions like RANK(), DENSE_RANK(), and ROW_NUMBER() differ in their behavior when there are ties in the data?",
+    "reference_answer": "Ranking window functions like RANK(), DENSE_RANK(), and ROW_NUMBER() differ in how they handle ties. RANK() assigns the same rank to tied rows and skips the next rank, as stated: 'Ties (equal values) get the same rank, and the next rank is skipped.' DENSE_RANK() also assigns the same rank to tied rows, but it does not skip the next rank, as noted: 'No ranks are skipped (this is the main difference from RANK()).' ROW_NUMBER() assigns unique sequential numbers to each row, regardless of ties, as explained: 'Unlike RANK() or DENSE_RANK(), there are no ties → every row gets its own distinct number, even if values are equal.'",
+    "key_points": [
+      "RANK() skips the next rank after ties.",
+      "DENSE_RANK() does not skip ranks after ties.",
+      "ROW_NUMBER() assigns unique ranks to all rows, even with ties."
+    ]
+  },
+  {
+    "question_id": "dbms.update_anomalies.medium2",
+    "subject": "DBMS",
+    "topic": "Update anomalies",
+    "difficulty": "medium",
+    "question": "Explain how update anomalies can occur in a database schema and why they are problematic.",
+    "reference_answer": "Update anomalies occur when redundant data is stored in multiple places, and an update in one place is not reflected in all others, leading to inconsistent data. This is problematic because it can result in loss of essential information or incorrect data. For example, changing an instructor’s name in one record without updating all related records can cause inconsistencies.",
+    "key_points": [
+      "Update anomalies occur when redundant data is stored in multiple places.",
+      "Update anomalies result in inconsistent data.",
+      "Update anomalies are a consequence of poor schema design."
+    ]
+  },
+  {
+    "question_id": "dbms.aggregate_functions_and_group_by.medium2",
+    "subject": "DBMS",
+    "topic": "Aggregate functions and GROUP BY",
+    "difficulty": "medium",
+    "question": "Explain how the GROUP BY clause interacts with aggregate functions in SQL queries, and why it is necessary to include grouping attributes in the SELECT clause.",
+    "reference_answer": "The GROUP BY clause partitions a relation into groups based on the values of one or more attributes. Each group is then processed independently by aggregate functions, which compute summary values for each group. It is necessary to include grouping attributes in the SELECT clause because these attributes define the groups, and the result must reflect the grouping structure. Without them, the output would not clearly associate the summary values with the correct group.",
+    "key_points": [
+      "The GROUP BY clause partitions a relation into groups based on the values of one or more attributes.",
+      "Each group is processed independently by aggregate functions, which compute summary values for each group.",
+      "It is necessary to include grouping attributes in the SELECT clause because these attributes define the groups."
+    ]
+  },
+  {
+    "question_id": "dbms.isolation_levels.hard2",
+    "subject": "DBMS",
+    "topic": "Isolation levels",
+    "difficulty": "hard",
+    "question": "How does the SERIALIZABLE isolation level address the phantom record problem compared to REPEATABLE READ?",
+    "reference_answer": "The SERIALIZABLE isolation level guarantees complete isolation from other transactions, which means it avoids all three problems, including the phantom record problem. In contrast, REPEATABLE READ does not prevent the phantom record problem. The phantom record problem occurs when a transaction T1 reads a set of rows, and another transaction T2 inserts a new row that satisfies T1's WHERE clause. If the system cannot ensure the correct behavior, the phantom record may or may not be seen by T1. SERIALIZABLE ensures that the phantom record is not seen if the equivalent serial order is T1 followed by T2.",
+    "key_points": [
+      "SERIALIZABLE guarantees complete isolation from other transactions.",
+      "The phantom record problem occurs when a transaction T1 reads a set of rows, and another transaction T3 inserts a new row that satisfies T1's WHERE clause.",
+      "REPEATABLE READ does not prevent the phantom record problem."
+    ]
+  },
+  {
+    "question_id": "dsa.expression_trees.easy1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Expression trees",
+    "difficulty": "easy",
+    "question": "Explain what an expression tree is and how it represents an arithmetic expression.",
+    "reference_answer": "An expression tree is a data structure that represents an arithmetic expression in a hierarchical form. It is built to translate code as data and then analyze and evaluate expressions. The tree is constructed such that operands are leaves and operators are internal nodes, with each operator connecting to its operands as children.",
+    "key_points": [
+      "An expression tree is a data structure that represents an arithmetic expression in a hierarchical form.",
+      "The tree is constructed such that operands are leaves and operators are internal nodes.",
+      "Each operator connects to its operands as children."
+    ]
+  },
+  {
+    "question_id": "dsa.graph_terminology.medium1",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Graph terminology",
+    "difficulty": "medium",
+    "question": "Explain how the directionality of edges affects the classification of a graph as directed or undirected, and how this relates to the concept of weighted graphs.",
+    "reference_answer": "The directionality of edges determines whether a graph is directed or undirected. In a directed graph, edges have a specific direction, meaning the relationship between vertices is one-way. In contrast, an undirected graph has edges that are unordered, meaning the relationship is mutual. Weighted graphs are a separate classification, where each edge has a numerical value, but this does not affect whether the graph is directed or undirected. A graph can be both directed and weighted, or undirected and weighted, depending on its definition.",
+    "key_points": [
+      "The directionality of edges determines whether a graph is directed or undirected.",
+      "In a directed graph, edges have a specific direction, meaning the relationship between vertices is one-way.",
+      "Weighted graphs are a separate classification, where each edge has a numerical value, but this does not affect whether the graph is directed or undirected."
+    ]
+  },
+  {
+    "question_id": "dsa.iterative_tree_traversals.medium2",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Iterative tree traversals",
+    "difficulty": "medium",
+    "question": "Explain how the iterative postorder traversal handles the order of processing nodes using the code provided.",
+    "reference_answer": "The iterative postorder traversal uses two stacks to simulate the recursive process. The first stack (s1) is used to process nodes by pushing them onto the second stack (s2) in reverse order. This ensures that nodes are printed in the correct postorder sequence—left, right, then root. The second stack (s2) stores nodes in the order they should be printed, and the traversal continues until s1 is empty.",
+    "key_points": [
+      "The iterative postorder traversal uses two stacks to simulate the recursive process.",
+      "The second stack (s2) stores nodes in the order they should be printed."
+    ]
+  },
+  {
+    "question_id": "dsa.postfix_expression_evaluation.medium2",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Postfix expression evaluation",
+    "difficulty": "medium",
+    "question": "Explain how the postfix expression evaluation algorithm ensures that operators are applied to the correct operands.",
+    "reference_answer": "The postfix expression evaluation algorithm ensures that operators are applied to the correct operands by using a stack to store operands as they are read. When an operator is encountered, the top two elements from the stack are popped, and the operator is applied to these two operands. This ensures that each operator always acts on the most recent two operands, which is a key property of postfix notation.",
+    "key_points": [
+      "Each operator in a postfix string refers to the previous two operands.",
+      "When an operator is reached, its operands will be the top two elements on the stack.",
+      "The two elements are popped out, the indicated operation is performed on them and result is pushed on the stack so that it will be available for use as an operand of the next operator."
+    ]
+  },
+  {
+    "question_id": "dsa.binary_tree_properties.hard2",
+    "subject": "Data Structures & Algorithms",
+    "topic": "Binary tree properties",
+    "difficulty": "hard",
+    "question": "Consider a complete binary tree. How does the structure of the tree ensure that the number of nodes at the last level is always odd, and what does this imply about the relationship between the depth and the number of nodes?",
+    "reference_answer": "In a complete binary tree, the structure ensures that any node at level less than d-1 has two children, and for nodes with a right descendent at level d, they must have a left child and all left descendants are either leaves or have two children. This implies that the last level has an odd number of nodes because the tree fills the left side completely before the right. This also means that the depth of the tree is directly related to the number of nodes, as the last level contains the remaining nodes after filling all previous levels completely.",
+    "key_points": [
+      "A complete binary tree ensures that any node at level less than d-1 has two children.",
+      "For nodes with a right descendent at level d, they must have a left child and all left descendants are either leaves or have two children.",
+      "The last level of a complete binary tree has an odd number of nodes."
+    ]
+  },
+  {
+    "question_id": "ooad.is_a_vs_has_a_relationship.easy1",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "IS-A vs HAS-A relationship",
+    "difficulty": "easy",
+    "question": "What is the difference between an 'is-a' relationship and a 'has-a' relationship in object-oriented design?",
+    "reference_answer": "An 'is-a' relationship is implemented using inheritance and represents a type-of relationship, such as a 'Dog' being a type of 'Animal'. A 'has-a' relationship is implemented using composition and represents a part-of relationship, such as a 'University' having a 'College'. The 'is-a' relationship defines a hierarchy, while the 'has-a' relationship defines containment and dependency.",
+    "key_points": [
+      "Inheritance is used to implement the 'is-a' relationship.",
+      "Composition is used to implement the 'has-a' relationship.",
+      "The 'has-a' relationship allows for more flexible design and easier modification."
+    ]
+  },
+  {
+    "question_id": "ooad.builder_pattern.medium2",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Builder pattern",
+    "difficulty": "medium",
+    "question": "Explain how the Builder pattern allows a class to delegate object creation to a builder, and why this is useful for creating different representations of a complex object.",
+    "reference_answer": "The Builder pattern allows a class to delegate object creation to a builder by encapsulating the construction process in a separate object. This means the class does not need to handle the complex logic of assembling parts. Instead, it can use different builders to create different representations of the same complex object, which simplifies the class and enhances flexibility.",
+    "key_points": [
+      "The Builder pattern allows a class to delegate object creation to a builder.",
+      "The Builder pattern encapsulates the construction process in a separate object.",
+      "Using different builders allows for different representations of the same complex object."
+    ]
+  },
+  {
+    "question_id": "ooad.abstract_class_vs_interface.medium1",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Abstract class vs interface",
+    "difficulty": "medium",
+    "question": "Explain the difference between an abstract class and an interface in terms of their use for abstraction and inheritance.",
+    "reference_answer": "An abstract class provides partial abstraction by allowing both abstract and concrete methods, while an interface provides full abstraction by only containing abstract methods (and later, default/static methods). An abstract class can be inherited by a class, but a class can only implement multiple interfaces. This makes interfaces more flexible for defining behavior that can be shared across unrelated classes.",
+    "key_points": [
+      "Abstract classes can have both abstract and concrete methods, while interfaces (before Java 8) only had abstract methods.",
+      "An interface represents what an object can do, while a class represents what an object is.",
+      "A class can implement multiple interfaces, but cannot extend multiple classes."
+    ]
+  },
+  {
+    "question_id": "ooad.model_view_controller.medium2",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Model-View-Controller",
+    "difficulty": "medium",
+    "question": "How does the Model-View-Controller pattern help in separating the user interface from the application logic, and what are the implications of this separation?",
+    "reference_answer": "The Model-View-Controller pattern helps in separating the user interface from the application logic by dividing the application into three distinct components: model, view, and controller. This separation ensures that the graphical interface displayed to the user is completely decoupled from the code that manages user actions. As a result, changes in the user interface do not directly affect the business logic or data handling, making the system more maintainable and scalable.",
+    "key_points": [
+      "The pattern ensures the graphical interface is decoupled from the code that manages user actions.",
+      "The controller acts as an intermediary between the model and the view."
+    ]
+  },
+  {
+    "question_id": "ooad.design_pattern_categories.hard2",
+    "subject": "Object-Oriented Analysis & Design",
+    "topic": "Design pattern categories",
+    "difficulty": "hard",
+    "question": "What are the implications of grouping design patterns into the three categories—creational, structural, and behavioral—and how does this grouping affect the way we think about object-oriented design?",
+    "reference_answer": "Grouping design patterns into these three categories helps us understand the primary focus of each pattern. Structural patterns deal primarily with the static composition and structure of classes and objects. Behavioral patterns deal primarily with dynamic interaction among classes and objects. This categorization allows us to think about design problems in terms of creation, structure, and interaction, which are core aspects of object-oriented design.",
+    "key_points": [
+      "Creational patterns deal with the process of object creation.",
+      "Structural patterns deal primarily with the static composition and structure of classes and objects.",
+      "Behavioral patterns deal primarily with dynamic interaction among classes and objects."
+    ]
+  },
+  {
+    "question_id": "os.logical_vs_physical_address.easy1",
+    "subject": "Operating Systems",
+    "topic": "Logical vs physical address",
+    "difficulty": "easy",
+    "question": "Explain the difference between a logical address and a physical address.",
+    "reference_answer": "A logical address is generated by the CPU and is also called a virtual address. A physical address is the address seen by the memory unit. Logical and physical addresses are the same in compile-time and load-time address-binding schemes, but differ in execution-time address-binding schemes.",
+    "key_points": [
+      "Logical address is generated by the CPU and is also called a virtual address.",
+      "Physical address is the address seen by the memory unit.",
+      "Logical and physical addresses are the same in compile-time and load-time address-binding schemes."
+    ]
+  },
+  {
+    "question_id": "os.deadlock_prevention.medium1",
+    "subject": "Operating Systems",
+    "topic": "Deadlock prevention",
+    "difficulty": "medium",
+    "question": "Explain how the 'circular wait' condition can be prevented in a system with multiple processes and shared resources.",
+    "reference_answer": "The circular wait condition can be prevented by assigning a numerical number to each resource and requiring that processes request resources in increasing order of numbering. This ensures that a cycle of waiting cannot form. By enforcing this ordering, the system can avoid the circular wait condition, which is one of the four necessary conditions for deadlock.",
+    "key_points": [
+      "Processes must request resources in increasing order of their assigned numerical numbers.",
+      "This is one of the four conditions that must be violated to prevent deadlock."
+    ]
+  },
+  {
+    "question_id": "os.context_switching.medium1",
+    "subject": "Operating Systems",
+    "topic": "Context switching",
+    "difficulty": "medium",
+    "question": "Explain how context switching affects the performance of a process in a round-robin scheduling system, and why the choice of time quantum is important.",
+    "reference_answer": "Context switching introduces overhead that can slow down process execution, especially when the time quantum is small. A smaller quantum leads to more frequent context switches, which increases the total execution time. However, a larger quantum may reduce context switches but could lead to longer waiting times for processes. The choice of time quantum is a trade-off between minimizing context-switch overhead and ensuring fair CPU allocation among processes.",
+    "key_points": [
+      "The time quantum directly influences the number of context switches.",
+      "Context switch time is a small fraction of the time quantum in modern systems.",
+      "Context switching can be costly if it involves swapping processes in and out of memory."
+    ]
+  },
+  {
+    "question_id": "os.banker_s_algorithm.medium1",
+    "subject": "Operating Systems",
+    "topic": "Banker's algorithm",
+    "difficulty": "medium",
+    "question": "Explain how the Banker’s algorithm ensures that a system remains in a safe state when allocating resources to processes.",
+    "reference_answer": "The Banker’s algorithm ensures a safe state by simulating resource allocation and checking if there exists a sequence of process completions that allows all processes to finish. It uses the Work and Finish vectors to determine if a process can be safely allocated resources without leading to a deadlock. If a process can be allocated resources and still leave the system in a safe state, it is granted the resources, otherwise, it must wait.",
+    "key_points": [
+      "The algorithm uses the Work vector to represent the available resources after allocation.",
+      "The algorithm ensures that all processes can eventually complete by checking if all Finish[i] are true."
+    ]
+  },
+  {
+    "question_id": "os.hardware_synchronization.hard2",
+    "subject": "Operating Systems",
+    "topic": "Hardware synchronization",
+    "difficulty": "hard",
+    "question": "Explain how the test_and_set instruction ensures mutual exclusion in a multi-process environment, and what happens if two processes attempt to acquire the lock simultaneously.",
+    "reference_answer": "The test_and_set instruction ensures mutual exclusion by atomically reading and writing to a shared memory location. When a process executes test_and_set, it reads the current value and sets it to TRUE, preventing other processes from acquiring the lock until this operation completes. If two processes attempt to acquire the lock simultaneously, the second process will detect that the lock is already held and will be blocked until the first process releases it.",
+    "key_points": [
+      "The test_and_set instruction ensures mutual exclusion by atomically reading and writing to a shared memory location.",
+      "The test_and_set instruction prevents other processes from acquiring the lock until the operation completes.",
+      "The test_and_set instruction returns the original value of the memory location before it is set to TRUE."
+    ]
+  }
+]

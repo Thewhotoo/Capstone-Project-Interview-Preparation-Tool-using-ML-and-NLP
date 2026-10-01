@@ -1,0 +1,412 @@
+{
+ "evaluator": "averaged-heuristic-v1+overall-single-deberta_v3_base_overall_single_v5_1088_epoch8",
+ "seconds": 10.8,
+ "rows": [
+  {
+   "example_id": "v4_diag_rel1_a",
+   "score": 0.691,
+   "grade": "adequate",
+   "heuristic_overall": 0.631,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_rel1_b",
+   "score": 0.789,
+   "grade": "good",
+   "heuristic_overall": 0.828,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_rel2_a",
+   "score": 0.759,
+   "grade": "good",
+   "heuristic_overall": 0.768,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_rel2_b",
+   "score": 0.794,
+   "grade": "good",
+   "heuristic_overall": 0.588,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_rel3_a",
+   "score": 0.811,
+   "grade": "good",
+   "heuristic_overall": 0.873,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_rel3_b",
+   "score": 0.801,
+   "grade": "good",
+   "heuristic_overall": 0.853,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_rel4_a",
+   "score": 0.681,
+   "grade": "adequate",
+   "heuristic_overall": 0.863,
+   "model_overall": 0.5
+  },
+  {
+   "example_id": "v4_diag_rel4_b",
+   "score": 0.946,
+   "grade": "excellent",
+   "heuristic_overall": 0.891,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_rel5_a",
+   "score": 0.688,
+   "grade": "adequate",
+   "heuristic_overall": 0.875,
+   "model_overall": 0.5
+  },
+  {
+   "example_id": "v4_diag_rel5_b",
+   "score": 0.696,
+   "grade": "adequate",
+   "heuristic_overall": 0.891,
+   "model_overall": 0.5
+  },
+  {
+   "example_id": "v4_diag_rel6_a",
+   "score": 0.492,
+   "grade": "weak",
+   "heuristic_overall": 0.234,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_rel6_b",
+   "score": 0.798,
+   "grade": "good",
+   "heuristic_overall": 0.596,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_rel7_a",
+   "score": 0.456,
+   "grade": "weak",
+   "heuristic_overall": 0.412,
+   "model_overall": 0.5
+  },
+  {
+   "example_id": "v4_diag_rel7_b",
+   "score": 0.728,
+   "grade": "adequate",
+   "heuristic_overall": 0.707,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_rel8_a",
+   "score": 0.696,
+   "grade": "adequate",
+   "heuristic_overall": 0.891,
+   "model_overall": 0.5
+  },
+  {
+   "example_id": "v4_diag_rel8_b",
+   "score": 0.946,
+   "grade": "excellent",
+   "heuristic_overall": 0.891,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_mp1_a",
+   "score": 0.828,
+   "grade": "good",
+   "heuristic_overall": 0.906,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_mp1_b",
+   "score": 0.824,
+   "grade": "good",
+   "heuristic_overall": 0.897,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_mp1_c",
+   "score": 0.382,
+   "grade": "weak",
+   "heuristic_overall": 0.514,
+   "model_overall": 0.25
+  },
+  {
+   "example_id": "v4_diag_mp2_a",
+   "score": 0.944,
+   "grade": "excellent",
+   "heuristic_overall": 0.887,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_mp2_b",
+   "score": 0.931,
+   "grade": "excellent",
+   "heuristic_overall": 0.863,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_mp2_c",
+   "score": 0.547,
+   "grade": "weak",
+   "heuristic_overall": 0.845,
+   "model_overall": 0.25
+  },
+  {
+   "example_id": "v4_diag_mp3_a",
+   "score": 0.95,
+   "grade": "excellent",
+   "heuristic_overall": 0.9,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_mp3_b",
+   "score": 0.837,
+   "grade": "good",
+   "heuristic_overall": 0.924,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_mp3_c",
+   "score": 0.417,
+   "grade": "weak",
+   "heuristic_overall": 0.834,
+   "model_overall": 0.0
+  },
+  {
+   "example_id": "v4_diag_tc1_a",
+   "score": 0.797,
+   "grade": "good",
+   "heuristic_overall": 0.844,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_tc1_b",
+   "score": 0.952,
+   "grade": "excellent",
+   "heuristic_overall": 0.903,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_tc1_c",
+   "score": 0.823,
+   "grade": "good",
+   "heuristic_overall": 0.895,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_tc1_d",
+   "score": 0.458,
+   "grade": "weak",
+   "heuristic_overall": 0.665,
+   "model_overall": 0.25
+  },
+  {
+   "example_id": "v4_diag_tc2_a",
+   "score": 0.702,
+   "grade": "adequate",
+   "heuristic_overall": 0.653,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_tc2_b",
+   "score": 0.931,
+   "grade": "excellent",
+   "heuristic_overall": 0.863,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_tc2_c",
+   "score": 0.58,
+   "grade": "adequate",
+   "heuristic_overall": 0.66,
+   "model_overall": 0.5
+  },
+  {
+   "example_id": "v4_diag_tc2_d",
+   "score": 0.569,
+   "grade": "adequate",
+   "heuristic_overall": 0.888,
+   "model_overall": 0.25
+  },
+  {
+   "example_id": "v4_diag_tc3_a",
+   "score": 0.639,
+   "grade": "adequate",
+   "heuristic_overall": 0.778,
+   "model_overall": 0.5
+  },
+  {
+   "example_id": "v4_diag_tc3_b",
+   "score": 0.931,
+   "grade": "excellent",
+   "heuristic_overall": 0.863,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_tc3_c",
+   "score": 0.556,
+   "grade": "adequate",
+   "heuristic_overall": 0.863,
+   "model_overall": 0.25
+  },
+  {
+   "example_id": "v4_diag_tc3_d",
+   "score": 0.681,
+   "grade": "adequate",
+   "heuristic_overall": 0.863,
+   "model_overall": 0.5
+  },
+  {
+   "example_id": "v4_diag_dep1_a",
+   "score": 0.394,
+   "grade": "weak",
+   "heuristic_overall": 0.537,
+   "model_overall": 0.25
+  },
+  {
+   "example_id": "v4_diag_dep1_b",
+   "score": 0.647,
+   "grade": "adequate",
+   "heuristic_overall": 0.794,
+   "model_overall": 0.5
+  },
+  {
+   "example_id": "v4_diag_dep1_c",
+   "score": 0.825,
+   "grade": "good",
+   "heuristic_overall": 0.9,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_dep2_a",
+   "score": 0.287,
+   "grade": "poor",
+   "heuristic_overall": 0.575,
+   "model_overall": 0.0
+  },
+  {
+   "example_id": "v4_diag_dep2_b",
+   "score": 0.889,
+   "grade": "good",
+   "heuristic_overall": 0.779,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_dep2_c",
+   "score": 0.98,
+   "grade": "excellent",
+   "heuristic_overall": 0.959,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_grd1_a",
+   "score": 0.556,
+   "grade": "adequate",
+   "heuristic_overall": 0.863,
+   "model_overall": 0.25
+  },
+  {
+   "example_id": "v4_diag_grd1_b",
+   "score": 0.653,
+   "grade": "adequate",
+   "heuristic_overall": 0.806,
+   "model_overall": 0.5
+  },
+  {
+   "example_id": "v4_diag_grd1_c",
+   "score": 0.946,
+   "grade": "excellent",
+   "heuristic_overall": 0.891,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_grd1_d",
+   "score": 0.431,
+   "grade": "weak",
+   "heuristic_overall": 0.863,
+   "model_overall": 0.0
+  },
+  {
+   "example_id": "v4_diag_grd1_e",
+   "score": 0.95,
+   "grade": "excellent",
+   "heuristic_overall": 0.9,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_grd2_a",
+   "score": 0.684,
+   "grade": "adequate",
+   "heuristic_overall": 0.869,
+   "model_overall": 0.5
+  },
+  {
+   "example_id": "v4_diag_grd2_b",
+   "score": 0.811,
+   "grade": "good",
+   "heuristic_overall": 0.872,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_grd2_c",
+   "score": 0.825,
+   "grade": "good",
+   "heuristic_overall": 0.9,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_grd2_d",
+   "score": 0.336,
+   "grade": "weak",
+   "heuristic_overall": 0.421,
+   "model_overall": 0.25
+  },
+  {
+   "example_id": "v4_diag_xd1_a",
+   "score": 0.523,
+   "grade": "weak",
+   "heuristic_overall": 0.297,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_xd1_b",
+   "score": 0.792,
+   "grade": "good",
+   "heuristic_overall": 0.834,
+   "model_overall": 0.75
+  },
+  {
+   "example_id": "v4_diag_xd1_c",
+   "score": 0.917,
+   "grade": "excellent",
+   "heuristic_overall": 0.834,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_xd2_a",
+   "score": 0.934,
+   "grade": "excellent",
+   "heuristic_overall": 0.869,
+   "model_overall": 1.0
+  },
+  {
+   "example_id": "v4_diag_xd2_b",
+   "score": 0.699,
+   "grade": "adequate",
+   "heuristic_overall": 0.897,
+   "model_overall": 0.5
+  },
+  {
+   "example_id": "v4_diag_xd2_c",
+   "score": 0.795,
+   "grade": "good",
+   "heuristic_overall": 0.841,
+   "model_overall": 0.75
+  }
+ ]
+}

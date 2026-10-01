@@ -1,0 +1,137 @@
+{
+  "source_dataset_version": "v_experiment_2_scaled_library",
+  "dataset_version": "v_experiment_3_relabeled_dimensions",
+  "total_examples": 2479,
+  "examples_with_changed_scores": 2340,
+  "total_score_changes": 4675,
+  "changes_by_dimension": {
+    "architecture": 398,
+    "communication": 1187,
+    "completeness": 2315,
+    "ownership": 392,
+    "testing": 188,
+    "tradeoffs": 195
+  },
+  "sample_changes": [
+    {
+      "example_id": "train_2fa5dc0c0a194846",
+      "dimension": "completeness",
+      "old_score": 0.7,
+      "new_score": 0.9
+    },
+    {
+      "example_id": "train_c31d402292e44ae5",
+      "dimension": "communication",
+      "old_score": 0.5,
+      "new_score": 0.269
+    },
+    {
+      "example_id": "train_c31d402292e44ae5",
+      "dimension": "completeness",
+      "old_score": 0.5,
+      "new_score": 0.7
+    },
+    {
+      "example_id": "train_ddd4aaf791274380",
+      "dimension": "communication",
+      "old_score": 0.12,
+      "new_score": 0.026759999999999996
+    },
+    {
+      "example_id": "train_ddd4aaf791274380",
+      "dimension": "completeness",
+      "old_score": 0.12,
+      "new_score": 0.0
+    },
+    {
+      "example_id": "train_ddd4aaf791274380",
+      "dimension": "testing",
+      "old_score": 0.12,
+      "new_score": 0.006600000000000006
+    },
+    {
+      "example_id": "train_664ab858167743a9",
+      "dimension": "completeness",
+      "old_score": 0.7,
+      "new_score": 0.9033333333333333
+    },
+    {
+      "example_id": "train_824160dc91904118",
+      "dimension": "communication",
+      "old_score": 0.3,
+      "new_score": 0.1488
+    },
+    {
+      "example_id": "train_824160dc91904118",
+      "dimension": "completeness",
+      "old_score": 0.3,
+      "new_score": 0.4725
+    },
+    {
+      "example_id": "train_824160dc91904118",
+      "dimension": "ownership",
+      "old_score": 0.3,
+      "new_score": 0.059999999999999984
+    },
+    {
+      "example_id": "train_4dbfb5a775c84374",
+      "dimension": "completeness",
+      "old_score": 0.9,
+      "new_score": 1.0
+    },
+    {
+      "example_id": "train_6bd53dd7a73d42de",
+      "dimension": "completeness",
+      "old_score": 0.7,
+      "new_score": 1.0
+    },
+    {
+      "example_id": "train_f3bebb3602014184",
+      "dimension": "architecture",
+      "old_score": 0.5,
+      "new_score": 0.274
+    },
+    {
+      "example_id": "train_f3bebb3602014184",
+      "dimension": "completeness",
+      "old_score": 0.5,
+      "new_score": 0.8
+    },
+    {
+      "example_id": "train_942ce87e56da42ba",
+      "dimension": "communication",
+      "old_score": 0.7,
+      "new_score": 0.4501
+    },
+    {
+      "example_id": "train_942ce87e56da42ba",
+      "dimension": "completeness",
+      "old_score": 0.7,
+      "new_score": 0.6666666666666666
+    },
+    {
+      "example_id": "train_6ddf2e140ef44e41",
+      "dimension": "completeness",
+      "old_score": 0.9,
+      "new_score": 1.0
+    },
+    {
+      "example_id": "train_e28513606a594e60",
+      "dimension": "communication",
+      "old_score": 0.3,
+      "new_score": 0.06659999999999999
+    },
+    {
+      "example_id": "train_e28513606a594e60",
+      "dimension": "completeness",
+      "old_score": 0.3,
+      "new_score": 0.41483333333333333
+    },
+    {
+      "example_id": "train_e28513606a594e60",
+      "dimension": "ownership",
+      "old_score": 0.3,
+      "new_score": 0.0792
+    }
+  ]
+}

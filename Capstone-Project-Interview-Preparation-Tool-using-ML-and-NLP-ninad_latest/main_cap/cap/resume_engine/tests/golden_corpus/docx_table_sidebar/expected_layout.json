@@ -1,0 +1,7 @@
+{
+  "layout_mode": "two_column",
+  "layout_confidence_min": 0.55,
+  "span_count_min": 5,
+  "hyperlink_count": 0,
+  "extraction_notes_contains": "docx_table_layout_detected:2_columns"
+}

@@ -1,0 +1,12 @@
+{
+  "fixture_id": "single_column_pdf",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "easy",
+  "known_edge_cases": [
+    "clean single-column PDF with a name banner, contact line, and two labeled sections"
+  ],
+  "notes": "Baseline regression fixture for Document Extraction + Layout Reconstruction on the common, unambiguous case.",
+  "added_in_milestone": 1
+}

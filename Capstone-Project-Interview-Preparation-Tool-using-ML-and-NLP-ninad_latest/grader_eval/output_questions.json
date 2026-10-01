@@ -1,0 +1,4298 @@
+[
+  {
+    "question_id": "cn.tcp_connection_establishment.medium2",
+    "style": "good_paraphrase",
+    "answer": "With a three-way handshake the client sends SYN, the server replies with SYN-ACK, and the client sends a final ACK, so each side has sent its own request and seen the other side acknowledge it. That's how both ends know the other one actually agreed to the connection, and they've also swapped their initial sequence numbers. With only two messages, the server would never find out whether its reply reached the client, so it could end up holding open a connection the client doesn't know about, for example because of an old, delayed SYN.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.tcp_connection_establishment.medium2",
+    "style": "partial",
+    "answer": "TCP uses SYN, SYN-ACK and ACK so that both the client and the server agree to open the connection and set up their sequence numbers before any data is sent.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "cn.tcp_connection_establishment.medium2",
+    "style": "confident_wrong",
+    "answer": "The third message is only there for speed, because the client can start sending data in it, so a two-way handshake would work just as well, only slightly slower. Both sides already agree after the SYN-ACK, so the final ACK is basically optional.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "cn.tcp_connection_establishment.medium2",
+    "style": "hesitant",
+    "answer": "Um, so the three-way, it's like, uh, SYN, then SYN-ACK, then ACK, so both sides, um, agree to the connection. And with only two, uh, the server doesn't know if the client actually got its reply, so, you know, it's not confirmed both ways.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "cn.tcp_vs_udp.easy1",
+    "style": "good",
+    "answer": "TCP is connection-oriented, so before any data is sent the client and server set up a connection with the three-way handshake, and then it delivers data reliably and in order using acknowledgements and retransmissions. UDP has no connection setup at all; it just sends datagrams, and it gives no reliability, so packets can be lost, duplicated or arrive out of order. That's why TCP is used for things like web pages and file transfers, and UDP for things like live video or DNS.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.tcp_vs_udp.easy1",
+    "style": "partial",
+    "answer": "The main difference is that TCP needs a connection to be set up first with a handshake, while UDP just starts sending data straight away.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "cn.tcp_vs_udp.easy1",
+    "style": "off_topic",
+    "answer": "IPv4 uses 32-bit addresses and IPv6 uses 128-bit addresses, so IPv6 has a much larger address space. IPv6 also has a simpler, fixed-length header.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.tcp_vs_udp.easy1",
+    "style": "dont_know",
+    "answer": "I don't really remember the difference between TCP and UDP, sorry.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.network_edge_and_access_networks.medium2",
+    "style": "good_paraphrase",
+    "answer": "The access network is the link between your home and the ISP, so it caps what your home network can do. The medium matters a lot: DSL over a phone line might give you tens of Mbps and is asymmetric, cable can give more, and fibre to the home is much faster, so that sets the bandwidth all your devices share. It also matters whether the access is shared or dedicated. With cable, all the homes in a neighbourhood share the link to the headend, so speeds drop in the evening when everyone's streaming, whereas DSL gives you a dedicated line to the central office, so performance is more consistent.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.network_edge_and_access_networks.medium2",
+    "style": "partial",
+    "answer": "It depends mostly on the type of connection, like DSL, cable or fibre. Fibre has a much higher transmission rate, so the home gets more bandwidth than with DSL, which is limited by the phone line.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "cn.network_edge_and_access_networks.medium2",
+    "style": "vague",
+    "answer": "The access network affects the home network's performance because everything has to go through it. If the access network is good, the home network works well, and if it isn't, you'll notice slowdowns.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "cn.network_edge_and_access_networks.medium2",
+    "style": "confident_wrong",
+    "answer": "The access network doesn't really affect home performance, because the speed is decided by your WiFi router. As long as your router supports a fast standard like WiFi 6, you get the full speed whether the line is DSL or fibre, and cable connections are always dedicated to one house.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.ftp.easy1",
+    "style": "good",
+    "answer": "FTP is the File Transfer Protocol, used to move files, often large ones, between a client and a server over the internet, and it runs on top of TCP. You use it from a command prompt or a GUI client to upload and download files, and also to manage them on the server, like renaming, deleting or copying them. It uses two separate TCP connections: a control connection on port 21 for commands, and a data connection on port 20 for the actual file transfer.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.ftp.easy1",
+    "style": "partial",
+    "answer": "FTP stands for File Transfer Protocol. It's used to transfer files between computers over the internet, and it runs over TCP.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "cn.ftp.easy1",
+    "style": "hesitant",
+    "answer": "Uh, FTP is, like, file transfer protocol, it's for sending files, um, over TCP. And you can, uh, upload, delete, rename files on a server. And it has, um, two connections, one for control and one for, you know, the data.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "cn.ftp.easy1",
+    "style": "off_topic",
+    "answer": "HTTP is the protocol the web uses: the browser sends a GET request and the server responds with the HTML page and its objects. It's stateless, so cookies are used to remember users.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.ipv6.medium1",
+    "style": "good",
+    "answer": "The usual approach is tunneling. When an IPv6 router has to send a datagram across a stretch of IPv4-only routers, it puts the whole IPv6 datagram inside the payload of an IPv4 datagram addressed to the IPv6 router at the other end of the tunnel. The IPv4 routers just forward it like any other IPv4 packet, and the router at the far end takes the IPv6 datagram back out. This matters because you can't switch every router on the internet over on one day, so tunneling lets networks migrate to IPv6 gradually while IPv4 routers are still around.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.ipv6.medium1",
+    "style": "partial",
+    "answer": "They use tunneling, where the IPv6 packet is wrapped inside an IPv4 packet so it can pass through the IPv4 routers.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "cn.ipv6.medium1",
+    "style": "confident_wrong",
+    "answer": "IPv4 routers can read IPv6 datagrams directly, since IPv6 is backward compatible with IPv4. So nothing special is needed: the IPv4 routers just ignore the extra address bits and forward the packet using the first 32 bits.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.ipv6.medium1",
+    "style": "vague",
+    "answer": "IPv6 and IPv4 can work together through some transition mechanisms. This is important because networks are moving from IPv4 to IPv6 and need to stay compatible during that time.",
+    "labels": [
+      "missing",
+      "partial"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "cn.distance_vector_routing.medium1",
+    "style": "good_paraphrase",
+    "answer": "In distance vector routing, each node keeps an estimate of its cost to every destination and periodically sends that vector to its neighbours. When it gets its neighbours' vectors, it applies Bellman-Ford: its cost to y is the minimum, over all neighbours v, of the link cost to v plus v's reported cost to y. Because every node keeps doing this with fresh information from its neighbours, correct costs spread hop by hop through the network, and eventually every node's estimates settle on the true least-cost paths.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.distance_vector_routing.medium1",
+    "style": "partial",
+    "answer": "Each node calculates its distance to every destination by taking the minimum, over its neighbours, of the cost to reach that neighbour plus the neighbour's distance to the destination.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "cn.distance_vector_routing.medium1",
+    "style": "confident_wrong",
+    "answer": "Each node floods its link costs to every router in the network, and then every router runs Dijkstra on the complete map. Neighbours don't need to exchange distance vectors, because each router already knows the whole topology.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.distance_vector_routing.medium1",
+    "style": "hesitant",
+    "answer": "Um, so each node, uh, takes the minimum over its neighbours, like the cost to the neighbour plus the neighbour's distance, that's Bellman-Ford. And they, um, keep sending their vectors to their neighbours, so the, you know, correct costs spread out until it converges.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "cn.ipv4_addressing.medium2",
+    "style": "good",
+    "answer": "In classful addressing, a Class C address uses the first 24 bits for the network ID and the last 8 bits for the host ID. The subnet mask just marks that split: a 1 for every network bit and a 0 for every host bit, so 24 ones followed by 8 zeros, which is 255.255.255.0. A device ANDs an IP address with the mask to get the network part, and the rest is the host part, which is how it decides whether a destination is on its own network.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.ipv4_addressing.medium2",
+    "style": "partial",
+    "answer": "For Class C the default mask is 255.255.255.0, since the first three octets are the network part and the last octet is for hosts.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "cn.ipv4_addressing.medium2",
+    "style": "vague",
+    "answer": "The subnet mask for Class C comes from how the class is defined. It's a standard value that goes with that class of addresses, and it's used in networking.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "cn.ipv4_addressing.medium2",
+    "style": "off_topic",
+    "answer": "Private IP ranges like 192.168.0.0 and 10.0.0.0 can't be routed on the public internet, so NAT translates them to a public address when traffic leaves the home network.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.arp.medium1",
+    "style": "good_paraphrase",
+    "answer": "It uses ARP. The device first looks in its ARP table, which is a cache of IP-to-MAC mappings; if the IP isn't there, it sends an ARP request as a broadcast frame, so every device on the LAN sees 'who has 192.168.1.5?'. Only the device with that IP replies, directly, with its MAC address. The sender stores that mapping in its ARP table with a TTL, typically a few minutes, so it doesn't have to ask every time but old entries eventually expire.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.arp.medium1",
+    "style": "partial",
+    "answer": "It uses ARP: it broadcasts a request to the whole LAN asking who has that IP, and the device with that IP replies with its MAC address.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.65
+  },
+  {
+    "question_id": "cn.arp.medium1",
+    "style": "confident_wrong",
+    "answer": "The device asks the DNS server, which keeps a table of the MAC addresses of every IP on the LAN. The answer is stored permanently, so the lookup only ever happens once per device.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.arp.medium1",
+    "style": "vague",
+    "answer": "The device uses a protocol to find the MAC address from the IP address. Once it gets the address, it can communicate with the other device on the LAN.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "cn.icmp.medium2",
+    "style": "good",
+    "answer": "ICMP is the protocol hosts and routers use to report network-layer problems and status, so it's the basis of most diagnostic tools. Ping uses ICMP echo request and echo reply: if you get replies, the host is reachable, and the timing gives you the round-trip time. Traceroute uses the time exceeded message: it sends packets with TTL 1, 2, 3 and so on, and each router that drops a packet because its TTL hit zero sends back a time exceeded message, which reveals the path hop by hop.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.icmp.medium2",
+    "style": "partial",
+    "answer": "ICMP is used by ping, which sends echo request messages and waits for echo replies to check whether a host is reachable.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "cn.icmp.medium2",
+    "style": "hesitant",
+    "answer": "Um, ICMP is for, like, reporting problems. Ping uses, uh, echo request and echo reply to check if a host is up. And, um, traceroute uses the time exceeded message, when the TTL runs out, to find the, you know, path.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "cn.icmp.medium2",
+    "style": "off_topic",
+    "answer": "SNMP is used to monitor and manage network devices: a manager polls agents on routers and switches to collect statistics like interface traffic and errors.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "cn.transport_layer_services.easy1",
+    "style": "good_paraphrase",
+    "answer": "A socket is the interface between an application process and the transport layer, the point where the process hands messages down and gets them back. You can think of it like the door of a house: the process pushes a message out through the door and trusts the transport layer to carry it to the door at the other end. So every communication has two sockets, one on each host, for example the browser's socket and the web server's socket, each identified by an IP address and a port number.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.transport_layer_services.easy1",
+    "style": "partial",
+    "answer": "A socket is the interface through which an application process sends and receives data over the network, using the transport layer.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "cn.transport_layer_services.easy1",
+    "style": "confident_wrong",
+    "answer": "A socket is the physical port on the network card where the cable plugs in. It works at the physical layer, and a single socket on the server is shared by both ends of the connection.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.transport_layer_services.easy1",
+    "style": "vague",
+    "answer": "A socket is used in networking to connect applications. It's related to the transport layer because the transport layer deals with sending data between applications.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "cn.go_back_n_and_selective_repeat.medium2",
+    "style": "good",
+    "answer": "In Selective Repeat, the receiver acknowledges every correctly received packet individually, even if it arrives out of order, and buffers out-of-order packets until the gaps are filled. The sender keeps a timer per packet and retransmits only the packet whose timer expires, not everything after it. The sender's window base moves forward only when the smallest unacknowledged packet gets its ACK. That's more efficient than Go-Back-N when the window is large and losses are occasional, because Go-Back-N would resend the whole window after a single loss, wasting bandwidth.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.go_back_n_and_selective_repeat.medium2",
+    "style": "partial",
+    "answer": "In Selective Repeat the sender only resends the packets that were actually lost, instead of resending everything after the lost packet like Go-Back-N does, so it wastes less bandwidth.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "cn.go_back_n_and_selective_repeat.medium2",
+    "style": "confident_wrong",
+    "answer": "In Selective Repeat the receiver only sends cumulative ACKs and discards any out-of-order packet, and when a timeout happens the sender resends every packet in the window. The window slides forward as soon as any packet in it is acknowledged.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.go_back_n_and_selective_repeat.medium2",
+    "style": "hesitant",
+    "answer": "Um, so the receiver, uh, ACKs each packet on its own, even out of order, and buffers them. The sender only, like, resends the ones that time out, not the whole window. And the window base moves only when the, um, oldest unACKed packet gets ACKed.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "cn.network_devices.medium1",
+    "style": "good_paraphrase",
+    "answer": "A hub is basically a dumb repeater with many ports, working at the physical layer: whatever comes in on one port gets copied out to every other port, and only one device can talk at a time, so it's half-duplex. A switch works at the data link layer: it learns which MAC address is on which port and keeps that in a table, so a frame for one computer goes only to that computer's port. Because of that, switch ports can run full-duplex, sending and receiving at the same time, and you get far fewer collisions.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.network_devices.medium1",
+    "style": "partial",
+    "answer": "A hub sends data out of every port to all devices, while a switch sends it only to the device it's meant for, using MAC addresses.",
+    "labels": [
+      "partial",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "cn.network_devices.medium1",
+    "style": "vague",
+    "answer": "A switch is a more intelligent device than a hub, so it handles network communication better. Hubs are older and simpler, so they're less efficient.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "cn.network_devices.medium1",
+    "style": "off_topic",
+    "answer": "A router connects different networks and forwards packets based on IP addresses using a routing table. It also separates broadcast domains.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "cn.ethernet.medium1",
+    "style": "good",
+    "answer": "An Ethernet frame is what actually carries data across the LAN: the network layer's IP datagram is put inside the frame's data field. The frame starts with a preamble, a pattern of alternating 1s and 0s that lets the receiver synchronise its clock with the sender's. Then come the destination and source MAC addresses, so the right adapter picks it up, and a type field saying which protocol, like IP, is inside. At the end there's a CRC, which the receiver checks to detect bit errors and drop corrupted frames.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.ethernet.medium1",
+    "style": "partial",
+    "answer": "An Ethernet frame has the destination and source MAC addresses, the data, and a CRC at the end so the receiver can detect errors.",
+    "labels": [
+      "partial",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "cn.ethernet.medium1",
+    "style": "confident_wrong",
+    "answer": "Ethernet frames carry IP packets, and the CRC at the end is used to correct errors, so a frame never needs to be retransmitted. The preamble holds the IP addresses of the sender and receiver.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.2
+  },
+  {
+    "question_id": "cn.ethernet.medium1",
+    "style": "vague",
+    "answer": "Ethernet frames are the format used to send data on a LAN. The structure of the frame makes sure data gets from one device to another reliably.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "cn.collision_and_broadcast_domains.medium2",
+    "style": "good_paraphrase",
+    "answer": "With a switch, every host has its own dedicated link to a switch port, so each link is a separate collision domain; nobody else shares that wire. Modern switched Ethernet runs full-duplex, so a host can send and receive on its link at the same time. The switch buffers and forwards frames between ports, so A can be sending to A' while B is sending to B' at the same moment, and none of those frames collide.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.collision_and_broadcast_domains.medium2",
+    "style": "partial",
+    "answer": "Each port on a switch is its own collision domain, so devices on different ports don't collide with each other.",
+    "labels": [
+      "covered",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "cn.collision_and_broadcast_domains.medium2",
+    "style": "hesitant",
+    "answer": "Um, so every link on the switch is, like, its own collision domain. And Ethernet there runs, uh, full-duplex, so send and receive at the same time. So, um, A can send to A-prime while B sends to B-prime, you know, no collisions.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "cn.collision_and_broadcast_domains.medium2",
+    "style": "off_topic",
+    "answer": "A router separates broadcast domains, so a broadcast on one LAN doesn't reach another LAN. VLANs can also split one switch into several broadcast domains.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "cn.csma_cd_and_csma_ca.easy1",
+    "style": "good",
+    "answer": "CSMA/CD is used on wired Ethernet: a station listens before sending, and while it's transmitting it keeps listening, so if it detects a collision it stops immediately, sends a jam signal and retries after a random backoff. That works on wires because a station can easily hear other signals while it transmits. CSMA/CA is for wireless, where a station can't reliably detect collisions while sending, so instead it tries to avoid them: it waits a random backoff even when the channel is idle and relies on ACKs, optionally with RTS/CTS.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.csma_cd_and_csma_ca.easy1",
+    "style": "partial",
+    "answer": "CSMA/CD detects collisions while it's transmitting and stops sending straight away, while CSMA/CA tries to avoid collisions before they happen.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "cn.csma_cd_and_csma_ca.easy1",
+    "style": "confident_wrong",
+    "answer": "CSMA/CD is used in WiFi because radio makes it easy to detect collisions, and CSMA/CA is used in wired Ethernet. In CSMA/CD the station finishes sending the whole frame first and only then checks whether there was a collision.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.csma_cd_and_csma_ca.easy1",
+    "style": "vague",
+    "answer": "Both CSMA/CD and CSMA/CA are ways of dealing with collisions when several devices share a medium. They just handle it differently depending on the type of network.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "cn.https_and_tls.easy1",
+    "style": "good_paraphrase",
+    "answer": "HTTPS is just HTTP running over TLS, so everything the browser and server send each other, including passwords and cookies, is encrypted in both directions. At the start, the TLS handshake uses public-key cryptography: the server sends a certificate with its public key, and the two sides use it to agree on a shared symmetric session key that only they know. After that, the actual data is encrypted with that symmetric key, which is much faster, and anyone sniffing the network just sees scrambled data.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.https_and_tls.easy1",
+    "style": "partial",
+    "answer": "HTTPS encrypts all the data between the browser and the server using TLS, so nobody in between can read it.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "cn.https_and_tls.easy1",
+    "style": "hesitant",
+    "answer": "Um, HTTPS uses, uh, TLS to encrypt everything between the browser and the server. And it uses, like, public and private keys, the server's public key, to, um, set up a key for the session.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "cn.https_and_tls.easy1",
+    "style": "off_topic",
+    "answer": "A firewall filters traffic coming into a network based on rules like IP addresses and port numbers, blocking anything that isn't allowed.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.network_devices.hard2",
+    "style": "good",
+    "answer": "A repeater works at the physical layer: it just regenerates the signal so it can travel further, which extends the reach of the network. It doesn't understand addresses, so everything it receives is passed on to everything on the other side, and the two segments become one big shared collision domain. A switch works at the data link layer: it learns MAC addresses and forwards each frame only to the port where the destination is. That means far fewer collisions and much better performance, so a repeater only makes sense for extending distance, while a switch is the better choice for joining segments with many devices.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.network_devices.hard2",
+    "style": "partial",
+    "answer": "A repeater just regenerates the signal so it can go further, while a switch uses MAC addresses to send data only to the device it's meant for.",
+    "labels": [
+      "covered",
+      "missing",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "cn.network_devices.hard2",
+    "style": "confident_wrong",
+    "answer": "A repeater is actually better for performance, because it filters traffic by IP address and only passes on packets meant for the other segment. A switch floods every frame to all its ports, so it causes more collisions than a repeater.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.network_devices.hard2",
+    "style": "vague",
+    "answer": "A switch is more advanced than a repeater, so it usually gives better performance. The repeater is simpler and works at a lower level, so it's used in different situations.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "cn.tcp_connection_establishment.easy1",
+    "style": "good_paraphrase",
+    "answer": "Before any data flows, TCP does a three-way handshake. The client sends a SYN with its starting sequence number, the server answers with a SYN-ACK that acknowledges it and carries the server's own starting sequence number, and the client finishes with an ACK. After those three messages both sides have agreed to talk and know each other's initial sequence numbers, along with things like buffer sizes, so the connection is set up.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.tcp_connection_establishment.easy1",
+    "style": "partial",
+    "answer": "The client and server do a three-way handshake, SYN, SYN-ACK, ACK, so that both of them agree to open the connection.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "cn.tcp_connection_establishment.easy1",
+    "style": "hesitant",
+    "answer": "Um, so it's a, uh, handshake, SYN, SYN-ACK, ACK. Both sides, like, agree to open the connection, and they, um, exchange their starting sequence numbers.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "cn.tcp_connection_establishment.easy1",
+    "style": "confident_wrong",
+    "answer": "The client just sends its first data segment, and if the server replies with an ACK, the connection is established. Sequence numbers always start at zero, so there's nothing to agree on.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.tcp_vs_udp.medium2",
+    "style": "good",
+    "answer": "TCP has congestion control: when it sees losses or growing delay, it shrinks its congestion window and slows the sender down so it doesn't overload the network. UDP has no congestion control at all, so an application can send at whatever rate it likes. Neither of them gives any throughput guarantee, though; TCP only adapts its rate, it can't promise a minimum bandwidth. That's why live video often uses UDP and does its own rate control.",
+    "labels": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.95
+  },
+  {
+    "question_id": "cn.tcp_vs_udp.medium2",
+    "style": "partial",
+    "answer": "TCP slows the sender down when the network is congested, using congestion control. UDP just sends at full speed.",
+    "labels": [
+      "covered",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.6
+  },
+  {
+    "question_id": "cn.tcp_vs_udp.medium2",
+    "style": "confident_wrong",
+    "answer": "UDP has built-in congestion control that drops its own packets when the network is busy, while TCP always sends at the maximum rate, because its retransmissions make up for any losses.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "cn.tcp_vs_udp.medium2",
+    "style": "off_topic",
+    "answer": "TCP uses a three-way handshake to set up a connection, while UDP is connectionless and just sends datagrams.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "cn.icmp.easy1",
+    "style": "good_paraphrase",
+    "answer": "ICMP is a helper protocol at the network layer that hosts and routers use to tell each other about problems. For example, if a router can't reach a destination, it sends back a 'destination unreachable' message, and if a packet's TTL runs out, it sends a 'time exceeded' message. It's also what tools like ping and traceroute rely on, so it's used both for reporting errors and for diagnosing the network.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "cn.icmp.easy1",
+    "style": "partial",
+    "answer": "ICMP is used to report errors: for example, when a destination host is unreachable, a router sends an ICMP message back to the sender.",
+    "labels": [
+      "partial",
+      "covered"
+    ],
+    "overall": 0.6
+  },
+  {
+    "question_id": "cn.icmp.easy1",
+    "style": "vague",
+    "answer": "ICMP is a protocol used in networks for various control purposes. It helps the network work properly.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "cn.icmp.easy1",
+    "style": "hesitant",
+    "answer": "Um, ICMP is, like, used by hosts and routers to, uh, report network-layer problems. Mostly error reporting, um, like destination unreachable, you know.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dbms.integrity_constraints.medium1",
+    "style": "good_paraphrase",
+    "answer": "Say we have a Student table and an Enrolment table that has student_id as a foreign key. Referential integrity means every student_id in Enrolment must match an actual student in Student, or be NULL, so you can't have an enrolment for a student who doesn't exist. That keeps the relationship between the two tables logically valid. And you can decide what happens when the referenced row is deleted or updated, using ON DELETE CASCADE, SET NULL or SET DEFAULT, so for example deleting a student can automatically delete their enrolments.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.integrity_constraints.medium1",
+    "style": "partial",
+    "answer": "A foreign key must refer to a primary key value that actually exists in the other table, or it can be null. That way you don't get rows pointing to records that don't exist.",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "dbms.integrity_constraints.medium1",
+    "style": "hesitant",
+    "answer": "Um, so referential integrity is, like, the foreign key has to match a primary key that, uh, exists in the other table, or it's null. And it keeps the, you know, relationships between tables correct. And you can, uh, set things like cascade or set null for when you delete.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dbms.integrity_constraints.medium1",
+    "style": "confident_wrong",
+    "answer": "Referential integrity means the primary key of a table must be unique and not null, so no two rows have the same key. If you try to delete a row that other tables refer to, SQL always blocks the delete; there's no way to change that behaviour.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "dbms.cap_theorem.medium2",
+    "style": "good",
+    "answer": "The CAP theorem says a distributed system can't fully guarantee consistency, availability and partition tolerance at the same time; when the network partitions, you have to choose between staying consistent and staying available. Traditional SQL databases lean towards consistency, backed by ACID transactions, so every read sees the latest committed data. Many NoSQL systems, like Cassandra or DynamoDB, choose availability and partition tolerance instead and accept eventual consistency, which lets them keep serving requests and scale out across many servers.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.cap_theorem.medium2",
+    "style": "partial",
+    "answer": "CAP says you can only get two out of consistency, availability and partition tolerance. So when you design a distributed database, you have to pick which two matter most.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.4
+  },
+  {
+    "question_id": "dbms.cap_theorem.medium2",
+    "style": "vague",
+    "answer": "The CAP theorem is about the trade-offs in distributed databases. SQL and NoSQL make different choices, so you pick the one that fits your requirements.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "dbms.cap_theorem.medium2",
+    "style": "off_topic",
+    "answer": "ACID stands for atomicity, consistency, isolation and durability. Atomicity means a transaction happens completely or not at all, and durability means committed changes survive a crash.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "dbms.null_handling_in_sql.easy1",
+    "style": "good_paraphrase",
+    "answer": "NULL in SQL means the value is missing or unknown, so SQL can't say whether a comparison with it is true or false. Something like salary > NULL, or even NULL = NULL, doesn't come out true or false; it comes out as a third logical value, UNKNOWN. A WHERE clause only keeps rows where the condition is true, so rows where it's UNKNOWN get filtered out, which is why you have to write IS NULL instead of = NULL.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.null_handling_in_sql.easy1",
+    "style": "partial",
+    "answer": "NULL means the value is missing, so you can't compare it with the equals sign; you have to use IS NULL or IS NOT NULL instead.",
+    "labels": [
+      "missing",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.35
+  },
+  {
+    "question_id": "dbms.null_handling_in_sql.easy1",
+    "style": "confident_wrong",
+    "answer": "SQL treats NULL as zero in comparisons, so salary > NULL is the same as salary > 0. And NULL = NULL is true, which is why you can use the equals sign to find rows with missing values.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.null_handling_in_sql.easy1",
+    "style": "dont_know",
+    "answer": "I'm not sure how SQL compares NULL values. I don't remember that part.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.relationships_and_cardinality.medium1",
+    "style": "good",
+    "answer": "A cardinality ratio says how many entities on one side can be associated with each entity on the other side. In a one-to-many relationship, like Department to Employee, one department can have many employees, but each employee belongs to at most one department. In many-to-many, like Student and Course, a student takes many courses and a course has many students. This changes how you design the tables: for one-to-many you put a foreign key on the many side, and for many-to-many you usually need a separate relationship table.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.relationships_and_cardinality.medium1",
+    "style": "partial",
+    "answer": "Cardinality tells you how many entities from one set can be linked with an entity in the other set, like one-to-one, one-to-many or many-to-many.",
+    "labels": [
+      "covered",
+      "partial",
+      "partial"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "dbms.relationships_and_cardinality.medium1",
+    "style": "hesitant",
+    "answer": "Um, so cardinality is, like, how many entities in one set can be, uh, related to one entity in the other. Like one-to-many, one department has, um, many employees but each employee is in, you know, one department. And many-to-many is, uh, like students and courses, both sides can have many.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dbms.relationships_and_cardinality.medium1",
+    "style": "off_topic",
+    "answer": "Normalization is the process of organizing tables to reduce redundancy. 1NF removes repeating groups, 2NF removes partial dependencies and 3NF removes transitive dependencies.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.deadlocks_in_dbms.easy1",
+    "style": "good_paraphrase",
+    "answer": "Suppose transaction T1 has locked row A and wants row B, while T2 has locked row B and wants row A. Each one is waiting for the other to release its lock, so it's a cycle and neither can ever go ahead. That's a deadlock. The DBMS usually detects it, for example with a wait-for graph, and breaks it by rolling back one of the transactions, the victim, so the other one can finish.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.deadlocks_in_dbms.easy1",
+    "style": "partial",
+    "answer": "A deadlock is when two transactions are each waiting for a lock the other one holds, so neither of them can continue.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.65
+  },
+  {
+    "question_id": "dbms.deadlocks_in_dbms.easy1",
+    "style": "confident_wrong",
+    "answer": "A deadlock is when a transaction takes too long and the database times it out. It happens when one transaction reads data another transaction hasn't committed yet, and it's fixed by committing both transactions together.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.deadlocks_in_dbms.easy1",
+    "style": "vague",
+    "answer": "A deadlock is a problem in databases where transactions get stuck. It can happen when many transactions are running at the same time, and the database has to deal with it somehow.",
+    "labels": [
+      "missing",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "dbms.first_normal_form_1nf.medium1",
+    "style": "good",
+    "answer": "First normal form says every attribute in a relation must be atomic, holding a single indivisible value per row and column. So you can't have composite attributes stored as one field, multivalued attributes like a list of phone numbers in one cell, or nested tables inside a row; you'd move the phone numbers into their own table instead. That matches the basic definition of a relation, which is why most relational systems only support 1NF tables, and it's the starting point for normalization: a relation has to be in 1NF before you can even talk about 2NF, 3NF or BCNF.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.first_normal_form_1nf.medium1",
+    "style": "partial",
+    "answer": "1NF means every column holds a single atomic value, so you can't store something like a list of phone numbers in one cell.",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "dbms.first_normal_form_1nf.medium1",
+    "style": "confident_wrong",
+    "answer": "1NF means the table has a primary key and there are no partial dependencies on it. It allows multivalued attributes as long as they're stored as comma-separated values in one column.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.first_normal_form_1nf.medium1",
+    "style": "hesitant",
+    "answer": "Um, so 1NF is, like, every attribute is atomic, uh, one value per cell. So no, um, multivalued or composite attributes. And it's, you know, the first step, you need it before 2NF and 3NF.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dbms.graph_databases_and_neo4j.medium2",
+    "style": "good_paraphrase",
+    "answer": "In a relational database you design the tables and columns up front, and adding a new attribute means an ALTER TABLE on the whole table. In Neo4j, nodes and relationships are just labelled items with key-value properties and there's no fixed set of columns, so one Person node can have an email property and another can have a phone number instead. You can also add new kinds of nodes or relationships, like a new FOLLOWS relationship, at any time without migrating existing data, which suits data models that keep evolving.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.graph_databases_and_neo4j.medium2",
+    "style": "partial",
+    "answer": "Neo4j doesn't need a fixed schema like SQL tables, so nodes can have different properties without defining them first.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "dbms.graph_databases_and_neo4j.medium2",
+    "style": "vague",
+    "answer": "Neo4j is a NoSQL graph database, so it's more flexible than relational databases. That flexibility makes it good for certain kinds of applications.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "dbms.graph_databases_and_neo4j.medium2",
+    "style": "off_topic",
+    "answer": "MongoDB stores data as JSON-like documents in collections, and each document can have its own fields. It's popular for web applications.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "dbms.nested_and_correlated_subqueries.hard2",
+    "style": "good",
+    "answer": "EXISTS is a Boolean test on a subquery: it's true if the subquery returns at least one row and false if it returns none, and NOT EXISTS is the opposite. It's usually used with a correlated subquery, one that refers to a column of the outer query, so the subquery is logically re-evaluated for each outer row. For example, selecting employees WHERE EXISTS a row in Dependents with that employee's id keeps exactly the employees who have a dependent. Because only emptiness matters, the database can stop scanning the subquery as soon as it finds one matching row.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.nested_and_correlated_subqueries.hard2",
+    "style": "partial",
+    "answer": "EXISTS returns true if the subquery returns any rows and false if it returns none, and NOT EXISTS is the reverse.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6
+  },
+  {
+    "question_id": "dbms.nested_and_correlated_subqueries.hard2",
+    "style": "confident_wrong",
+    "answer": "EXISTS compares the value of a column with every value the subquery returns and is true only if they all match. It can't be used with correlated subqueries, because the subquery has to run only once before the outer query.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.nested_and_correlated_subqueries.hard2",
+    "style": "hesitant",
+    "answer": "Um, EXISTS checks if the, uh, subquery is empty or not. If it has at least one row it's true, otherwise false. And it's, like, mostly used with correlated subqueries, where the inner query, um, uses a column from the outer one.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dbms.lossless_decomposition.medium1",
+    "style": "good_paraphrase",
+    "answer": "When you split a table into smaller ones during normalization, you have to be able to join them back and get exactly the original table, with no rows lost and no extra fake rows. For example, if you split an Employee-Project-Department table badly and join it back, you can get spurious rows pairing employees with departments they never belonged to. Lossless decomposition, also called the non-additive join property, guarantees that the natural join of the pieces gives back exactly the original relation, and it's the one property you can never give up when decomposing, even if you have to sacrifice dependency preservation.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.lossless_decomposition.medium1",
+    "style": "partial",
+    "answer": "Lossless decomposition means that if you join the decomposed tables back together, you get the original table without any extra spurious rows.",
+    "labels": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.65
+  },
+  {
+    "question_id": "dbms.lossless_decomposition.medium1",
+    "style": "vague",
+    "answer": "Lossless decomposition is about decomposing relations properly so that data isn't lost. It's an important property in database design.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "dbms.lossless_decomposition.medium1",
+    "style": "off_topic",
+    "answer": "Dependency preservation means every functional dependency of the original relation can still be checked in one of the decomposed relations without doing a join.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "dbms.set_operations_in_sql.medium2",
+    "style": "good",
+    "answer": "UNION returns every row that appears in either query result, while INTERSECT returns only the rows that appear in both. Both need the two queries to be union compatible, meaning the same number of columns with matching types in the same order. And both remove duplicates by default, so each row appears only once in the result, unless you write UNION ALL or INTERSECT ALL. So UNION is for combining sets, like all students in either club, and INTERSECT is for the overlap, like students in both clubs.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.set_operations_in_sql.medium2",
+    "style": "partial",
+    "answer": "UNION gives you all the rows from both queries, and INTERSECT gives only the rows that are common to both.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "dbms.set_operations_in_sql.medium2",
+    "style": "confident_wrong",
+    "answer": "INTERSECT returns rows from both tables and keeps all the duplicates, while UNION returns only the common rows. The two queries don't need the same number of columns, since SQL pads the shorter one with NULLs.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.set_operations_in_sql.medium2",
+    "style": "vague",
+    "answer": "INTERSECT and UNION are set operations that combine the results of two queries in different ways, so the output depends on which one you use.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "dbms.denormalization.easy1",
+    "style": "good_paraphrase",
+    "answer": "Denormalization is deliberately adding redundant data back into tables after normalizing, as a performance optimization. For example, you might store the customer's name directly in the Orders table so a report doesn't have to join Orders with Customers every time. You do it when reads matter more than writes, like reporting or dashboards, because queries get simpler and faster, but the cost is extra storage and the risk that the copies go out of sync on updates.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.denormalization.easy1",
+    "style": "partial",
+    "answer": "Denormalization means adding redundant data to tables so queries don't need so many joins, which makes reads faster.",
+    "labels": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.65
+  },
+  {
+    "question_id": "dbms.denormalization.easy1",
+    "style": "hesitant",
+    "answer": "Um, denormalization is, like, adding redundant data into tables, on purpose. You do it when, uh, reading is more important than updating. And it makes the, um, queries simpler and faster, you know, fewer joins.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dbms.denormalization.easy1",
+    "style": "off_topic",
+    "answer": "Normalization splits tables to remove redundancy, going through 1NF, 2NF and 3NF so that update anomalies don't happen.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "dbms.vector_databases_and_embeddings.hard2",
+    "style": "good",
+    "answer": "Exact nearest-neighbour search compares the query vector with every stored vector, which is far too slow when you have millions of high-dimensional embeddings. ANN algorithms like HNSW or IVF use index structures to search only a small part of the data, so they're much faster and scale to huge datasets. The trade-off is accuracy: they might occasionally miss a true nearest neighbour and return a slightly less similar one, so recall drops a little. For things like semantic search or recommendations that's usually acceptable in exchange for millisecond responses.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.vector_databases_and_embeddings.hard2",
+    "style": "partial",
+    "answer": "ANN algorithms make vector search much faster than comparing the query against every vector, which is important for big datasets.",
+    "labels": [
+      "partial",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.4
+  },
+  {
+    "question_id": "dbms.vector_databases_and_embeddings.hard2",
+    "style": "confident_wrong",
+    "answer": "ANN algorithms always return the exact nearest neighbours; they're just a faster implementation of brute-force search using GPUs. The only trade-off is that they need more memory, and they only work well on low-dimensional data.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.vector_databases_and_embeddings.hard2",
+    "style": "vague",
+    "answer": "ANN is used in vector databases to search embeddings. It has some trade-offs between different factors, which affect how the system performs.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "dbms.foreign_key.medium2",
+    "style": "good_paraphrase",
+    "answer": "Say Orders has a foreign key to Customers. With ON DELETE CASCADE, if you delete a customer, all of that customer's orders in the child table are deleted automatically instead of the delete being rejected. With ON UPDATE CASCADE, if you change the customer's ID in the parent table, the matching customer_id values in Orders are updated to the new ID automatically. Either way, the child rows stay consistent with the parent, and you never end up with orders pointing to a customer that doesn't exist.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.foreign_key.medium2",
+    "style": "partial",
+    "answer": "ON DELETE CASCADE means that when you delete a row in the parent table, the rows in the child table that refer to it are deleted too.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "dbms.foreign_key.medium2",
+    "style": "hesitant",
+    "answer": "Um, so on delete cascade, if you, uh, delete the parent row, the child rows that reference it also get, like, deleted. And on update cascade, if the parent key changes, the, um, child's foreign key gets updated too.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.85
+  },
+  {
+    "question_id": "dbms.foreign_key.medium2",
+    "style": "off_topic",
+    "answer": "A primary key uniquely identifies each row in a table and can't be NULL, and each table can have only one primary key.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.equivalence_of_sets_of_fds.easy1",
+    "style": "good",
+    "answer": "Two sets of functional dependencies E and F are equivalent if they have the same closure, E+ = F+, meaning they imply exactly the same dependencies. In practice you check that each covers the other: every FD in F can be derived from E, and every FD in E can be derived from F. To check whether an FD X → Y in F follows from E, you compute the attribute closure of X using E's dependencies and see whether it contains Y.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.equivalence_of_sets_of_fds.easy1",
+    "style": "partial",
+    "answer": "Two sets of FDs are equivalent if every dependency in one can be derived from the other, and the other way round.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "dbms.equivalence_of_sets_of_fds.easy1",
+    "style": "confident_wrong",
+    "answer": "Two sets of FDs are equivalent if they contain exactly the same dependencies written in the same way. If one set has an FD the other doesn't list explicitly, they're not equivalent, so you just compare the two lists.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.equivalence_of_sets_of_fds.easy1",
+    "style": "vague",
+    "answer": "Two sets of functional dependencies are equivalent when they basically mean the same thing for the relation. It's used in normalization.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "dbms.er_to_relational_mapping.medium2",
+    "style": "good_paraphrase",
+    "answer": "For a one-to-many relationship, like one department having many employees, you don't need a new table: you just put the department's primary key into the Employee table as a foreign key, on the 'many' side. For many-to-many, like students and courses, that doesn't work because each side can have many of the other, so you create a separate relation, Enrolment, holding foreign keys to both Student and Course, and their combination is usually its primary key. So the cardinality decides whether the relationship becomes a column or a whole table in the schema.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.er_to_relational_mapping.medium2",
+    "style": "partial",
+    "answer": "For many-to-many you need a separate table with foreign keys to both entities, like an Enrolment table for students and courses.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "dbms.er_to_relational_mapping.medium2",
+    "style": "hesitant",
+    "answer": "Um, one-to-many, you just, uh, add a foreign key on the many side, no new table. Many-to-many needs a, like, separate table with foreign keys to both. So, um, it changes how the relationship shows up in the schema.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dbms.er_to_relational_mapping.medium2",
+    "style": "confident_wrong",
+    "answer": "A one-to-many relationship always needs its own separate table with keys from both sides, while a many-to-many relationship is handled by putting a foreign key on either side, whichever you prefer.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.transaction_states.medium2",
+    "style": "good",
+    "answer": "A transaction goes into the failed state when it can't continue normally, for example after a hardware error or a constraint violation. The system then rolls it back, undoing its changes, and from there it can go one of two ways. It can be killed, which ends it for good, usually when the problem is a logical error in the transaction itself. Or it can be restarted as a brand-new transaction, which makes sense when the failure wasn't the transaction's fault, like a deadlock or a hardware glitch, so it gets another chance to run and commit.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.transaction_states.medium2",
+    "style": "partial",
+    "answer": "After a transaction fails, it's rolled back and then it can either be restarted or killed.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6
+  },
+  {
+    "question_id": "dbms.transaction_states.medium2",
+    "style": "vague",
+    "answer": "A failed transaction eventually becomes terminated. There are different ways this can happen depending on the situation, and each affects the database differently.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "dbms.transaction_states.medium2",
+    "style": "off_topic",
+    "answer": "The ACID properties make sure transactions are reliable: atomicity, consistency, isolation and durability.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.weak_entity_sets.hard2",
+    "style": "good_paraphrase",
+    "answer": "A weak entity can depend on more than one owner; for example, a Payment might be identified by both a Loan and a Customer. Its primary key is then the combination of the primary keys of all the identifying entity sets plus its own discriminator, say loan_id, customer_id and payment_no. In the relational schema, the weak entity's table has to contain all of those owner keys as foreign keys, which together with the discriminator form its primary key.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.weak_entity_sets.hard2",
+    "style": "partial",
+    "answer": "The weak entity's primary key would include the primary keys of all the strong entities it depends on.",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "dbms.weak_entity_sets.hard2",
+    "style": "confident_wrong",
+    "answer": "A weak entity can only ever have one identifying entity set, so this isn't possible in ER modelling. If it seems to depend on two, you just pick one strong entity's key as its primary key and ignore the other.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.weak_entity_sets.hard2",
+    "style": "hesitant",
+    "answer": "Um, so if a weak entity has, uh, more than one owner, its primary key has, like, all the owners' primary keys plus its own discriminator. And the table needs, um, all those keys as foreign keys, you know.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dbms.indexing_basics.medium1",
+    "style": "good",
+    "answer": "Without an index, a SELECT with a WHERE condition has to do a full table scan, reading every block and checking every row, which is O(n) and slow for big tables. With a B-tree index on the searched column, the database walks down the tree from the root to the leaf holding the key, which takes O(log n) steps, and then jumps straight to the qualifying records. So it reads only a handful of blocks instead of the whole table. The cost is extra storage and slower inserts and updates, since the index has to be maintained.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.indexing_basics.medium1",
+    "style": "partial",
+    "answer": "An index lets the database find the matching rows directly, instead of scanning the whole table, so queries are faster.",
+    "labels": [
+      "partial",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "dbms.indexing_basics.medium1",
+    "style": "vague",
+    "answer": "Indexing makes SELECT queries faster because it organizes the data in a way that's easier to search. It's more efficient than searching everything.",
+    "labels": [
+      "missing",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "dbms.indexing_basics.medium1",
+    "style": "off_topic",
+    "answer": "A view is a virtual table defined by a query. It doesn't store data itself, and it can be used to simplify complex queries or restrict access.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.triggers.hard2",
+    "style": "good",
+    "answer": "A BEFORE INSERT trigger runs before each row is actually inserted, so it can inspect or modify the new values first. If it's a row-level trigger, it fires once for every row the operation inserts, including rows inserted as a side effect of another operation. The whole statement, including any cascaded changes, runs as one atomic unit, so if the trigger raises an error, everything is rolled back, not just that one row. One thing to note is that foreign key cascades usually propagate deletes and updates rather than inserts, so an ON DELETE CASCADE wouldn't fire a BEFORE INSERT trigger at all.",
+    "labels": [
+      "covered",
+      "partial",
+      "covered"
+    ],
+    "overall": 0.95
+  },
+  {
+    "question_id": "dbms.triggers.hard2",
+    "style": "partial",
+    "answer": "The BEFORE INSERT trigger fires before the row is inserted, so it runs first and can check or change the data.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "dbms.triggers.hard2",
+    "style": "confident_wrong",
+    "answer": "Triggers never fire for changes caused by cascading constraints, and even if the trigger raises an error, the cascaded changes are still committed because they happen in a separate transaction.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dbms.triggers.hard2",
+    "style": "vague",
+    "answer": "Triggers and cascading constraints can interact in complex ways. The trigger does something when the insert happens, and the result depends on how the database handles it.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "dbms.participation_constraints.easy1",
+    "style": "good_paraphrase",
+    "answer": "Total participation means every entity in the entity set has to take part in at least one instance of the relationship; none can exist on its own. For example, if the university says every student must have an advisor, then Student has total participation in the Advises relationship. In an ER diagram you show it with a double line between the entity set and the relationship, whereas a single line means partial participation, where some entities may not participate.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dbms.participation_constraints.easy1",
+    "style": "partial",
+    "answer": "Total participation means every entity in the set must be part of at least one relationship, like every student must have an advisor.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6
+  },
+  {
+    "question_id": "dbms.participation_constraints.easy1",
+    "style": "hesitant",
+    "answer": "Um, total participation is, like, every entity has to be in at least, uh, one relationship. And in the ER diagram it's, um, shown with a double line.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.85
+  },
+  {
+    "question_id": "dbms.participation_constraints.easy1",
+    "style": "off_topic",
+    "answer": "Cardinality ratios describe how many entities can be related, such as one-to-one, one-to-many and many-to-many.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "dsa.asymptotic_notations.easy1",
+    "style": "good",
+    "answer": "t(n) is in Omega of g(n) if, from some point on, t(n) is always at least a constant multiple of g(n). Formally, there's a positive constant c and a threshold n0 such that t(n) is greater than or equal to c times g(n) for every n from n0 onwards. So it's a lower bound: t(n) grows at least as fast as g(n). For example, n squared is in Omega of n.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.asymptotic_notations.easy1",
+    "style": "partial",
+    "answer": "Omega is the lower bound. It means t(n) grows at least as fast as g(n).",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "dsa.asymptotic_notations.easy1",
+    "style": "confident_wrong",
+    "answer": "Omega means g(n) is an upper bound on t(n), so t(n) never grows faster than g(n). It's the notation for the worst case, and it needs t(n) to be less than or equal to c times g(n).",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.asymptotic_notations.easy1",
+    "style": "hesitant",
+    "answer": "Um, so Omega is, like, the lower bound. It means, uh, t of n is at least c times g of n, for some constant c, um, when n is bigger than some n-naught. So it grows, you know, at least as fast.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.85
+  },
+  {
+    "question_id": "dsa.circular_queue.easy1",
+    "style": "good_paraphrase",
+    "answer": "In a simple array queue, once rear hits the last index you can't insert anymore, even if you've dequeued lots of elements from the front and those slots are empty. A circular queue treats the array as if the end joins back to the start: when rear reaches the end it wraps around to index 0, usually with rear = (rear + 1) mod size. That way the slots freed by removed elements get reused, and the queue only reports full when every slot is really occupied.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.circular_queue.easy1",
+    "style": "partial",
+    "answer": "In a circular queue, when the rear reaches the end of the array it goes back to the beginning, using modulo.",
+    "labels": [
+      "covered",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "dsa.circular_queue.easy1",
+    "style": "vague",
+    "answer": "A circular queue is a better version of the simple queue that uses memory more efficiently. It solves the wasted space problem by arranging the elements in a different way.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "dsa.circular_queue.easy1",
+    "style": "off_topic",
+    "answer": "A stack works on last-in, first-out, so the last element pushed is the first one popped. It's used for things like function calls and undo operations.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.recurrence_relations.medium1",
+    "style": "good",
+    "answer": "The Master Theorem handles recurrences of the form T(n) = aT(n/b) + f(n), where f(n) is Theta of n to the d. It compares a with b to the power d. If a is less than b^d, the work done at the top level dominates, so T(n) is Theta of n^d. If a equals b^d, every level does about the same work, so you get Theta of n^d log n. And if a is greater than b^d, the recursive calls dominate and it's Theta of n to the log base b of a.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.recurrence_relations.medium1",
+    "style": "partial",
+    "answer": "You compare a with b to the power d. If a equals b^d, the answer is n^d log n, and if a is bigger, it's n to the log base b of a.",
+    "labels": [
+      "partial",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "dsa.recurrence_relations.medium1",
+    "style": "confident_wrong",
+    "answer": "The Master Theorem compares a and b directly. If a is bigger than b the complexity is always n log n, and if a is smaller than b it's linear, so d doesn't really matter.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.recurrence_relations.medium1",
+    "style": "dont_know",
+    "answer": "I don't remember the Master Theorem cases, sorry. I'd have to look them up.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.brute_force_sorting.hard2",
+    "style": "good_paraphrase",
+    "answer": "On each pass, selection sort scans the unsorted part of the array, finds the smallest element and swaps it into the first unsorted position. Once an element lands there it's in its final place, because everything after it is bigger or equal and nothing will ever be swapped in front of it again. So the sorted part grows by one element from the left on every pass, and after n minus 1 passes the whole array is sorted. It also means the number of comparisons doesn't depend on the input, it's always about n squared over 2, but it does at most n minus 1 swaps.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.brute_force_sorting.hard2",
+    "style": "partial",
+    "answer": "In each pass, selection sort finds the minimum element in the remaining unsorted part and swaps it to the front of that part.",
+    "labels": [
+      "partial",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "dsa.brute_force_sorting.hard2",
+    "style": "hesitant",
+    "answer": "Um, so every pass it, like, finds the smallest one in the, uh, unsorted part and swaps it to the front. And that one is, um, in its final spot, it won't move again. So the sorted part, you know, grows from the left each time.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dsa.brute_force_sorting.hard2",
+    "style": "confident_wrong",
+    "answer": "Selection sort compares neighbouring elements and swaps them if they're in the wrong order, so the largest element bubbles to the end on each pass. Elements can still move after a pass, so nothing is in its final position until the very end.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.iterative_tree_traversals.easy1",
+    "style": "good",
+    "answer": "You start by pushing the root onto a stack. Then, while the stack isn't empty, you pop a node, print it, and push its right child first and then its left child. Because the stack is last-in, first-out, the left child comes off next, so the left subtree is fully processed before the right one, which gives root, left, right, the same order as recursive preorder.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.iterative_tree_traversals.easy1",
+    "style": "partial",
+    "answer": "It uses a stack instead of recursion. You pop a node, visit it, and push its children, with the right child pushed before the left so the left one is processed first.",
+    "labels": [
+      "missing",
+      "covered"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "dsa.iterative_tree_traversals.easy1",
+    "style": "vague",
+    "answer": "Iterative preorder does the same thing as recursive preorder but without recursion. It uses a data structure to keep track of the nodes and visits them in the right order.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "dsa.iterative_tree_traversals.easy1",
+    "style": "off_topic",
+    "answer": "Level-order traversal uses a queue: you enqueue the root, then repeatedly dequeue a node, visit it and enqueue its children, so the tree is visited level by level.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.time_and_space_complexity.easy1",
+    "style": "good",
+    "answer": "Time complexity describes how the running time of an algorithm grows as a function of the input size n, usually measured by counting how many times the basic operation runs rather than in seconds. Space complexity describes how much extra memory the algorithm needs as n grows, like auxiliary arrays or the recursion stack. Together they're the main criteria for comparing algorithms; for example, merge sort takes O(n log n) time but O(n) extra space, while heap sort takes O(n log n) time and O(1) extra space.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.time_and_space_complexity.easy1",
+    "style": "partial",
+    "answer": "Time complexity is how the running time of an algorithm grows with the input size, like O(n) or O(n squared).",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.4
+  },
+  {
+    "question_id": "dsa.time_and_space_complexity.easy1",
+    "style": "vague",
+    "answer": "Time and space complexity are ways of describing how good an algorithm is. They tell you about its performance.",
+    "labels": [
+      "missing",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "dsa.time_and_space_complexity.easy1",
+    "style": "off_topic",
+    "answer": "Big-O notation gives an upper bound, Big-Omega a lower bound and Big-Theta a tight bound on a function's growth rate.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "dsa.double_ended_queue.medium1",
+    "style": "good_paraphrase",
+    "answer": "In an array-based deque, deleting from the front or rear is just index arithmetic: you first check whether the deque is empty, then move front forward or rear backward, wrapping around with modulo because the array is used circularly, and handle the case where the last element is removed. In a doubly linked list you don't move indexes; you unlink the first or last node by updating the neighbouring node's prev or next pointer and the head or tail pointer, then free the node. So the array version is about managing indices and wrap-around, and the list version is about fixing pointers.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.double_ended_queue.medium1",
+    "style": "partial",
+    "answer": "In the linked list version, you delete a node by changing the next and previous pointers of the nodes around it, and then free it.",
+    "labels": [
+      "missing",
+      "covered"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "dsa.double_ended_queue.medium1",
+    "style": "confident_wrong",
+    "answer": "In the array implementation, deleting from the front means shifting every remaining element one position left, so it never needs wrap-around. In the doubly linked list you have to traverse the whole list from the head to find the last node before deleting it.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.double_ended_queue.medium1",
+    "style": "hesitant",
+    "answer": "Um, in the array one you, uh, check if it's empty and then, like, move front or rear with wrap-around, modulo. And in the doubly linked list it's, um, just changing the pointers of the neighbouring nodes, you know.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dsa.tries.easy1",
+    "style": "good",
+    "answer": "A trie, or prefix tree, is a search tree for storing a set of keys, usually strings, where each edge represents a single character rather than a whole key. The path from the root to a node spells out a prefix, and a node is marked when a complete word ends there. So looking up a word of length m takes O(m) steps no matter how many words are stored, and all words with a common prefix sit in the same subtree. That's why tries are used for dictionaries, spell-checkers and auto-complete.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.tries.easy1",
+    "style": "partial",
+    "answer": "A trie is a tree that stores strings character by character, so each level of the tree corresponds to one letter of the word.",
+    "labels": [
+      "partial",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "dsa.tries.easy1",
+    "style": "confident_wrong",
+    "answer": "A trie is a balanced binary search tree where each node stores a complete string, and strings are compared alphabetically to decide whether to go left or right. It's mainly used for sorting numbers.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.tries.easy1",
+    "style": "off_topic",
+    "answer": "A hash table stores key-value pairs in an array using a hash function, so lookups take O(1) time on average.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.dijkstra_s_algorithm.medium2",
+    "style": "good_paraphrase",
+    "answer": "Dijkstra keeps a set of vertices whose shortest distance from the source is already final, like a growing tree. At each step, for every vertex u outside that tree, it looks at the best way to reach u through a tree vertex v, which is v's distance plus the weight of the edge from v to u, and it picks the vertex with the smallest such value. Once a vertex is picked, its distance is final and never changes, because all edge weights are non-negative, so any other route would have to be at least as long. Then it relaxes that vertex's neighbours and repeats.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.dijkstra_s_algorithm.medium2",
+    "style": "partial",
+    "answer": "At each step Dijkstra picks the unvisited vertex with the smallest tentative distance from the source, which is the distance to some visited vertex plus the edge weight.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "dsa.dijkstra_s_algorithm.medium2",
+    "style": "vague",
+    "answer": "Dijkstra's algorithm chooses the next vertex based on the distances it has calculated so far and the weights in the graph. It keeps going until it has processed all the vertices.",
+    "labels": [
+      "partial",
+      "missing"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "dsa.dijkstra_s_algorithm.medium2",
+    "style": "hesitant",
+    "answer": "Um, it picks the vertex with the, uh, smallest distance, like d of v plus the weight of v to u. And once a vertex is, um, added to the tree, its shortest path is, you know, final, it doesn't change.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dsa.stacks_and_recursion.medium2",
+    "style": "good",
+    "answer": "Every time a function is called, an activation record holding its parameters, local variables and return address is pushed onto the top of the call stack. If main calls A and A calls B, the stack holds main, then A, then B on top. B has to finish first and its record is popped, then A finishes, then main. So functions complete in the reverse order they were called, which is exactly last-in, first-out, the defining behaviour of a stack.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.stacks_and_recursion.medium2",
+    "style": "partial",
+    "answer": "Function calls work in LIFO order, so the last function that was called is the first one to finish.",
+    "labels": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.6
+  },
+  {
+    "question_id": "dsa.stacks_and_recursion.medium2",
+    "style": "confident_wrong",
+    "answer": "Nested function calls are handled with a queue: the first function called is the first to finish, so main returns before the functions it calls. Activation records are added to the bottom of the stack.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.stacks_and_recursion.medium2",
+    "style": "vague",
+    "answer": "Function calls are related to the stack because the stack keeps track of them. The order in which functions finish depends on how they were called.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "dsa.binary_search.medium1",
+    "style": "good_paraphrase",
+    "answer": "Binary search is decrease-and-conquer by a constant factor: each step compares the target with the middle element of the sorted array and throws away half of it. If the target is smaller, you only need to search the left half; if it's larger, the right half. So the problem goes from size n to n/2, then n/4, and so on, which gives the recurrence T(n) = T(n/2) + 1 and a running time of O(log n). It's naturally written recursively, calling itself on the smaller half, though it can also be done with a loop.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.binary_search.medium1",
+    "style": "partial",
+    "answer": "Binary search compares the target with the middle element and then searches only one half, so the array size is halved each time and it takes O(log n).",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "dsa.binary_search.medium1",
+    "style": "off_topic",
+    "answer": "Linear search checks each element one by one from the start until it finds the target, so it takes O(n) time but works on unsorted arrays.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.binary_search.medium1",
+    "style": "confident_wrong",
+    "answer": "Binary search reduces the problem by a constant amount each step, removing just the middle element, so it takes O(n) comparisons in the worst case. It also works on unsorted arrays.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.disjoint_sets_and_union_find.medium1",
+    "style": "good",
+    "answer": "Union-find keeps a collection of disjoint sets, each represented by a tree whose root is the set's representative. Find follows parent pointers from an element up to the root, so two elements are in the same set exactly when find gives the same root. Union merges two different sets by making one root point to the other, ideally attaching the smaller tree under the larger. That makes it great for tracking which elements belong together as sets merge over time, which is exactly what Kruskal's algorithm needs to check whether an edge would create a cycle.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.disjoint_sets_and_union_find.medium1",
+    "style": "partial",
+    "answer": "Union joins two sets together into one, and find tells you which set an element belongs to.",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "dsa.disjoint_sets_and_union_find.medium1",
+    "style": "hesitant",
+    "answer": "Um, union, uh, merges two disjoint sets into one. And find gives the, like, representative of the set, the root. So it's useful for, um, keeping track of which elements are in which set, you know, like in Kruskal's.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dsa.disjoint_sets_and_union_find.medium1",
+    "style": "vague",
+    "answer": "Union-find is a data structure for sets. The union and find operations work together to manage the sets efficiently.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "dsa.graph_connectivity_and_path_finding.hard2",
+    "style": "good_paraphrase",
+    "answer": "If you remove every edge that lies on some path from the source to the destination, then at the very least the source and destination end up in different components, so a graph that was connected becomes disconnected. Other parts of the graph can lose connectivity too, because those same edges might have been the only links for other vertices, while vertices joined by edges not on any such path stay reachable from each other. That follows from the definition: a graph is connected only if there's a path between every pair of vertices, and there's no longer a path between the source and the destination.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.graph_connectivity_and_path_finding.hard2",
+    "style": "partial",
+    "answer": "The graph would become disconnected, because there would be no path left between the source and the destination.",
+    "labels": [
+      "covered",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "dsa.graph_connectivity_and_path_finding.hard2",
+    "style": "confident_wrong",
+    "answer": "The graph stays connected, because removing edges never changes connectivity as long as all the vertices are still there. Connectivity only depends on the number of vertices, not the edges.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.graph_connectivity_and_path_finding.hard2",
+    "style": "off_topic",
+    "answer": "BFS explores a graph level by level using a queue, and it finds the shortest path in terms of number of edges in an unweighted graph.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.suffix_tries_and_suffix_trees.medium1",
+    "style": "good",
+    "answer": "A suffix trie stores every suffix of a text character by character, so it has lots of nodes with only one child, which wastes a lot of space. A suffix tree compresses those chains of single-child nodes into one edge labelled with a whole substring, usually stored as start and end indexes into the text. That makes it far smaller while still holding all the suffixes, so you can check whether a pattern occurs in the text by walking down from the root in time proportional to the pattern's length, and answer prefix and substring queries quickly.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.suffix_tries_and_suffix_trees.medium1",
+    "style": "partial",
+    "answer": "A suffix tree is a compressed suffix trie: chains of nodes with only one child are merged into a single edge, so it uses much less space.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "dsa.suffix_tries_and_suffix_trees.medium1",
+    "style": "hesitant",
+    "answer": "Um, a suffix tree is, like, a compressed suffix trie, where, uh, chains of single nodes are merged. And it's, um, good for pattern matching, finding if a substring is in the text, you know.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dsa.suffix_tries_and_suffix_trees.medium1",
+    "style": "vague",
+    "answer": "A suffix tree is a more efficient version of a suffix trie. It's useful for working with strings.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "dsa.open_addressing.medium1",
+    "style": "good_paraphrase",
+    "answer": "Both handle a collision by probing other slots in the same table. Linear probing tries h(key), then h(key)+1, h(key)+2 and so on, modulo the table size, so collided keys pile up next to each other in long runs, which is called primary clustering and slows searches down. Quadratic probing tries h(key)+1, h(key)+4, h(key)+9, that is h(key) plus i squared modulo the table size, so the keys spread out and primary clustering is avoided. Linear probing is simpler and cache-friendly, so it's fine when the table is lightly loaded, but quadratic probing holds up better when there are lots of collisions.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.open_addressing.medium1",
+    "style": "partial",
+    "answer": "Linear probing checks the next slot, then the one after that, one by one, until it finds an empty slot, so keys can cluster together.",
+    "labels": [
+      "missing",
+      "covered"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "dsa.open_addressing.medium1",
+    "style": "confident_wrong",
+    "answer": "Quadratic probing uses a second hash function to decide the step size, while linear probing uses the square of the attempt number. Linear probing is better because it never causes clustering.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.open_addressing.medium1",
+    "style": "off_topic",
+    "answer": "Separate chaining stores all keys that hash to the same index in a linked list at that slot, so the table never really fills up.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "dsa.binary_tree_properties.medium1",
+    "style": "good",
+    "answer": "In any non-empty binary tree, the number of leaves is always one more than the number of nodes with two children: n0 = n2 + 1. In a full binary tree, where every internal node has two children and all the leaves are on the same last level, there are no degree-1 nodes at all, so the tree is made of exactly n2 internal nodes and n2 + 1 leaves. For depth d that gives 2^d leaves and 2^d - 1 internal nodes, so 2^(d+1) - 1 nodes in total.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.binary_tree_properties.medium1",
+    "style": "partial",
+    "answer": "In a binary tree, the number of leaf nodes is one more than the number of nodes with two children.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "dsa.binary_tree_properties.medium1",
+    "style": "hesitant",
+    "answer": "Um, so the, uh, number of leaves is one more than the number of, like, degree-2 nodes. And a full binary tree has, um, all its leaves on the same level, you know, the last level.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dsa.binary_tree_properties.medium1",
+    "style": "confident_wrong",
+    "answer": "In a binary tree the number of leaf nodes is always equal to the number of nodes with two children. A full binary tree just means every node has at most two children, so its leaves can be at any level.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.expression_trees.medium2",
+    "style": "good_paraphrase",
+    "answer": "You scan the postfix expression left to right with a stack of tree nodes. Each operand becomes a leaf node that's pushed onto the stack. When you see an operator, you pop the top two nodes, make them the right and left children of a new operator node, and push that node back. Because postfix always puts an operator right after its operands, it's always combined with the correct subtrees. At the end, the one node left on the stack is the root of the whole expression tree, and evaluating it bottom-up gives the correct value.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.expression_trees.medium2",
+    "style": "partial",
+    "answer": "Operands are pushed onto a stack, and when you get an operator you pop two operands, make them the children of the operator node, and push it back.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "dsa.expression_trees.medium2",
+    "style": "vague",
+    "answer": "Postfix notation makes it easy to build the expression tree because the order is already clear. Then the tree can be evaluated correctly.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "dsa.expression_trees.medium2",
+    "style": "off_topic",
+    "answer": "An inorder traversal of an expression tree gives the infix expression, and a postorder traversal gives the postfix expression.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "dsa.insertion_sort.medium1",
+    "style": "good",
+    "answer": "Insertion sort keeps the left part of the array sorted and grows it one element at a time. At step i, A[0..i-1] is already sorted, so it takes A[i], shifts the larger elements one place right until it finds the correct spot, and inserts A[i] there. It's decrease and conquer by one: to sort n elements, you assume you can sort the first n-1, then extend that solution by inserting the last element into its right place.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.insertion_sort.medium1",
+    "style": "partial",
+    "answer": "Insertion sort takes each element and inserts it into its correct position among the elements before it, which are already sorted.",
+    "labels": [
+      "partial",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "dsa.insertion_sort.medium1",
+    "style": "hesitant",
+    "answer": "Um, so it builds the sorted part, uh, one element at a time. Each new element is, like, inserted into the right place in the sorted part. And it's decrease and conquer because, um, you sort n minus 1 elements and then, you know, add the last one.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "dsa.insertion_sort.medium1",
+    "style": "confident_wrong",
+    "answer": "Insertion sort is a divide and conquer algorithm: it splits the array into two halves, sorts each half and then merges them. At each step it swaps the smallest element to the front.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.insertion_sort.hard2",
+    "style": "good_paraphrase",
+    "answer": "The left part of the array is always sorted, and on each pass it grows by exactly one element, because the next element is slid back past the larger ones and dropped into its correct place. Since the sorted part is already in order, the insertion stops as soon as it meets an element smaller than the one being inserted. So if the array is already or nearly sorted, each insertion takes only one or two comparisons and the whole sort runs in close to linear time, which is why insertion sort is great for small or nearly sorted inputs, even though its worst case is O(n squared).",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.insertion_sort.hard2",
+    "style": "partial",
+    "answer": "The sorted part grows by one element each iteration, as the next element is inserted into it in the right place.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6
+  },
+  {
+    "question_id": "dsa.insertion_sort.hard2",
+    "style": "vague",
+    "answer": "The sorted subarray changes during insertion sort, and this is important for how the algorithm performs. It makes the algorithm work well in some cases.",
+    "labels": [
+      "missing",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "dsa.insertion_sort.hard2",
+    "style": "off_topic",
+    "answer": "Merge sort always takes O(n log n) time because it splits the array in half and merges the sorted halves, but it needs O(n) extra space.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.binary_search.hard2",
+    "style": "good",
+    "answer": "In decrease and conquer, once you've solved a smaller instance you have to turn that into the answer for the original. In binary search that step is trivial but still essential: after comparing the target with the middle element, you recursively search one half, and whatever that smaller search returns, the index or 'not found', is directly the answer for the whole array. That works only because the comparison already guarantees the target can't be in the half you discarded, so the smaller instance's answer is correct for the original problem.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "dsa.binary_search.hard2",
+    "style": "partial",
+    "answer": "Binary search reduces the problem to searching one half of the array, and the result from that half is the answer for the whole array.",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "dsa.binary_search.hard2",
+    "style": "confident_wrong",
+    "answer": "In binary search you have to search both halves and then merge the results, like merge sort, so the extend step combines the answers from the left and right halves.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "dsa.binary_search.hard2",
+    "style": "hesitant",
+    "answer": "Um, so binary search, uh, solves a smaller instance, one half, and then, like, the answer from that half is just the answer for the whole thing. That step is, um, needed, because you, you know, rely on the smaller result to decide.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.75
+  },
+  {
+    "question_id": "ooad.creator_grasp.medium2",
+    "style": "good_paraphrase",
+    "answer": "Creator says the job of creating an object should go to the class that has the most information about it, typically the one that contains or aggregates it, closely uses it, or has the data needed to initialise it. For example, an Order creates its OrderLine objects, because the order contains them and already knows the product and quantity. So creation follows the existing relationships and interactions between objects, and no extra class has to depend on OrderLine just to create it, which keeps coupling low.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.creator_grasp.medium2",
+    "style": "partial",
+    "answer": "The Creator principle says a class B should create objects of class A if B contains A or has the data needed to initialise A. For example, an Order would create its OrderLines.",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "ooad.creator_grasp.medium2",
+    "style": "confident_wrong",
+    "answer": "The Creator pattern says all objects in the system should be created by a single central factory class, so that no other class ever uses new. That way creation is completely separated from how objects interact with each other.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "ooad.creator_grasp.medium2",
+    "style": "dont_know",
+    "answer": "I haven't studied the GRASP Creator pattern properly, so I don't know how to answer this.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.facade_and_proxy_patterns.medium2",
+    "style": "good",
+    "answer": "A proxy implements the same interface as the real service, so you can add a new proxy, say for caching, logging or access control, without changing the service class or the clients that call it. That's the open/closed principle: the system is open for extension but closed for modification. The trade-off is an extra layer between the client and the real object, which adds classes and makes the code more complex, and since every request is forwarded through the proxy, responses can be a bit slower.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.facade_and_proxy_patterns.medium2",
+    "style": "partial",
+    "answer": "Proxy supports open/closed because you can add new behaviour, like logging or lazy loading, in a proxy class without touching the original class or the clients.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "ooad.facade_and_proxy_patterns.medium2",
+    "style": "vague",
+    "answer": "The Proxy pattern follows good design principles like open/closed, because it makes the system easier to extend. It does have some trade-offs, so it's not always the best choice.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "ooad.facade_and_proxy_patterns.medium2",
+    "style": "hesitant",
+    "answer": "Um, so proxy, it, uh, lets you add new proxies without changing the, like, real service or the clients, so that's open-closed. But, um, it adds another layer, so the code is more complex, and, uh, it can be a bit slower because requests go through it.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "ooad.chain_of_responsibility_pattern.medium1",
+    "style": "good_paraphrase",
+    "answer": "Think of a support system where a ticket goes to a level-1 agent, and if they can't handle it, it's passed to level 2, then to a manager. In Chain of Responsibility, the request travels along a chain of handler objects until one of them handles it, so several objects get a chance to deal with it. The chain is just handlers linked together, so you can build or reorder it at runtime, say by adding a spam filter at the front. And the sender only knows the first handler, not which one will actually process the request, so sender and receiver stay loosely coupled.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.chain_of_responsibility_pattern.medium1",
+    "style": "partial",
+    "answer": "The request is passed along a chain of handler objects until one of them handles it. The sender doesn't need to know which handler will process it.",
+    "labels": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.65
+  },
+  {
+    "question_id": "ooad.chain_of_responsibility_pattern.medium1",
+    "style": "off_topic",
+    "answer": "The Observer pattern has a subject that keeps a list of observers and notifies all of them when its state changes. It's used for things like event listeners in GUIs.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.chain_of_responsibility_pattern.medium1",
+    "style": "confident_wrong",
+    "answer": "In Chain of Responsibility every handler in the chain processes the request, one after another, and the chain is fixed at compile time. The sender has to hold a reference to every handler so it can call them in order, which is why it's tightly coupled.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "ooad.method_overloading.hard2",
+    "style": "good",
+    "answer": "Overloading is resolved at compile time using the method name and the parameter list, meaning the number, types and order of the parameters. The return type isn't part of that signature. So if two methods have the same name and parameters and differ only in return type, the compiler can't tell which one a call like add(2, 3) means, especially when the result isn't even assigned to anything. That's why Java reports a compile error saying the method is already defined.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.method_overloading.hard2",
+    "style": "partial",
+    "answer": "You'd get a compile error, because in Java you can't overload methods just by changing the return type.",
+    "labels": [
+      "partial",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "ooad.method_overloading.hard2",
+    "style": "confident_wrong",
+    "answer": "That's allowed: the compiler looks at the type you're assigning the result to and picks the method with the matching return type. So int x = get() calls the int version and String s = get() calls the String version.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.method_overloading.hard2",
+    "style": "hesitant",
+    "answer": "Um, so the, uh, return type isn't part of the signature for overloading. The compiler only, like, looks at the name and the parameters. So if only the return type is different, it can't, um, figure out which one to call, and you get a, you know, compile error.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.85
+  },
+  {
+    "question_id": "ooad.abstract_classes.hard2",
+    "style": "good_paraphrase",
+    "answer": "Since you can't create an object of an abstract class, it only exists to be extended, so it acts as a base or template in the hierarchy. For example, a Shape class can't be instantiated, but Circle and Rectangle extend it. Any abstract method in Shape, like area(), has to be implemented by each concrete subclass, so the abstract class sets a contract they must follow. At the same time it can include normal methods with bodies, so common code lives in one place, which gives partial implementation rather than a pure interface.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.abstract_classes.hard2",
+    "style": "partial",
+    "answer": "You can't make objects of an abstract class, so it's only used as a parent class, and the subclasses have to implement its abstract methods.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.65
+  },
+  {
+    "question_id": "ooad.abstract_classes.hard2",
+    "style": "vague",
+    "answer": "Abstract classes can't be instantiated, which affects how they're used in inheritance. They're mainly meant for design purposes in object-oriented programming.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.25
+  },
+  {
+    "question_id": "ooad.abstract_classes.hard2",
+    "style": "off_topic",
+    "answer": "Encapsulation means keeping a class's data private and only exposing it through methods like getters and setters, so other classes can't change it directly.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.object_memory_allocation.easy1",
+    "style": "good",
+    "answer": "In Java, every time you create an object with the new keyword, the JVM allocates a separate block of memory on the heap for it. That memory holds the object's own copy of the instance variables, so two Student objects from the same class can have different names and marks without affecting each other. You then use the reference variable with the dot operator, like s1.name or s1.display(), to reach that particular object's fields and methods.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.object_memory_allocation.easy1",
+    "style": "partial",
+    "answer": "When you use new, Java creates the object in memory, and each object gets its own separate space for its variables.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.65
+  },
+  {
+    "question_id": "ooad.object_memory_allocation.easy1",
+    "style": "confident_wrong",
+    "answer": "All objects of a class share the same memory in Java, so changing a field in one object changes it in every other object of that class. Objects are created automatically when the class is loaded, so you don't need the new keyword.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.object_memory_allocation.easy1",
+    "style": "vague",
+    "answer": "Having its own memory means the object has space to store its data. This is part of how Java handles objects.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "ooad.parameter_passing_in_java.medium1",
+    "style": "good_paraphrase",
+    "answer": "Java is always pass-by-value; the question is just what value gets copied. For a primitive like an int, the method gets a copy of the number, so if it sets the parameter to 100, the caller's variable doesn't change. For an object, the value copied is the reference, so the method points at the same object: if it calls list.add(x), the caller sees the change, but if it does list = new ArrayList(), that only changes its own copy of the reference, not the caller's variable.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.parameter_passing_in_java.medium1",
+    "style": "partial",
+    "answer": "Primitives are passed by value, so changes inside the method don't affect the caller, but objects are passed by reference, so the method can change them.",
+    "labels": [
+      "missing",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.4
+  },
+  {
+    "question_id": "ooad.parameter_passing_in_java.medium1",
+    "style": "hesitant",
+    "answer": "Um, so Java is, uh, always pass by value. For primitives, like, a copy is passed, so changing it doesn't change the caller's. And for objects it's, um, a copy of the reference, so you can change the object but not, you know, make the caller point somewhere else.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.85
+  },
+  {
+    "question_id": "ooad.parameter_passing_in_java.medium1",
+    "style": "confident_wrong",
+    "answer": "In Java, primitives are passed by reference, so changing an int parameter changes the caller's variable, while objects are copied completely, so any change inside the method is lost when it returns.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.builder_pattern.easy1",
+    "style": "good",
+    "answer": "Builder is a creational design pattern for constructing complex objects step by step. It separates how an object is built from what the final object looks like, by putting the construction steps in a separate builder object. Because different builders can implement those steps differently, the same construction process can produce different representations. A common example is building a pizza or an HTTP request with many optional fields, where a builder with chained methods is much cleaner than a constructor with ten parameters.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.builder_pattern.easy1",
+    "style": "partial",
+    "answer": "Builder is a creational pattern used to construct complex objects step by step, instead of using one big constructor.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "ooad.builder_pattern.easy1",
+    "style": "off_topic",
+    "answer": "The Factory pattern creates objects without exposing the creation logic to the client: the client asks the factory for a type, and the factory decides which subclass to instantiate.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "ooad.builder_pattern.easy1",
+    "style": "vague",
+    "answer": "The Builder pattern is useful for building objects in a better way. It makes the code more organized and easier to work with.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "ooad.low_level_design_approach.medium2",
+    "style": "good_paraphrase",
+    "answer": "Low-level design takes the analysis model, which captures precisely what the system has to do, and turns it into concrete classes, data structures, algorithms and interfaces. Because the design is built directly on that model, each part of the code maps to a clear responsibility from the analysis, and well-chosen interfaces and data structures let you swap or add pieces without reworking everything. So when requirements change, you add or extend components while the core functionality from the analysis model keeps working.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95
+  },
+  {
+    "question_id": "ooad.low_level_design_approach.medium2",
+    "style": "partial",
+    "answer": "The analysis model defines what the system should do, and the low-level design builds on it to decide the classes and methods.",
+    "labels": [
+      "partial",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "ooad.low_level_design_approach.medium2",
+    "style": "vague",
+    "answer": "Low-level design helps make the system flexible by designing it properly. The analysis model is also important in this process.",
+    "labels": [
+      "missing",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "ooad.low_level_design_approach.medium2",
+    "style": "confident_wrong",
+    "answer": "Low-level design ignores the analysis model and focuses only on writing code quickly; flexibility comes later from refactoring. The analysis model is only used for testing after the system is built.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.anti_patterns.medium2",
+    "style": "good",
+    "answer": "Vendor lock-in happens when a system depends so heavily on one vendor's proprietary product that you can't easily switch away or work around it. On the management side, your maintenance cycle becomes tied to the vendor's upgrade schedule: if you need a feature or a fix, you wait for their next release, and schedules slip. On the development side, the vendor's specific APIs spread throughout the code, which makes the architecture more complex and harder to change. The usual fix is an isolation layer, so the rest of the system talks to your own interface instead of the vendor's.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.anti_patterns.medium2",
+    "style": "partial",
+    "answer": "Vendor lock-in is when your project depends completely on one vendor's product, so you have to wait for their upgrades before you can deliver new features.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "ooad.anti_patterns.medium2",
+    "style": "hesitant",
+    "answer": "Um, vendor lock-in is, like, when you depend totally on one vendor. So your maintenance is, uh, tied to their product upgrades. And the, um, architecture gets more complex because the vendor's stuff is, you know, everywhere.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "ooad.anti_patterns.medium2",
+    "style": "off_topic",
+    "answer": "The God Class anti-pattern is when one class does too many things and knows too much, which makes it hard to maintain and test.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "ooad.controller_grasp.medium1",
+    "style": "good_paraphrase",
+    "answer": "In GRASP, the Controller is the first object beyond the UI layer that receives a system operation, like a Register or a PlaceOrderHandler. The button click in the GUI just calls the controller, and the controller decides which domain objects should do the work and delegates to them; it doesn't do the business logic itself. That way, UI classes never talk directly to the domain classes, so you can change the interface, say from a desktop app to a web page, without touching the domain logic, and coupling stays low.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.controller_grasp.medium1",
+    "style": "partial",
+    "answer": "The controller sits between the UI and the domain objects, so the GUI sends requests to the controller instead of talking directly to the business classes.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.65
+  },
+  {
+    "question_id": "ooad.controller_grasp.medium1",
+    "style": "confident_wrong",
+    "answer": "The Controller pattern says the GUI classes should handle system operations themselves, and the controller is just the class that draws the screen. It does all the business logic directly, so there's no need for separate domain objects.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.controller_grasp.medium1",
+    "style": "hesitant",
+    "answer": "Um, so the controller is, like, between the UI and the, uh, domain objects. The GUI calls the controller, and the controller, um, delegates the work to other objects. So the UI isn't, you know, directly coupled to the system classes.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "ooad.open_closed_principle.medium2",
+    "style": "good",
+    "answer": "Every time you edit code that already works and is tested, you risk breaking something that depends on it, often in ways you don't expect. The open-closed principle says classes should be open for extension but closed for modification, so new features are added by writing new code rather than changing old code. In OOP you do that with inheritance and interfaces: for example, to add a new payment method you write a new class that implements the PaymentMethod interface, and the existing checkout code, which only depends on the interface, doesn't change at all.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.open_closed_principle.medium2",
+    "style": "partial",
+    "answer": "The open-closed principle says code should be open for extension but closed for modification, so you add new features by extending classes instead of editing them.",
+    "labels": [
+      "missing",
+      "covered",
+      "partial"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "ooad.open_closed_principle.medium2",
+    "style": "off_topic",
+    "answer": "The single responsibility principle says each class should have only one reason to change, so each class focuses on one job.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.open_closed_principle.medium2",
+    "style": "vague",
+    "answer": "The open-closed principle is a good design principle that makes the code safer when you add features. Following it reduces problems in the software.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "ooad.polymorphism.medium2",
+    "style": "good_paraphrase",
+    "answer": "Say Circle, Square and Triangle all extend Shape and override draw(). You can put them all in a list of Shape and call shape.draw() in a loop, without caring which actual class each one is. At runtime Java looks at the real object and calls the right draw() method, which is dynamic method dispatch. That means client code is written once against the common superclass or interface, and adding a new shape later doesn't require changing it, which makes the design much more flexible and reusable.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.polymorphism.medium2",
+    "style": "partial",
+    "answer": "Polymorphism lets you refer to a subclass object with a superclass reference, like Shape s = new Circle(), so you can treat different shapes the same way.",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "ooad.polymorphism.medium2",
+    "style": "confident_wrong",
+    "answer": "Polymorphism means one class can inherit from many superclasses at once, and the compiler decides at compile time which method to call based on the reference type, so a Shape reference always calls Shape's version of the method.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.polymorphism.medium2",
+    "style": "hesitant",
+    "answer": "Um, so polymorphism is, like, you can treat, uh, different subclass objects as the superclass. One interface works for, um, many types. And which method runs is decided at, you know, runtime, dynamic dispatch.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "ooad.single_responsibility_principle.medium1",
+    "style": "good",
+    "answer": "SRP says a class should have one, and only one, reason to change. Suppose an Order class stores order details, charges the customer's card and sends confirmation emails. Then a change to the payment gateway, a change to the email template and a change to the order fields all hit the same class, so every change risks breaking something unrelated. If you split it into Order, PaymentProcessor and NotificationService, each class does one thing, so each is smaller, easier to test on its own and easier to maintain.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.single_responsibility_principle.medium1",
+    "style": "partial",
+    "answer": "SRP means a class should only have one responsibility, so the Order class shouldn't also handle payments and emails; those should be in separate classes.",
+    "labels": [
+      "partial",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "ooad.single_responsibility_principle.medium1",
+    "style": "vague",
+    "answer": "The Single Responsibility Principle improves design by keeping classes focused. The Order class would be better designed if it followed it.",
+    "labels": [
+      "missing",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "ooad.single_responsibility_principle.medium1",
+    "style": "off_topic",
+    "answer": "Dependency inversion says high-level modules should depend on abstractions, not on concrete classes, so you can swap implementations easily.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.classes_and_objects.hard2",
+    "style": "good",
+    "answer": "A class is a blueprint: it defines the fields an object will have and the methods that describe its behaviour, and every object created with new is an instance with its own values for those fields. In Java every class implicitly extends java.lang.Object, the root of the class hierarchy. So every object automatically gets basic methods like toString(), equals(), hashCode() and getClass(), which gives all objects a common interface. That's why you can store any object in an Object reference or a generic collection and still call those methods on it.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.classes_and_objects.hard2",
+    "style": "partial",
+    "answer": "A class is like a blueprint that defines the variables and methods, and objects are instances created from it.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.4
+  },
+  {
+    "question_id": "ooad.classes_and_objects.hard2",
+    "style": "confident_wrong",
+    "answer": "A class is an actual object in memory, and the objects created from it are copies of that same object. The Object class is just an optional utility class that you have to extend explicitly if you want methods like toString().",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.classes_and_objects.hard2",
+    "style": "hesitant",
+    "answer": "Um, a class is, like, a blueprint for the object's fields and methods. And the, uh, Object class is the root, so every class inherits from it. So every object gets, um, basic methods like toString and equals, you know.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "ooad.constructors.medium2",
+    "style": "good_paraphrase",
+    "answer": "A default constructor takes no arguments, so every new object starts with default values, like 0, null or false, or whatever that constructor sets. A parameterized constructor takes arguments, so you can create an object that's properly set up in one step, like new Student(\"Asha\", 21). One catch is that Java only generates the default constructor if you haven't written any constructor, so once you add a parameterized one, new Student() stops compiling unless you also write the no-argument constructor yourself.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.constructors.medium2",
+    "style": "partial",
+    "answer": "A parameterized constructor takes arguments so you can set the object's values when you create it, while a default constructor takes no arguments.",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "ooad.constructors.medium2",
+    "style": "off_topic",
+    "answer": "Method overloading means having several methods with the same name but different parameter lists in the same class.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "ooad.constructors.medium2",
+    "style": "vague",
+    "answer": "Parameterized and default constructors are both used to create objects, but they initialize them in different ways. Which one you use depends on your needs.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "ooad.indirection_and_pure_fabrication.easy1",
+    "style": "good",
+    "answer": "Pure fabrication is a GRASP principle for when giving a responsibility to a real domain class would hurt the design, for example by making it less cohesive or coupling it to a database. Instead you invent a class that doesn't represent anything in the problem domain, purely for convenience, like a PersistentStorage or OrderRepository class that handles saving objects. Because it's a separate, focused class, it keeps the domain classes cohesive and loosely coupled, and it can be reused across the system.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.indirection_and_pure_fabrication.easy1",
+    "style": "partial",
+    "answer": "Pure fabrication means creating a made-up class that isn't part of the domain, like a database helper class, to handle some responsibility.",
+    "labels": [
+      "missing",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "ooad.indirection_and_pure_fabrication.easy1",
+    "style": "confident_wrong",
+    "answer": "Pure fabrication means every class must directly represent a real-world object from the domain, and you should never create classes that don't exist in the problem description.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.indirection_and_pure_fabrication.easy1",
+    "style": "hesitant",
+    "answer": "Um, pure fabrication is when putting a responsibility in a, uh, domain class causes problems. So you, like, create an artificial class instead. And it, um, makes things more modular and reusable, you know.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "ooad.liskov_substitution_principle.hard2",
+    "style": "good_paraphrase",
+    "answer": "LSP says a subclass must be completely substitutable for its base class: any code that works with the base class should still work correctly if you pass it a subclass object. The classic violation is Square extending Rectangle and overriding setWidth to also change the height. A function that sets a rectangle's width to 5 and height to 4 and expects an area of 20 gets 16 with a Square, so the program breaks. The subclass changed the behaviour its parent promised; a subclass should never weaken or drop what the base class guarantees, only add to it.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.liskov_substitution_principle.hard2",
+    "style": "partial",
+    "answer": "Liskov says you should be able to replace a parent class object with a child class object without breaking the program.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "ooad.liskov_substitution_principle.hard2",
+    "style": "vague",
+    "answer": "Overriding methods can sometimes break the Liskov Substitution Principle, which can cause problems for programs that use the superclass.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "ooad.liskov_substitution_principle.hard2",
+    "style": "off_topic",
+    "answer": "Method overloading is resolved at compile time based on the parameter list, while overriding is resolved at runtime.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.coupling_and_cohesion.easy1",
+    "style": "good_paraphrase",
+    "answer": "High cohesion means everything inside a class belongs together: its methods and data all serve one focused purpose. For example, an InvoicePrinter that only formats and prints invoices is highly cohesive, whereas a Utils class that sends emails, parses dates and talks to the database is not. A cohesive class is easier to understand, test, change and reuse, because it does one clear job. Across a whole system that keeps things simpler and usually goes together with low coupling.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.coupling_and_cohesion.easy1",
+    "style": "partial",
+    "answer": "High cohesion means a class focuses on one task, with all its methods closely related.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "ooad.coupling_and_cohesion.easy1",
+    "style": "confident_wrong",
+    "answer": "High cohesion means classes depend heavily on each other and share lots of data, which is good because it makes them work closely together. You should aim for high cohesion and high coupling.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.coupling_and_cohesion.easy1",
+    "style": "vague",
+    "answer": "High cohesion is a design principle that leads to better code. It's important because good design matters in software.",
+    "labels": [
+      "missing",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "ooad.singleton_pattern.easy1",
+    "style": "good",
+    "answer": "Singleton guarantees there's only one instance of a class. The constructor is made private, so no other class can call new on it. The class keeps a private static field for its single instance and exposes a public static method, usually getInstance(), which creates the instance the first time it's called and returns the same one every time after that. In multi-threaded code you'd make getInstance synchronized or use eager initialization, so two threads can't create two instances.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "ooad.singleton_pattern.easy1",
+    "style": "partial",
+    "answer": "You make the constructor private so other classes can't create objects with new.",
+    "labels": [
+      "partial",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "ooad.singleton_pattern.easy1",
+    "style": "off_topic",
+    "answer": "The Observer pattern lets one object notify a list of subscribers whenever its state changes.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "ooad.singleton_pattern.easy1",
+    "style": "hesitant",
+    "answer": "Um, so the, uh, constructor is private, so nobody outside can create it. And there's a, like, static getInstance method that makes the object the first time and then, um, returns the same one. So there's only, you know, one instance.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "os.file_allocation_methods.easy1",
+    "style": "good",
+    "answer": "In contiguous allocation each file is stored in a set of consecutive blocks on the disk. It's simple because the directory only needs two things for each file: the starting block number and the length in blocks. It also supports both sequential and direct access, since block i of the file is just the start plus i. The downsides are external fragmentation and difficulty growing a file.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.file_allocation_methods.easy1",
+    "style": "partial",
+    "answer": "Contiguous allocation means each file takes up a continuous run of blocks on the disk, one after another.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.4
+  },
+  {
+    "question_id": "os.file_allocation_methods.easy1",
+    "style": "dont_know",
+    "answer": "I don't remember what contiguous allocation is, sorry.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.file_allocation_methods.easy1",
+    "style": "confident_wrong",
+    "answer": "In contiguous allocation each block of a file stores a pointer to the next block, so the blocks can be anywhere on the disk. It's simple because you only store the first block's address, but it only supports sequential access.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.file_system_concepts.hard2",
+    "style": "good_paraphrase",
+    "answer": "An FCB is the per-file record the file system keeps, like an inode in Unix. It stores the file's metadata: owner, permissions, size, timestamps and, most importantly, where the file's data blocks are on disk. When you open a file, the OS reads its FCB so it can check whether you're allowed to access it and then find the blocks without searching the disk. So it's central both to protecting files and to finding their data efficiently.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.file_system_concepts.hard2",
+    "style": "partial",
+    "answer": "The FCB stores information about a file, like who owns it, its permissions and its size.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.4
+  },
+  {
+    "question_id": "os.file_system_concepts.hard2",
+    "style": "hesitant",
+    "answer": "Um, the FCB is, like, a structure with info about the file, uh, owner, permissions. And it has, um, where the file's blocks are on disk, so the OS can, you know, find the data.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.65
+  },
+  {
+    "question_id": "os.file_system_concepts.hard2",
+    "style": "vague",
+    "answer": "The file control block is an important structure in the file system. It helps the OS manage files properly and makes file operations more efficient.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "os.optimal_and_lru_page_replacement.medium1",
+    "style": "good",
+    "answer": "Optimal replaces the page that won't be used for the longest time in the future, so it gives the fewest page faults possible, but the OS can't know the future, so it's only used as a benchmark. LRU replaces the page that hasn't been used for the longest time in the past, using recent history as a guess about the future. LRU is the practical choice and works well because programs have locality, but it can do worse than Optimal, for example on looping access patterns.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.optimal_and_lru_page_replacement.medium1",
+    "style": "partial",
+    "answer": "Optimal replaces the page that won't be needed for the longest time in the future, which gives the lowest number of page faults, but it can't really be implemented.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "os.optimal_and_lru_page_replacement.medium1",
+    "style": "confident_wrong",
+    "answer": "LRU replaces the page that was loaded into memory earliest, and Optimal replaces the page that has been used the fewest times. Optimal is what most real operating systems use, because it's the most efficient.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.optimal_and_lru_page_replacement.medium1",
+    "style": "off_topic",
+    "answer": "Thrashing happens when a process doesn't have enough frames, so it spends more time swapping pages in and out than doing useful work. The working-set model helps prevent it.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.page_faults.medium1",
+    "style": "good_paraphrase",
+    "answer": "When a process touches a page that isn't in memory, the hardware traps to the OS. The OS first checks whether the reference was actually invalid; if so, it kills the process, but if the page is valid and just not loaded, it finds a free frame, reads the page in from disk, updates the page table and restarts the instruction. To stop thrashing, it watches each process's page-fault rate: if a process is faulting too often it gets an extra frame, and if it's faulting very rarely it loses one. Keeping every process's fault rate inside that band stops the system spending all its time swapping.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.page_faults.medium1",
+    "style": "partial",
+    "answer": "On a page fault the OS finds a free frame, loads the missing page from disk into it, updates the page table and restarts the instruction that caused the fault.",
+    "labels": [
+      "missing",
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.35
+  },
+  {
+    "question_id": "os.page_faults.medium1",
+    "style": "hesitant",
+    "answer": "Um, so first the OS, uh, checks if the reference is invalid. If it's valid it, like, finds a free frame and brings the page in from disk. And for thrashing, um, it looks at the page-fault rate, and if it's, uh, too high the process gets more frames, if too low it loses some.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "os.page_faults.medium1",
+    "style": "vague",
+    "answer": "When a page fault happens, the OS handles it by bringing in what's needed. It also keeps an eye on page faults in general so that the system doesn't slow down too much.",
+    "labels": [
+      "missing",
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "os.context_switching.hard2",
+    "style": "good",
+    "answer": "A normal context switch just saves and restores registers and process state, so process size barely matters. But if the process being switched in has been swapped out to disk, the switch includes swapping, and then size matters a lot: moving a process takes time roughly proportional to its size, so a multi-gigabyte process can take many seconds to swap out and back in. To reduce that, the OS can swap only the memory the process is actually using rather than everything it might use, for example by having processes tell the OS when they request and release memory, or by using paging so only individual pages are moved.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.context_switching.hard2",
+    "style": "partial",
+    "answer": "If the context switch involves swapping, a bigger process takes longer, because more memory has to be written to and read back from the disk.",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "os.context_switching.hard2",
+    "style": "off_topic",
+    "answer": "The time quantum in round robin decides how often context switches happen: a very small quantum means lots of switches and a lot of overhead.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "os.context_switching.hard2",
+    "style": "confident_wrong",
+    "answer": "Process size has no effect on context switching, since the OS only saves the program counter and never moves process memory. The only way to reduce context switch time is to increase the time quantum.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.free_space_management.hard2",
+    "style": "good",
+    "answer": "A bit vector uses one bit per disk block, 1 for free and 0 for allocated, so finding a free block is just scanning for the first 1 bit, which hardware instructions make fast. But that's only efficient if the whole vector is kept in main memory; if you have to read it from disk every time, it's slow. That's fine for small disks, but the vector grows with the disk: a 1 TB disk with 4 KB blocks needs about 256 million bits, roughly 32 MB of RAM just for the map. So for large disks, systems use alternatives like a linked list of free blocks, grouping, counting runs of free blocks, or larger clusters to shrink the map.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.free_space_management.hard2",
+    "style": "partial",
+    "answer": "The bit vector needs one bit for every block, so for a huge disk it gets very large and takes a lot of memory.",
+    "labels": [
+      "missing",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "os.free_space_management.hard2",
+    "style": "vague",
+    "answer": "A bit vector has some limitations when the disk gets big, so operating systems sometimes use other methods for managing free space.",
+    "labels": [
+      "missing",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "os.free_space_management.hard2",
+    "style": "off_topic",
+    "answer": "Indexed allocation keeps all of a file's block pointers in an index block, which supports direct access without external fragmentation.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.multilevel_page_tables.medium1",
+    "style": "good_paraphrase",
+    "answer": "With a 32-bit address space and 4 KB pages, a flat page table needs about a million entries per process, even though most of the address space is never used. A two-level table splits the page number into an outer index and an inner index: the outer table points to inner page tables, and inner tables are only created for regions that are actually in use, so unused parts of the address space cost almost nothing. The price is speed: translating an address now needs one memory access per level before reaching the data, which is why the TLB matters so much.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.multilevel_page_tables.medium1",
+    "style": "partial",
+    "answer": "Hierarchical page tables split the page table into levels, so you only need inner tables for the parts of memory that are actually used, which saves memory.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6
+  },
+  {
+    "question_id": "os.multilevel_page_tables.medium1",
+    "style": "confident_wrong",
+    "answer": "Hierarchical page tables use more memory than a flat table because they store extra outer tables, but they make translation faster, since each level can be searched in parallel.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.multilevel_page_tables.medium1",
+    "style": "hesitant",
+    "answer": "Um, so it, uh, breaks the page table into multiple levels. And you only, like, allocate the inner tables for the parts that are used, so less memory. But, um, translation is slower because you have to go through, you know, each level.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "os.signals.medium2",
+    "style": "good",
+    "answer": "SIGINT is sent when the user presses Control-C in the terminal; it's user-initiated and by default terminates the process, although a program can catch it to clean up first. SIGALRM is sent by the kernel when a timer set with alarm() expires, so it's system-initiated and used for timing, like timeouts or periodic tasks. Both arrive asynchronously, at any point in the program's execution, and in both cases the process can install its own handler to change what happens.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.signals.medium2",
+    "style": "partial",
+    "answer": "SIGINT is the signal you get when you press Ctrl-C, and it usually terminates the program.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.4
+  },
+  {
+    "question_id": "os.signals.medium2",
+    "style": "off_topic",
+    "answer": "SIGKILL immediately kills a process and can't be caught or ignored, unlike SIGTERM, which a process can handle to shut down cleanly.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "os.signals.medium2",
+    "style": "vague",
+    "answer": "SIGINT and SIGALRM are both signals that a process can receive. They're used for different purposes, and the process reacts to them differently.",
+    "labels": [
+      "missing",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "os.deadlock_detection_and_recovery.easy1",
+    "style": "good_paraphrase",
+    "answer": "You start from the resource-allocation graph, remove the resource nodes and collapse the edges: if P1 is waiting for a resource that P2 holds, you just draw an edge from P1 to P2. So an edge Pi → Pj means Pi is waiting for Pj to release something. When every resource type has a single instance, there's a deadlock exactly when this graph has a cycle, so the OS periodically runs a cycle-detection algorithm on it.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.deadlock_detection_and_recovery.easy1",
+    "style": "partial",
+    "answer": "In a wait-for graph, an edge from one process to another means the first process is waiting for a resource the second one holds, and a cycle means deadlock.",
+    "labels": [
+      "missing",
+      "covered"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "os.deadlock_detection_and_recovery.easy1",
+    "style": "confident_wrong",
+    "answer": "A wait-for graph has an edge from each resource to every process that might ever request it, and a deadlock happens only when the graph has no cycles. It's built by adding extra resource nodes to the allocation graph.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.deadlock_detection_and_recovery.easy1",
+    "style": "hesitant",
+    "answer": "Um, you take the resource allocation graph and, uh, remove the resource nodes, and, like, collapse the edges. So an edge from Pi to Pj means Pi is, um, waiting for Pj. And if there's a cycle, you know, deadlock.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "os.mutex_locks.medium2",
+    "style": "good",
+    "answer": "A spinlock makes a waiting thread busy-wait: it keeps looping, checking whether the lock is free, instead of going to sleep. That burns CPU cycles doing nothing useful, and on a single CPU it can even stop the lock holder from running and releasing the lock. In a real-time system this is bad because the time a task can spend spinning is hard to bound, so it hurts predictability and can delay higher-priority work. Spinlocks are only reasonable when locks are held for a very short time on multiprocessors, where spinning is cheaper than a context switch.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.95
+  },
+  {
+    "question_id": "os.mutex_locks.medium2",
+    "style": "partial",
+    "answer": "Spinlocks use busy waiting, so the process keeps checking the lock in a loop and wastes CPU time.",
+    "labels": [
+      "covered",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "os.mutex_locks.medium2",
+    "style": "vague",
+    "answer": "Spinlocks can cause problems in real-time systems because of the way they wait for the lock. This makes the system less efficient.",
+    "labels": [
+      "missing",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "os.mutex_locks.medium2",
+    "style": "confident_wrong",
+    "answer": "Spinlocks put the waiting process to sleep, so they never waste CPU time; they're actually preferred in real-time systems because they make waiting fully predictable.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.pthreads.medium1",
+    "style": "good_paraphrase",
+    "answer": "Pthreads is the POSIX standard, IEEE 1003.1c, for creating and synchronizing threads. It's only a specification of the API and its behaviour, not an implementation, so a system can provide it as a user-level library, where threads are managed in user space, or map the threads onto kernel threads. That difference shows up in the scheduling scope: PTHREAD_SCOPE_PROCESS means threads compete for the CPU only against other threads in the same process, which fits user-level or many-to-many implementations, while PTHREAD_SCOPE_SYSTEM means they compete with every thread in the system, which matches kernel-level threads. Linux, for instance, only supports system scope.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.pthreads.medium1",
+    "style": "partial",
+    "answer": "Pthreads is the POSIX standard API for creating and synchronizing threads, with functions like pthread_create and pthread_join.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.4
+  },
+  {
+    "question_id": "os.pthreads.medium1",
+    "style": "hesitant",
+    "answer": "Um, Pthreads is the, uh, POSIX standard for threads. It's just a spec, so it can be, like, user-level or kernel-level. And the, um, scheduling scope, process scope or system scope, shows that, you know, difference.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "os.pthreads.medium1",
+    "style": "off_topic",
+    "answer": "A mutex lock protects a critical section: a thread calls acquire before entering and release after leaving, so only one thread is inside at a time.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.linux_and_windows_scheduling.easy1",
+    "style": "good",
+    "answer": "CFS gives each task a virtual run time, vruntime, which grows as the task runs, and grows more slowly for high-priority tasks with low nice values. All runnable tasks are kept in a red-black tree, which is a balanced binary search tree, ordered by vruntime. To pick the next task, CFS just takes the leftmost node, the task with the smallest vruntime, which is the one that has had the least fair share of the CPU so far. So tasks with lower nice values effectively get more CPU time, and tasks that have been waiting catch up.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.linux_and_windows_scheduling.easy1",
+    "style": "partial",
+    "answer": "CFS picks the task that has the smallest virtual runtime, meaning the one that has had the least CPU time so far.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "os.linux_and_windows_scheduling.easy1",
+    "style": "confident_wrong",
+    "answer": "CFS keeps tasks in a simple FIFO queue and always runs the task with the highest virtual runtime, because that task has shown it needs the CPU most. Nice values don't affect scheduling in CFS.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.linux_and_windows_scheduling.easy1",
+    "style": "vague",
+    "answer": "CFS tries to be fair to all tasks, so it chooses the next task in a way that balances CPU time between them.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "os.contiguous_memory_allocation.medium1",
+    "style": "good_paraphrase",
+    "answer": "First-fit takes the first hole that's big enough, so it stops searching early and is fast. Best-fit takes the smallest hole that fits, which leaves the smallest leftover, but it has to search the whole list unless the list is sorted by size. Worst-fit takes the largest hole, leaving the biggest leftover, and simulations show it wastes memory the most. So first-fit and best-fit do better than worst-fit on storage use, with first-fit usually faster. All three still suffer from external fragmentation, and compaction can fix it by moving processes together, but only if addresses are relocated dynamically at run time.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.contiguous_memory_allocation.medium1",
+    "style": "partial",
+    "answer": "First-fit puts the process in the first hole that's big enough, best-fit uses the smallest hole that fits, and worst-fit uses the biggest hole.",
+    "labels": [
+      "partial",
+      "partial",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.4
+  },
+  {
+    "question_id": "os.contiguous_memory_allocation.medium1",
+    "style": "hesitant",
+    "answer": "Um, first-fit is, uh, faster and better than worst-fit for storage. Best-fit leaves the smallest leftover but, like, has to search the whole list. Worst-fit leaves the biggest hole, so it's, um, less efficient. And all of them have external fragmentation, which compaction can fix if relocation is, you know, dynamic.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "os.contiguous_memory_allocation.medium1",
+    "style": "off_topic",
+    "answer": "Paging avoids external fragmentation by dividing memory into fixed-size frames and processes into pages of the same size, although it can still have internal fragmentation.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "os.resource_allocation_graph.medium2",
+    "style": "good",
+    "answer": "When every resource type has only one instance, a cycle in the resource-allocation graph is both necessary and sufficient for deadlock. A cycle means each process in it is holding a resource that the next process is waiting for, so none of them can ever proceed. The OS periodically runs a cycle-detection algorithm, usually on the simplified wait-for graph, and searching for a cycle takes on the order of n squared operations, where n is the number of vertices. With multiple instances per resource type, a cycle alone isn't enough, and you'd need a Banker's-style detection algorithm instead.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.resource_allocation_graph.medium2",
+    "style": "partial",
+    "answer": "It checks the graph for a cycle; if there's a cycle, there's a deadlock, because the processes in it are waiting for each other's resources.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.65
+  },
+  {
+    "question_id": "os.resource_allocation_graph.medium2",
+    "style": "confident_wrong",
+    "answer": "With a single instance of each resource, a cycle in the graph doesn't necessarily mean a deadlock, so the OS instead checks whether any process has been waiting longer than a fixed timeout. The check is done in constant time.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.resource_allocation_graph.medium2",
+    "style": "vague",
+    "answer": "The resource allocation graph shows which processes have which resources. The algorithm looks at the graph to figure out if there's a deadlock.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "os.deadlock_prevention.hard2",
+    "style": "good",
+    "answer": "Under this prevention scheme, if a process holding some resources requests another one that can't be granted immediately, it's preempted: all the resources it currently holds are released. Those preempted resources are added to the list of resources the process is waiting for, and it's restarted only when it can get back its old resources along with the new one. This breaks the no-preemption condition, one of the four necessary conditions for deadlock, because resources can now be taken away from a waiting process. It works well for resources whose state is easy to save and restore, like CPU registers or memory, but not for things like printers.",
+    "labels": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.95
+  },
+  {
+    "question_id": "os.deadlock_prevention.hard2",
+    "style": "partial",
+    "answer": "The process has to give up all the resources it's holding, and it only restarts when it can get all of them back plus the new one.",
+    "labels": [
+      "covered",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "os.deadlock_prevention.hard2",
+    "style": "hesitant",
+    "answer": "Um, so the process, uh, releases all the resources it's holding. And those resources are, like, added to what it's waiting for, so it restarts only when it gets them all back. And it's, um, breaking the no preemption condition, you know.",
+    "labels": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "os.deadlock_prevention.hard2",
+    "style": "off_topic",
+    "answer": "Circular wait can be prevented by numbering all resource types and requiring processes to request them only in increasing order.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "os.fragmentation.medium2",
+    "style": "good_paraphrase",
+    "answer": "External fragmentation is when there's enough free memory in total for a request, but it's split into small scattered holes, so no single hole is big enough, say three free 100 KB holes when a process needs 250 KB. Compaction fixes this by moving the allocated blocks together so all the free memory forms one big contiguous block. But it only works if relocation is dynamic, done at execution time, because the processes' addresses change when they move. It's also expensive, and there's an I/O problem: a job doing I/O into its buffer can't be moved, so it has to be latched in memory, or the I/O has to go through OS buffers.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.fragmentation.medium2",
+    "style": "partial",
+    "answer": "External fragmentation means the free memory is split into small non-contiguous pieces, so a big request can't be satisfied even though enough memory is free in total.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.4
+  },
+  {
+    "question_id": "os.fragmentation.medium2",
+    "style": "confident_wrong",
+    "answer": "External fragmentation is the unused space inside an allocated block, when a process gets more memory than it asked for. Compaction fixes it by splitting blocks into smaller pieces, and it works with any kind of address binding.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.fragmentation.medium2",
+    "style": "vague",
+    "answer": "External fragmentation causes problems with memory allocation, and compaction helps with this. But compaction isn't perfect and has some drawbacks.",
+    "labels": [
+      "missing",
+      "partial",
+      "partial"
+    ],
+    "overall": 0.15
+  },
+  {
+    "question_id": "os.multilevel_queue_scheduling.medium2",
+    "style": "good",
+    "answer": "In a multilevel feedback queue there are several ready queues with different priorities, and the scheduler always serves the highest-priority non-empty queue, so a lower queue only runs when all the higher queues are empty. If a process arrives in a higher queue while a lower-priority process is running, it preempts that process. What makes it 'feedback' is that processes move between queues based on their behaviour: a process that uses its whole time slice is moved down, so CPU-bound jobs sink while I/O-bound and interactive jobs stay high, and a process that waits too long can be moved up to prevent starvation.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.multilevel_queue_scheduling.medium2",
+    "style": "partial",
+    "answer": "Higher-priority queues always run first, and a process arriving in a higher queue preempts one running from a lower queue.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6
+  },
+  {
+    "question_id": "os.multilevel_queue_scheduling.medium2",
+    "style": "hesitant",
+    "answer": "Um, the higher queues are, uh, always run before the lower ones. And if something comes into a higher queue it, like, preempts the lower one. And processes, um, move between queues depending on how they behave, you know, using too much CPU moves them down.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8
+  },
+  {
+    "question_id": "os.multilevel_queue_scheduling.medium2",
+    "style": "off_topic",
+    "answer": "Round robin gives each process a fixed time quantum in turn, and a process that doesn't finish goes to the back of the ready queue.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.inter_process_communication.medium1",
+    "style": "good_paraphrase",
+    "answer": "With shared memory, the processes set up a region that both can read and write, so they communicate just by accessing common variables, which is fast, but they have to synchronize themselves, for example with semaphores, to avoid race conditions. With message passing there are no shared variables at all: one process calls send to pass a message and the other calls receive to get it, and the OS or the channel handles the copying and can provide synchronization, for example a blocking receive that waits until a message arrives. Message passing is simpler and works across machines, but it's slower because of the system calls involved.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.inter_process_communication.medium1",
+    "style": "partial",
+    "answer": "In message passing, processes communicate by sending and receiving messages through the kernel.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.5
+  },
+  {
+    "question_id": "os.inter_process_communication.medium1",
+    "style": "confident_wrong",
+    "answer": "Message passing works by having both processes write into the same shared variables, and shared memory is when the kernel copies messages between them. Message passing needs no synchronization at all.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.inter_process_communication.medium1",
+    "style": "vague",
+    "answer": "Message passing and shared memory are two different ways processes can communicate. They have different trade-offs for synchronization.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1
+  },
+  {
+    "question_id": "os.fifo_page_replacement.easy1",
+    "style": "good",
+    "answer": "FIFO keeps the pages in memory in a queue in the order they were loaded. When a page fault happens and all frames are full, it evicts the page at the head of the queue, the one that has been in memory the longest, loads the new page and puts it at the tail. It's simple, but the oldest page might still be heavily used. It also suffers from Belady's anomaly: for some reference strings, giving the process more frames actually increases the number of page faults; for example, 1,2,3,4,1,2,5,1,2,3,4,5 gives 9 faults with 3 frames but 10 with 4.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.fifo_page_replacement.easy1",
+    "style": "partial",
+    "answer": "FIFO replaces the page that has been in memory the longest, keeping the pages in a queue in the order they came in.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55
+  },
+  {
+    "question_id": "os.fifo_page_replacement.easy1",
+    "style": "hesitant",
+    "answer": "Um, FIFO keeps the pages in a, uh, queue in the order they came in, and on a page fault it, like, replaces the oldest one. And it can have, um, Belady's anomaly, where more frames gives more faults, you know.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.85
+  },
+  {
+    "question_id": "os.fifo_page_replacement.easy1",
+    "style": "off_topic",
+    "answer": "LRU replaces the page that hasn't been used for the longest time, which usually performs better than FIFO but needs hardware support like counters or a stack.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05
+  },
+  {
+    "question_id": "os.schedulers.easy1",
+    "style": "good_paraphrase",
+    "answer": "The short-term scheduler, or CPU scheduler, decides which of the processes that are ready to run gets the CPU next. It picks one from the ready queue, and the dispatcher then does the context switch to it. The ready queue doesn't have to be first-in first-out; it could be a priority queue, a tree or an unordered list, depending on the scheduling algorithm. The entries in that queue are the processes' PCBs. It runs very often, every few milliseconds, so it has to be fast.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0
+  },
+  {
+    "question_id": "os.schedulers.easy1",
+    "style": "partial",
+    "answer": "The short-term scheduler picks which process from the ready queue gets the CPU next.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.45
+  },
+  {
+    "question_id": "os.schedulers.easy1",
+    "style": "confident_wrong",
+    "answer": "The short-term scheduler decides which programs are brought from disk into memory, and it runs only a few times a minute. It stores the actual program code in the ready queue instead of PCBs.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0
+  },
+  {
+    "question_id": "os.schedulers.easy1",
+    "style": "vague",
+    "answer": "The short-term scheduler is the part of the operating system that handles scheduling processes. It helps decide what runs.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.15
+  }
+]

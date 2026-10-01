@@ -1,0 +1,13 @@
+{
+  "fixture_id": "every_section_pdf",
+  "layout_type": "single_column",
+  "document_type": "pdf",
+  "template_style": "ats_plain",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "easy",
+  "known_edge_cases": [
+    "every canonical Section Detection label present with standard header phrasing (Milestone 2 baseline)"
+  ],
+  "notes": "Milestone 2 fixture (2026-08). Baseline regression for the 4-tier cascade's confident gazetteer-match path (Tier 2).",
+  "added_in_milestone": 2
+}

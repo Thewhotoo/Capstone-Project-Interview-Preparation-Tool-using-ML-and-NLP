@@ -1,0 +1,14 @@
+{
+  "fixture_id": "mixed_layout_two_page",
+  "layout_type": "two_column",
+  "document_type": "pdf",
+  "template_style": "ats_plain",
+  "synthetic_or_real": "synthetic",
+  "difficulty": "medium",
+  "known_edge_cases": [
+    "page 1 is single-column (name + summary only), page 2 is a clean two-column sidebar+main",
+    "tests that per-page classification and document-level aggregation (layout.py's _aggregate_document_mode) correctly report two_column overall when only one of two pages actually is"
+  ],
+  "notes": "Validation-pass fixture (2026-08). A real cover-page-then-body-page resume pattern.",
+  "added_in_milestone": 1
+}

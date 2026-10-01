@@ -1,0 +1,12 @@
+{
+  "AI SOC Analyst": [
+    "Why did you use Python in this project?",
+    "Why did you use Redis in this project?",
+    "How did you approach caching in this project?"
+  ],
+  "Task Tracker": [
+    "Why did you use React in this project?",
+    "Why did you use Node.js in this project?",
+    "How did you approach authentication in this project?"
+  ]
+}

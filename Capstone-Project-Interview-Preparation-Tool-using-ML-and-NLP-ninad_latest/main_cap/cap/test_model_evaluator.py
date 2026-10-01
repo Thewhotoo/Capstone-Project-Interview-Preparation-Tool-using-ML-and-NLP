@@ -1,0 +1,280 @@
+"""
+Tests for model_evaluator.py — TrainedEvaluator (the Evaluator Protocol
+implementation) and promote_trained_model. Includes the import-graph
+assertion enforcing this layer's approved dependency boundary. Uses the
+tiny random backbone (approved clarification #4) — never a full pretrained
+download in unit tests.
+"""
+
+import ast
+import inspect
+import os
+import sys
+import unittest
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import torch
+
+from evaluation_request import ConversationContextSnapshot, EvaluationRequest
+from evaluator import Evaluator, check_conformance
+import evaluator_registry
+import model_evaluator as model_evaluator_module
+from model_backbone import BackboneConfig, build_tiny_random_encoder, build_tokenizer
+from model_evaluator import TrainedEvaluator, promote_trained_model
+from model_heads import MultiTaskModel
+from question_families import ReasoningType
+from question_specification import Grounding, ProjectGrounding, QuestionCategory, QuestionSpecification, SourceType
+from training_experimentation import BenchmarkResult, Checkpoint, ExperimentConfig, PromotionDecision, assemble_checkpoint
+
+_TOKENIZER = build_tokenizer(BackboneConfig())
+
+
+def _module_imports(module) -> set:
+    tree = ast.parse(inspect.getsource(module))
+    names = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            names.add(node.module)
+    return names
+
+
+class TestModelEvaluatorStaysWithinItsOwnBoundary(unittest.TestCase):
+    FORBIDDEN_MODULES = {
+        "synthetic_generation_pipeline", "coverage_strategy",
+        "generation_client", "generation_recipe", "generation_validation",
+        "prompt_assembler", "prompt_controllers", "labeling_operations", "dataset_manifest",
+        "conversation_engine", "conversation_memory", "discussion_policy", "planner", "topic_pool",
+        "discussion_engine", "heuristic_evaluator",
+    }
+
+    def test_never_imports_forbidden_modules(self):
+        self.assertFalse(_module_imports(model_evaluator_module) & self.FORBIDDEN_MODULES)
+
+
+def _spec() -> QuestionSpecification:
+    return QuestionSpecification(
+        id="topic_0", category=QuestionCategory.PROJECT_DEEP_DIVE, text_seed="Redis caching",
+        grounding=Grounding(project=ProjectGrounding(
+            title="RD Platform", technologies=("Python", "Redis"), concepts=("Caching",),
+        )),
+        source_type=SourceType.PROJECT, source_id="RD Platform", source_field="interview_seeds", reason="test",
+    )
+
+
+def _request(request_id: str = "r1", expected_concepts: tuple = ("caching",)) -> EvaluationRequest:
+    return EvaluationRequest(
+        request_id=request_id, requested_at="2026-07-24T00:00:00+00:00",
+        specification=_spec(), question_text="Did Redis caching give you trouble?",
+        reasoning_type=ReasoningType.DEBUGGING,
+        answer_text="I worked through a cache invalidation bug using Redis carefully.",
+        conversation_context=ConversationContextSnapshot(turn_number=1, is_followup=False),
+        expected_concepts=expected_concepts,
+    )
+
+
+def _checkpoint(dataset_version: str = "v1") -> Checkpoint:
+    config = ExperimentConfig(backbone_name="microsoft/deberta-v3-base", random_seed=1, dataset_version=dataset_version)
+    return assemble_checkpoint(model_version="m1", experiment_config=config, artifact_uri="in-memory-test-artifact")
+
+
+def _trained_evaluator() -> TrainedEvaluator:
+    backbone = build_tiny_random_encoder(_TOKENIZER, hidden_size=16)
+    model = MultiTaskModel(BackboneConfig(), backbone=backbone)
+    return TrainedEvaluator(_checkpoint(), model, _TOKENIZER, BackboneConfig(max_length=32))
+
+
+class TestTrainedEvaluatorConformance(unittest.TestCase):
+    def test_satisfies_evaluator_protocol_structurally(self):
+        evaluator = _trained_evaluator()
+        self.assertIsInstance(evaluator, Evaluator)
+
+    def test_passes_check_conformance(self):
+        evaluator = _trained_evaluator()
+        check_conformance(evaluator, _request())  # must not raise
+
+    def test_declares_all_dimensions_and_reasoning_types(self):
+        evaluator = _trained_evaluator()
+        self.assertEqual(set(evaluator.declared_dimensions), set(TrainedEvaluator.declared_dimensions))
+        self.assertEqual(set(evaluator.declared_reasoning_types), set(ReasoningType))
+        self.assertFalse(evaluator.requires_network)
+
+
+class TestTrainedEvaluatorDevicePortability(unittest.TestCase):
+    """Session 10 (Colab portability): device is inferred from the model
+    itself, not a separate constructor argument -- verified here on CPU
+    (the only device available in this environment); the SAME mechanism
+    (next(model.parameters()).device) resolves to cuda automatically if the
+    model was moved there, with zero code change needed."""
+
+    def test_device_is_inferred_from_the_model(self):
+        evaluator = _trained_evaluator()
+        self.assertEqual(evaluator.device, torch.device("cpu"))
+
+    def test_evaluate_works_when_model_explicitly_on_cpu(self):
+        backbone = build_tiny_random_encoder(_TOKENIZER, hidden_size=16)
+        model = MultiTaskModel(BackboneConfig(), backbone=backbone)
+        model.to("cpu")
+        evaluator = TrainedEvaluator(_checkpoint(), model, _TOKENIZER, BackboneConfig(max_length=32))
+        self.assertEqual(evaluator.device, torch.device("cpu"))
+        result = evaluator.evaluate(_request())  # must not raise a device-mismatch error
+        self.assertTrue(result.dimensions)
+
+
+class TestTrainedEvaluatorEvaluate(unittest.TestCase):
+    def test_produces_valid_result_with_populated_provenance_fields(self):
+        evaluator = _trained_evaluator()
+        result = evaluator.evaluate(_request())
+
+        self.assertEqual(result.request_id, "r1")
+        self.assertTrue(result.dimensions)
+        self.assertIn(result.grade, ("poor", "weak", "adequate", "good", "excellent"))
+        self.assertEqual(result.dataset_version, "v1")
+        self.assertIsNotNone(result.training_date)
+        self.assertEqual(result.confidence_source, "model_derived")
+        for d in result.dimensions:
+            self.assertEqual(d.confidence_source, "model_derived")
+
+    def test_only_relevant_dimensions_are_reported(self):
+        from reasoning_dimension_relevance import relevant_dimensions
+        evaluator = _trained_evaluator()
+        result = evaluator.evaluate(_request())
+        expected = relevant_dimensions(ReasoningType.DEBUGGING)
+        self.assertEqual({d.name for d in result.dimensions}, set(expected))
+
+    def test_concept_coverage_produced_for_expected_concepts(self):
+        evaluator = _trained_evaluator()
+        result = evaluator.evaluate(_request(expected_concepts=("caching", "redis")))
+        self.assertEqual({c.concept for c in result.concept_coverage}, {"caching", "redis"})
+        for observation in result.concept_coverage:
+            self.assertEqual(observation.confidence_source, "model_derived")
+
+    def test_no_expected_concepts_yields_empty_concept_coverage(self):
+        evaluator = _trained_evaluator()
+        result = evaluator.evaluate(_request(expected_concepts=()))
+        self.assertEqual(result.concept_coverage, ())
+
+    def test_evaluate_is_stateless_across_calls(self):
+        evaluator = _trained_evaluator()
+        result_a = evaluator.evaluate(_request(request_id="r1"))
+        result_b = evaluator.evaluate(_request(request_id="r1"))
+        self.assertEqual(
+            [d.raw_score for d in result_a.dimensions], [d.raw_score for d in result_b.dimensions],
+        )
+
+
+class TestProportionalDimensionWeighting(unittest.TestCase):
+    """Phase 3 evaluation-fairness fix (same rationale/change as
+    heuristic_evaluator.py's `evaluate()`): the always-relevant dimensions
+    must carry more weight than the 1-2 extra, reasoning_type-specific
+    dimensions, not uniform 1/N weighting."""
+
+    def test_always_relevant_dimension_has_higher_weight_than_an_extra_dimension(self):
+        evaluator = _trained_evaluator()
+        result = evaluator.evaluate(_request())  # DEBUGGING -> extras {debugging, technical_depth}
+        always_relevant_weight = result.dimension("technical_accuracy").weight_used
+        extra_weight = result.dimension("debugging").weight_used
+        self.assertGreater(always_relevant_weight, extra_weight)
+
+    def test_weights_still_sum_to_one_across_contributing_dimensions(self):
+        evaluator = _trained_evaluator()
+        result = evaluator.evaluate(_request())
+        contributing = [d for d in result.dimensions if d.contributes_to_overall]
+        self.assertAlmostEqual(sum(d.weight_used for d in contributing), 1.0, places=2)
+
+
+class TestPromoteTrainedModel(unittest.TestCase):
+    def setUp(self):
+        # evaluator_registry is process-global state -- reset between tests
+        # so promotion tests don't leak into each other or other test files.
+        evaluator_registry._registry.clear()
+        evaluator_registry._active_name = None
+
+    def test_rejects_unapproved_decision(self):
+        checkpoint = _checkpoint()
+        decision = PromotionDecision(
+            approved=False, rationale="did not clear the bar",
+            checkpoint_model_version=checkpoint.model_version, benchmark_id="bench_1",
+        )
+        with self.assertRaises(ValueError):
+            promote_trained_model(checkpoint, decision, _trained_evaluator())
+
+    def test_approved_decision_registers_and_activates(self):
+        checkpoint = _checkpoint()
+        decision = PromotionDecision(
+            approved=True, rationale="cleared the bar",
+            checkpoint_model_version=checkpoint.model_version, benchmark_id="bench_1",
+        )
+        evaluator = _trained_evaluator()
+        promote_trained_model(checkpoint, decision, evaluator, sample_request=_request(), make_active=True)
+
+        self.assertEqual(evaluator_registry.get_active_evaluator().name, evaluator.name)
+        self.assertIn(evaluator.name, evaluator_registry.registered_evaluator_names())
+
+
+def _spec_with_category(category: QuestionCategory) -> QuestionSpecification:
+    return QuestionSpecification(
+        id="topic_cat", category=category, text_seed="Linux",
+        grounding=Grounding(project=ProjectGrounding(
+            title="AI SOC Analyst", technologies=("Linux",), concepts=(),
+        )),
+        source_type=SourceType.PROJECT, source_id="AI SOC Analyst",
+        source_field="technical_topics", reason="test",
+    )
+
+
+def _request_with(spec: QuestionSpecification, reasoning_type: ReasoningType) -> EvaluationRequest:
+    return EvaluationRequest(
+        request_id="req_cat", requested_at="2026-07-24T00:00:00+00:00",
+        specification=spec, question_text="Why did you take the approach you did for Linux?",
+        reasoning_type=reasoning_type,
+        answer_text="I used it for log analysis.",
+        conversation_context=ConversationContextSnapshot(turn_number=1, is_followup=False),
+        expected_concepts=(),
+    )
+
+
+class TestCategoryAwareDimensionSelection(unittest.TestCase):
+    """Phase 6 (question-specific dimensions): TrainedEvaluator must skip
+    the architecture/tradeoffs dimension heads for SKILL_IN_CONTEXT +
+    DECISION_MAKING -- the same evidenced exclusion HeuristicEvaluator
+    applies, since both consult the same relevant_dimensions() table."""
+
+    def test_skill_in_context_decision_making_excludes_architecture_and_tradeoffs(self):
+        evaluator = _trained_evaluator()
+        spec = _spec_with_category(QuestionCategory.SKILL_IN_CONTEXT)
+        result = evaluator.evaluate(_request_with(spec, ReasoningType.DECISION_MAKING))
+        dim_names = {d.name for d in result.dimensions}
+        self.assertNotIn("architecture", dim_names)
+        self.assertNotIn("tradeoffs", dim_names)
+
+    def test_project_overview_decision_making_still_includes_architecture_and_tradeoffs(self):
+        evaluator = _trained_evaluator()
+        spec = _spec_with_category(QuestionCategory.PROJECT_OVERVIEW)
+        result = evaluator.evaluate(_request_with(spec, ReasoningType.DECISION_MAKING))
+        dim_names = {d.name for d in result.dimensions}
+        self.assertIn("architecture", dim_names)
+        self.assertIn("tradeoffs", dim_names)
+
+    def test_project_deep_dive_decision_making_still_includes_architecture_and_tradeoffs(self):
+        evaluator = _trained_evaluator()
+        spec = _spec_with_category(QuestionCategory.PROJECT_DEEP_DIVE)
+        result = evaluator.evaluate(_request_with(spec, ReasoningType.DECISION_MAKING))
+        dim_names = {d.name for d in result.dimensions}
+        self.assertIn("architecture", dim_names)
+        self.assertIn("tradeoffs", dim_names)
+
+    def test_weights_still_sum_to_one_with_narrower_dimension_set(self):
+        """Aggregation stays generic -- proportional weighting normalizes
+        correctly even with two fewer dimensions than usual."""
+        evaluator = _trained_evaluator()
+        spec = _spec_with_category(QuestionCategory.SKILL_IN_CONTEXT)
+        result = evaluator.evaluate(_request_with(spec, ReasoningType.DECISION_MAKING))
+        contributing = [d for d in result.dimensions if d.contributes_to_overall]
+        self.assertAlmostEqual(sum(d.weight_used for d in contributing), 1.0, places=2)
+
+
+if __name__ == "__main__":
+    unittest.main()

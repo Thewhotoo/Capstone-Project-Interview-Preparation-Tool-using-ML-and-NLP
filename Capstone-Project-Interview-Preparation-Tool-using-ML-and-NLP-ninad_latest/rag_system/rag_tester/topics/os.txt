@@ -1,0 +1,71 @@
+# Introduction
+Operating system functions | role of OS, resource manager, types of operating systems
+User mode vs kernel mode | dual mode, privileged instructions, mode bit
+System calls | system call types, API, trap
+Interrupts | interrupt handling, hardware interrupt, software interrupt, trap vs interrupt
+
+# Processes and threads
+Schedulers | long-term, short-term, medium-term scheduler, dispatcher
+Context switching | context switch, context switch overhead
+Process creation and termination | fork, exec, wait, exit
+Threads | thread, process vs thread, benefits of multithreading
+User-level vs kernel-level threads | user thread, kernel thread, multithreading models
+Pthreads | pthread_create, pthread_join, thread library
+Signals | signal handling, SIGKILL, SIGINT, kill()
+Bash shell and cron | shell scripting, cron jobs, crontab
+
+# CPU scheduling
+Scheduling criteria | CPU utilization, throughput, turnaround time, waiting time, response time
+Preemptive vs non-preemptive scheduling | preemption, non-preemptive
+FCFS scheduling | first come first serve, convoy effect
+SJF and SRTF scheduling | shortest job first, shortest remaining time first
+Round robin scheduling | time quantum, time slice
+Priority scheduling | priority, starvation, aging
+Multilevel queue scheduling | multilevel queue, multilevel feedback queue
+Multiprocessor scheduling | processor affinity, load balancing, symmetric multiprocessing
+Linux and Windows scheduling | Completely Fair Scheduler, CFS, Windows priority scheduling
+
+# Synchronization
+Inter-process communication | IPC, shared memory, message passing, pipes
+Race condition | race condition, shared data
+Critical section problem | critical section, mutual exclusion, progress, bounded waiting
+Peterson's solution | Peterson's algorithm
+Hardware synchronization | test-and-set, compare-and-swap, atomic instructions
+Mutex locks | mutex, spinlock, busy waiting
+Semaphores | semaphore, wait, signal, counting semaphore, binary semaphore
+Producer-consumer problem | bounded buffer problem
+Readers-writers problem | readers writers
+Dining philosophers problem | dining philosophers
+
+# Deadlocks
+Deadlock conditions | mutual exclusion, hold and wait, no preemption, circular wait
+Resource allocation graph | RAG, cycle, request edge, assignment edge
+Deadlock prevention | preventing hold and wait, circular wait
+Deadlock avoidance | safe state, unsafe state
+Banker's algorithm | banker's algorithm, need matrix, safety algorithm
+Deadlock detection and recovery | wait-for graph, process termination, resource preemption
+Deadlock vs starvation vs livelock | starvation, livelock
+
+# Memory management
+Logical vs physical address | logical address, physical address, MMU, address binding
+Contiguous memory allocation | first fit, best fit, worst fit, partitioning
+Fragmentation | internal fragmentation, external fragmentation, compaction
+Paging | page, frame, page table, page size
+Translation lookaside buffer | TLB, TLB hit, effective access time
+Multilevel page tables | hierarchical paging, inverted page table, hashed page table
+Segmentation | segment table, segmentation vs paging
+Swapping | swapping, backing store
+
+# Virtual memory
+Virtual memory and demand paging | virtual memory, demand paging, lazy swapping
+Page faults | page fault, page fault handling
+FIFO page replacement | FIFO, Belady's anomaly
+Optimal and LRU page replacement | optimal page replacement, LRU, least recently used
+Thrashing | thrashing, working set model, locality of reference
+
+# Storage
+File system concepts | file, directory structure, file attributes, file operations
+File allocation methods | contiguous allocation, linked allocation, indexed allocation, inode
+Free-space management | bit vector, bitmap, linked free list
+Disk scheduling | FCFS, SSTF, SCAN, C-SCAN, LOOK, seek time
+RAID levels | RAID 0, RAID 1, RAID 5, striping, mirroring

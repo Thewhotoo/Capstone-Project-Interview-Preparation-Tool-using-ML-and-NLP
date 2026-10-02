@@ -56,6 +56,7 @@ from planner import ConversationState, Planner
 from question_specification import UnitStatus
 from concept_analysis import concept_coverage_percent
 from strong_answer import build_improved_answer, coaching_note
+from tech_consistency_flag import check_tech_consistency
 from topic_pool import ProfileLike
 
 _conversations: dict[str, dict] = {}
@@ -194,6 +195,7 @@ def start_conversation(profile: ProfileLike, enable_adaptive_followups: bool = F
         "answer_history": {},  # spec_id -> tuple[str, ...] of raw answers given (Phase 3)
         "enable_adaptive_followups": enable_adaptive_followups,
         "followups_by_source": {},  # source_id (project) -> count of adaptive follow-ups asked (session-local)
+        "tech_consistency_flags": [],  # one entry per turn, parallel to memory.timeline/ledger (see check_tech_consistency)
     }
     return {
         "status": "success",
@@ -268,6 +270,15 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
     turn_evaluation["improved_answer"] = build_improved_answer(current_question, result, answer)
     turn_evaluation["coaching_note"] = coaching_note(current_question, result, answer)
     turn_evaluation["concept_coverage_pct"] = concept_coverage_percent(result)
+    # Tech-consistency flag (informational only -- see tech_consistency_flag.py):
+    # never touches overall_score/grade above; a resume-grounded side-channel
+    # check for whether the described tech stack is consistent with what the
+    # resume itself lists for this project. None when not applicable.
+    turn_evaluation["tech_consistency"] = check_tech_consistency(request)
+    # Recorded in parallel with memory.timeline/the ledger (both grow by exactly
+    # one entry per advance_conversation call, including follow-up probes) so
+    # end_conversation can line this up with project_reference per turn.
+    session["tech_consistency_flags"].append(turn_evaluation["tech_consistency"])
 
     # ── ADAPTIVE FOLLOW-UP (opt-in): on a weak-but-real answer, probe deeper on
     # the SAME topic before covering it — throttled per project, per session, and
@@ -429,7 +440,9 @@ def end_conversation(conversation_id: str, integrity: dict | None = None) -> tup
     # results (replaces the frontend's fixed narrative templates). No evaluation
     # logic here — pure summarization of results already computed.
     from interview_feedback import build_feedback
-    summary["feedback"] = build_feedback(summary["evaluations"], summary["timeline"])
+    summary["feedback"] = build_feedback(
+        summary["evaluations"], summary["timeline"], session["tech_consistency_flags"],
+    )
     if summary["integrity"]["terminated"]:
         logger.warning(
             "Conversation %s terminated for an integrity violation: %s at turn %s",

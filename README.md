@@ -61,6 +61,29 @@ main_cap/cap/deployed_model_overall_single_v5_1088/best_checkpoint_weights.pt
 
 Without the real file the app still runs: Round 1 falls back to the heuristic evaluator (the startup log says which evaluator is active).
 
+### Production mode with Docker (optional)
+
+One command runs the app with PostgreSQL and Redis, without installing Python or any package. You need only [Docker Desktop](https://www.docker.com/products/docker-desktop/) (on Windows it also needs WSL 2; see [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md#docker-optional)). From the repository root:
+
+```bash
+docker compose up --build -d     # first time ~15 min (downloads ~3 GB); later starts take seconds
+docker compose logs -f app       # watch it start (Ctrl+C stops watching, not the app)
+```
+
+Open **http://localhost:5000**.
+
+| | `python app.py` (simple mode) | `docker compose up` (production mode) |
+|---|---|---|
+| Database | SQLite file | PostgreSQL container |
+| Interviews in progress | This process's memory; a restart ends them | Redis container; survive a restart |
+| Server | Flask development server | waitress (`serve.py`) |
+| Install | Python 3.12 + packages | Docker only |
+
+- **Your data** (accounts, resumes, sessions, interviews in progress) lives in Docker volumes and is kept across `docker compose down` / `up`. `docker compose down -v` deletes it.
+- **The trained Round 1 evaluator** is not in the image: it is mounted from `main_cap/cap/deployed_model_overall_single_v5_1088/`, so run `git lfs pull` first (without it, Round 1 uses the heuristic evaluator).
+- **After changing the code**, `docker compose up --build -d` rebuilds only the code layer (seconds).
+- **Optional settings** (port, database password, secret key, threads): copy `.env.example` to `.env`.
+
 ---
 
 ## Configuration
@@ -131,7 +154,9 @@ Evaluation scripts:
 ├── integration_checks/            Before/after comparison scripts and data
 ├── resume_classifier/             Resume text extraction for DOCX/DOC/TXT
 ├── parser_tests/                  Parser benchmark scripts (the test resumes themselves are not in git)
-└── docs/architecture/             Earlier design documents
+├── docs/architecture/             Earlier design documents
+├── Dockerfile, docker-compose.yml, .dockerignore, .env.example   Production mode in Docker
+└── docker/                        Model download script and pinned versions for the image
 ```
 
 Not in git (see `.gitignore`): the database and uploads, the lecture slides and the search indexes built from them, generation caches, and personal test resumes.

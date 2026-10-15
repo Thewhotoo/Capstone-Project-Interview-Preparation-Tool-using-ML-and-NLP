@@ -84,6 +84,21 @@ python app.py          # then open http://localhost:5000
 
 This is Flask's development server, fine for local use and demos, not a production deployment.
 
+### Docker (optional)
+
+To run **production mode** (PostgreSQL + Redis + the waitress server) with `docker compose up` instead of installing Python and the packages (README, "Production mode with Docker"). Only the machine that runs the server needs this; people taking interviews just use a browser.
+
+| Need | Details |
+|---|---|
+| **Docker Desktop** | [docker.com](https://www.docker.com/products/docker-desktop/), tested with 29.8. On Linux, Docker Engine with the compose plugin is enough. |
+| **WSL 2** (Windows only) | Docker Desktop runs Linux containers inside it. If Docker Desktop says WSL is missing, run `wsl --install --no-distribution` in an administrator terminal and restart. |
+| **Disk** | About **6 GB** for the image (CPU-only PyTorch and the models are inside it), plus the database volume. |
+| **RAM** | As above: about 3 GB for the app, plus a little for PostgreSQL and Redis. On Windows, containers may use up to half the machine's RAM by default, which is enough with 8 GB or more. |
+| **Internet** | Only for the first build (about 3 GB of downloads). The running container needs none, except the browser still loads MediaPipe and fonts from the internet. |
+| **Git LFS** | The trained evaluator weights are mounted from the repository, so pull them as described above. |
+
+**Deploying for other people:** the webcam only works on `http://localhost` or over **HTTPS**, so a server that others reach by its address needs HTTPS in front of it (a reverse proxy with a certificate, or a tunnel). Set `CAP_SECRET_KEY` and `POSTGRES_PASSWORD` in `.env` before the first start.
+
 ---
 
 ## 2. To run the tests

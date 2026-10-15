@@ -341,10 +341,10 @@ Flow invariants:
 - **Gemini** (`google-genai` client, lazy singleton, `gemini-2.5-flash`): dev tooling only (see §2).
 - **Hugging Face Hub**: model downloads at first use.
 - **MediaPipe via jsDelivr**: browser-side face landmarking.
-- **SQLite** (local file). There is no external DB, queue or cache service.
+- **SQLite** (local file) by default; in production mode **PostgreSQL** and **Redis** (§4.26). There is no queue service.
 
 ### 3.6 Deployment / runtime architecture
-- There are **no Dockerfile, CI, WSGI or cloud config files**. The app runs with `python app.py` from `main_cap/cap/`, which uses Flask's development server: `app.run(debug=False, port=5000, threaded=True, use_reloader=False)`.
+- **Two ways to run:** `python app.py` from `main_cap/cap/` (Flask's development server: `app.run(debug=False, port=5000, threaded=True, use_reloader=False)`), or `docker compose up` from the repository root (production mode, below). There is no CI or cloud config.
 - **Startup sequence:**
   1. load `.env`;
   2. `bootstrap_production_evaluator()`;
@@ -356,7 +356,18 @@ Flow invariants:
   - `uploads/`: resume files;
   - `secret_key`: the Flask secret, generated once so logins survive restarts.
 - **Simple mode** (`python app.py`): one process, SQLite, live state in memory; a restart ends interviews in progress (their answered turns are kept).
-- **Production mode** (`python serve.py`, waitress): PostgreSQL + Redis live state + a shared `CAP_SECRET_KEY` and upload folder, so **several processes or servers can serve the same users** and an interview survives a restart. Verified 2026-10-15 with two servers sharing one PostgreSQL and one Redis, every request alternating between them and one server restarted mid-interview (§4.26). There is still no container or CI (planned: Docker, `PRODUCTION_INFRA_PROGRESS.md`).
+- **Production mode** (`python serve.py`, waitress): PostgreSQL + Redis live state + a shared `CAP_SECRET_KEY` and upload folder, so **several processes or servers can serve the same users** and an interview survives a restart. Verified 2026-10-15 with two servers sharing one PostgreSQL and one Redis, every request alternating between them and one server restarted mid-interview (§4.26).
+- **Docker** (`Dockerfile`, `docker-compose.yml`, `.dockerignore`, `docker/`): `docker compose up` runs production mode as three containers: `app` (`serve.py`), `postgres:16` and `redis:7` (append-only file on, so live interviews also survive a Redis restart). Why each choice:
+  - **CPU-only PyTorch** (2.13.0+cpu): nothing at interview time needs a GPU, and the CUDA build is about 2 GB larger.
+  - **Models downloaded at build time** (`docker/download_models.py`, into `HF_HOME=/opt/hf`): the container starts with no internet and loads every model in about 3 s.
+  - **Layers ordered by how often they change** (torch → packages → models → code): a code change rebuilds only the last layer, in seconds. First build about 13 min (downloads about 3 GB); image about 6 GB.
+  - **Exact package versions** (`docker/constraints.txt`): the image installs the tested versions; `Requirements_Global.txt` keeps lower bounds. Only the app's part of the requirements is installed (the slide pipeline, developer tools and tests are left out).
+  - **An allow-list `.dockerignore`**: only `main_cap/cap/` (without tests and `instance/`), `resume_classifier/`, the question bank and the requirements go into the image.
+  - **The trained evaluator weights are mounted, not copied** (read-only, from `deployed_model_overall_single_v5_1088/`): they stay in git LFS, rebuilds don't copy 735 MB, and a missing or un-pulled file falls back to the heuristic evaluator as usual.
+  - **Volumes**: `pgdata` (database), `redisdata` (live interviews), `app-data` on `instance/` (uploads and the generated secret key, so logins survive the container being replaced).
+  - **PostgreSQL and Redis publish no ports**: only the app can reach them. The app runs as a non-root user, has a health check on `/health`, and every container restarts automatically (`restart: unless-stopped`).
+  - **Settings** come from an optional `.env` (`.env.example`): port, `POSTGRES_PASSWORD`, `CAP_SECRET_KEY`, `CAP_THREADS`.
+  - **Verified 2026-10-15:** full journey (sign-up, Round 1, both technical interviews, history) inside Docker; the app container restarted in the middle of Round 1 and of a technical interview, and both carried on; after `docker compose down` / `up` the account, uploaded resume and history were all there. On Linux in the container: 1,252 app tests passed (24 skipped) and 511 resume-engine tests passed.
 - **Model deployment** is file-based: copy `best_checkpoint_weights.pt`, `best_checkpoint.json` and `final_promotion_decision.json` into `main_cap/cap/deployed_model/`. `deployment_evaluator.bootstrap_production_evaluator()` checks that all three exist and that the promotion is approved *before* loading anything. Otherwise it skips the ~700 MB backbone download entirely and activates the heuristic evaluator.
 - **Training** ran on Google Colab (the `artifact_uri` in `best_checkpoint.json` is `/content/e4/artifacts/experiment_4_train/best_checkpoint_weights.pt`).
 
@@ -1695,7 +1706,7 @@ The code has no literal `TODO` markers. The items below come from docstrings, co
 
 **Architecture and runtime**
 1. **Multiple workers need production mode** (§4.26). With the default memory live store, live interviews are per-process and end on restart. (Fixed 2026-10-15: profile sessions used to be kept forever; every live record now expires after 2 h.) The legacy v1 discussion engine and the RAG pool still keep their own in-memory state; neither is used by the UI.
-2. **No container or CI yet.** A production server exists (`serve.py`, waitress); Docker is planned (`PRODUCTION_INFRA_PROGRESS.md`).
+2. **No CI yet.** Production mode runs with `docker compose up` (§3.6), but tests are run by hand, and a deployment others can reach needs HTTPS in front of it (the browser allows the webcam only on HTTPS or `localhost`).
 3. **No login rate limiting, and no email verification yet.** `email_verified` exists but nothing checks it.
 4. **Some model weights are absent:** the old Experiment 4 `deployed_model/best_checkpoint_weights.pt` and the resume-classifier `bert_resume_model/`. The production Round 1 weights are in Git LFS; a clone made without Git LFS runs on the heuristic evaluator. (Startup now detects the missing weights and skips the DeBERTa download.)
 5. **Client-side enforcement.** The session-integrity rules and the attention monitoring can be bypassed with DevTools, and the backend trusts the sanitised integrity record.

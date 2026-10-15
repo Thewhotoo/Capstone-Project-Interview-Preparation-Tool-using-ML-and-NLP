@@ -1,5 +1,6 @@
 """Tests for rewrite_verifier_client.py — Experiment 4 (Rewrite Augmentation) Stage."""
 
+import importlib.util
 import os
 import sys
 import unittest
@@ -46,6 +47,8 @@ class TestSemanticDriftVerdictSchema(unittest.TestCase):
         self.assertEqual(verdict.explanation, "")
 
 
+# google-genai is an optional developer-tool dependency (not in the Docker image).
+@unittest.skipUnless(importlib.util.find_spec("google.genai"), "google-genai not installed")
 class TestGeminiSemanticVerifierClientRetriesOnUnparsedResponse(unittest.TestCase):
     """Regression test for a real failure hit running the Experiment 4
     pilot: a successful HTTP call whose body doesn't parse into

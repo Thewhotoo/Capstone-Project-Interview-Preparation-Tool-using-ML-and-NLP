@@ -1,0 +1,25 @@
+# Allow-list: the image gets only what the app needs at run time (see the
+# Dockerfile). Everything else (archive, docs, experiments, slides, the
+# offline question pipeline) stays out, which keeps the build context small.
+*
+!Requirements_Global.txt
+!docker/
+!resume_classifier/
+!rag_system/rag_tester/question_bank/
+!main_cap/cap/
+
+# Inside the allowed folders, leave out:
+# runtime data (database, uploads, secret key) -- never baked into an image
+main_cap/cap/instance
+# the trained evaluator weights (735 MB): mounted by docker-compose.yml instead
+**/*.pt
+# tests and their fixtures
+main_cap/cap/test_*
+main_cap/cap/resume_engine/tests
+# caches and local logs
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+main_cap/cap/hybrid_diagnostics.jsonl
+main_cap/cap/*.log
+main_cap/cap/*_log*.txt

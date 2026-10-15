@@ -38,7 +38,7 @@ App ──────┤
 | 0 · Prerequisites | ✅ Docker 29.8.2 + WSL 2 running; packages installed | ~30 min |
 | 1 · PostgreSQL | ✅ Done 2026-10-15: all tests + a live end-to-end run pass on PostgreSQL 16 | ~½ day |
 | 2 · Redis for live state | ✅ Done 2026-10-15: two servers share one interview; it survives a restart | ~3–5 days (took 1 day) |
-| 3 · Docker setup | ⬜ | ~½ day |
+| 3 · Docker setup | ✅ Done 2026-10-15: `docker compose up` runs everything; interviews survive restarts | ~½ day |
 
 ---
 
@@ -99,16 +99,23 @@ Why replay is safe: planning is deterministic (crc32, no `random` or `hash()`). 
 
 **Not moved (not used by the UI):** the legacy v1 discussion engine (`discussion_engine.py`) and the legacy RAG question pool keep their own in-memory state.
 
-## Step 3 · Docker setup
+## Step 3 · Docker setup ✅
 
-- [ ] `Dockerfile`: Python 3.12 slim, CPU-only PyTorch, the requirements, models downloaded at build time (the container then needs no internet), and `waitress` as the server.
-- [ ] `docker-compose.yml`: `app` + `postgres:16` + `redis:7`, named volumes for the database and uploads, health checks, and environment variables set for production mode.
-- [ ] `.dockerignore` (archive/, instance/, caches, weights unless provided).
-- [ ] Optional: mount the trained Round 1 weights file if present.
-- [ ] Check from a clean state: `docker compose up --build` → `http://localhost:5000` → sign up, Full Interview, history. Then `docker compose restart app` mid-interview, and the interview continues.
-- [ ] Docs: README ("Simple mode" vs "Production mode"), SETUP_PREREQUISITES (Docker Desktop), PROJECT_DOCUMENTATION (§3.6 deployment, §4.19 config).
+- [x] `Dockerfile`: `python:3.12.10-slim-bookworm`, CPU-only PyTorch 2.13.0, the app's part of `Requirements_Global.txt` pinned by `docker/constraints.txt`, models downloaded at build time (`docker/download_models.py`), non-root user, health check, `python serve.py`.
+- [x] `docker-compose.yml`: `app` + `postgres:16` + `redis:7` (append-only), volumes `pgdata`, `redisdata`, `app-data` (uploads + secret key), health checks, `depends_on: service_healthy`, `restart: unless-stopped`; database and Redis ports not published.
+- [x] `.dockerignore`: an allow-list (app code without tests or `instance/`, `resume_classifier/`, the question bank, requirements).
+- [x] Trained Round 1 weights mounted read-only from the repository (git LFS); startup log confirmed `Production evaluator ACTIVE: averaged-heuristic-v1+overall-single-...`.
+- [x] `.env.example` for the optional settings.
+- [x] Checks (all pass):
+  - full journey inside Docker: sign-up with resume and photo, Round 1 (10 answers, 0.7 s each), Round 2 and a standalone technical interview (about 2.5 s per turn), history, insights, logout;
+  - `docker compose restart app` in the middle of Round 1 and of a technical interview: both carried on, still logged in;
+  - `docker compose down` then `up`: account, uploaded resume file and both completed sessions still there;
+  - Linux test run inside the image: 1,252 app tests passed (24 skipped), 511 resume-engine tests passed. Two Gemini developer-tool tests needed `google-genai`, which the image leaves out on purpose; they now skip when it isn't installed (and pass when it is).
+- [x] Docs: README ("Production mode with Docker"), SETUP_PREREQUISITES ("Docker (optional)"), PROJECT_DOCUMENTATION (§3.5, §3.6, §7).
 
-**Done when:** a fresh `docker compose up` gives a working app at `localhost:5000` with everything working.
+**Done when:** a fresh `docker compose up` gives a working app at `localhost:5000` with everything working. ✅
+
+**Measured:** first build about 13 min (torch 1 min, packages 5 min, models 5 min, export 1.5 min); image about 6 GB; healthy 16 s after `up`; all models loaded 3.3 s later.
 
 **Deployment note:** only the server needs Docker; users just open the site in a browser. The webcam only works on **HTTPS** (or `localhost`), so any public deployment needs HTTPS. Hugging Face Spaces and tunnels provide it.
 
@@ -122,6 +129,8 @@ Why replay is safe: planning is deterministic (crc32, no `random` or `hash()`). 
 | 2026-10-15 | `psycopg` 3 (not psycopg2) | Current driver; ships binary wheels for Windows and Python 3.12 |
 | 2026-10-15 | `waitress` as the production server | Gunicorn doesn't run on Windows; waitress works both on Windows and in Docker |
 | 2026-10-15 | Redis backend behind a `live_store` interface | The memory backend keeps today's behaviour and the tests unchanged; Redis is a config switch |
+| 2026-10-15 | Models baked into the image; evaluator weights mounted | The container starts offline in seconds; the 735 MB weights stay in git LFS and aren't copied on every build |
+| 2026-10-15 | Exact versions in `docker/constraints.txt` | Every image gets the tested versions; `Requirements_Global.txt` stays flexible for local installs |
 
 ## Log
 
@@ -131,3 +140,4 @@ Why replay is safe: planning is deterministic (crc32, no `random` or `hash()`). 
 - **2026-10-15:** Committed the two weeks of pending work as `43c719b`, after a full test run (1,244 app tests + 18 skipped, 511 resume-engine, 9/9 frontend, 19 slide-pipeline). Pushed it to `ninad_latest` and `main` (a fast-forward, no force). Moved the internal notes to `docs/internal/`; `interview_prep.md` and the Team187 PDF are git-ignored. Created the branch `prod-infra`.
 - **2026-10-15:** **Step 1 done.** Tests run on PostgreSQL through `CAP_TEST_DATABASE_URL`; the connection is pinned to UTC; over-long text is trimmed (a new test fails on PostgreSQL without the fix). 1,245 tests pass on both databases, and a live end-to-end run passes on PostgreSQL. Next: step 2 (Redis).
 - **2026-10-15:** **Step 2 done.** Live interview state moved to `live_store.py` (memory or Redis); Round 1 is rebuilt by deterministic replay, and the technical interview by `to_state`/`from_state`. Added `serve.py` (waitress). Two servers sharing PostgreSQL + Redis ran one interview with alternating requests and a mid-interview restart: all pass. Fixed the startup logging that alembic was silencing. Next: step 3 (Docker).
+- **2026-10-15:** **Step 3 done.** `docker compose up` runs app + PostgreSQL + Redis. The first build failed because pip doesn't accept extras (`psycopg[binary]`) in a constraints file; fixed. Journey, restart and down/up checks all pass in Docker, and the full test suite passes on Linux inside the image. **All three steps are done.**

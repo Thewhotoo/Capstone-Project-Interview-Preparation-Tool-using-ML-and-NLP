@@ -1,0 +1,71 @@
+# Production mode in one command: the app (waitress) + PostgreSQL + Redis.
+#
+#     docker compose up --build        # first time: ~10-30 min (downloads ~3 GB)
+#     open http://localhost:5000
+#
+#     docker compose down              # stop (data is kept in the volumes)
+#     docker compose down -v           # stop and DELETE all data
+#
+# Optional settings go in a `.env` file next to this one (see .env.example).
+# PostgreSQL and Redis are reachable only by the app (no ports published).
+
+name: cap
+
+services:
+  app:
+    build: .
+    image: cap-app:latest
+    ports:
+      - "${CAP_PORT:-5000}:5000"
+    environment:
+      CAP_DATABASE_URL: postgresql+psycopg://cap:${POSTGRES_PASSWORD:-cap}@postgres:5432/cap
+      CAP_LIVE_STORE: redis
+      CAP_REDIS_URL: redis://redis:6379/0
+      # Empty: a key is generated once and kept in the app-data volume.
+      CAP_SECRET_KEY: ${CAP_SECRET_KEY:-}
+      CAP_THREADS: ${CAP_THREADS:-8}
+    volumes:
+      # Uploaded resumes and the generated secret key.
+      - app-data:/app/main_cap/cap/instance
+      # The trained Round 1 evaluator (git LFS), read-only. If it is only an
+      # un-pulled LFS pointer, Round 1 uses the heuristic evaluator.
+      - ./main_cap/cap/deployed_model_overall_single_v5_1088:/app/main_cap/cap/deployed_model_overall_single_v5_1088:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: cap
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cap}
+      POSTGRES_DB: cap
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cap -d cap"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    # Append-only file: interviews in progress also survive a Redis restart.
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  app-data:
+  pgdata:
+  redisdata:

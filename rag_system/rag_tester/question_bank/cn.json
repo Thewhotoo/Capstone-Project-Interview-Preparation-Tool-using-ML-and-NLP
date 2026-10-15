@@ -126,17 +126,13 @@
   "topic_coverage": "good",
   "question": "Explain how a device determines the MAC address of another device on the same LAN when it only knows the IP address of that device.",
   "difficulty": "medium",
-  "reference_answer": "A device uses ARP to find the MAC address of another device on the same LAN. When it doesn't have the MAC address in its ARP table, it broadcasts an ARP query with the target IP address. The device with the matching IP address responds with its MAC address. The requesting device then adds this IP-MAC mapping to its ARP table for future use.",
+  "reference_answer": "The device uses ARP, which finds the MAC address that matches a known IP address on the same LAN. If the MAC address is not already in its ARP table, it broadcasts an ARP query containing the target IP address to every device on the LAN. Only the device with that IP address replies, with its MAC address. The sender stores the mapping in its ARP table as an IP-to-MAC entry with a TTL, so the entry is reused for a while and then expires.",
   "key_points": [
    {
-    "point": "ARP is used to find the MAC address of a device when only the IP address is known.",
+    "point": "ARP finds the MAC address for a known IP address.",
     "quote": "A wants to send datagram to B. B’s MAC address not in A’s ARP table, so A uses ARP to find B’s MAC address",
     "followup": "What happens if the device already knows the MAC address?",
     "followup_answer": "It would use the existing entry in its ARP table instead of broadcasting an ARP query.",
-    "variants": [
-     "to find the mac, you send an arp request with the ip.",
-     "arp is used to map an ip to a mac address."
-    ],
     "followup_replies": [
      "it uses the existing entry.",
      "it checks the arp table first.",
@@ -146,18 +142,10 @@
     ]
    },
    {
-    "point": "ARP queries are broadcasted to all devices on the LAN.",
+    "point": "The ARP request is broadcast to all devices on the network.",
     "quote": "A broadcasts ARP query, containing B's IP addr. destination MAC address = FF-FF-FF-FF-FF-FF",
     "followup": "Why is the destination MAC address set to FF-FF-FF-FF-FF-FF?",
     "followup_answer": "This is the Ethernet broadcast address, ensuring all devices on the LAN receive the ARP query.",
-    "variants": [
-     "arp queries are sent to all devices on the lan.",
-     "you broadcast the arp request to every device.",
-     "arp uses a broadcast to reach all devices.",
-     "the arp query is sent to the broadcast mac address.",
-     "all devices on the lan get the arp request.",
-     "broadcasting ensures everyone sees the arp query."
-    ],
     "followup_replies": [
      "it's the broadcast address.",
      "ff-ff-ff-ff-ff-ff.",
@@ -167,17 +155,10 @@
     ]
    },
    {
-    "point": "The ARP table stores IP-MAC mappings with a Time To Live (TTL) value.",
+    "point": "The reply is saved in the ARP table for later use.",
     "quote": "ARP table: each IP node (host, router) - IP/MAC address mappings for some < IP address; MAC address; TTL>",
     "followup": "What happens to an ARP table entry when the TTL expires?",
     "followup_answer": "The entry is removed from the ARP table, and the device will need to re-query for the MAC address if it is needed again.",
-    "variants": [
-     "arp tables store ip and mac pairs with a ttl.",
-     "entries in the arp table expire after a ttl.",
-     "arp uses a time to live for each entry.",
-     "the arp table has a ttl for each mapping.",
-     "the arp table keeps entries for a limited time."
-    ],
     "followup_replies": [
      "it's removed from the table.",
      "it gets deleted.",
@@ -227,9 +208,12 @@
    "stated_by_bank": 0.994
   },
   "quality_score": 9,
-  "quality_note": "classic, correct",
+  "quality_note": "classic; key points shortened, TTL added to the reference (repair 3)",
   "curated": true,
-  "interview_priority": 3
+  "interview_priority": 3,
+  "repairs": [
+   "batch3_2026-10-03"
+  ]
  },
  {
   "id": "cn.tcp_vs_udp.easy1",
@@ -334,21 +318,13 @@
   "topic_coverage": "good",
   "question": "Why does TCP use a three-way handshake to establish a connection, rather than a two-way handshake?",
   "difficulty": "medium",
-  "reference_answer": "TCP uses a three-way handshake to ensure both the sender and receiver agree to establish the connection and to synchronize their initial sequence numbers. A two-way handshake would not guarantee that both parties are ready to communicate, which could lead to lost data or failed connections. The three-way handshake allows each side to confirm the other's willingness to connect and to exchange initial sequence numbers, ensuring reliable communication.",
+  "reference_answer": "In the three-way handshake the client sends SYN, the server replies SYN-ACK and the client answers ACK. Each side sends its own connection request and sees it acknowledged, so both sides know the other agreed to the connection, and both initial sequence numbers are exchanged and confirmed. With only two messages the server would never learn whether its reply reached the client, so an old or duplicate SYN could make the server open a connection the client does not know about.",
   "key_points": [
    {
-    "point": "TCP uses a three-way handshake to ensure both parties agree to establish the connection.",
+    "point": "The three-way handshake makes sure both sides agree to establish the connection.",
     "quote": "agree to establish connection (each knowing the other willing to establish connection)",
     "followup": "What would happen if only one side sent a connection request and the other did not respond?",
     "followup_answer": "The connection would not be established, and the initiating side might remain in a waiting state, leading to potential resource waste and failed communication.",
-    "variants": [
-     "tcp uses three-way handshake to make sure both sides agree to connect.",
-     "three-way handshake ensures both parties are ready to talk.",
-     "the three-way handshake confirms both sides want to establish a connection.",
-     "so both sides can confirm they're willing to connect.",
-     "three-way handshake makes sure both are ready to communicate.",
-     "tcp needs both sides to agree, so it uses three-way handshake."
-    ],
     "followup_replies": [
      "no connection.",
      "it would wait forever.",
@@ -358,17 +334,10 @@
     ]
    },
    {
-    "point": "A two-way handshake would not guarantee mutual acknowledgment of the connection request.",
+    "point": "With a two-way handshake the server cannot know whether the client received its reply.",
     "quote": "agree to establish connection (each knowing the other willing to establish connection)",
     "followup": "What is the risk of using a two-way handshake in a network with packet loss?",
     "followup_answer": "The receiving side might not receive the connection request, leading to a failed connection and potential retransmission issues.",
-    "variants": [
-     "two-way handshake can't confirm both sides got the message.",
-     "without three-way, you can't be sure both are listening.",
-     "two-way handshake doesn't guarantee mutual acknowledgment.",
-     "two-way handshake might miss one side's response.",
-     "three-way handshake ensures both sides are in sync."
-    ],
     "followup_replies": [
      "no response, connection fails.",
      "retransmission issues.",
@@ -409,9 +378,12 @@
    "stated_by_bank": 0.993
   },
   "quality_score": 9,
-  "quality_note": "classic",
+  "quality_note": "classic; key points reworded (repair 1). KP1's slide quote is generic (the slide shows the two-way handshake failure as a diagram), so its point-quote link is below 0.35",
   "curated": true,
-  "interview_priority": 3
+  "interview_priority": 3,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "cn.tcp_flow_control.medium1",
@@ -426,18 +398,10 @@
   "reference_answer": "TCP flow control ensures the sender does not overwhelm the receiver's buffer by having the receiver advertise its available buffer space through the rwnd field in the TCP header. The sender limits the amount of unACKed data it can transmit based on this advertised window size. This mechanism guarantees that the receiver's buffer will not overflow, even if the network layer delivers data faster than the application layer can process it.",
   "key_points": [
    {
-    "point": "The receiver advertises its available buffer space through the rwnd field in the TCP header.",
+    "point": "The receiver tells the sender how much free buffer space it has (rwnd).",
     "quote": "TCP receiver “advertises” free buffer space in rwnd field in TCP header",
     "followup": "What happens if the receiver's buffer is full?",
     "followup_answer": "The receiver will advertise a window size of zero, which tells the sender to stop transmitting until more buffer space is available.",
-    "variants": [
-     "the receiver tells the sender how much buffer it has with the rwnd field",
-     "rwnd in the tcp header shows how much buffer the receiver has",
-     "the receiver uses rwnd to tell the sender its buffer space",
-     "tcp uses rwnd to let the receiver advertise its buffer",
-     "the receiver advertises buffer space via the rwnd field",
-     "the rwnd field in the header tells the sender about the receiver's buffer"
-    ],
     "followup_replies": [
      "the sender stops sending",
      "window size becomes zero",
@@ -447,11 +411,10 @@
     ]
    },
    {
-    "point": "TCP flow control guarantees the receiver's buffer will not overflow.",
+    "point": "The sender limits its unacknowledged data to the window the receiver advertised.",
     "quote": "guarantees receive buffer will not overflow",
     "followup": "How does the sender know how much data it can send at any time?",
     "followup_answer": "The sender uses the receiver's advertised window size in the TCP header to determine the maximum amount of data it can send without overwhelming the receiver.",
-    "variants": [],
     "followup_replies": [
      "the sender checks the window size",
      "sender uses the window size",
@@ -498,9 +461,12 @@
    "stated_by_bank": 0.006
   },
   "quality_score": 9,
-  "quality_note": "classic",
+  "quality_note": "classic; key points reworded to plain language (repair 1)",
   "curated": true,
-  "interview_priority": 3
+  "interview_priority": 3,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "cn.https_and_tls.easy1",
@@ -1047,20 +1013,13 @@
   "topic_coverage": "thin",
   "question": "Explain how a self-learning switch builds its MAC address table.",
   "difficulty": "easy",
-  "reference_answer": "A self-learning switch builds its MAC address table by recording the sender's MAC address and the interface it was received on. When a frame is received, the switch examines the source MAC address and associates it with the incoming port. This process is automatic and requires no manual configuration. The switch updates its table whenever it receives a new frame from a device, allowing it to forward future frames more efficiently.",
+  "reference_answer": "A self-learning switch starts with an empty table and fills it automatically. Whenever a frame arrives, the switch records the frame's source MAC address together with the port it arrived on. To forward a frame, it looks up the destination MAC address in the table and sends the frame only to that port; if the address is not in the table yet, it floods the frame to all other ports. Entries expire after a while, so the table keeps up with hosts that move.",
   "key_points": [
    {
-    "point": "A self-learning switch learns which hosts are connected by recording the sender's MAC address and the interface it was received on.",
+    "point": "The switch records each frame's source MAC address together with the port it arrived on.",
     "quote": "Switch learns which hosts can be - When frame received, switch - Records sender/location pair in - Switch table MAC addr interface",
     "followup": "What happens if a device sends a frame from a different port than before?",
     "followup_answer": "The switch updates the MAC address table to reflect the new port, replacing the old entry with the new one.",
-    "variants": [
-     "it keeps track of devices by their mac and the port they're connected to.",
-     "the switch builds the table by associating macs with incoming ports.",
-     "when a frame comes in, the switch logs the mac and the port it arrived on.",
-     "the switch automatically records the mac and the port it received the frame on.",
-     "the switch learns the mac address and which port it's on by observing incoming frames."
-    ],
     "followup_replies": [
      "it updates the entry with the new port.",
      "it replaces the old port with the new one.",
@@ -1070,18 +1029,10 @@
     ]
    },
    {
-    "point": "The MAC address table is used to selectively forward frames to the correct port.",
+    "point": "It uses the table to forward frames only to the port of the destination MAC address.",
     "quote": "Switch is a link-layer device: takes an active role - Store, forward Ethernet frames - Examine incoming frame’s MAC address, selectively forward frame to one-or-more outgoing links when frame is to be forwarded on segment",
     "followup": "What happens if the destination MAC address is not in the switch's table?",
     "followup_answer": "The switch forwards the frame to all ports except the one it was received on, using a process called flooding.",
-    "variants": [
-     "the switch uses the table to send frames only to the right port.",
-     "it forwards frames to the correct port using the mac table.",
-     "the mac table helps the switch direct frames to the right place.",
-     "the switch selectively forwards frames based on the mac table.",
-     "the table allows the switch to send frames to the correct port.",
-     "the switch uses the mac table to determine where to send frames."
-    ],
     "followup_replies": [
      "it floods the frame to all ports except the incoming one.",
      "it sends the frame to every port except the one it came in on.",
@@ -1129,9 +1080,12 @@
    "stated_by_bank": 0.994
   },
   "quality_score": 9,
-  "quality_note": "good",
+  "quality_note": "classic; key points shortened (repair 3)",
   "curated": true,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "repairs": [
+   "batch3_2026-10-03"
+  ]
  },
  {
   "id": "cn.persistent_vs_non_persistent_http.medium1",
@@ -1824,19 +1778,13 @@
   "topic_coverage": "good",
   "question": "Explain how a DHCP client and server coordinate to assign an IP address to a host, and why this process is important for network management.",
   "difficulty": "medium",
-  "reference_answer": "A DHCP client and server coordinate through a four-step process: the client broadcasts a DHCP discover message, the server responds with a DHCP offer, the client requests an IP address via DHCP request, and the server confirms the assignment with a DHCP ack. This process is important for network management because it allows dynamic IP address allocation, supports mobile users, and enables efficient reuse of IP addresses across the network.",
+  "reference_answer": "DHCP gives hosts their IP addresses automatically, so nobody has to configure each machine by hand. A new host broadcasts a DHCP discover message, a DHCP server replies with an offer, the host sends a request for that address, and the server confirms it with an ACK: four messages, discover, offer, request and ACK. Addresses are leased for a time and reused when hosts leave. This matters for network management because it supports mobile users who join and leave the network, avoids address conflicts and lets a limited pool of addresses be shared.",
   "key_points": [
    {
-    "point": "DHCP allows dynamic IP address allocation.",
+    "point": "DHCP gives hosts their IP addresses automatically (dynamically).",
     "quote": "Dynamic Host Configuration Protocol - assign IP addresses to computers in a network dynamically.",
     "followup": "What happens if a device is connected to the network but doesn't receive an IP address?",
     "followup_answer": "The device cannot communicate on the network, as it lacks a valid IP address.",
-    "variants": [
-     "dynamic ip allocation is what dhcp does.",
-     "dhcp discover, offer, request, ack steps let ips be assigned.",
-     "without dhcp, you have to manually assign ips.",
-     "dhcp makes it easy to assign and reuse ip addresses."
-    ],
     "followup_replies": [
      "nope",
      "can't connect",
@@ -1846,18 +1794,10 @@
     ]
    },
    {
-    "point": "DHCP supports mobile users who join/leave the network.",
+    "point": "DHCP supports mobile users who join and leave the network.",
     "quote": "support for mobile users who join/leave network",
     "followup": "Why is it important for a network to support mobile users?",
     "followup_answer": "It ensures that users can maintain connectivity as they move between different network segments.",
-    "variants": [
-     "dhcp helps users who move between networks.",
-     "mobile users get ips through dhcp.",
-     "dhcp supports users who join and leave the network.",
-     "dhcp lets users stay connected when moving.",
-     "dhcp makes it easy for people to switch networks.",
-     "dhcp keeps track of users as they move around."
-    ],
     "followup_replies": [
      "so they can stay connected when moving",
      "connectivity stays consistent",
@@ -1867,18 +1807,10 @@
     ]
    },
    {
-    "point": "DHCP uses a client-server model with specific message exchanges.",
+    "point": "The client and server exchange four messages: discover, offer, request and ACK.",
     "quote": "A client-server model & based on discovery, offer, request, and ACK.",
     "followup": "What would happen if the DHCP server did not respond to a DHCP discover message?",
     "followup_answer": "The client would not receive an IP address and would be unable to communicate on the network.",
-    "variants": [
-     "dhcp client sends a discover message to find a server.",
-     "dhcp uses messages like discover and ack to assign ips.",
-     "dhcp client-server exchange ensures ip assignment.",
-     "dhcp relies on a specific message flow to assign ips.",
-     "dhcp messages like discover and offer help assign ips.",
-     "dhcp uses a four-step process to assign an ip."
-    ],
     "followup_replies": [
      "no ip, no network",
      "can't connect",
@@ -1923,10 +1855,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.992
   },
-  "quality_score": 6,
-  "quality_note": "key points skip the DORA exchange",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 8,
+  "quality_note": "key points reworded; DORA exchange made a key point (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "cn.cidr.medium1",
@@ -1938,21 +1873,13 @@
   "topic_coverage": "good",
   "question": "Explain how CIDR allows for more efficient allocation of IP addresses compared to traditional class-based addressing.",
   "difficulty": "medium",
-  "reference_answer": "CIDR allows for more efficient allocation of IP addresses by enabling variable-length subnet masks, which means the subnet portion of an address can be of arbitrary length. This flexibility reduces the number of wasted IP addresses that were common with class-based addressing.",
+  "reference_answer": "With classful addressing a network got a fixed block: class A, B or C, with 8, 16 or 24 network bits. An organisation needing about 2,000 addresses had to take a class B block of 65,536 addresses and waste most of it. CIDR (classless inter-domain routing) lets the network prefix have any length, written a.b.c.d/x where x is the number of prefix bits, so the same organisation can get a /21 block of 2,048 addresses. Blocks can be sized to what is actually needed, which wastes far fewer addresses, and contiguous blocks can also be aggregated into one route.",
   "key_points": [
    {
-    "point": "CIDR allows for variable-length subnet masks.",
+    "point": "CIDR lets the network prefix have any length instead of a fixed class size.",
     "quote": "subnet portion of address of arbitrary length",
     "followup": "What is the main advantage of having a subnet portion of arbitrary length?",
     "followup_answer": "It allows for more efficient allocation of IP addresses by enabling flexible subnet sizes.",
-    "variants": [
-     "cidr lets you use different subnet masks for different networks.",
-     "with cidr, you can have subnet masks of any length.",
-     "cidr uses variable-length subnet masks instead of fixed ones.",
-     "variable-length subnet masks are what make cidr efficient.",
-     "cidr allows for flexible subnet sizes by changing the mask length.",
-     "you can choose how long the subnet part is with cidr."
-    ],
     "followup_replies": [
      "more efficient allocation",
      "flexible subnet sizes",
@@ -1962,18 +1889,10 @@
     ]
    },
    {
-    "point": "CIDR addresses are written in the format a.b.c.d/x.",
+    "point": "CIDR addresses are written as a.b.c.d/x, where x is the number of prefix bits.",
     "quote": "address format: a.b.c.d/x, where x is # bits in subnet",
     "followup": "How does the format a.b.c.d/x help in CIDR?",
     "followup_answer": "It clearly indicates the number of bits used for the subnet portion, making it easier to determine the network and host portions of an IP address.",
-    "variants": [
-     "cidr addresses are written as a.b.c.d/x to show the subnet bits.",
-     "the format a.b.c.d/x shows how many bits are in the network part.",
-     "using a.b.c.d/x makes it clear how the ip is divided into network and host.",
-     "the x in a.b.c.d/x tells you the subnet mask length.",
-     "cidr uses a.b.c.d/x to define the network portion.",
-     "the a.b.c.d/x format helps identify the network and host parts."
-    ],
     "followup_replies": [
      "it shows how many bits are in the network",
      "it helps determine the network and host parts",
@@ -2013,10 +1932,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.0
   },
-  "quality_score": 6,
-  "quality_note": "key points miss the efficiency argument",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "key points reworded; efficiency argument added to the reference (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "cn.mac_addressing.medium2",
@@ -2028,19 +1950,13 @@
   "topic_coverage": "good",
   "question": "How does the uniqueness of MAC addresses ensure that data is delivered correctly within a LAN?",
   "difficulty": "medium",
-  "reference_answer": "The uniqueness of MAC addresses ensures that data is delivered correctly within a LAN because each device has a distinct identifier. This allows the LAN switch to forward frames directly to the intended recipient. The 48-bit MAC address is burned into the NIC ROM and is globally unique, which prevents collisions and ensures accurate delivery.",
+  "reference_answer": "Every network interface has its own unique 48-bit MAC address, which is burned into the NIC's ROM by the manufacturer; manufacturers get their own blocks of addresses from the IEEE, so no two cards share one. Because each address belongs to exactly one interface, a switch can learn which port each MAC address is on and forward a frame only to the device it is addressed to, and every other device ignores frames that are not addressed to it.",
   "key_points": [
    {
-    "point": "MAC addresses are globally unique across all devices.",
+    "point": "Every network interface has its own unique 48-bit MAC address.",
     "quote": "has unique 48-bit MAC address",
     "followup": "What would happen if two devices had the same MAC address on the same LAN?",
     "followup_answer": "It would cause data to be delivered to the wrong device, leading to communication errors.",
-    "variants": [
-     "mac addresses are unique so switches know where to send frames",
-     "every device has a different mac address to avoid confusion",
-     "unique mac addresses prevent data from being sent to the wrong device",
-     "the mac address is unique so the switch can direct traffic properly"
-    ],
     "followup_replies": [
      "data gets sent to the wrong device",
      "communication errors",
@@ -2050,18 +1966,10 @@
     ]
    },
    {
-    "point": "MAC addresses are burned into the NIC ROM by the manufacturer.",
+    "point": "The MAC address is burned into the NIC's ROM by the manufacturer.",
     "quote": "48-bit MAC address (for most LANs) burned in NIC ROM",
     "followup": "How does this manufacturing process ensure uniqueness?",
     "followup_answer": "Manufacturers are allocated a portion of the MAC address space by IEEE, ensuring that each address is unique across all devices.",
-    "variants": [
-     "the mac address is etched into the nic rom by the manufacturer",
-     "each nic has a mac address burned into it during production",
-     "manufacturers write the mac address into the nic rom",
-     "the mac address is permanently stored in the nic rom",
-     "nic rom contains the unique mac address",
-     "the mac address is physically written into the nic"
-    ],
     "followup_replies": [
      "ieee assigns unique ranges to manufacturers",
      "each manufacturer gets a unique block",
@@ -2106,10 +2014,14 @@
    "review": "unreviewed",
    "stated_by_bank": 0.007
   },
-  "quality_score": 6,
-  "quality_note": "ok",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "key points reworded; reference states every point (repair 3)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03",
+   "batch3_2026-10-03"
+  ]
  },
  {
   "id": "cn.ipv4_addressing.medium2",
@@ -2775,15 +2687,10 @@
   "reference_answer": "The Bellman-Ford algorithm ensures convergence by iteratively updating each node’s distance vector using the minimum cost from its neighbors, as described by the equation Dx(y) = minv {cx,v + Dv(y)}. This process allows each node to refine its estimate of the least-cost path over time. It is important that nodes update their distance vectors based on their neighbors' information because this enables the propagation of accurate cost updates across the network, allowing all nodes to eventually agree on the shortest paths.",
   "key_points": [
    {
-    "point": "Each node updates its distance vector using the minimum cost from its neighbors.",
+    "point": "A node's cost to a destination is the minimum over its neighbours of link cost plus the neighbour's cost.",
     "quote": "Dx(y) ← minv{cx,v + Dv(y)} for each node y ∊ N",
     "followup": "What would happen if a node did not update its distance vector based on its neighbors' information?",
     "followup_answer": "The node would not be able to propagate accurate cost information, leading to incorrect routing decisions and potential network inefficiency.",
-    "variants": [
-     "each node uses the minimum cost from its neighbors to update its distance vector.",
-     "bellman-ford updates distance vectors by taking the minimum cost from neighbors.",
-     "so nodes can refine their path estimates by using neighbor info."
-    ],
     "followup_replies": [
      "nope",
      "incorrect routing",
@@ -2793,15 +2700,10 @@
     ]
    },
    {
-    "point": "The algorithm relies on the exchange of distance vectors between neighbors to propagate correct cost information.",
+    "point": "Nodes keep exchanging their distance vectors with their neighbours.",
     "quote": "from time-to-time, each node sends its own distance vector estimate",
     "followup": "Why is it important for nodes to send their distance vectors periodically?",
     "followup_answer": "It is important because it allows other nodes to update their own distance vectors and propagate accurate cost information throughout the network.",
-    "variants": [
-     "neighbors share their distance vectors to spread correct cost info.",
-     "nodes exchange distance vectors to update their own estimates.",
-     "sharing distance vectors lets nodes learn about the network."
-    ],
     "followup_replies": [
      "to update their own vectors",
      "so others can update",
@@ -2845,10 +2747,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.0
   },
-  "quality_score": 7,
-  "quality_note": "fine",
-  "curated": false,
-  "interview_priority": 2
+  "quality_score": 8,
+  "quality_note": "fine; key points reworded (repair 1)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "cn.transport_layer_services.easy1",

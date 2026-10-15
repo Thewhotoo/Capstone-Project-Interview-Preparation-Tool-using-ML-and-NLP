@@ -25,7 +25,7 @@ from typing import Callable, Optional
 
 from .bank import Question
 from .followup import Decision, decide
-from .grader import CORE_FLOORS, Grade, combine, followup_covers, grade_answer
+from .grader import CONTRA_CAP, CORE_FLOORS, Grade, combine, followup_covers, grade_answer
 
 RECOVERED_CREDIT = 0.75
 
@@ -54,7 +54,7 @@ class TechInterview:
         self.questions = questions
         self.mode = mode
         self._grade = grade_fn or (lambda q, a: grade_answer(q, a))
-        self._cover = cover_fn or (lambda kp, a: followup_covers(kp, a))
+        self._cover = cover_fn or (lambda kp, a: followup_covers(kp, a, subject=self.current.question.subject))
         self.index = 0
         self.clarify_count = 0
         self.records: list[dict] = []
@@ -146,6 +146,8 @@ class TechInterview:
         g.score = round(combine(g.keypoint_score, g.reference_similarity), 3)
         if g.clarity.dont_know and not g.covered:
             g.score = min(g.score, 0.1)
+        if base.contradicts_reference:   # a recovered follow-up never lifts a contradicted answer
+            g.score = min(g.score, CONTRA_CAP)
         cur.grade = g
 
     def _close(self, cur: _Current, reason: str) -> dict:

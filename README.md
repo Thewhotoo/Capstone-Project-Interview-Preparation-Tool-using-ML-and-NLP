@@ -153,9 +153,9 @@ python -m slide_rag.interview_priority    # interview-frequency tiers
 
 - [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md): everything a new machine needs (system, models, weights file, browser, question-bank rebuild).
 - [`PROJECT_DOCUMENTATION.md`](PROJECT_DOCUMENTATION.md): architecture, every subsystem, design decisions, measured results, limitations and a glossary.
-- [`resumeParser_integration.md`](resumeParser_integration.md): how the improved resume engine and trained evaluator were integrated and measured.
+- [`docs/internal/resumeParser_integration.md`](docs/internal/resumeParser_integration.md): how the improved resume engine and trained evaluator were integrated and measured.
 - [`rag_system/rag_tester/question_bank/quality_review.md`](rag_system/rag_tester/question_bank/quality_review.md): per-question quality scores and the topics still to cover.
-- [`mcq_tobedone.md`](mcq_tobedone.md): the planned 30-question MCQ test.
+- [`docs/internal/mcq_tobedone.md`](docs/internal/mcq_tobedone.md): the planned 30-question MCQ test.
 
 ## Team workflow
 

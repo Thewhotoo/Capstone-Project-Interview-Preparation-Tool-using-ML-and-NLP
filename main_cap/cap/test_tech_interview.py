@@ -8,6 +8,8 @@ set CAP_SKIP_MODEL_TESTS=1 to skip them. Every other test uses a fake grader.
 """
 
 import os
+
+import numpy as np
 import random
 import unittest
 from collections import Counter
@@ -155,6 +157,40 @@ class TestClarity(unittest.TestCase):
 
     def test_dont_know(self):
         self.assertTrue(analyse_clarity("Sorry, I don't know this one.").dont_know)
+
+
+class TestContradictionCap(unittest.TestCase):
+    """grader.grade_answer caps an answer the reference answer contradicts (fluent but wrong)."""
+
+    def setUp(self):
+        self.q = make_question()
+        # fake models: every key point fully entailed, answer close to the reference
+        self.kw = dict(embed=lambda texts: np.ones((len(texts), 4)) / 2.0, entail=lambda prem, hyp: 0.95)
+
+    def test_contradicted_answer_is_capped(self):
+        from tech_interview.grader import CONTRA_CAP, grade_answer
+        g = grade_answer(self.q, "a fluent and confident answer that is actually wrong about it",
+                         contradict=lambda prem, hyp: 0.9, **self.kw)
+        self.assertTrue(g.contradicts_reference)
+        self.assertLessEqual(g.score, CONTRA_CAP)
+
+    def test_uncontradicted_answer_is_not_capped(self):
+        from tech_interview.grader import grade_answer
+        g = grade_answer(self.q, "a fluent and confident answer that is correct about it",
+                         contradict=lambda prem, hyp: 0.1, **self.kw)
+        self.assertFalse(g.contradicts_reference)
+        self.assertGreater(g.score, 0.7)
+
+    def test_recovered_followup_does_not_lift_the_cap(self):
+        from tech_interview.grader import CONTRA_CAP
+        capped = Grade(CONTRA_CAP, 0.5, 0.5, ["P1 point"], [], ["P2 point", "P3 point"],
+                       clarity=Clarity(words=30), contradicts_reference=True)
+        interview = TechInterview([make_question()], grade_fn=lambda q, a: capped,
+                                  cover_fn=lambda kp, a: ("covered", {}))
+        interview.submit("wrong but fluent")
+        result = interview.submit("the follow-up reply")
+        self.assertLessEqual(interview.records[0]["score"] if result["record"] else interview.current.grade.score,
+                             CONTRA_CAP)
 
 
 class TestCuratedBank(unittest.TestCase):

@@ -1,0 +1,790 @@
+[
+  {
+    "question_id": "ooad.abstraction.medium1",
+    "style": "short_casual",
+    "answer": "basically abstraction just means you hide all the messy internal stuff and only show the person using it what they actually need, like how to use it not how it works inside",
+    "labels": [
+      "covered",
+      "partial"
+    ],
+    "overall": 0.65,
+    "followup": {
+      "question": "What is the role of an interface in abstraction?",
+      "answer": "umm not totally sure, maybe it's just the way you call the methods?",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.types_of_inheritance.hard2",
+    "style": "confident_wrong",
+    "answer": "this is a classic example of multilevel inheritance, since one class extends another which extends another. Java handles this totally fine, there's no real limitation here because you can just chain your extends keywords one after another and the JVM resolves the method calls in order up the chain. interfaces aren't really needed for this specific case, they're more for callbacks.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1,
+    "followup": {
+      "question": "What is the role of interfaces in Java's support for hybrid inheritance?",
+      "answer": "oh interfaces do help you implement multiple interfaces in a class so i guess that kind of gives you multiple behaviors, but i don't think it's really related to this case",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.icmp.medium2",
+    "style": "partial",
+    "answer": "ICMP is used for diagnostics like ping, so echo request and reply tell you if a host is up or not. there's also other ICMP messages but I don't remember exactly what they do for tracing stuff.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.45,
+    "followup": {
+      "question": "How does the time exceeded message contribute to network diagnostics?",
+      "answer": "no idea, not sure what that one does",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.overloading_vs_overriding.hard2",
+    "style": "good",
+    "answer": "so overloading means same method name but different parameter types or number of params, and that gets decided at compile time based on what you pass in. overriding is when a subclass has the exact same method signature as the parent class, same name and same params, and that's runtime polymorphism cause it depends on the actual object type at runtime. in your scenario since the derived method has a different param type, that would just be overloading, not overriding, because overriding needs the signature to match exactly.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.9,
+    "followup": {
+      "question": "How does the timing of resolution differ between overloading and overriding?",
+      "answer": "hmm I don't remember the exact term for that, maybe something to do with vtables?",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dsa.parenthesis_matching.medium1",
+    "style": "good",
+    "answer": "you basically go through the string character by character, and whenever you see an opening bracket you push it onto a stack. when you hit a closing bracket you pop the top of the stack and check if it matches the type of bracket, if it doesn't match then the expression is invalid. if you try to pop but the stack's empty that also means its invalid cause there's an extra closing bracket with nothing to match. and at the very end if there's still stuff left in the stack that means there were unmatched opening brackets so its also invalid.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.92,
+    "followup": {
+      "question": "What if the expression ends with a closing parenthesis and the stack is empty?",
+      "answer": "yeah that means its invalid, i think it returns false or 0 or something like that",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.interfaces.easy1",
+    "style": "off_topic",
+    "answer": "oh is this about abstract classes? so abstract classes let you have some methods implemented and some not, and you can't create an object of an abstract class directly, you have to extend it first. they're useful when you want to share some common code between subclasses but still force them to implement specific stuff themselves.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "Why is multiple inheritance not possible with classes but possible with interfaces?",
+      "answer": "uh i'm mixing it up with something else, not sure",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.multilevel_page_tables.hard2",
+    "style": "confident_wrong",
+    "answer": "inverted page tables actually handle shared memory really well because the table is indexed by physical frame number, so when two processes want to share a page you just add both their virtual addresses as separate columns in that frame's entry. the main challenge is actually just the search time since you have to hash the virtual address to find the frame, not really a sharing limitation at all.",
+    "labels": [
+      "missing",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.1,
+    "followup": {
+      "question": "What would happen if you tried to map multiple virtual addresses to the same physical address in an inverted page table?",
+      "answer": "it would break the one-to-one structure since each physical frame only has room for one virtual address entry, so you'd need some extra structure on the side to handle that case",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.topological_sorting.easy1",
+    "style": "partial",
+    "answer": "topological sort is like ordering the nodes of a graph so that if there's an edge from a to b, a comes before b in the list. you can only do it on graphs that don't have cycles I think, but im not 100% sure why that matters.",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.45,
+    "followup": {
+      "question": "What kind of real-world problems can be modeled using topological sorting?",
+      "answer": "not sure, maybe scheduling tasks? but i cant think of a real example right now",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.multilevel_page_tables.medium1",
+    "style": "confident_wrong",
+    "answer": "hierarchical page tables actually use MORE memory than flat tables because you need a separate table at each level plus the top level directory, so you're storing extra overhead structures. the real benefit is actually speed, not memory, because you can cache the higher levels and skip lookups for repeated addresses.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "How does this affect the performance of address translation?",
+      "answer": "hm not sure exactly, maybe it stays about the same?",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.builder_pattern.easy1",
+    "style": "confident_wrong",
+    "answer": "the Builder pattern is actually a structural pattern, like Adapter or Decorator, because it's about how you structure the construction code rather than creating new instances directly. its main purpose is to let you build an object step by step by chaining setter methods, which is basically the same thing as just using a constructor with a bunch of optional parameters, builder just makes the syntax look nicer.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1,
+    "followup": {
+      "question": "How does the Builder pattern support creating different representations of an object?",
+      "answer": "yeah so you can have different builder classes or configure the same builder differently to get different final objects out of the same build process",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.functional_dependency.medium1",
+    "style": "hesitant",
+    "answer": "um so, Armstrong's axioms, like there's... i think three rules? um, reflexive, augmentation, and transitivity, and you use them to like, derive new dependencies from the ones you already have. so um, reflexive is like, if, uh, if B is a subset of A then A determines B, that's like a trivial one. and then transitivity is like... you chain them, um, if A determines B and B determines C you get A determines C. i'm kinda fuzzy on augmentation though, i think it's about adding stuff to both sides but not totally sure.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.75,
+    "followup": {
+      "question": "How can the transitivity rule be used in practice?",
+      "answer": "um, i think you use it to like... combine two FDs that are totally unrelated? like if A determines B and C determines D you can just mash them into A determines D? not sure, something like that",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.isolation_levels.hard2",
+    "style": "partial",
+    "answer": "SERIALIZABLE is the strictest isolation level so it avoids all the anomalies including phantom reads. REPEATABLE READ is a bit looser, i know it stops dirty reads and non-repeatable reads but i don't remember exactly why phantoms still happen under it.",
+    "labels": [
+      "covered",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.45,
+    "followup": {
+      "question": "Why is the phantom record problem more complex than dirty reads or non-repeatable reads?",
+      "answer": "maybe cause it involves new rows showing up instead of just existing data changing? not 100% sure if thats the right distinction",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.stack_operations.easy1",
+    "style": "good_own_words",
+    "answer": "think of it like a stack of plates in your kitchen cabinet - when you link stuff with pointers instead of an array, the 'top' is basically a pointer to whichever node is currently at the front of the list. when you push, you make a new node point to whatever was the old top, and then move the top pointer to this new node, kinda like sliding a new plate onto the stack. popping is the reverse, you just grab whatever top points to, save it, and move top down to the next node, like taking a plate off.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.85,
+    "followup": {
+      "question": "What is the effect of popping an element from a linked list-based stack?",
+      "answer": "it removes the last element that got added to the very bottom of the list",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.deadlock_avoidance.medium2",
+    "style": "short_casual",
+    "answer": "so basically before giving out a resource the system checks if that would still leave things in a safe state, if yes it grants it if no the process waits",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6,
+    "followup": {
+      "question": "How does the behavior of processes affect the system's ability to avoid deadlocks?",
+      "answer": "i guess if processes ask for resources in weird orders it could still mess things up even if the system started out safe",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.integrity_constraints.medium1",
+    "style": "partial",
+    "answer": "referential integrity is about foreign keys matching a primary key in another table, so you can't have a foreign key pointing to something that doesn't exist. it keeps the tables consistent with each other I think, like if you delete something it should also handle the related rows somehow.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55,
+    "followup": {
+      "question": "What is the purpose of the CASCADE option in referential integrity?",
+      "answer": "it automatically updates or deletes the related rows in other tables when you change or delete the referenced row",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.abstract_class_vs_interface.medium1",
+    "style": "good",
+    "answer": "abstract classes can have a mix of implemented and unimplemented methods, so you get some code reuse built in, whereas an interface traditionally only had method signatures with no bodies, so its pure abstraction, 100%. also a class in java can only extend one abstract class but it can implement as many interfaces as it wants, so interfaces are how you get around the no multiple inheritance rule for classes. basically abstract class answers 'what is this thing' while interface answers 'what can this thing do'.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.9,
+    "followup": {
+      "question": "Why would you prefer using interfaces over abstract classes in some cases?",
+      "answer": "because interfaces run faster at runtime since they don't have any method bodies to execute",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.vector_databases_and_embeddings.medium1",
+    "style": "vague",
+    "answer": "vector databases are good for AI stuff because they store embeddings and can find similar things fast using like some math distance thing, its more modern than normal databases for search.",
+    "labels": [
+      "partial",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.25,
+    "followup": {
+      "question": "Why is indexing important for vector databases?",
+      "answer": "it makes the database use less storage space",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.schema_vs_instance.easy1",
+    "style": "hesitant",
+    "answer": "um, so, the schema is like... the structure, right, like the tables and columns and stuff, and it doesn't really change much. and then the instance is, um, the actual data that's in there right now, like today's data, and that changes all the time as people add or remove stuff. yeah i think thats right.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.75,
+    "followup": {
+      "question": "Can the instance ever be the same as the schema?",
+      "answer": "umm i don't think so but i'm not totally sure how to explain why",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.peterson_s_solution.easy1",
+    "style": "good_own_words",
+    "answer": "peterson's solution is like a polite 'after you' system between two processes. each process has a flag that says 'hey I want to go in', and then there's a shared turn variable that acts like a tiebreaker - whoever's turn it is gets to go first if both flags are up at the same time. so a process only barges into the critical section if the other one isn't interested, or if it is interested but its just not currently their turn.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.85,
+    "followup": {
+      "question": "Why is the turn variable necessary for mutual exclusion?",
+      "answer": "it's not really necessary, the flags alone would be enough to stop both from entering at once",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "cn.multiple_access_protocols.medium1",
+    "style": "good_own_words",
+    "answer": "aloha just lets anyone talk whenever they feel like it, and if two people happen to talk at the same time you get a collision, garbled data, and both sides just wait a random little bit and try again later. its like a group chat where everyone just says what they want and if two people type at once you just repeat yourself. tdma on the other hand is more like a scheduled meeting where everyone gets their own assigned turn or time slot, so nobody ever talks over anyone else, but you're also stuck waiting for your slot even if nobody else needs the channel.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.85,
+    "followup": {
+      "question": "Why would a protocol like TDMA not need to handle collisions?",
+      "answer": "because TDMA uses error correction codes to fix any overlaps automatically",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.optimal_and_lru_page_replacement.medium1",
+    "style": "partial",
+    "answer": "optimal picks whichever page wont be needed for the longest time in the future, so its the best you could possibly do, but obviously you cant actually know the future so its not real. LRU is based on the past instead.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.65,
+    "followup": {
+      "question": "What is the main limitation of LRU?",
+      "answer": "it can't predict what's gonna happen next so it might kick out a page that was actually about to get used again soon",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.preemptive_vs_non_preemptive_scheduling.medium1",
+    "style": "confident_wrong",
+    "answer": "preemptive scheduling only kicks in when a process voluntarily gives up the cpu, like when it calls yield() or finishes an IO request, the OS doesn't actually force anything, it just reacts to those calls. non-preemptive is actually the one that can interrupt running processes using timer interrupts to force a context switch after a fixed quantum. because of this, non-preemptive scheduling is the one that typically needs mutex locks to avoid race conditions from sudden interruptions.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "What is a potential downside of preemptive scheduling?",
+      "answer": "it can cause race conditions on shared data since a process might get interrupted mid-update, so you need locks to protect that",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.relationships_and_cardinality.medium1",
+    "style": "hesitant",
+    "answer": "um, cardinality is like... how many of one thing can connect to how many of another thing, right? so um, one-to-many would be like, one row here connects to, uh, multiple rows over there, but each of those can only point back to the one. and um, many-to-many is when, like, both sides can have multiple connections to each other, and i think for that one you need like an extra table in the middle or something, not totally sure why though.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.7,
+    "followup": {
+      "question": "Why is an intermediary table often used for many-to-many relationships?",
+      "answer": "um, maybe because you can't just put a list of multiple ids in one column normally?",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.signals.easy1",
+    "style": "partial",
+    "answer": "a signal is basically like a notification sent to a process, like when you press ctrl+c it sends a signal to kill it. its used for stuff like that I think.",
+    "labels": [
+      "partial",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.35,
+    "followup": {
+      "question": "What kind of events can a signal communicate?",
+      "answer": "not sure, maybe errors or something?",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dsa.tries.easy1",
+    "style": "partial",
+    "answer": "a trie is a tree structure for storing strings, where each node is kind of like a letter instead of storing the whole word at once. its used for stuff like autocomplete I think.",
+    "labels": [
+      "partial",
+      "covered",
+      "partial"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "Why would someone use a trie for auto-complete?",
+      "answer": "cause you can just walk down the tree following the letters typed so far and see what comes next, something like that",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.tcp_congestion_control.medium2",
+    "style": "confident_wrong",
+    "answer": "TCP congestion control works by having the receiver tell the sender exactly how much bandwidth is available on the network, kind of like a speed limit sign, and the sender just sets its rate to match that number directly. that's basically it, packet loss doesn't really change the rate since the receiver's estimate already accounts for the current network conditions.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "Why is reducing the sending rate on a loss event important?",
+      "answer": "hm not sure why that matters specifically",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.composition_over_inheritance.medium1",
+    "style": "confident_wrong",
+    "answer": "composition is actually just a fancier word for inheritance, both of them let one class reuse code from another, the only real difference is composition uses private member variables while inheritance uses the extends keyword, but functionally they behave the same way at runtime. that's why most people say they're interchangeable in practice.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "Why might test-ability be an important factor in choosing composition over inheritance?",
+      "answer": "because you can test each piece separately without needing the whole class hierarchy set up, makes debugging easier",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.network_devices.hard2",
+    "style": "short_casual",
+    "answer": "basically a repeater just blasts the signal to everyone connected which causes more collisions, while a switch actually checks the MAC address and only sends it to the right device so way fewer collisions",
+    "labels": [
+      "missing",
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.6,
+    "followup": {
+      "question": "How does this compare to the behavior of a Repeater?",
+      "answer": "umm i already kinda said it but not sure what else to add",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.hardware_synchronization.hard2",
+    "style": "short_casual",
+    "answer": "test_and_set basically reads the lock value and sets it to true in one atomic step so nothing can sneak in between, so if two processes race for it only one actually gets true back meaning it got the lock, the other one keeps spinning",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8,
+    "followup": {
+      "question": "How is the return value of test_and_set used in a locking mechanism?",
+      "answer": "if it returns false you got the lock, if true someone else has it, i think, might have that backwards though",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.priority_scheduling.medium1",
+    "style": "partial",
+    "answer": "if low priority stuff keeps getting pushed back by higher priority jobs coming in it can just sit there forever, never running. not sure what the actual fix is called though, maybe something with bumping priority over time?",
+    "labels": [
+      "covered",
+      "covered",
+      "partial"
+    ],
+    "overall": 0.55,
+    "followup": {
+      "question": "How can we prevent low-priority processes from being starved?",
+      "answer": "yeah using aging, so you slowly increase their priority until they finally get picked",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.first_normal_form_1nf.medium1",
+    "style": "good_own_words",
+    "answer": "1NF basically just means every cell in your table can only hold one single value, no lists or sets crammed into one field. like if you had a 'phone numbers' column and someone tried to stuff two numbers in there separated by a comma, that breaks 1NF, you'd need a separate row or table for that instead. it's the baseline requirement, like you can't even start talking about 2NF or 3NF until your table already satisfies this one.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.85,
+    "followup": {
+      "question": "Why is 1NF considered a foundational normal form?",
+      "answer": "because 2NF and 3NF build on top of it, they assume you're already atomic, so you gotta fix 1NF violations first",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.tcp_connection_establishment.medium2",
+    "style": "confident_wrong",
+    "answer": "TCP uses three messages mainly just for security reasons, its basically a way to authenticate both sides before they're allowed to exchange data, kind of like a password check. a two way handshake would actually work fine for agreeing to connect, the real reason three is used is to prevent random computers from spoofing a connection.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1,
+    "followup": {
+      "question": "What is the risk of using a two-way handshake in a network with packet loss?",
+      "answer": "not sure, maybe it just fails silently?",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.deadlock_detection_and_recovery.easy1",
+    "style": "partial",
+    "answer": "a wait for graph shows which process is waiting on which other process, and if you follow the arrows and they loop back around into a cycle that means there's a deadlock.",
+    "labels": [
+      "missing",
+      "covered"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "How does this edge represent a deadlock condition?",
+      "answer": "if those edges form a loop then everyone in that loop is stuck waiting on the next one, so none of them can move forward",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.throughput_and_bottleneck_link.medium1",
+    "style": "good_own_words",
+    "answer": "basically whatever link in the path has the smallest capacity is what caps your throughput, doesn't matter how fast the other links are, you're stuck at that slowest one. and if a bunch of client-server pairs are all squeezing through that same middle link, they gotta split its capacity between them, so each pair effectively gets less than the full link speed, like dividing a pizza between however many people showed up.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8,
+    "followup": {
+      "question": "How does the number of pairs affect the shared link capacity available to each pair?",
+      "answer": "i mean i basically just said it with the pizza thing lol, not sure how else to put it",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.denormalization.easy1",
+    "style": "good_own_words",
+    "answer": "denormalization is basically going backwards on purpose, you intentionally duplicate some data across tables so you don't have to do a bunch of joins every time you query something. its a tradeoff, you use it when reading data fast matters way more than keeping updates clean and simple, like for reporting dashboards where you query a lot but barely ever update.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8,
+    "followup": {
+      "question": "How does denormalization affect query complexity?",
+      "answer": "umm probably makes it simpler but i'm blanking on exactly why right now",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.translation_lookaside_buffer.easy1",
+    "style": "vague",
+    "answer": "TLB is like a cache thing for memory thats used to make things faster when the cpu needs to look stuff up, its related to virtual memory somehow.",
+    "labels": [
+      "partial",
+      "missing"
+    ],
+    "overall": 0.25,
+    "followup": {
+      "question": "What happens when a page table entry is not found in the TLB?",
+      "answer": "then it probably has to go check somewhere else, like the actual table in memory",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.outer_joins.medium1",
+    "style": "confident_wrong",
+    "answer": "a full outer join is basically the same thing as an inner join except it also includes NULLs by default, so you'll just see fewer rows than a left or right join normally would. and MySQL actually supports FULL OUTER JOIN directly as a keyword, you just write it like any other join, no need for any workaround.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "What is a common workaround for implementing Full Outer Join in MySQL?",
+      "answer": "i think you can do it with some kind of join and union combo, not 100% sure on the exact syntax",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.arp.medium1",
+    "style": "short_casual",
+    "answer": "so the device just broadcasts asking 'who has this IP' and whoever owns it replies back with their mac, then that gets saved in the arp table for a bit",
+    "labels": [
+      "covered",
+      "covered",
+      "partial"
+    ],
+    "overall": 0.65,
+    "followup": {
+      "question": "What happens to an ARP table entry when the TTL expires?",
+      "answer": "it probably just gets cleared out and has to ask again next time",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.having_vs_where.medium1",
+    "style": "good_own_words",
+    "answer": "where filters out individual rows before anything gets grouped together, so its working on raw rows. having happens after the grouping step, so it's filtering entire groups based on stuff like aggregate results, like only keep groups where the count is more than 5. so basically where comes first on raw data, having comes after on the grouped results.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.85,
+    "followup": {
+      "question": "Why is the order of execution important for the result of a query?",
+      "answer": "it doesn't really matter, you'd get the same groups either way since SQL optimizes it to the same result",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dsa.stacks_and_recursion.easy1",
+    "style": "confident_wrong",
+    "answer": "recursive function calls don't actually use a stack directly, they use a queue internally so that the first function call made is also the first one to finish and return, which is why recursion processes things in the order you called them. the stack is only used for storing global variables, not the actual call sequence.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "What happens to the return address when a function call is made?",
+      "answer": "i think it gets saved somewhere so the program knows where to jump back to, not sure exactly where though",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.method_overloading.hard2",
+    "style": "partial",
+    "answer": "if two methods only differ by return type you'll get a compile error, java doesn't let you do that for overloading. not sure exactly why though, maybe because the compiler can't tell them apart somehow.",
+    "labels": [
+      "partial",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.45,
+    "followup": {
+      "question": "Why is the return type not considered when resolving overloaded methods?",
+      "answer": "cause the compiler only looks at the name and the parameter types when it decides which method you meant",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.chain_of_responsibility_pattern.medium1",
+    "style": "good_own_words",
+    "answer": "chain of responsibility is like passing a note down a line of people, each one checks if they can handle it, and if they can't they just pass it along to the next person in line. the cool part is you decide who's in that line and in what order at runtime, so the sender has no clue who actually ends up dealing with the request, they just send it off. that's what keeps things loosely coupled, the sender and whoever eventually handles it don't need to know about each other directly.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.88,
+    "followup": {
+      "question": "How does giving multiple objects an opportunity to handle the request contribute to loose coupling?",
+      "answer": "the sender just fires off the request without caring who actually picks it up, so they're not tightly tied to one specific handler",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.singleton_pattern.easy1",
+    "style": "good_own_words",
+    "answer": "singleton works by hiding the constructor, making it private so nobody outside the class can just do 'new MyClass()' whenever they want. instead there's one static method, usually called getInstance(), that everyone has to go through, and it either builds the one and only object the first time its called or just hands back the one that already exists.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.85,
+    "followup": {
+      "question": "Why is having a global access point important?",
+      "answer": "so every part of the app is working with the exact same object instead of accidentally creating separate copies with different states",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.expression_trees.easy1",
+    "style": "partial",
+    "answer": "an expression tree represents math expressions as a tree, where I think the numbers are at the bottom and the operators are somewhere above them connecting things together.",
+    "labels": [
+      "covered",
+      "covered",
+      "partial"
+    ],
+    "overall": 0.55,
+    "followup": {
+      "question": "How does an operator node relate to its operands in the tree?",
+      "answer": "the operands are stored inside the operator node itself as properties, not as separate child nodes",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.aggregate_functions_and_group_by.easy1",
+    "style": "short_casual",
+    "answer": "aggregate functions like sum count avg just take a bunch of rows and squish it down to one value, and with group by you get one of those per group instead of just one overall",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.75,
+    "followup": {
+      "question": "What happens if you include a non-aggregated attribute in the SELECT clause with GROUP BY?",
+      "answer": "i think it just picks some random value for it or throws an error, not 100% sure which",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.go_back_n_and_selective_repeat.medium2",
+    "style": "short_casual",
+    "answer": "selective repeat only resends the one packet that actually got lost instead of everything after it like go back n does, and the receiver acks packets one by one so the sender only moves its window up once the earliest unacked one finally gets confirmed",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8,
+    "followup": {
+      "question": "How does this differ from Go-Back-N's window advancement?",
+      "answer": "go back n just slides forward whenever basically any ack comes in i think, not as precise as selective repeat",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.tcp_flow_control.medium1",
+    "style": "partial",
+    "answer": "the receiver tells the sender how much space it has left in its buffer using that rwnd field, so the sender knows not to send more than that so it doesn't flood the receiver.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.75,
+    "followup": {
+      "question": "How does the sender know how much data it can send at any time?",
+      "answer": "it checks the rwnd value the receiver sent and keeps its unacked data under that limit",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.java_collections_and_list_interface.easy1",
+    "style": "partial",
+    "answer": "List keeps things in the order you put them in, and I think it lets you access stuff by index too, unlike Set.",
+    "labels": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.55,
+    "followup": {
+      "question": "What kind of operations would you use if you needed to access elements by their position?",
+      "answer": "you'd use contains() to find the index of something",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.super_key_and_candidate_key.easy1",
+    "style": "hesitant",
+    "answer": "um, so a superkey is just, uh, any set of columns that can uniquely identify a row, like it could even have extra useless columns in it. and um, a candidate key is like... the trimmed down version, the minimal one, where you can't remove anything else without breaking the uniqueness. so yeah, candidate key is kind of a special, smaller case of a superkey I guess.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.75,
+    "followup": {
+      "question": "Can a relation have more than one candidate key?",
+      "answer": "umm maybe? i genuinely don't remember",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dsa.dijkstra_s_algorithm.easy1",
+    "style": "short_casual",
+    "answer": "you always go to the closest unvisited node next and check if going through it makes a shorter path to its neighbors than what you already had",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8,
+    "followup": {
+      "question": "How does the algorithm use the weight of an edge to update distances?",
+      "answer": "it subtracts the edge weight from the current distance to get the new one",
+      "correct": false
+    }
+  }
+]

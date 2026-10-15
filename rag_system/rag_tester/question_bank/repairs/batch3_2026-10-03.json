@@ -1,0 +1,170 @@
+{
+ "about": "Key-point repair batch 3 (2026-10-03): served questions that failed grader_eval/sanity_check.py, i.e. their own reference answer did not pass (a key point asks for something the reference does not say, or says it in other words), plus three OOAD pattern questions whose generic points gave credit to other questions' answers. Same rule: short points, one claim each, naming the mechanism; the reference answer states every key point. Lesson from this batch: a point must not list examples ('for security, caching or lazy creation') or extra qualifiers ('with a TTL'); a correct casual answer mentions one example or none.",
+ "questions": {
+  "cn.arp.medium1": {
+   "quality_note": "classic; key points shortened, TTL added to the reference (repair 3)",
+   "reference_answer": "The device uses ARP, which finds the MAC address that matches a known IP address on the same LAN. If the MAC address is not already in its ARP table, it broadcasts an ARP query containing the target IP address to every device on the LAN. Only the device with that IP address replies, with its MAC address. The sender stores the mapping in its ARP table as an IP-to-MAC entry with a TTL, so the entry is reused for a while and then expires.",
+   "key_points": [
+    {
+     "point": "ARP finds the MAC address for a known IP address."
+    },
+    {
+     "point": "The ARP request is broadcast to all devices on the network."
+    },
+    {
+     "point": "The reply is saved in the ARP table for later use."
+    }
+   ]
+  },
+  "cn.switching_and_vlans.easy1": {
+   "quality_note": "classic; key points shortened (repair 3)",
+   "reference_answer": "A self-learning switch starts with an empty table and fills it automatically. Whenever a frame arrives, the switch records the frame's source MAC address together with the port it arrived on. To forward a frame, it looks up the destination MAC address in the table and sends the frame only to that port; if the address is not in the table yet, it floods the frame to all other ports. Entries expire after a while, so the table keeps up with hosts that move.",
+   "key_points": [
+    {
+     "point": "The switch records each frame's source MAC address together with the port it arrived on."
+    },
+    {
+     "point": "It uses the table to forward frames only to the port of the destination MAC address."
+    }
+   ]
+  },
+  "cn.mac_addressing.medium2": {
+   "quality_note": "key points reworded; reference states every point (repair 3)",
+   "reference_answer": "Every network interface has its own unique 48-bit MAC address, which is burned into the NIC's ROM by the manufacturer; manufacturers get their own blocks of addresses from the IEEE, so no two cards share one. Because each address belongs to exactly one interface, a switch can learn which port each MAC address is on and forward a frame only to the device it is addressed to, and every other device ignores frames that are not addressed to it.",
+   "key_points": [
+    {
+     "point": "Every network interface has its own unique 48-bit MAC address."
+    },
+    {
+     "point": "The MAC address is burned into the NIC's ROM by the manufacturer."
+    }
+   ]
+  },
+  "dsa.binary_search_tree_deletion.easy1": {
+   "quality_note": "classic; second key point now states why the replacement works (repair 3)",
+   "key_points": [
+    {
+     "point": "Replace the node's value with its inorder successor or inorder predecessor."
+    },
+    {
+     "point": "Then delete that successor or predecessor, which has at most one child, so it is easy to remove."
+    }
+   ]
+  },
+  "dsa.postfix_expression_evaluation.medium2": {
+   "quality_note": "good; key points shortened (repair 3)",
+   "reference_answer": "Operands are pushed onto a stack as they are read. In postfix notation each operator comes right after the two operands it applies to, so when an operator is read, its operands are the top two elements of the stack. The two elements are popped, the operation is applied to them (the first popped is the right operand), and the result is pushed back onto the stack, where it becomes an operand of a later operator. At the end the only value left on the stack is the result of the expression.",
+   "key_points": [
+    {
+     "point": "Each operator applies to the two operands that come just before it."
+    },
+    {
+     "point": "When an operator is read, its operands are the top two elements of the stack."
+    },
+    {
+     "point": "The two operands are popped, the operation is applied, and the result is pushed back."
+    }
+   ]
+  },
+  "os.context_switching.medium1": {
+   "quality_note": "good; reference now states every key point (repair 3)",
+   "reference_answer": "In round-robin scheduling every quantum ends with a context switch, which is pure overhead: the CPU saves one process's state and loads another's instead of doing useful work. A smaller time quantum causes more context switches, so more time is lost to overhead, while a very large quantum makes round robin behave like first-come first-served and hurts response time. In modern systems a context switch takes far less time than one quantum (microseconds versus milliseconds), so a reasonable quantum keeps the overhead small. A context switch is much more costly if processes must be swapped in and out of memory.",
+   "key_points": [
+    {
+     "point": "A smaller time quantum causes more context switches."
+    },
+    {
+     "point": "A context switch normally takes far less time than one quantum."
+    },
+    {
+     "point": "A context switch is much more costly if processes must be swapped in and out of memory."
+    }
+   ]
+  },
+  "os.producer_consumer_problem.easy1": {
+   "quality_note": "good; semaphores added to the reference (repair 3)",
+   "reference_answer": "In the producer-consumer problem a producer process puts items into a shared, bounded buffer and a consumer process takes them out; it is the standard example of cooperating processes. They must be synchronized: the producer has to wait when the buffer is full, the consumer has to wait when it is empty, and only one of them may change the buffer at a time. It is usually solved with semaphores: mutex for exclusive access to the buffer, full to count filled slots and empty to count free slots. It matters because many parts of an operating system, such as I/O buffers, pipes and print spooling, follow this pattern, and without synchronization data is lost or corrupted.",
+   "key_points": [
+    {
+     "point": "A producer process produces data that a consumer process consumes, through a shared buffer."
+    },
+    {
+     "point": "The producer and consumer must be synchronized, for example with semaphores."
+    }
+   ]
+  },
+  "os.page_faults.medium1": {
+   "quality_note": "good; key points shortened, reference aligned (repair 3)",
+   "reference_answer": "On a page fault the operating system first checks whether the reference is invalid, in which case the process is aborted, or the page is just not in memory. In that case it finds a free frame, reads the page into it from disk, updates the page table and restarts the instruction. To manage page-fault frequency, the system sets an acceptable fault rate for each process: if a process's fault rate is too high it gains frames, and if it is too low it loses frames. Controlling page-fault frequency this way avoids thrashing, because no process is left with too few frames.",
+   "key_points": [
+    {
+     "point": "The OS first checks whether the reference is invalid or the page is just not in memory."
+    },
+    {
+     "point": "It finds a free frame and reads the page into it from disk."
+    },
+    {
+     "point": "A process gains frames if its page-fault rate is too high and loses frames if it is too low."
+    },
+    {
+     "point": "Controlling page-fault frequency avoids thrashing."
+    }
+   ]
+  },
+  "os.deadlock_prevention.medium1": {
+   "quality_note": "good; second key point now names the condition (repair 3)",
+   "key_points": [
+    {
+     "point": "Number all resources and make processes request them only in increasing order."
+    },
+    {
+     "point": "This removes circular wait, one of the four necessary conditions for deadlock."
+    }
+   ]
+  },
+  "ooad.builder_pattern.easy1": {
+   "quality_note": "good; generic key points made specific (they credited unrelated answers) (repair 3)",
+   "reference_answer": "The Builder pattern is a creational pattern for constructing complex objects. Instead of one constructor with many parameters, a separate builder object constructs the object step by step, and the finished object is returned at the end. Because the construction process is separated from the object's representation, the same construction process can create different representations of the object by using different builders. It makes the creation of objects with many optional parts readable and less error-prone.",
+   "key_points": [
+    {
+     "point": "The Builder pattern is a creational pattern for constructing complex objects."
+    },
+    {
+     "point": "A separate builder object constructs the object step by step."
+    },
+    {
+     "point": "The same construction process can create different representations of the object."
+    }
+   ]
+  },
+  "ooad.facade_and_proxy_patterns.easy1": {
+   "quality_note": "good; generic key points made specific (they credited unrelated answers) (repair 3)",
+   "reference_answer": "The Proxy pattern puts a placeholder object in front of another object: the proxy stands in for the real object and the client uses it through the same interface as the real object. Its main purpose is to control access to the real object, so it can do something before or after passing a request on, for example checking permissions, caching results or creating an expensive object only when it is first needed.",
+   "key_points": [
+    {
+     "point": "A proxy is a placeholder object that stands in for another object."
+    },
+    {
+     "point": "The proxy controls access to the real object."
+    },
+    {
+     "point": "The client uses the proxy through the same interface as the real object."
+    }
+   ]
+  },
+  "ooad.adapter_pattern.medium1": {
+   "quality_note": "good; key points shortened (repair 3)",
+   "key_points": [
+    {
+     "point": "An adapter lets incompatible classes work together."
+    },
+    {
+     "point": "Adapter is a structural design pattern."
+    },
+    {
+     "point": "It converts the interface of a class into the interface the client expects."
+    }
+   ]
+  }
+ }
+}

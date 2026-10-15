@@ -118,7 +118,7 @@ One picture of the entire project: what the candidate touches, the modules behin
 
 ---
 
-## 3. Use case diagram (3 actors, 11 use cases)
+## 3. Use case diagram (3 actors, 12 use cases)
 
 **Prompt:** "Using the rules above, draw a UML use case diagram. Put the use cases in one system boundary named 'Interview Prep Platform'. Use `top to bottom direction`. Draw only the associations, «include» and «extend» relationships listed."
 
@@ -139,6 +139,7 @@ One picture of the entire project: what the candidate touches, the modules behin
 | U7 | View report & history | Candidate |
 | U8 | Camera setup check | Candidate, Proctor System |
 | U9 | Monitor attention & liveness | Proctor System |
+| U12 | Enforce session rules (full screen, no tab switch, no copy-paste) | Proctor System |
 | U10 | Terminate on rule violation | Proctor System |
 | U11 | Generate question bank | Developer |
 
@@ -147,7 +148,8 @@ One picture of the entire project: what the candidate touches, the modules behin
 - U4 «include» U8, U4 «include» U5
 - U6 «extend» U5 (when a key point is missing)
 - U9 «extend» U3 and U4
-- U10 «extend» U9 (on tab switch / leaving full screen / copy-paste)
+- U12 «extend» U3 and U4 (session rules apply throughout both interviews)
+- U10 «extend» U12 (on tab switch / leaving full screen / copy-paste). Attention monitoring (U9) only warns and lowers the attention score; it never terminates
 
 ---
 

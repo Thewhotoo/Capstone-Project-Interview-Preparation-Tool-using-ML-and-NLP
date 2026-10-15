@@ -43,7 +43,7 @@ def main(which: str = "both") -> None:
             if fu.get("answer", "").strip() and isinstance(fu.get("correct"), bool):
                 kp = next((k for k in q.key_points if k.followup == fu["question"]), None)
                 if kp is not None:
-                    verdict, _ = followup_covers(kp, fu["answer"])
+                    verdict, _ = followup_covers(kp, fu["answer"], subject=q.subject)
                     fu_n += 1
                     fu_ok += (verdict != "missing") == fu["correct"]
             lines.append(f"  you {x['overall']:.2f}  grader {g.score:.2f}  | follow-up you {'ok ' if fu.get('correct') else 'bad'} grader {verdict or '-':<8}| {q.topic}")

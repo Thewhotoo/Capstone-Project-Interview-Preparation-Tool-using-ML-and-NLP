@@ -1,0 +1,519 @@
+[
+  {
+    "question_id": "ooad.adapter_pattern.medium1",
+    "style": "partial",
+    "answer": "basically an adapter is like a middle layer between classes that dont match, so it lets the objects work together",
+    "labels": ["covered", "missing", "covered"],
+    "overall": 0.35,
+    "followup": {
+      "question": "How does the Adapter pattern ensure that the client's needs are met?",
+      "answer": "i'm not sure, maybe it just makes the old class fit the new interface",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "cn.tcp_connection_establishment.medium2",
+    "style": "partial",
+    "answer": "the three way handshake makes sure both sides agree before the connection is really established. with only two messages you dont really get mutual confirmation that both sides got the request",
+    "labels": ["covered", "covered"],
+    "overall": 0.75,
+    "followup": {
+      "question": "What is the risk of using a two-way handshake in a network with packet loss?",
+      "answer": "yeah, packets can get lost so one side may not know the other actually received the request",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.coupling_and_cohesion.easy1",
+    "style": "good",
+    "answer": "high cohesion means a class is focused on things that belong together. so one class should have closely related responsibilities, which makes it easier to understand and maintain, and usually reduces unnecessary complexity",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.80,
+    "followup": {
+      "question": "How does high cohesion affect the overall design of a system?",
+      "answer": "umm not really sure, i guess it makes the classes smaller",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dsa.time_and_space_complexity.easy1",
+    "style": "confident_wrong",
+    "answer": "time complexity is basically how much memory an algorithm uses as the input gets bigger, while space complexity is how long it takes to run. theyre useful for seeing which algorithm is faster",
+    "labels": ["missing", "missing", "covered"],
+    "overall": 0.05,
+    "followup": {
+      "question": "Why are time and space complexity important when choosing an algorithm?",
+      "answer": "not sure",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.this_and_super_keywords.medium1",
+    "style": "short_casual",
+    "answer": "super calls the parent constructor and it has to come first because the parent part needs to be initialized first",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.75,
+    "followup": {
+      "question": "What would happen if a subclass had two superclasses and you called 'super' in its constructor?",
+      "answer": "it would call the constructor of the direct parent class",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.dijkstra_s_algorithm.easy1",
+    "style": "confident_wrong",
+    "answer": "dijkstra keeps picking the vertex with the biggest tentative distance and then updates nearby nodes",
+    "labels": ["missing", "covered"],
+    "overall": 0.05,
+    "followup": {
+      "question": "How does the algorithm use the weight of an edge to update distances?",
+      "answer": "i dont remember",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dsa.merge_sort.easy1",
+    "style": "good",
+    "answer": "you keep splitting the array into two parts until you get small pieces, then recursively sort them and merge the sorted pieces back together. during merge you compare the two front values and put the smaller one first",
+    "labels": ["covered", "covered"],
+    "overall": 0.95,
+    "followup": {
+      "question": "How does the merge process ensure the final array is sorted?",
+      "answer": "because it always takes the smaller front element from the two sorted parts, so the result stays ordered",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.tcp_flow_control.medium1",
+    "style": "good_own_words",
+    "answer": "its basically the receiver telling the sender how much room it has left using the rwnd field. the sender uses that advertised window so it doesnt keep dumping more data than the receiver can buffer",
+    "labels": ["covered", "covered"],
+    "overall": 0.92,
+    "followup": {
+      "question": "How does the sender know how much data it can send at any time?",
+      "answer": "the sender looks at the advertised receive window in the TCP header",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.throughput_and_bottleneck_link.medium1",
+    "style": "short_casual",
+    "answer": "the slowest shared part is the bottleneck, so it caps the end to end rate. if several pairs share that middle link, its capacity gets split between them",
+    "labels": ["covered", "covered", "partial"],
+    "overall": 0.72,
+    "followup": {
+      "question": "How does the number of pairs affect the shared link capacity available to each pair?",
+      "answer": "yeah, more pairs means less of that shared capacity for each pair if its shared fairly",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.peterson_s_solution.easy1",
+    "style": "short_casual",
+    "answer": "there is a flag for each process showing it wants the critical section, and the turn variable decides which one gets priority",
+    "labels": ["covered", "covered"],
+    "overall": 0.72,
+    "followup": {
+      "question": "Why is the turn variable necessary for mutual exclusion?",
+      "answer": "because if both flags are true, turn decides who waits",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.denormalization.easy1",
+    "style": "short_casual",
+    "answer": "denormalization means keeping some duplicate data in tables on purpose. you do it when read performance matters more than update efficiency, and it can make queries simpler because you may need fewer joins",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.80,
+    "followup": {
+      "question": "How does denormalization affect query complexity?",
+      "answer": "it can reduce the number of joins because related data may already be together",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.static_members.easy1",
+    "style": "partial",
+    "answer": "a static block is used for initializing static data and it runs before main",
+    "labels": ["covered", "covered", "missing"],
+    "overall": 0.60,
+    "followup": {
+      "question": "What would happen if you create multiple instances of the class?",
+      "answer": "even if i create many objects it should still run once",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.semaphores.hard2",
+    "style": "hesitant",
+    "answer": "um so a semaphore without busy waiting blocks a process and keeps it in a waiting queue when the value is zero. priority inversion is when a low priority process has a lock that a high priority one needs, and priority inheritance is used to deal with that",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.82,
+    "followup": {
+      "question": "Why would a priority-inheritance protocol help in the case of semaphores?",
+      "answer": "uh it raises the lower priority process temporarily so it can release the lock",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.integrity_constraints.medium1",
+    "style": "good_own_words",
+    "answer": "a foreign key normally has to refer to an existing primary key in the other table, or it can be null. this keeps the relationship between the tables valid, and actions like cascade or set null can define what happens when the referenced row changes",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.85,
+    "followup": {
+      "question": "What is the purpose of the CASCADE option in referential integrity?",
+      "answer": "i dont remember",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.common_table_expressions_cte.medium1",
+    "style": "confident_wrong",
+    "answer": "a recursive CTE starts with an anchor query and then the recursive part keeps referring to the CTE again. its useful for things like employee manager hierarchies because you can keep expanding the chain",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.85,
+    "followup": {
+      "question": "Why is a recursive CTE suitable for hierarchical data?",
+      "answer": "it can repeatedly follow the parent child relationship and build the hierarchy",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.priority_queue.easy1",
+    "style": "good_own_words",
+    "answer": "a priority queue removes elements based on their priority rather than normal insertion order. in an ascending one the smallest value comes out first, while descending gives the largest one first",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.78,
+    "followup": {
+      "question": "How would you implement a descending priority queue using an array?",
+      "answer": "not sure, maybe keep the biggest value at the front",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dsa.stacks_and_recursion.easy1",
+    "style": "partial",
+    "answer": "when recursion happens, each call goes onto the stack and the calls return in reverse order. thats why the last call is the first one to finish",
+    "labels": ["covered", "covered", "missing"],
+    "overall": 0.45,
+    "followup": {
+      "question": "What happens to the return address when a function call is made?",
+      "answer": "i dont remember",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.cap_theorem.medium2",
+    "style": "good_own_words",
+    "answer": "CAP says a distributed system has to deal with consistency, availability and partition tolerance, so you cant fully guarantee all three during a partition. traditional SQL systems usually emphasize strong consistency with ACID, while many NoSQL systems favor availability and partition tolerance even if consistency is weaker",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.82,
+    "followup": {
+      "question": "What kind of consistency do NoSQL systems typically use?",
+      "answer": "i'm not sure, maybe its eventually consistent in many cases",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "cn.network_devices.hard2",
+    "style": "confident_wrong",
+    "answer": "a repeater just boosts or regenerates the signal and sends the data onward, while a switch uses addresses to decide where to send it. so the switch is smarter and should reduce unnecessary traffic",
+    "labels": ["covered", "missing", "covered", "covered"],
+    "overall": 0.35,
+    "followup": {
+      "question": "How does this compare to the behavior of a Repeater?",
+      "answer": "i dont know exactly",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.is_a_vs_has_a_relationship.easy1",
+    "style": "good_own_words",
+    "answer": "is-a usually means inheritance, like a dog is an animal. has-a is more like composition, where one object contains another. composition is usually more flexible because you can change the contained object without changing an inheritance tree",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.78,
+    "followup": {
+      "question": "Why might a developer prefer composition over inheritance?",
+      "answer": "not sure, probably because its easier to change the pieces",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.preemptive_vs_non_preemptive_scheduling.medium1",
+    "style": "partial",
+    "answer": "with preemptive scheduling the OS can interrupt a running process and switch to another. in non-preemptive scheduling it normally waits until the process blocks or finishes. preemption can also mean you need synchronization around shared data",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.78,
+    "followup": {
+      "question": "What is a potential downside of preemptive scheduling?",
+      "answer": "yeah, it can cause race conditions if shared data isnt protected",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.go_back_n_and_selective_repeat.medium2",
+    "style": "confident_wrong",
+    "answer": "selective repeat retransmits the whole window from the lost packet again, and the receiver mainly acknowledges the last packet in order",
+    "labels": ["missing", "missing", "missing"],
+    "overall": 0.05,
+    "followup": {
+      "question": "How does this differ from Go-Back-N's window advancement?",
+      "answer": "i dont remember",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.priority_scheduling.medium1",
+    "style": "good_own_words",
+    "answer": "a low priority process can keep waiting because higher priority jobs keep getting chosen, so it can starve. aging fixes this by gradually increasing the priority of processes that have waited for a long time",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.80,
+    "followup": {
+      "question": "How can we prevent low-priority processes from being starved?",
+      "answer": "not sure",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dsa.expression_trees.easy1",
+    "style": "good_own_words",
+    "answer": "its a tree representation of an arithmetic expression. operators are the internal nodes and the actual values are leaves, so something like plus would have its two operands as children",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.94,
+    "followup": {
+      "question": "How does an operator node relate to its operands in the tree?",
+      "answer": "the operator node has the operands as its children",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.method_overriding.easy1",
+    "style": "confident_wrong",
+    "answer": "overriding is when the child class changes the implementation of a method from the parent. its mainly compile time polymorphism because the compiler decides which method to use",
+    "labels": ["covered", "missing", "covered"],
+    "overall": 0.05,
+    "followup": {
+      "question": "Can a class override a method from a class it does not inherit from?",
+      "answer": "yeah, a class can override a method from any class as long as the method exists somewhere",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.denormalization.medium2",
+    "style": "confident_wrong",
+    "answer": "denormalization usually makes reads faster because fewer joins are needed, but it also means duplicate values can exist and become inconsistent. so updates need more care because the copies have to stay in sync",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.94,
+    "followup": {
+      "question": "What challenge does denormalization introduce for data updates?",
+      "answer": "it can make updates harder because multiple copies may need to be changed",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.mutex_locks.easy1",
+    "style": "confident_wrong",
+    "answer": "a mutex is a lock used around the critical section. a process acquires it before entering and releases it after, and the lock state tells whether its available",
+    "labels": ["covered", "covered", "missing"],
+    "overall": 0.70,
+    "followup": {
+      "question": "How is the state of a mutex lock represented in memory?",
+      "answer": "not sure",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.deadlock_conditions.hard2",
+    "style": "hesitant",
+    "answer": "if resources can be taken away, then the no-preemption condition isnt required for deadlock. taking a resource away can break the cycle, although doing that can also cause some processes to keep waiting",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.95,
+    "followup": {
+      "question": "What is a potential downside of allowing preemption in a system?",
+      "answer": "the downside is that a process could keep losing the resource and starve",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.outer_joins.medium1",
+    "style": "partial",
+    "answer": "a full outer join keeps every row from both tables and fills unmatched sides with nulls. its useful when you want the complete set from both sides. mysql doesnt directly support it, so you can combine left and right joins with UNION",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.95,
+    "followup": {
+      "question": "What is a common workaround for implementing Full Outer Join in MySQL?",
+      "answer": "use LEFT OUTER JOIN and RIGHT OUTER JOIN together with UNION",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.data_independence.easy1",
+    "style": "partial",
+    "answer": "physical data independence means you can change how the data is physically stored without changing the logical schema",
+    "labels": ["covered", "missing"],
+    "overall": 0.55,
+    "followup": {
+      "question": "How does physical data independence help in the long-term management of a database?",
+      "answer": "i think it makes storage changes easier without touching the application",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.network_devices.medium1",
+    "style": "good_own_words",
+    "answer": "a switch works at the data link layer and learns MAC addresses, so it can send a frame to the right port. it also supports full duplex, unlike a hub which is half duplex",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.95,
+    "followup": {
+      "question": "How does a Switch handle a device that it has not learned the MAC address for?",
+      "answer": "if it doesnt know the MAC yet, it floods the frame out the other ports",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.open_closed_principle.medium2",
+    "style": "good",
+    "answer": "the idea is that you should avoid changing working code every time you add something, because modification can introduce bugs. instead you extend it, for example with interfaces or inheritance",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.95,
+    "followup": {
+      "question": "How can inheritance help in following the Open-Closed Principle?",
+      "answer": "a subclass can add new behavior without editing the original class",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.binary_search_tree_deletion.easy1",
+    "style": "dont_know",
+    "answer": "i think you remove the node and then connect its children so the tree stays ordered",
+    "labels": ["missing", "missing"],
+    "overall": 0.03,
+    "followup": {
+      "question": "Can you delete a node with two children by using either the inorder successor or predecessor?",
+      "answer": "not sure",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.chain_of_responsibility_pattern.medium1",
+    "style": "short_casual",
+    "answer": "multiple handlers can get a chance to handle the same request, and the chain can be changed while the program is running. the sender doesnt need to know which handler will actually deal with it",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.75,
+    "followup": {
+      "question": "How does giving multiple objects an opportunity to handle the request contribute to loose coupling?",
+      "answer": "because the sender just sends the request into the chain without depending on one specific receiver",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.logical_vs_physical_address.easy1",
+    "style": "short_casual",
+    "answer": "a logical address is basically the virtual address produced by the CPU, while the physical one is what memory actually sees. i think they are always different because the MMU translates them",
+    "labels": ["covered", "covered", "missing"],
+    "overall": 0.60,
+    "followup": {
+      "question": "In which scenario do logical and physical addresses differ?",
+      "answer": "when the program is running with address translation",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.inheritance.medium2",
+    "style": "hesitant",
+    "answer": "inheritance lets a child class reuse things from its parent, so its an is-a relationship. in a class diagram its basically shown as generalization",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.55,
+    "followup": {
+      "question": "How is inheritance represented in a class diagram?",
+      "answer": "i think its a line with a triangle pointing to the child",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.deadlock_avoidance.medium2",
+    "style": "confident_wrong",
+    "answer": "before granting a request, the system checks whether giving the resource could make the state unsafe. a safe state means there is still some order in which processes can finish, so deadlock can be avoided",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.70,
+    "followup": {
+      "question": "How does the behavior of processes affect the system's ability to avoid deadlocks?",
+      "answer": "not sure, maybe if they request resources in a bad order the system can get stuck",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.method_overloading.hard2",
+    "style": "good_own_words",
+    "answer": "you cant overload methods just by changing the return type. the compiler uses the method name and parameter list to choose the call, so two methods with the same parameters would be ambiguous",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.96,
+    "followup": {
+      "question": "Why is the return type not considered when resolving overloaded methods?",
+      "answer": "because return type isnt part of the signature used for overload resolution",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.stack_operations.easy1",
+    "style": "short_casual",
+    "answer": "with a linked list, you can treat the first node as the top. push adds a node at the front and pop removes that front node",
+    "labels": ["covered", "covered", "covered"],
+    "overall": 0.75,
+    "followup": {
+      "question": "What is the effect of popping an element from a linked list-based stack?",
+      "answer": "the front node is removed and top moves to the next node",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.nested_and_correlated_subqueries.medium1",
+    "style": "good",
+    "answer": "a normal nested query can run independently, but a correlated subquery depends on the current row of the outer query, so it can be evaluated for each outer row. EXISTS is commonly used to check whether a matching row exists",
+    "labels": ["covered", "covered"],
+    "overall": 0.95,
+    "followup": {
+      "question": "Why would you use EXISTS with a correlated subquery?",
+      "answer": "because it checks whether at least one matching row exists for that outer row",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.abstraction.medium1",
+    "style": "confident_wrong",
+    "answer": "abstraction means exposing all the implementation details so users can see exactly how the object works. an interface is mostly used to make the implementation more complicated",
+    "labels": ["missing", "missing"],
+    "overall": 0.25,
+    "followup": {
+      "question": "What is the role of an interface in abstraction?",
+      "answer": "it lets other objects use the entity without knowing its internal implementation",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.overloading_vs_overriding.medium1",
+    "style": "partial",
+    "answer": "overloading is when the same method name has different parameter lists, and overriding is when a child gives a different implementation of the parent method. overriding is runtime polymorphism while overloading is compile time",
+    "labels": ["covered", "covered", "missing"],
+    "overall": 0.70,
+    "followup": {
+      "question": "Why would you use method overloading instead of creating multiple methods with different names?",
+      "answer": "i dont remember",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.composition_over_inheritance.medium1",
+    "style": "partial",
+    "answer": "composition is a has-a relationship and you build an object using other objects. its often easier to test because the pieces can be tested separately",
+    "labels": ["covered", "missing", "covered"],
+    "overall": 0.65,
+    "followup": {
+      "question": "Why might test-ability be an important factor in choosing composition over inheritance?",
+      "answer": "because you can test the individual components separately",
+      "correct": true
+    }
+  },
+  {
+    "question_id

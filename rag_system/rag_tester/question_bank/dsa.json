@@ -104,21 +104,13 @@
   "topic_coverage": "good",
   "question": "Explain how Dijkstra’s algorithm finds the shortest paths in a weighted graph.",
   "difficulty": "easy",
-  "reference_answer": "Dijkstra’s algorithm finds the shortest paths by iteratively selecting the vertex with the smallest tentative distance. It uses a tree of vertices that have already been processed, and for each of these, it considers their outgoing edges to update the shortest path to neighboring vertices. The algorithm ensures that once a vertex is added to the tree, its shortest path is finalized.",
+  "reference_answer": "Dijkstra's algorithm starts with distance 0 for the source and infinity for every other vertex. It repeatedly picks the unvisited vertex with the smallest current distance and marks that distance as final. It then relaxes the vertex's outgoing edges: for each neighbour, if going through this vertex gives a shorter path, the neighbour's distance is updated. Because edge weights are non-negative, a vertex's distance can never improve after it has been picked, so when all vertices are done each one holds its shortest distance from the source.",
   "key_points": [
    {
-    "point": "Dijkstra’s algorithm selects the vertex with the smallest tentative distance.",
+    "point": "It picks the unvisited vertex with the smallest tentative distance.",
     "quote": "Among vertices not already in the tree, it finds vertex u with the smallest sum dv + w(v,u).",
     "followup": "What determines which vertex is selected next in the algorithm?",
     "followup_answer": "The vertex with the smallest tentative distance is selected next.",
-    "variants": [
-     "the algorithm picks the closest vertex each time.",
-     "we choose the vertex with the least distance first.",
-     "the next vertex is the one with the smallest current distance.",
-     "the smallest tentative distance determines the next selection.",
-     "the algorithm always selects the closest unprocessed node.",
-     "the next step is to pick the vertex with the minimum tentative distance."
-    ],
     "followup_replies": [
      "the smallest tentative distance",
      "tentative distance",
@@ -128,18 +120,10 @@
     ]
    },
    {
-    "point": "The algorithm updates the shortest path to neighboring vertices using outgoing edges.",
+    "point": "It updates a neighbour's distance when a shorter path through that vertex is found.",
     "quote": "w(v,u) is the length (weight) of edge from v to u",
     "followup": "How does the algorithm use the weight of an edge to update distances?",
     "followup_answer": "The weight of an edge is added to the shortest path to v to compute a potential new shortest path to u.",
-    "variants": [
-     "the algorithm checks edges to update neighboring distances.",
-     "it uses outgoing edges to find better paths to other nodes.",
-     "the algorithm looks at edges to improve the shortest path estimates.",
-     "for each processed node, it considers its edges to update distances.",
-     "it updates the distances to neighbors using their edges.",
-     "the algorithm uses edges to refine the shortest paths."
-    ],
     "followup_replies": [
      "you add the edge weight to the current distance",
      "edge weight is added to the distance to the source",
@@ -180,9 +164,12 @@
    "stated_by_bank": 0.007
   },
   "quality_score": 9,
-  "quality_note": "classic",
+  "quality_note": "classic; reference answer rewritten (it contradicted correct answers) (repair 1)",
   "curated": true,
-  "interview_priority": 3
+  "interview_priority": 3,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "dsa.binary_search_tree_deletion.easy1",
@@ -197,18 +184,10 @@
   "reference_answer": "To delete a node with two children in a binary search tree, you replace the node's value with its inorder successor or predecessor. This changes the problem to deleting a node with one or no children, which is simpler. The inorder successor is the smallest value in the right subtree, and the inorder predecessor is the largest value in the left subtree. After replacing the node's value, you then delete the inorder successor or predecessor, which may involve one or no children.",
   "key_points": [
    {
-    "point": "Replace the node with its inorder successor or predecessor.",
+    "point": "Replace the node's value with its inorder successor or inorder predecessor.",
     "quote": "To delete the node with info 5: - Replace 5 with its inorder successor and delete that inorder successor",
     "followup": "What happens if the node has two children and you want to maintain the binary search tree properties?",
     "followup_answer": "You replace the node's value with the inorder successor or predecessor to maintain the binary search tree properties.",
-    "variants": [
-     "you replace the node with its inorder successor or predecessor",
-     "when a node has two children, you swap its value with the inorder successor or predecessor",
-     "the inorder successor or predecessor takes the node's place in the tree",
-     "you use the inorder successor or predecessor to replace the node's value",
-     "replacing the node with the inorder successor or predecessor keeps the bst properties",
-     "to maintain the bst, you replace the node with its inorder successor or predecessor"
-    ],
     "followup_replies": [
      "yes",
      "you have to",
@@ -218,18 +197,10 @@
     ]
    },
    {
-    "point": "The choice between inorder successor and predecessor is arbitrary.",
+    "point": "Then delete that successor or predecessor, which has at most one child, so it is easy to remove.",
     "quote": "To delete the node with info 5: - Replace 5 with its inorder predecessor and delete that inorder predecessor",
     "followup": "Can you delete a node with two children by using either the inorder successor or predecessor?",
     "followup_answer": "Yes, you can choose either the inorder successor or predecessor, and the choice does not affect the correctness of the deletion.",
-    "variants": [
-     "you can use either the inorder successor or predecessor",
-     "choosing between the successor or predecessor doesn't matter",
-     "the choice of successor or predecessor is arbitrary",
-     "you can pick either the successor or predecessor to delete",
-     "using the successor or predecessor is interchangeable",
-     "the decision between successor or predecessor is up to you"
-    ],
     "followup_replies": [
      "yes",
      "you can",
@@ -287,9 +258,12 @@
    "stated_by_bank": 0.033
   },
   "quality_score": 9,
-  "quality_note": "classic",
+  "quality_note": "classic; second key point now states why the replacement works (repair 3)",
   "curated": true,
-  "interview_priority": 3
+  "interview_priority": 3,
+  "repairs": [
+   "batch3_2026-10-03"
+  ]
  },
  {
   "id": "dsa.stack_operations.easy1",
@@ -1855,19 +1829,13 @@
   "topic_coverage": "good",
   "question": "Explain how the postfix expression evaluation algorithm ensures that operators are applied to the correct operands.",
   "difficulty": "medium",
-  "reference_answer": "The postfix expression evaluation algorithm ensures that operators are applied to the correct operands by using a stack to store operands as they are read. When an operator is encountered, the top two elements from the stack are popped, and the operator is applied to these two operands. This ensures that each operator always acts on the most recent two operands, which is a key property of postfix notation.",
+  "reference_answer": "Operands are pushed onto a stack as they are read. In postfix notation each operator comes right after the two operands it applies to, so when an operator is read, its operands are the top two elements of the stack. The two elements are popped, the operation is applied to them (the first popped is the right operand), and the result is pushed back onto the stack, where it becomes an operand of a later operator. At the end the only value left on the stack is the result of the expression.",
   "key_points": [
    {
-    "point": "Each operator in a postfix string refers to the previous two operands.",
+    "point": "Each operator applies to the two operands that come just before it.",
     "quote": "Each operator in a postfix string refers to the previous two operands.",
     "followup": "Why is it important for an operator to refer to the previous two operands in a postfix expression?",
     "followup_answer": "It is important because this structure ensures that each operator is applied to the most recently available operands, which avoids ambiguity in the order of operations.",
-    "variants": [
-     "each operator in postfix uses the last two numbers.",
-     "postfix operators always act on the two previous values.",
-     "the structure of postfix ensures operators use the last two inputs.",
-     "postfix notation makes sure operators work on the previous two operands."
-    ],
     "followup_replies": [
      "nope",
      "to avoid confusion",
@@ -1877,18 +1845,10 @@
     ]
    },
    {
-    "point": "When an operator is reached, its operands will be the top two elements on the stack.",
+    "point": "When an operator is read, its operands are the top two elements of the stack.",
     "quote": "When an operator is reached, its operands will be the top two elements on the stack.",
     "followup": "What would happen if an operator was applied to the wrong operands in a postfix expression?",
     "followup_answer": "The result would be incorrect, as the operator would not be applied to the intended operands, leading to a wrong computation.",
-    "variants": [
-     "when you hit an operator, it uses the top two on the stack.",
-     "operators take the top two elements from the stack.",
-     "the stack gives the operands for each operator.",
-     "the operator uses the two most recent values from the stack.",
-     "the stack ensures the right operands are used for each operator.",
-     "operators in postfix get their operands from the top of the stack."
-    ],
     "followup_replies": [
      "the answer would be wrong",
      "it would compute the wrong result",
@@ -1898,17 +1858,10 @@
     ]
    },
    {
-    "point": "The two elements are popped out, the indicated operation is performed on them and result is pushed on the stack so that it will be available for use as an operand of the next operator.",
+    "point": "The two operands are popped, the operation is applied, and the result is pushed back.",
     "quote": "The two elements are popped out, the indicated operation is performed on them and result is pushed on the stack so that it will be available for use as an operand of the next operator.",
     "followup": "Why is it necessary to push the result back onto the stack after performing an operation?",
     "followup_answer": "It is necessary to push the result back onto the stack so that it can be used as an operand for subsequent operators, maintaining the correct order of operations in the postfix expression.",
-    "variants": [
-     "the result is pushed so later operators can use it.",
-     "the stack keeps track of intermediate results.",
-     "when you do an operation, you push the result for future use.",
-     "the result is stored so it can be used by the next operator.",
-     "the stack holds the result so it can be used as an operand later."
-    ],
     "followup_replies": [
      "so later operators can use it",
      "to keep the calculation going",
@@ -1956,9 +1909,12 @@
    "stated_by_bank": 0.005
   },
   "quality_score": 8,
-  "quality_note": "good",
+  "quality_note": "good; key points shortened (repair 3)",
   "curated": true,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "repairs": [
+   "batch3_2026-10-03"
+  ]
  },
  {
   "id": "dsa.parenthesis_matching.medium1",
@@ -2186,17 +2142,10 @@
   "reference_answer": "When a function t(n) is in Ω(g(n)), it means that t(n) is bounded below by some constant multiple of g(n) for all sufficiently large n. This indicates that t(n) grows at least as fast as g(n). The definition requires the existence of a positive constant c and a nonnegative integer n₀ such that t(n) ≥ c·g(n) for all n ≥ n₀. This notation is used to describe the lower bound of the growth rate of a function.",
   "key_points": [
    {
-    "point": "Ω-notation describes a lower bound on the growth rate of a function.",
+    "point": "t(n) in Ω(g(n)) means t(n) grows at least as fast as g(n): g is a lower bound.",
     "quote": "A function t(n) is said to be in Ω(g(n)), denoted t(n) ∈ Ω(g(n)), if t(n) is bounded below by some constant multiple of g(n) for all large n",
     "followup": "What does it mean for a function to be bounded below by another function?",
     "followup_answer": "It means that the function grows at least as fast as the other function, up to a constant factor.",
-    "variants": [
-     "Ω-notation shows t(n) grows at least as fast as g(n).",
-     "Ω means t(n) is always bigger than g(n) by some constant.",
-     "Ω describes the minimum growth rate of t(n) compared to g(n).",
-     "When we say t(n) is in Ω(g(n)), we're saying it's bounded below by g(n).",
-     "Ω is used to describe the lower bound of a function's growth."
-    ],
     "followup_replies": [
      "it grows at least as fast",
      "it's bounded below",
@@ -2206,18 +2155,10 @@
     ]
    },
    {
-    "point": "Ω-notation requires the existence of a positive constant c and a threshold n₀.",
+    "point": "Formally, t(n) ≥ c·g(n) for some positive constant c and all n ≥ n₀.",
     "quote": "there exist some positive constant c and some nonnegative integer n₀ such that t(n) ≥ c·g(n) for all n ≥ n₀",
     "followup": "Why is it important that the inequality holds for all n ≥ n₀?",
     "followup_answer": "Because it ensures that the lower bound is valid for sufficiently large input sizes, which is the focus of asymptotic analysis.",
-    "variants": [
-     "Ω requires a constant c and a threshold n₀.",
-     "You need a c and n₀ to define Ω.",
-     "Ω is defined with a constant and a starting point.",
-     "The definition of Ω has a constant and a cutoff n₀.",
-     "To use Ω, you need a c and an n₀.",
-     "Ω is based on a constant and a threshold."
-    ],
     "followup_replies": [
      "to ensure it works for large n",
      "so the bound is valid for big inputs",
@@ -2264,10 +2205,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.993
   },
-  "quality_score": 6,
-  "quality_note": "formal",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 8,
+  "quality_note": "key points reworded (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "dsa.open_addressing.medium1",
@@ -2279,21 +2223,13 @@
   "topic_coverage": "good",
   "question": "Explain how quadratic probing differs from linear probing in open addressing, and why one might be preferred over the other in certain scenarios.",
   "difficulty": "medium",
-  "reference_answer": "Quadratic probing uses a formula of (h(key) + i²) % tableSize to resolve collisions, while linear probing uses (h(key) + i) % tableSize. This difference leads to a more even distribution of keys in quadratic probing, reducing primary clustering. Linear probing is simpler to implement but can lead to clustering, making quadratic probing more efficient in scenarios with high collision rates.",
+  "reference_answer": "Both resolve a collision by probing other slots of the same table. Linear probing tries the next slots one after another, h(key)+1, h(key)+2, and so on modulo the table size. It is simple and cache-friendly, but occupied slots form long runs (primary clustering) that make later insertions and searches slower. Quadratic probing jumps by squares, h(key)+1², h(key)+2², h(key)+3², modulo the table size, which spreads colliding keys out and avoids primary clustering, at the cost that it may not find an empty slot unless the table size is prime and the table is less than half full. So linear probing suits lightly loaded tables, and quadratic probing is preferred when collisions are frequent.",
   "key_points": [
    {
-    "point": "Quadratic probing uses the formula (h(key) + i²) % tableSize to resolve collisions.",
+    "point": "Quadratic probing tries the slots h + 1², h + 2², h + 3², … (mod table size) after a collision.",
     "quote": "h(key) = ( h(key) + i^2 ) % tableSize where i = 1, 2, 3, …",
     "followup": "What happens if two keys hash to the same index in a quadratic probing table?",
     "followup_answer": "The algorithm uses i² to find the next available slot, which helps reduce clustering compared to linear probing.",
-    "variants": [
-     "quadratic probing adds i squared to the hash to find a spot",
-     "when a hash collision happens, quadratic probing uses i squared to find the next slot",
-     "quadratic probing is like linear probing but with i squared instead of i",
-     "the quadratic probing formula is hash plus i squared mod table size",
-     "quadratic probing spreads out keys better than linear probing",
-     "using i squared in probing helps avoid clustering"
-    ],
     "followup_replies": [
      "it finds the next available slot",
      "it avoids primary clustering",
@@ -2303,17 +2239,10 @@
     ]
    },
    {
-    "point": "Linear probing uses the formula (h(key) + i) % tableSize to resolve collisions.",
+    "point": "Linear probing tries the next slots one by one: h + 1, h + 2, … (mod table size).",
     "quote": "h(key) = ( h(key) + i ) % tableSize where i = 1, 2, 3, …",
     "followup": "Why might linear probing be less efficient than quadratic probing in some cases?",
     "followup_answer": "Linear probing can lead to primary clustering, where consecutive collisions cause keys to cluster together, reducing performance.",
-    "variants": [
-     "when there's a collision, linear probing checks the next index",
-     "linear probing is simpler but can cause clustering",
-     "the linear probing formula is hash plus i mod table size",
-     "linear probing is the basic way to handle collisions",
-     "linear probing can lead to primary clustering"
-    ],
     "followup_replies": [
      "because of primary clustering",
      "it causes keys to cluster",
@@ -2361,10 +2290,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.003
   },
-  "quality_score": 6,
-  "quality_note": "key points are only formulas; miss clustering",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "key points reworded; clustering trade-off in the reference (not in the slides, so not a key point) (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "dsa.dijkstra_s_algorithm.medium2",
@@ -2376,21 +2308,13 @@
   "topic_coverage": "good",
   "question": "Explain how the selection of the next vertex in Dijkstra’s algorithm depends on the structure of the graph and the current state of the algorithm.",
   "difficulty": "medium",
-  "reference_answer": "Dijkstra’s algorithm selects the next vertex based on the smallest tentative distance from the source, which is computed as dv + w(v,u). This value depends on the current shortest path to vertex v and the weight of the edge from v to u. The algorithm ensures that once a vertex is added to the tree, its shortest path is finalized, which affects how the remaining vertices are processed.",
+  "reference_answer": "At each step Dijkstra's algorithm looks at the vertices that are not yet finalized and picks the one with the smallest current distance from the source, which is the smallest dv + w(v,u) over edges (v,u) from finalized vertices v. The choice therefore depends on the edge weights of the graph and on the distances found so far. Once a vertex is picked, its shortest distance is final and never changes, because all edge weights are non-negative; the algorithm then updates the distances of that vertex's neighbours before picking the next vertex.",
   "key_points": [
    {
-    "point": "The next vertex is selected based on the smallest dv + w(v,u).",
+    "point": "The next vertex is the unvisited one with the smallest distance from the source.",
     "quote": "Among vertices not already in the tree, it finds vertex u with the smallest sum dv + w(v,u).",
     "followup": "What happens if two vertices have the same dv + w(v,u) value?",
     "followup_answer": "The algorithm can select either vertex arbitrarily, as both would result in the same shortest path length.",
-    "variants": [
-     "the next vertex is picked based on the smallest distance plus the edge weight.",
-     "we look for the vertex with the lowest current distance plus the edge weight.",
-     "the algorithm chooses the vertex with the minimum dv plus the weight of the edge to it.",
-     "the next step is to pick the vertex with the smallest tentative distance.",
-     "the next vertex is determined by the smallest dv plus the edge weight from v to u.",
-     "the algorithm selects the vertex with the minimum dv plus the weight of the edge."
-    ],
     "followup_replies": [
      "either is fine.",
      "it doesn't matter which one you pick.",
@@ -2400,18 +2324,10 @@
     ]
    },
    {
-    "point": "Once a vertex is added to the tree, its shortest path is finalized.",
+    "point": "Once a vertex is picked, its shortest distance is final.",
     "quote": "v is a vertex for which shortest path has been already found on preceding iterations (such vertices form a tree rooted at s).",
     "followup": "Why is it important that the shortest path to a vertex is finalized once it is added to the tree?",
     "followup_answer": "Finalizing the shortest path ensures that no further updates to that vertex are needed, which optimizes the algorithm’s efficiency.",
-    "variants": [
-     "once a vertex is in the tree, its shortest path is locked in.",
-     "when a vertex is added to the tree, its distance is final.",
-     "the algorithm ensures the shortest path is fixed once a vertex is added.",
-     "adding a vertex to the tree means its distance can't be updated anymore.",
-     "the shortest path to a vertex is finalized once it's in the tree.",
-     "the tree ensures the shortest path is fixed once a vertex is included."
-    ],
     "followup_replies": [
      "it saves computation.",
      "it avoids unnecessary updates.",
@@ -2452,10 +2368,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.908
   },
-  "quality_score": 6,
-  "quality_note": "odd phrasing",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "odd phrasing; key points reworded (repair 1)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "dsa.merge_sort.medium2",
@@ -2467,19 +2386,13 @@
   "topic_coverage": "good",
   "question": "How does the merge step in merge sort ensure that the final merged array is sorted in the worst case?",
   "difficulty": "medium",
-  "reference_answer": "The merge step ensures that the final merged array is sorted in the worst case by comparing the smallest remaining elements of the two sorted subarrays and placing the smaller one into the result array. This process continues until all elements are merged. The worst-case number of key comparisons during merging is n – 1, which is guaranteed because each element is compared at most once during the merge.",
+  "reference_answer": "The merge step takes two subarrays that are already sorted. It repeatedly compares the first remaining element of each and copies the smaller one to the output, and when one subarray runs out it copies the rest of the other. Because each half is sorted, the smallest remaining element overall is always one of the two being compared, so the output comes out in sorted order. Every comparison places one element, so merging n elements takes at most n - 1 comparisons, even in the worst case.",
   "key_points": [
    {
-    "point": "The merge step compares the smallest remaining elements of the two sorted subarrays.",
+    "point": "Merging repeatedly compares the first remaining elements of the two sorted halves and copies the smaller one.",
     "quote": "Repeat the following until no elements remain in one of the arrays: compare the first elements in the remaining unprocessed portions of the arrays",
     "followup": "What happens if the two subarrays are not sorted?",
     "followup_answer": "The merge step would not produce a sorted array because the comparison relies on the subarrays being sorted.",
-    "variants": [
-     "the merge step looks at the smallest elements from both sorted halves",
-     "merge step uses the sorted subarrays to pick the next smallest element",
-     "the merge process relies on the subarrays already being sorted",
-     "to merge, you always pick the smaller of the two current elements"
-    ],
     "followup_replies": [
      "it wouldn't work",
      "it would fail",
@@ -2489,18 +2402,10 @@
     ]
    },
    {
-    "point": "The merge step guarantees that each element is compared at most once during the merge.",
+    "point": "Each comparison places one element, so merging n elements takes at most n − 1 comparisons.",
     "quote": "The number of key comparisons performed during the merging stage in the worst case is: Cmerge(n) = n – 1",
     "followup": "Why is the number of comparisons in the worst case n – 1?",
-    "followup_answer": "Because each element is compared exactly once during the merge, except for the last element which is copied without comparison.",
-    "variants": [
-     "each element is checked once during the merge",
-     "merge step only compares elements once",
-     "the merge process limits comparisons to one per element",
-     "you compare each element at most once",
-     "merge ensures no element is compared more than once",
-     "the merge step avoids redundant comparisons"
-    ],
+    "followup_answer": "Every comparison moves one element to the output, and once one half runs out the rest are copied without comparing, so at most n - 1 comparisons are made.",
     "followup_replies": [
      "because you compare each element once",
      "each element is compared once",
@@ -2510,14 +2415,10 @@
     ]
    },
    {
-    "point": "The merge step ensures that the final array is sorted by placing elements in order.",
+    "point": "Because both halves are already sorted, the merged output comes out in sorted order.",
     "quote": "Merge(B[0 .. p -1], C[0 .. q -1], A[0 .. p + q -1]) //Merges two sorted arrays into one sorted array",
     "followup": "What would happen if the merge step did not place elements in order?",
     "followup_answer": "The final array would not be sorted, and the merge sort algorithm would fail to produce a correct result.",
-    "variants": [
-     "the merge step puts elements in order to keep the array sorted",
-     "merge step keeps the array sorted by inserting elements in order"
-    ],
     "followup_replies": [
      "it would be unsorted",
      "it would fail",
@@ -2564,10 +2465,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.004
   },
-  "quality_score": 5,
-  "quality_note": "a key point is inaccurate",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "inaccurate key point fixed (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "dsa.heap_sort.easy1",
@@ -3023,21 +2927,13 @@
   "topic_coverage": "good",
   "question": "Explain how the construction of an expression tree using a postfix notation ensures that the resulting tree can be evaluated correctly.",
   "difficulty": "medium",
-  "reference_answer": "The construction of an expression tree using postfix notation ensures correct evaluation by leveraging the stack-based approach. When an operator is encountered, the two most recent operands are popped from the stack and used as children of the new operator node. This ensures that the operator is applied to the correct operands in the correct order. The final root of the tree represents the entire expression, allowing for a straightforward evaluation from the leaves up to the root.",
+  "reference_answer": "Scan the postfix expression from left to right using a stack of tree nodes. Each operand becomes a leaf node that is pushed onto the stack. Each operator pops the top two nodes: the first popped becomes its right child and the second its left child, and the new subtree is pushed back. Postfix already places every operator after its operands, so each operator gets exactly the right operands in the right order. At the end the single node left on the stack is the root, and evaluating the tree from the leaves up gives the value of the expression.",
   "key_points": [
    {
-    "point": "The stack is used to temporarily store operand nodes during the construction of the expression tree.",
+    "point": "An operator pops the top two nodes from the stack and makes them its children.",
     "quote": "If symbol is an operand, push address of node to stack",
     "followup": "What happens if you tried to build the tree without using a stack?",
     "followup_answer": "You would not be able to correctly associate operators with their operands, leading to an incorrect tree structure and invalid evaluation.",
-    "variants": [
-     "the stack holds operands while building the tree",
-     "stack stores operands during tree construction",
-     "using a stack keeps track of operands as we build the tree",
-     "stack helps manage operands when creating the tree",
-     "stack is essential for storing operands in the tree building process",
-     "stack is used to hold operands temporarily while building the tree"
-    ],
     "followup_replies": [
      "nope",
      "invalid structure",
@@ -3047,18 +2943,10 @@
     ]
    },
    {
-    "point": "The final node on the stack becomes the root of the expression tree.",
+    "point": "The last node left on the stack is the root of the expression tree.",
     "quote": "Finally, stack has only element which is the 100 address of the root of expression tree",
     "followup": "What would happen if the stack had more than one element at the end of the construction?",
     "followup_answer": "It would indicate that the postfix expression is invalid, as there are more operands than operators, or that the operators were not properly applied to their operands.",
-    "variants": [
-     "the last node on the stack is the root of the tree",
-     "stack's top becomes the root of the tree",
-     "final stack element is the tree's root",
-     "the root is the remaining node on the stack",
-     "stack's final node is the root",
-     "the root is the last node left on the stack"
-    ],
     "followup_replies": [
      "invalid expression",
      "too many operands",
@@ -3111,10 +2999,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.967
   },
-  "quality_score": 7,
-  "quality_note": "fine",
-  "curated": false,
-  "interview_priority": 2
+  "quality_score": 8,
+  "quality_note": "fine; reference answer and key points rewritten (repair 1)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "dsa.stacks_and_recursion.medium2",

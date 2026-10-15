@@ -70,14 +70,14 @@ The **target users** are students and early-career engineers preparing for place
 
 The **core value proposition** has three parts:
 1. **Resume-specific questioning**: a deterministic planner guarantees that every question comes from the resume and can be explained after the fact.
-2. **Explainable scoring**: every score carries a reasoning trail, evidence-linked claims and version metadata. It is produced by a hybrid of a fine-tuned **DeBERTa-v3** multi-task evaluator and a deterministic heuristic evaluator, with automatic fallback.
+2. **Explainable scoring**: every score carries a reasoning trail, evidence-linked claims and version metadata. It is produced by `AveragedEvaluator`: 0.8 × a fine-tuned **DeBERTa-v3** overall-score model + 0.2 × a deterministic heuristic evaluator, behind a non-answer gate, with automatic fallback to the heuristic.
 3. **No paid API on the runtime path**: resume parsing moved from a single Gemini call to a fully deterministic, local 8-stage **Resume Intelligence Engine**, and the entire discussion runs locally.
 
 The repository also contains a substantial **ML research track**: synthetic dataset generation, labeling, training infrastructure and five experiment rounds. This track produced the deployed DeBERTa checkpoint. The repository also includes supporting and exploratory subsystems (a RAG question generator, a RoBERTa question classifier, a legacy resume domain classifier, and a parser benchmark harness), most of which are not wired into the shipped UI flow.
 
-**Teammate's branch integrated (2026-09-30, `resumeParser_integration.md`).** A teammate's improved resume engine, Round 1 question-variety changes, a trained Round 1 answer evaluator (blended 80/20 with the heuristic) and data-driven report feedback were merged in, each measured before/after and with a rollback in `archive/` (`resume_engine_backup_2026-09-30/`, `round1_planner_backup_2026-09-30/`, `evaluator_backup_2026-09-30/`). Comparison scripts: `integration_checks/`.
+**Teammate's branch integrated (2026-09-30, `docs/internal/resumeParser_integration.md`).** A teammate's improved resume engine, Round 1 question-variety changes, a trained Round 1 answer evaluator (blended 80/20 with the heuristic) and data-driven report feedback were merged in, each measured before/after and with a rollback in `archive/` (`resume_engine_backup_2026-09-30/`, `round1_planner_backup_2026-09-30/`, `evaluator_backup_2026-09-30/`). Comparison scripts: `integration_checks/`.
 
-**Slide RAG pipeline and question bank.** `rag_system/rag_tester/slide_rag/` rebuilds the technical knowledge base from the faculty lecture slides of five subjects (CN, DBMS, DSA, OOAD, OS; ~5,800 slides). It reads slides by layout, cleans and classifies them, regroups them into sections, and indexes them for hybrid retrieval with exact slide-page citations. On hand-labelled interview questions it finds the right slides in its top 5 for 96–100% of questions, against 68–82% for the old page-per-chunk index (§4.24). From it and 279 curated topics, a local LLM (Qwen3-8B via Ollama) generated a **422-question technical-interview bank** offline, spanning all five subjects and three difficulty levels. Every key point is backed by a verified slide quote and every question passed an LLM judge; each question then carries a confidence rank, a hand-assigned quality score and an interview-frequency tier, so interviews draw the strongest questions on the most-asked topics first (§4.25). It feeds the standalone Technical Interview (10 questions) and the full interview's Round 2 (8), graded by an NLI grader that needs no LLM or GPU at interview time (`tech_interview/`, §4.25); a 30-question MCQ test is planned for later (`mcq_tobedone.md`).
+**Slide RAG pipeline and question bank.** `rag_system/rag_tester/slide_rag/` rebuilds the technical knowledge base from the faculty lecture slides of five subjects (CN, DBMS, DSA, OOAD, OS; ~5,800 slides). It reads slides by layout, cleans and classifies them, regroups them into sections, and indexes them for hybrid retrieval with exact slide-page citations. On hand-labelled interview questions it finds the right slides in its top 5 for 96–100% of questions, against 68–82% for the old page-per-chunk index (§4.24). From it and 279 curated topics, a local LLM (Qwen3-8B via Ollama) generated a **422-question technical-interview bank** offline, spanning all five subjects and three difficulty levels. Every key point is backed by a verified slide quote and every question passed an LLM judge; each question then carries a confidence rank, a hand-assigned quality score and an interview-frequency tier, so interviews draw the strongest questions on the most-asked topics first (§4.25). It feeds the standalone Technical Interview (10 questions) and the full interview's Round 2 (8), graded by an NLI grader that needs no LLM or GPU at interview time (`tech_interview/`, §4.25); a 30-question MCQ test is planned for later (`docs/internal/mcq_tobedone.md`).
 
 ### 1.1 The four main modules
 
@@ -108,7 +108,7 @@ The project is organised into four modules, each owned by one team member. LOC i
 |---|---|
 | Python | 3.12 (development machine); the whole backend and ML stack |
 | JavaScript | Vanilla ES2020+ inline in one HTML page; no framework and no build step |
-| HTML/CSS | A single `templates/index.html` (~8,600 lines: inline CSS, then markup, then one inline script) |
+| HTML/CSS | A single `templates/index.html` (~9,300 lines: inline CSS, then markup, then one inline script) |
 | Node.js | Used only to run the frontend unit tests (`node test_*.js`) |
 
 ### Backend & ML libraries
@@ -145,12 +145,13 @@ Packages the code imports that are **missing from `Requirements_Global.txt`**: `
 ### Pretrained models
 | Model | Purpose |
 |---|---|
-| `microsoft/deberta-v3-base` | Backbone of the trained answer evaluator (cross-encoder, `max_length=128` as deployed) |
+| `microsoft/deberta-v3-base` + `overall_single_v5_1088` weights | **Production Round 1 evaluator**: DeBERTa-v3-base with one CORAL ordinal head (5 tiers), 735 MB, in `deployed_model_overall_single_v5_1088/` (Git LFS); 80% of the Round 1 score (§4.6) |
+| `microsoft/deberta-v3-base` (Experiment 4 multi-task) | Earlier trained evaluator (CORAL heads per dimension, `max_length=128`); weights absent, used only by the fallback `HybridEvaluator` tier |
 | `all-MiniLM-L6-v2` (SBERT) | Semantic similarity, section-header embedding fallback, KeyBERT backbone, RAG embeddings, rewrite drift check |
 | `cross-encoder/nli-MiniLM2-L6-H768` | Contradiction flag (never blended into a score) |
 | `cross-encoder/nli-deberta-v3-base` | Technical-interview grader: key-point entailment (`tech_interview/grader.py`) |
 | `cross-encoder/ms-marco-MiniLM-L-6-v2` | RAG reranker |
-| `Qwen/Qwen2.5-1.5B-Instruct` | Legacy RAG question/answer generation (not viable for the planned question bank; see `mcq_tobedone.md`) |
+| `Qwen/Qwen2.5-1.5B-Instruct` | Legacy RAG question/answer generation (not viable for the planned question bank; see `docs/internal/mcq_tobedone.md`) |
 | `Qwen/Qwen3-VL-2B-Instruct` | Slide pipeline Stage 3: reads diagrams, tables, formulas and picture-only slides (local, bf16, ~4.3 GB, fits 8 GB VRAM, ~10 s per slide). Run on CN's picture/table slides so far |
 | `qwen3:8b` via **Ollama** (GGUF Q4_K_M, llama.cpp engine) | Question-bank generator and judge (`slide_rag/qbank.py`, `llm_client.py`). Runs 100% on the RTX 5050 (~6.2 GB VRAM, 8,192-token context), ~45 tokens/s. Offline only — the app never calls it |
 | `Qwen/Qwen3-8B` (4-bit NF4, bitsandbytes) | Earlier feasibility test only (`slide_rag/llm_smoke_test.py`: ~16 tokens/s); replaced by Ollama, which is ~2.7× faster |
@@ -210,7 +211,7 @@ Every answered turn is written to the database immediately, so a restart loses n
 ┌──────▼───────────┐ ┌────▼─────────────────────┐ ┌───────▼───────────────────┐ ┌──▼──────────────┐
 │ SQLite (instance/│ │ Resume Intelligence      │ │ Conversation Engine (v2)  │ │ Quiz helpers    │
 │ app.db) via      │ │ Engine: 8 deterministic  │ │ Planner → Realizer →      │ │ tech_interview/ │
-│ SQLAlchemy:      │ │ stages → CandidateProfile│ │ Evaluator (Hybrid /       │ │ bank · selector │
+│ SQLAlchemy:      │ │ stages → CandidateProfile│ │ Evaluator (Averaged /     │ │ bank · selector │
 │ users, profiles, │ │ (parsed once at upload,  │ │ Heuristic) → Ledger       │ │ NLI grader      │
 │ resumes, sessions│ │ stored on the Resume row)│ └──────────┬────────────────┘ └──┬──────────────┘
 │ turns            │◄┴──────────────────────────┘            │ each turn           │ each turn
@@ -219,7 +220,7 @@ Every answered turn is written to the database immediately, so a restart loses n
       Offline / research (not on request path):
       synthetic data gen → DatasetManifest → relabel → split → train (Colab) → benchmark → promote
       → deployed_model/{best_checkpoint.json, final_promotion_decision.json, best_checkpoint_weights.pt*}
-      (* weights file is gitignored and absent from the repo)
+      (* these old Experiment 4 weights are absent; the production v5_1088 weights are in Git LFS, §4.6)
       Slide RAG (offline, rag_system/rag_tester/slide_rag; its question bank is read by tech_interview/):
       sources/<subject>/*.pdf → extract → classify/clean → [vision: Qwen3-VL on GPU] → sections
       → knowledge_base_v2/<subject>/ (hybrid index)  ·  topics/<subject>.txt  → qbank (Qwen3-8B) → rank_bank
@@ -240,12 +241,12 @@ Every answered turn is written to the database immediately, so a restart loses n
 | **Planner** | `planner.py`, `topic_pool.py`, `question_specification.py`, `traceability.py`, `coverage_tracker.py` | Deterministic *what to ask* | Conversation engine |
 | **Realizer** | `question_realizer.py`, `question_families.py`, `discussion_policy.py`, `interview_question.py`, `conversation_memory.py` | *How to phrase it* (families, transitions, anti-repetition) | Conversation engine |
 | **Conversation Engine** | `conversation_engine.py` | Session lifecycle; the only module importing both planning and evaluation types | Planner, realizer, evaluation engine |
-| **Evaluation** | `evaluator.py`, `evaluator_registry.py`, `evaluation_request.py`, `evaluation_result.py`, `evaluation_engine.py`, `heuristic_evaluator.py`, `hybrid_evaluator.py`, `reasoning_dimension_relevance.py`, `expected_concepts_registry.py` | Stable evaluator interface and implementations | Conversation engine |
+| **Evaluation** | `averaged_evaluator.py`, `overall_single_evaluator.py`, `answer_gate.py`, `evaluator.py`, `evaluator_registry.py`, `evaluation_request.py`, `evaluation_result.py`, `evaluation_engine.py`, `heuristic_evaluator.py`, `hybrid_evaluator.py`, `reasoning_dimension_relevance.py`, `expected_concepts_registry.py` | Stable evaluator interface and implementations | Conversation engine |
 | **Trained model layer** | `model_backbone.py`, `model_heads.py`, `model_dataset.py`, `model_checkpoint_io.py`, `model_evaluator.py`, `deployment_evaluator.py` | DeBERTa-v3 multi-task evaluator: training, inference, startup wiring | Evaluator registry |
 | **Coaching** | `strong_answer.py`, `concept_analysis.py` | Deterministic coaching note and concept-coverage % | Conversation engine |
 | **ML research track** | `training_example*.py`, `generation_*.py`, `prompt_*.py`, `coverage_strategy.py`, `dataset_*.py`, `labeling_operations.py`, `training_experimentation.py`, `rewrite_*.py`, `deterministic_rewrite*.py`, `run_*.py` | Produce and benchmark training data and checkpoints | Model layer (offline) |
 | **Legacy v1 discussion** | `discussion_engine.py`, `legacy_topic_pool_adapter.py` | Older adaptive engine (still routed at `/api/resume-discussion/*`, unused by the UI) | Planner via adapter |
-| **Slide RAG pipeline** | `rag_system/rag_tester/slide_rag/*`, `topics/`, `knowledge_base_v2/` | Offline: lecture slides → cleaned sections → hybrid index; topic lists; retrieval evaluation. Basis of the planned question bank | Not yet called by the app |
+| **Slide RAG pipeline** | `rag_system/rag_tester/slide_rag/*`, `topics/`, `knowledge_base_v2/` | Offline: lecture slides → cleaned sections → hybrid index; topic lists; retrieval evaluation. Generates, ranks, repairs and curates the question bank | Offline by design; its `question_bank/` is read by `tech_interview/` |
 | **Supporting subsystems** | `rag_system/` (legacy RAG), `resume_classifier/`, `parser_tests/` (RoBERTa archived) | Old RAG question generation, legacy resume classifier, parser benchmark | Loosely via `sys.path` in `app.py` |
 
 ### 3.3 Data flow through the system
@@ -259,7 +260,7 @@ sequenceDiagram
     participant CE as conversation_engine
     participant P as Planner/TopicPool
     participant QR as question_realizer
-    participant EV as Evaluator (Hybrid/Heuristic)
+    participant EV as Evaluator (Averaged/Heuristic, answer gate)
 
     participant DB as SQLite (session_history)
 
@@ -283,8 +284,8 @@ sequenceDiagram
     U->>A: POST .../end {session_id, integrity, attention_metrics}
     A->>DB: finish_resume_discussion (completed | terminated)
     Note over U: Round 1 summary (still full screen)
-    U->>A: POST /api/technical-sessions → 5 × (/api/next_question + /api/evaluate {session_id}) → .../end
-    A->>DB: technical session + one turn per question
+    U->>A: POST /api/tech-interview/start {mode: round2} → 8 × POST /api/tech-interview/<id>/answer (follow-up or clarification possible, ≤ 2 per question) → POST /api/tech-interview/<id>/end
+    A->>DB: technical session + one turn per main question
     Note over U: combined final results built client-side (rdRenderReport combined mode)
 ```
 
@@ -305,8 +306,23 @@ Flow invariants:
 | **Templates, not generative phrasing** | FLAN-T5-small produced definitional drift ("What is X?"); hand-written families hit the "senior engineer" tone every time. |
 | **Two traceability gates** | The *shape* gate (exactly one origin) runs at profile generation; the *substance* gate (the origin actually exists on this profile) runs in `TopicPool._build`, where the full profile is available. Rejected topics go to `TopicPool.rejected`. |
 | **The evaluator interface is the architecture** | `Evaluator` Protocol + registry + frozen `EvaluationResult`, so heuristic → pretrained → fine-tuned models can be swapped without touching routes, session code or the UI. The evaluator is pinned per session so a session is never scored by two model versions. |
-| **Hybrid Round 3: DeBERTa authoritative** | On the 362-example held-out test set, raw DeBERTa scored QWK 0.3976, the heuristic 0.1341, and the Round 2 blended hybrid 0.1814. Blending let the weaker model override the stronger one, so DeBERTa now scores and the heuristic supplies feedback text, confidence, a downgrade-only guardrail, and fallback. |
-| **NLI used only as a contradiction flag** | Entailment rewarded lexical echoing, so NLI never contributes to a score. |
+| **Hybrid Round 3: DeBERTa authoritative** (superseded 2026-09-30 by `AveragedEvaluator`, §4.6; kept as the fallback tier) | On the 362-example held-out test set, raw DeBERTa scored QWK 0.3976, the heuristic 0.1341, and the Round 2 blended hybrid 0.1814. Blending let the weaker model override the stronger one, so DeBERTa now scores and the heuristic supplies feedback text, confidence, a downgrade-only guardrail, and fallback. |
+| **Round 1: NLI used only as a contradiction flag** | On open-ended resume answers, entailment against the grounding text rewarded lexical echoing, so in Round 1 NLI never contributes to a score. (Round 2 is different: there each answer is checked against short, specific key points, where entailment is the right test; see below.) |
+| **Round 1: blend 0.8 × trained model + 0.2 × heuristic** (`AveragedEvaluator`) | The trained model is far better at ranking answers (QWK 0.86 vs 0.10), but on the 58-answer stress set the pure model occasionally crushed a strong answer; a small heuristic share removed those cases without lowering QWK. The heuristic also supplies the per-dimension scores and feedback text the model doesn't produce. |
+| **Round 1: a non-answer gate after every evaluator** | Both models can be fooled by a keyword dump (one scored 0.79 "good"). A cheap rule layer that caps "idk", one-word, keyword-list, gibberish and pasted-code replies at 0.1 works whichever evaluator is active, and was checked to flag 0 of 628 genuine answers. |
+| **Local models only at interview time** (no LLM API anywhere on the request path) | No per-interview cost or quota failures (Gemini's free tier ran out during development), resumes and answers never leave the machine, latency is predictable (~0.3 s per technical answer on CPU), and the same answer always gets the same score. The cost is smaller models, so the graders are weaker than a large LLM on informal answers. |
+| **Technical questions generated offline, selected at runtime** | A question generated live can't be checked before the candidate sees it. Offline, every key point is verified against a slide quote, judged by a second LLM pass and hand-reviewed; at runtime selection is a lookup that needs no GPU. The cost is a fixed bank whose gaps must be filled by another offline run. |
+| **Slides grouped into sections; hybrid FAISS + BM25 retrieval with a cross-encoder reranker** | Faculty slides spread one idea over several "(contd.)" and build-up slides, so page-per-chunk retrieval missed them (hit@5 68–82%); sections lifted it to 96–100%. Dense embeddings catch paraphrases, BM25 catches exact terms ("BCNF", "TCP"), and the reranker reads query and section together to order the top 20 precisely (without it DBMS hit@5 drops 1.00 → 0.95). |
+| **Every key point must quote the slides** (fuzzy match ≥ 88, checked in code) | The cheapest reliable guard against a hallucinated "fact" becoming something candidates are graded on. The LLM judge and hand review catch what quote-checking can't (a true quote attached to a false claim). |
+| **Round 2: grade by key points with NLI, not by similarity to a model answer** | Similarity rewards sharing words: "context switching is when the context switches" outscored a correct answer. Checking whether the answer *states* each expected point (entailment) is explainable — the report shows ✓/~/✗ per point — and tells the interviewer exactly which follow-up to ask. Score = 0.85 × key points + 0.15 × similarity to the reference, so the points dominate and the similarity term gives a little credit for overall correct framing. |
+| **Round 2: a follow-up for a missing point instead of an immediate low score** | Real interviewers probe what you left out. Asking the prepared follow-up for a specific missing point (≤ 2 per question) lets a candidate who knew it recover partial credit (0.75 of the point) and keeps the interview conversational. |
+| **Round 2: short, single-claim key points** | Measured, not assumed: making points longer and "more complete" made grading worse (a correct handshake answer fell 0.96 → 0), because NLI only credits a point the answer supports in full. Detail belongs in the reference answer. |
+| **Round 2 safeguards: contradiction cap, abbreviation expansion, similarity floor** | Each fixes a measured failure: fluent wrong answers scored full marks (the reference contradicting the whole answer now caps it at 0.2; checks per point or per sentence also fired on correct answers, so they were rejected); "DFS" wasn't recognised as "depth-first search"; NLI hallucinated 0.99 entailment between unrelated texts (no credit below 0.25 similarity). |
+| **Serve a hand-curated tier, weighted toward the most-asked topics** | Automated ranking can't tell a correct-but-odd question from a good interview question. Serving only questions a human scored 8+/10, with ×6 weight on topics interviewers ask most, makes 87% of asked questions come from those topics while still never repeating a topic within a session. |
+| **A fresh labelled set that is never tuned on** | The grader looked like 89–92% agreement on LLM-written answers and was 64% on human-style ones; tuning on a set flatters it. Changes are judged on the fresh set, and the benchmark fails on any regression against `baseline.json`. |
+| **Gaze: iris position weighted above head pose, calibrated per user** | People glance away with their eyes without turning the head, so gaze carries 0.55 of the signal and head pose 0.35. A per-session baseline absorbs camera angle and face shape; hysteresis, 5-frame confirmation and staged timers (caution 3.5 s, warning 8.5 s) stop normal glances from triggering warnings, and looking down right after typing is tolerated. |
+| **Liveness by head turn, not blink** | Blink detection was unreliable on ordinary webcams (blinks missed at low resolution or frame rate); a random left/right head turn is a clear, reliable challenge that a photo can't pass. |
+| **Camera alerts visual only; quality issues warn, never block** | Spoken warnings could be transcribed into the answer by the microphone. Blocking on lighting would lock out candidates in ordinary rooms, so only "no camera / no face / more than one face" block the start. |
 | **Reject, never repair (data pipeline)** | Any failed validation discards the whole generation attempt, so no partially-fixed example enters the dataset. |
 | **Specification-level (group) splits** | Examples from the same `QuestionSpecification` at different quality tiers had leaked across train and test in the first experiment. |
 | **API-free Track B augmentation** | Gemini's free tier (20 requests/model/day) blocked data collection, so deterministic rewrites plus an SBERT drift check replaced it. |
@@ -350,9 +366,12 @@ Flow invariants:
 capstone_latest/
 ├── README.md                         Project readme (partly outdated — see §7)
 ├── PROJECT_DOCUMENTATION.md          This document
-├── mcq_tobedone.md                   Plan for the MCQ / question-bank generation (not built yet)
+├── docs/internal/                    Team notes: MCQ plan (mcq_tobedone.md, not built yet), integration log,
+│                                     review context, diagram / LLD briefs, LLD review
 ├── grader_eval/                      Grader test sets: questions.json, output_questions.json (400 LLM-written
-│                                     answers), my_answers.json (40 real answers), tuning_set/, run_*.py
+│                                     answers), my_answers.json (40 real answers), tuning_set/, run_*.py,
+│                                     real_set/ (team answers + ANSWER_PROMPT.md), benchmark.py + baseline.json,
+│                                     sanity_check.py
 ├── CONTRIBUTING.md                   Branch workflow (main / adaptive-engine / resume_classifier)
 ├── Requirements_Global.txt           The only requirements file (sectioned per subsystem)
 ├── .gitignore                        Ignores venvs, caches, *.pt/*.safetensors, artifacts/, .env, diagnostics
@@ -362,6 +381,7 @@ capstone_latest/
 │   ├── slide_rag/                    ★ Slide RAG pipeline package (§4.24)
 │   ├── sources/<subject>/*.pdf       Faculty lecture slides, one slide per page (git-ignored)
 │   ├── topics/<subject>.txt          Curated topic lists (279 topics) checked against the slides
+│   ├── question_bank/repairs/        Hand-written key-point repair batches (slide_rag/apply_repairs.py)
 │   ├── question_bank/<subject>.json  Generated technical-interview questions (+ <subject>_report.md for review;
 │   │                                 enrichment fields and enrich_report.md from slide_rag/enrich_bank.py)
 │   ├── knowledge_base_v2/<subject>/  Pipeline output: slides, sections, index, reports, quiz.json
@@ -393,9 +413,9 @@ capstone_latest/
 | `resume_store.py` | Resume files on disk (random names, SHA-256), staging for signup, parsing via the resume engine |
 | `avatar_store.py` | Profile photos: validate and re-encode uploads to a 256×256 JPEG (§4.20) |
 | `model_warmup.py` | Local-only model loading when all models are cached, and background model warm-up at startup (§5.1) |
-| `tech_interview/` | Question-bank technical interview: `bank.py`, `selector.py`, `grader.py`, `followup.py`, `session.py` (§4.25) |
+| `tech_interview/` | Question-bank technical interview: `bank.py`, `selector.py`, `grader.py`, `followup.py`, `session.py`, `terms.py` (abbreviation expansion) (§4.25) |
 | `session_history.py` | Records both interview types turn by turn; completed/terminated/abandoned; deletion |
-| `session_routes.py` | History API blueprint: `/api/sessions`, `/api/insights`, `/api/technical-sessions`, and the technical interview `/api/tech-interview/*` |
+| `session_routes.py` | History API blueprint: `/api/sessions`, `/api/insights`, the legacy `/api/technical-sessions`, and the technical interview `/api/tech-interview/*` |
 | `insights.py` | Home stats, score trend, "Focus next" |
 | `db_manage.py` | Minimal Flask app for `flask --app db_manage db migrate/upgrade` (skips loading ML models) |
 | `migrations/` | Alembic migrations (initial schema; `last_activity_at`; profile photo `a7c3e91f2b40`) |
@@ -465,7 +485,7 @@ capstone_latest/
 **Responsibility:** turn a resume file into an `AnnotatedCandidateProfile` using only local, deterministic logic, with SBERT/KeyBERT used surgically for fuzzy matching.
 **Entry:** `candidate_profile_generator.generate_candidate_profile_via_engine(file_path)` calls `factory.default_pipeline().run(file_path, source_format)` and then `candidate_profile_mapper.map_to_candidate_profile(...)`. A new pipeline and registry are built on every request.
 
-**Phase 1 engine (integrated 2026-09-30, `resumeParser_integration.md`).** The engine is a teammate's "Phase 1" rewrite (11 files + `text_normalization.py`): entry boundaries use a two-tier line role (strong header vs title-like) plus blank-line gaps and body context instead of font alone, a per-section body font, majority-bold headers, glyph-split heading repair ("T ECHNICAL S KILLS"), stricter skills/certification/contact parsing. On 41 resumes it finds far more of the resume than the previous engine (golden-corpus jobs 21 → 33, real-resume education 5 → 8, no sentence junk in skills); Round 1 plans went from 91 to 110 questions across 38 resumes. Integration fixes on top (`resume_engine/tests/test_integration_fixes.py`): date-range dashes are not title separators, sentence-like bullet lines and wrapped continuations are not titles (`reads_as_sentence`), page footers are not entries, glyph-only lines are not body, certification lines must look like names, "- Resume" suffixes don't hide the name, phones don't swallow the next field's number, "March, 2022"-style dates are recognised. **Rollback:** the previous engine is in `archive/resume_engine_backup_2026-09-30/` (`python archive/resume_engine_backup_2026-09-30/restore_old_parser.py`).
+**Phase 1 engine (integrated 2026-09-30, `docs/internal/resumeParser_integration.md`).** The engine is a teammate's "Phase 1" rewrite (11 files + `text_normalization.py`): entry boundaries use a two-tier line role (strong header vs title-like) plus blank-line gaps and body context instead of font alone, a per-section body font, majority-bold headers, glyph-split heading repair ("T ECHNICAL S KILLS"), stricter skills/certification/contact parsing. On 41 resumes it finds far more of the resume than the previous engine (golden-corpus jobs 21 → 33, real-resume education 5 → 8, no sentence junk in skills); Round 1 plans went from 91 to 110 questions across 38 resumes. Integration fixes on top (`resume_engine/tests/test_integration_fixes.py`): date-range dashes are not title separators, sentence-like bullet lines and wrapped continuations are not titles (`reads_as_sentence`), page footers are not entries, glyph-only lines are not body, certification lines must look like names, "- Resume" suffixes don't hide the name, phones don't swallow the next field's number, "March, 2022"-style dates are recognised. **Rollback:** the previous engine is in `archive/resume_engine_backup_2026-09-30/` (`python archive/resume_engine_backup_2026-09-30/restore_old_parser.py`).
 
 #### Pipeline orchestration (`pipeline.py`)
 `ResumePipeline` is a dataclass with eight injected Protocol collaborators. `run(file_path, source_format, trace=None)` calls each stage through `_timed(stage_name, trace, fn, ..., enrich=None)`. When `trace` is `None` it is a plain call; otherwise it records a `StageTrace` with timing and optional enrichment.
@@ -666,7 +686,7 @@ The effect is one unit per present category in tier order (a coverage sweep), th
 
 ---
 
-**Question variety (integrated 2026-09-30, `resumeParser_integration.md` step 4).** A project's own
+**Question variety (integrated 2026-09-30, `docs/internal/resumeParser_integration.md` step 4).** A project's own
 `interview_seeds` (from `seed_synthesis.py`) are asked verbatim after its first mention, naming the project
 ("Why did you use Redis in AI SOC Analyst?"), never two seed questions back to back
 (`question_realizer.realize`); a question family used in the last 3 turns is avoided when the arc has an
@@ -752,14 +772,15 @@ The 12 dimensions are: technical_accuracy, technical_depth, communication, compl
 #### Fallback chain
 | Situation | What handles scoring |
 |---|---|
-| Normal operation | `HybridEvaluator` (DeBERTa authoritative) |
-| DeBERTa fails on one turn | Hybrid falls back to heuristic-only scoring for that turn |
+| Normal operation (v5_1088 weights present) | `AveragedEvaluator` = 0.8 × `OverallSingleEvaluator` + 0.2 × `HeuristicEvaluator` |
+| The model fails on one turn | `AveragedEvaluator` returns the heuristic result for that turn |
+| v5 weights absent, old Experiment 4 weights present | `HybridEvaluator` (DeBERTa multi-task authoritative) |
 | Trained model can't load at startup | Bare `HeuristicEvaluator` |
 | Nothing registered (tests) | `conversation_engine` auto-registers `HeuristicEvaluator` |
 
 ---
 
-**Round 1 scoring with a trained model (`averaged_evaluator.py`, 2026-09-30, `resumeParser_integration.md` step 5).** When `main_cap/cap/deployed_model_overall_single_v5_1088/best_checkpoint_weights.pt` (735 MB, git-ignored, a teammate's DeBERTa-v3 `overall_single_v5_1088` model) is present, `deployment_evaluator.bootstrap_production_evaluator` activates `AveragedEvaluator`: score = 0.8 × the model (`OverallSingleEvaluator`) + 0.2 × `HeuristicEvaluator`, with the heuristic's dimensions and feedback kept for the report. QWK vs gold: 0.86 on the model's 151-answer held-out test set (heuristic alone 0.10) and 0.70 on a 58-answer stress set (heuristic 0.23); no strong answer crushed, no weak one inflated. Without the file (or with `CAP_TRAINED_EVALUATOR=0`) the previous tiers apply unchanged. Adds ~4 s to server start and ~0.1 s per answer on a GPU (~1 s on CPU). Known bias: the model's score tracks answer length (r = 0.70).
+**Round 1 scoring with a trained model (`averaged_evaluator.py`, 2026-09-30, `docs/internal/resumeParser_integration.md` step 5).** When `main_cap/cap/deployed_model_overall_single_v5_1088/best_checkpoint_weights.pt` (735 MB, git-ignored, a teammate's DeBERTa-v3 `overall_single_v5_1088` model) is present, `deployment_evaluator.bootstrap_production_evaluator` activates `AveragedEvaluator`: score = 0.8 × the model (`OverallSingleEvaluator`) + 0.2 × `HeuristicEvaluator`, with the heuristic's dimensions and feedback kept for the report. QWK vs gold: 0.86 on the model's 151-answer held-out test set (heuristic alone 0.10) and 0.70 on a 58-answer stress set (heuristic 0.23); no strong answer crushed, no weak one inflated. Without the file (or with `CAP_TRAINED_EVALUATOR=0`) the previous tiers apply unchanged. Adds ~4 s to server start and ~0.1 s per answer on a GPU (~1 s on CPU). Known bias: the model's score tracks answer length (r = 0.70).
 
 **End-of-session feedback (`interview_feedback.py`, 2026-09-30).** `conversation_engine.end_conversation` adds `summary["feedback"]` (headline, summary, strengths, focus areas, a scope note that factual correctness isn't verified, stats), built from the per-turn results: depth (`technical_depth`), relevance (`completeness`) and grounding (`ownership`, `resume_grounding`), averaged over answered questions only (non-answers are ignored). The Round 1 report uses its headline/summary instead of the fixed per-grade text, lists its focus tips first under "Before Your Next Interview" and shows the scope note; it is saved with the session, so History shows the same text. In the Full Interview report the top headline comes from both round scores instead (`rdCombinedVerdict`: ≥60% good, <40% weak, e.g. "Strong on your projects, but the technical round needs real work."), and the Round 1 headline moves to the top of the Round 1 section.
 
@@ -790,7 +811,7 @@ flags 0 of 628 genuine answers tested (`integration_checks/gate_check.py`).
 | hyperparameters | epoch 4, lr 2e-5, batch 4, weight decay 0.01, 615 warmup steps, linear decay, seed 42, split 0.7/0.15/0.15 |
 | promotion (`final_promotion_decision.json`) | **approved**, candidate QWK 0.3976 vs heuristic baseline 0.1341 |
 
-**The weights file is not in the repository** (`*.pt` is gitignored), so a fresh clone runs on the bare `HeuristicEvaluator`. Startup detects the missing file up front and never downloads or loads the DeBERTa tokenizer or backbone in that case.
+**These Experiment 4 weights are not in the repository** (`*.pt` is gitignored). The production Round 1 model (`deployed_model_overall_single_v5_1088/best_checkpoint_weights.pt`) **is**, via Git LFS (§4.6); a clone without Git LFS falls back to the heuristic. Startup detects the missing file up front and never downloads or loads the DeBERTa tokenizer or backbone in that case.
 
 ---
 
@@ -882,8 +903,8 @@ Planner over 36 profiles → CoverageUnit pool
 | `/api/resume-discussion-v2/start` | POST `{session_id}` | ✅ | Checks the profile session belongs to `current_user`; `conversation_engine.start_conversation`; then `session_history.begin_resume_discussion` |
 | `/api/resume-discussion-v2/reply` | POST `{session_id, answer}` | ✅ | Ownership check (`owns_conversation`), `advance_conversation`, then `record_resume_discussion_turn` |
 | `/api/resume-discussion-v2/end` | POST `{session_id, integrity, attention_metrics}` | ✅ | Ownership check, `end_conversation(id, integrity=...)`, then `finish_resume_discussion` |
-| `/api/next_question` | POST `{asked_ids, difficulty, topic}` | ✅ (Technical) | Takes from the RAG pool if available (it never is), else `SAMPLE_QUESTIONS`; relaxes filters; `completed` when exhausted |
-| `/api/evaluate` | POST | ✅ (Technical) | Inline heuristic: gibberish filter, token overlap with the reference, fill-mask flexible match; `combined = 0.7·main + 0.3·fill` → marks /10. With a `session_id` of the user's in-progress technical session, the question is also recorded (`record_technical_turn`) |
+| `/api/next_question` | POST `{asked_ids, difficulty, topic}` | — (legacy, unused) | Takes from the RAG pool if available (it never is), else `SAMPLE_QUESTIONS`; relaxes filters; `completed` when exhausted |
+| `/api/evaluate` | POST | — (legacy, unused) | Inline heuristic: gibberish filter, token overlap with the reference, fill-mask flexible match; `combined = 0.7·main + 0.3·fill` → marks /10. With a `session_id` of the user's in-progress technical session, the question is also recorded (`record_technical_turn`) |
 | `/api/candidate-profile/<id>` | GET | — | Raw stored profile |
 | `/api/get-resume-discussion` | POST | — | Legacy MCQ-style discussion generator + `_hardcoded_fallback` |
 | `/api/resume-discussion/{start,reply,end}` | POST | — | Legacy v1 `discussion_engine` |
@@ -924,7 +945,7 @@ A single page with inline CSS and JS, and no framework. Screens are top-level co
 All processing is **client-side**; frames never reach Flask.
 - **Loading:**
   - `ensureGazeLandmarkerReady()` dynamically imports `@mediapipe/tasks-vision@0.10.14` from jsDelivr.
-  - `FaceLandmarker.createFromOptions` uses `modelAssetPath="/static/models/face_landmarker.task"`, the GPU delegate with a CPU retry, `runningMode:"VIDEO"`, one face, and transformation matrixes.
+  - `FaceLandmarker.createFromOptions` uses `modelAssetPath="/static/models/face_landmarker.task"`, the GPU delegate with a CPU retry, `runningMode:"VIDEO"`, up to two faces (`numFaces: 2`; the second triggers the second-person alert), and transformation matrixes.
 - **Lifecycle:** `initializeGazeMonitoring()` is idempotent and calls `getUserMedia({video:true})`. It shows a "Camera blocked" panel on denial. `startGazeDetectionLoop()` runs `detectForVideo` in a rAF loop. `stopGazeMonitoring()` releases everything.
 - **Head pose:** yaw and pitch come from the facial transformation matrix, smoothed with EMA 0.30. Beyond 26° the head counts as left, right, up or down.
 - **Iris gaze:**
@@ -937,7 +958,7 @@ All processing is **client-side**; frames never reach Flask.
   - NORMAL → CAUTION (3.5 s) → WARNING (8.5 s).
   - FACE_ABSENT after 7.5 s without a face.
   - A 45 s cooldown per warning type.
-  - Warnings are both visual (`showGazeWarning`) and spoken (`speechSynthesis`).
+  - Warnings are visual (`showGazeWarning`) and spoken (`speechSynthesis`), but speech is muted while either microphone is on; the second-person and lighting alerts are visual only.
 - **Liveness:**
   - States: NO_FACE → FACE_DETECTED → LIVENESS_CHECKING → LIVE_PERSON_CONFIRMED.
   - One random challenge: turn the head left or right, with a 12 s timeout. (The blink challenge is disabled since 2026-09-30 as unreliable on webcams; its checker code is kept.)
@@ -968,7 +989,7 @@ Zero-tolerance rules for **the whole interview**: the full interview (Round 1, t
 | Violations | `visibilitychange` hidden → `tab_switch`; window `blur` not regained within `PROCTOR_BLUR_GRACE_MS=1500` → `window_switch`; `fullscreenchange` exit → `fullscreen_exit`; `copy`/`cut`/`paste`/`drop` and Ctrl/Cmd+C/X/V and Shift/Ctrl+Insert → blocked + violation; right-click is blocked only |
 | Permission prompts | Both mic buttons suspend blur tracking (`proctorSuspendBlur` / `rdMicSettled`). Losing full screen while suspended asks the candidate to re-enter instead of terminating |
 | `proctorViolation(type)` | Terminates exactly once. It records `{type, label, at_turn, round, occurred_at}`, then disarms, exits full screen, stops mics, disables input, shows the red overlay, and calls `interviewTerminate()`. That ends whatever phase is running: Round 1 (`rdTriggerReport`), the break (`terminateBetweenRounds`) or technical (`finishTechnicalRound`) |
-| Backend | Both `/api/resume-discussion-v2/end` and `/api/technical-sessions/<id>/end` receive `proctorIntegrityPayload()`. `conversation_engine.sanitize_integrity` whitelists it, and the session is saved as `terminated` |
+| Backend | Both `/api/resume-discussion-v2/end` and `/api/tech-interview/<id>/end` receive `proctorIntegrityPayload()`. `conversation_engine.sanitize_integrity` whitelists it, and the session is saved as `terminated` |
 | Results | Red "Session terminated" banner naming the round and question. Unanswered turns are dropped, and "Round 2 not taken" is shown if it ended before Round 2 |
 
 Limitation: enforcement is client-side and can be bypassed with DevTools.
@@ -1146,7 +1167,9 @@ Resume engine internals: TextSpan → DocumentModel → Section → ParserResult
 | `slide_rag.qbank` constants | `PROMPT_VERSION=6`, `QUOTE_MATCH=88`, `QUOTE_MIN_WORDS=4`, `POINT_QUOTE_SIM=0.35`, `MIN_KEY_POINTS=2`, `DISTINCT_SIM=0.85`, `DUPLICATE_SIM=0.90`, `MAX_CONTEXT_CHARS=9000` | Question generation and its checks (bump `PROMPT_VERSION` to regenerate) |
 | `slide_rag.llm_client` constants | `DEFAULT_MODEL=qwen3:8b`, `NUM_CTX=8192`, `THINK_BUDGET=3000`, `KEEP_ALIVE=30m` | Ollama client |
 | `slide_rag.rank_bank` | `DEFAULT_THRESHOLD=0.80` (bank currently ranked with 0.75), signal weights | Which questions are active |
-| `CAP_CURATED_ONLY` | `1` | New technical interviews draw only from the 132 hand-reviewed best questions (`"curated": true`). `0` serves all 282 active. See §4.25 |
+| `CAP_CURATED_ONLY` | `1` | New technical interviews draw only from the 156 hand-reviewed best questions (`"curated": true`). `0` serves all 279 active. See §4.25 |
+| `tech_interview.grader` caps | `CONTRA_THRESHOLD=0.50`, `CONTRA_CAP=0.20`, `CREDIT_SIM_FLOOR=0.25` | Score capped at 0.2 when the reference answer contradicts the answer; no key-point credit below 0.25 similarity (§4.25) |
+| `CAP_RUN_GRADER_BENCHMARK` | unset | `1` runs the slow grader benchmark test (`test_grader_benchmark.py`) |
 | `CAP_GRADER_ENRICHMENT` | `replies` | Technical grader's use of the offline enrichment: `off`, `replies` (short correct follow-up replies), `all` (also key-point variants + main idea; measured to pass wrong answers). See §4.25 |
 | `CAP_QUESTION_BANK_DIR` | `rag_system/rag_tester/question_bank` | Where the app reads the question bank |
 | `CAP_TRAINED_EVALUATOR` | on | Round 1 uses the averaged evaluator when the v5_1088 model file is installed; `0` forces the heuristic evaluator |
@@ -1241,6 +1264,7 @@ Session cookies are HttpOnly with `SameSite=Lax`.
 **Migrations:**
 1. `ee1633ec7576`: the initial schema.
 2. `eeeb3959ae84`: adds `interview_sessions.last_activity_at`.
+3. `a7c3e91f2b40`: profile photo (`users.avatar`, `avatar_updated_at`).
 
 To create a new one: `flask --app db_manage db migrate -m "..."`.
 
@@ -1269,7 +1293,8 @@ To create a new one: `flask --app db_manage db migrate -m "..."`.
 | `GET /api/sessions[?type=]` | Newest first; `to_dict()` includes the resume filename, integrity and attention |
 | `GET /api/sessions/<id>` | Everything plus `summary` and every turn |
 | `DELETE /api/sessions/<id>` | Also closes the session if it's live |
-| `POST /api/technical-sessions`, `POST /api/technical-sessions/<id>/end` | Start / finish a technical session (`{attention_metrics, integrity}`) |
+| `POST /api/technical-sessions`, `POST /api/technical-sessions/<id>/end` | Legacy (old fill-in-the-blank quiz), unused by the UI |
+| `POST /api/tech-interview/start`, `/<id>/answer`, `/<id>/end` | The technical interview (§4.25) |
 | `GET /api/insights` | §4.22 |
 
 **Current limitation:** the two rounds of a full interview are stored as **two separate sessions**. They aren't linked yet, so Sessions lists them separately.
@@ -1323,7 +1348,7 @@ Rules (showInterviewRules "full") → full screen → phase "resume"
   rdTriggerReport: /end saved, stays full screen, webcam on → phase "between"
   #round-transition: "Round 1 complete." score · grade · verdict → [Begin Round 2]
   beginRound2: attention counters reset → startTechnicalRound("All") → phase "technical"
-  Round 2 · Technical: /api/technical-sessions + 5 × (next_question, evaluate{session_id})
+  Round 2 · Technical: /api/tech-interview/start (round2) + 8 × /answer (follow-ups, clarifications) → /end
   finishTechnicalRound: disarm + exit full screen, end session, stop webcam → phase "ended"
   showFinalResults: rdRenderReport(round1, {combined: {round2, integrity, attention}})
      = Round 1 report + "Round 2 · Technical" section + "Attention · Whole interview"
@@ -1335,7 +1360,7 @@ Rules (showInterviewRules "full") → full screen → phase "resume"
 
 ### 4.24 Slide RAG pipeline
 
-**Location:** `rag_system/rag_tester/slide_rag/` (run commands from `rag_system/rag_tester`). **Status:** built and evaluated for all five subjects; **not yet called by the Flask app**.
+**Location:** `rag_system/rag_tester/slide_rag/` (run commands from `rag_system/rag_tester`). **Status:** built and evaluated for all five subjects. It runs offline only; the question bank it produces is what the technical interview serves (§4.25).
 
 **Why it replaced the old ingestion.** The old ingestor made one chunk per PDF page. Faculty slides break that: a running header and logo on every slide, diagram labels scattered through the text, build-up slides repeated with one more bullet, ideas spread over several "(contd.)" slides, and screenshots with no text layer. The new pipeline treats a slide as a laid-out object and a **section** (a run of related slides) as the unit of retrieval.
 
@@ -1437,10 +1462,10 @@ Change the cut-off with `python -m slide_rag.rank_bank --threshold 0.78` (0.70 k
 | Stage | Questions | What it guarantees |
 |---|---|---|
 | Generated from the slides | **422** | 1,057 key points, each with a verified slide quote; 1,055 with a prepared follow-up |
-| Passed automated ranking (`active`) | 282 | Confidence ≥ 0.75 across six signals |
-| Hand-curated top tier (`curated`) | 132 | Scored 8+/10 (7+ on a most-asked topic) by human review; served by default |
+| Passed automated ranking (`active`) | 279 (282 minus questions deactivated on review) | Confidence ≥ 0.75 across six signals |
+| Hand-curated top tier (`curated`) | **156** | Scored 8+/10 (7+ on a most-asked topic) by human review, many after key-point repair; served by default |
 
-Interviews serve the curated tier by default (`CAP_CURATED_ONLY=1`); `CAP_CURATED_ONLY=0` serves all 282 active questions.
+Interviews serve the curated tier by default (`CAP_CURATED_ONLY=1`); `CAP_CURATED_ONLY=0` serves all 279 active questions.
 
 **Session types (Technical Interview and Full Interview built; the MCQ test planned):**
 
@@ -1448,17 +1473,32 @@ Interviews serve the curated tier by default (`CAP_CURATED_ONLY=1`); `CAP_CURATE
 |---|---|---|
 | **Full Interview** (resume parsing + technical interview) | Round 1 Resume Discussion (unchanged) → Round 2 **technical interview**: 8–10 concept questions (no MCQs, no fill-in-the-blank) with follow-ups | Proctored end to end; saved to history |
 | **Technical Interview** (only technical) | The same technical interview on its own: **8–10 main concept questions**, all different, spread across subjects; at most 1–2 follow-ups each when needed | Proctored; saved to history |
-| **Technical MCQ Test** (later) | **30 MCQs in 30 minutes**, random across subjects and topics | Scoring **+1 correct, −0.25 wrong, 0 unanswered**; plan in `mcq_tobedone.md` |
+| **Technical MCQ Test** (later) | **30 MCQs in 30 minutes**, random across subjects and topics | Scoring **+1 correct, −0.25 wrong, 0 unanswered**; plan in `docs/internal/mcq_tobedone.md` |
 
 - **Follow-ups:** after each answer the system decides whether a follow-up is needed. A good answer moves on. Otherwise it asks for clarification (hesitation, fillers, broken sentences, a vague answer) or asks the prepared follow-up for a missing key point, **at most 1–2 per main question**.
 - **Phase 2 (backend) — done:** `main_cap/cap/tech_interview/`:
   - `bank.py` loads the active questions and, by default, serves only the curated ones (below); the selector favours topics asked often in interviews; `selector.py` picks 10 (standalone) or 8 (Round 2) from different topics across all five subjects, easy → medium → hard, never repeating a question the user has seen, weighted toward the user's weak topics;
-  - `grader.py` marks each key point covered / partial / missing with the NLI cross-encoder `cross-encoder/nli-deberta-v3-base` (entailment) plus a MiniLM-similarity rescue; score = 0.85 × key points + 0.15 × similarity to the reference answer (counted fully once half the points are met). Tuned on 100 hand-checked answers (key-point agreement 85% vs 72% for the earlier MiniLM NLI), then tested on 400 answers to 100 unseen questions (`grader_eval/`): 81% key-point agreement, score correlation 0.84, the same move-on decision as the human 89% of the time; 3% of weak answers pass, 9% of strong ones are held back; fillers stripped before grading but counted as hesitation;
+  - `grader.py` marks each key point covered / partial / missing with the NLI cross-encoder `cross-encoder/nli-deberta-v3-base` (entailment) plus a MiniLM-similarity rescue; score = 0.85 × key points + 0.15 × similarity to the reference answer (counted fully once half the points are met). Tuned on 100 hand-checked answers (key-point agreement 85% vs 72% for the earlier MiniLM NLI), then tested on 400 answers to 100 unseen questions (`grader_eval/`): 81% key-point agreement, score correlation 0.84, the same move-on decision as the human 89% of the time; 3% of weak answers pass, 9% of strong ones are held back; fillers stripped before grading but counted as hesitation. (Current figures on the 400 LLM-written answers, after the 2026-10-03 changes: key-point agreement 83%, correlation 0.89, same move-on decision 92%; see `grader_eval/baseline.json`. Human-style answers are much harder — see the update below);
   - `followup.py` decides next / clarify / prepared follow-up (≤ 2 per question, good ≥ 0.70); `session.py` runs the live interview; points recovered through a follow-up earn 0.75 credit;
   - routes `POST /api/tech-interview/start | /<id>/answer | /<id>/end` in `session_routes.py`; each main question is saved as one `SessionTurn` (topic in `category`, question id in `source_id`, follow-ups in `evaluation`). No new table or migration: "already seen" questions and per-topic averages are read from these turns;
-  - `test_tech_interview.py`: 24 tests (incl. curated-only serving and interview-priority weighting).
+  - `test_tech_interview.py`: 27 tests (incl. curated-only serving, interview-priority weighting and the contradiction cap).
+- **How one technical answer is graded, step by step (`grader.grade_answer`, then `followup.decide`):**
+  1. Filler words ("um", "like", "basically") are stripped and counted as hesitation.
+  2. Subject abbreviations are expanded in the answer, the key points and the reference ("DFS" → "depth-first search"), so both sides use the same words.
+  3. The answer is split into sentences, pairs of neighbouring sentences, and overlapping 20- and 40-word windows, because a point is often stated across two sentences and spoken answers often have no punctuation.
+  4. For each key point, the NLI model scores how strongly any piece entails it, and MiniLM scores how similar the closest piece is. **Covered:** entailment ≥ 0.6, or ≥ 0.2 with similarity ≥ 0.8. **Partial:** entailment ≥ 0.05 with similarity ≥ 0.6 or entailment ≥ 0.3. **Missing** otherwise, and always when similarity < 0.25 (the answer isn't about this point).
+  5. Score = 0.85 × key-point credit (covered 1, partial 0.5) + 0.15 × similarity to the reference answer (rescaled between a floor and a ceiling).
+  6. If the reference answer contradicts the whole answer (probability ≥ 0.5), the score is capped at 0.2.
+  7. Decision: "I don't know", the follow-up limit or a score ≥ 0.70 → next question; a hesitant (filler ratio ≥ 6%), vague or repetitive answer → a clarification request; otherwise the prepared follow-up for the first missing point, then partial ones (≤ 2 per question). A point recovered in a follow-up earns 0.75 credit, and the question is regraded.
 - **Grader on real answers (2026-09-30):** the LLM-written test sets flattered the grader; on 40 answers typed by the user (`grader_eval/my_answers.json`) main answers were graded too strictly and follow-ups were judged right only 15/40 times. Follow-up judging was rewritten: "I don't know" → missing, a yes/no rule ("nope"), and the reply read with its question counting only what it *adds* beyond the question. Now 30/40, with 8% of wrong replies accepted (tested by giving each follow-up the replies to other questions).
-- **Curated subset (2026-09-30):** every active question was read and scored 1–10 by hand (clear, answerable, key points correct and matching the question, sensible difficulty); the score and a one-line note are stored on each question (`quality_score`, `quality_note`). Each topic also has an **interview-frequency tier** (`interview_priority`: 3 asked very often, 2 regularly, 1 rarely; hand-assigned in `slide_rag/interview_priority.py`, re-applied with `python -m slide_rag.interview_priority`). The 132 scoring 8+, or 7+ on a tier-3 topic, are `"curated": true`, listed first in each bank file (most-asked first, then by score), and are the only ones new interviews use (`CAP_CURATED_ONLY`, default on): CN 18, DBMS 29, DSA 20, OOAD 36, OS 29. The selector multiplies each candidate's weight by x6 / x1 / x0.2 by tier, so 87% of questions asked come from tier-3 topics (47% without it) while no single topic appears in more than ~34% of sessions and a user taking 5 interviews in a row sees no repeated question; every 8-question interview still gets 8 distinct topics (checked on 3,000 simulated sessions). DSA has no curated hard question, so its hard slot falls back to a curated easy/medium one. 41 tier-3 topics still have no curated question (e.g. OSI model, DNS, paging, round robin, quick sort, hashing, SQL views) — listed in the review file for generation. Low scores flag false key points (e.g. "TCP guarantees minimum throughput", "the last level of a complete binary tree is always odd"), references to text the candidate never sees ("the code provided", "the example provided") and vague questions. Full list: `question_bank/quality_review.md`; bank backup: `archive/question_bank_backup_2026-09-30/`. Lookups by id (`question_by_id`) and the grader-eval scripts still see every active question.
+- **Curated subset (2026-09-30):** every active question was read and scored 1–10 by hand (clear, answerable, key points correct and matching the question, sensible difficulty); the score and a one-line note are stored on each question (`quality_score`, `quality_note`). Each topic also has an **interview-frequency tier** (`interview_priority`: 3 asked very often, 2 regularly, 1 rarely; hand-assigned in `slide_rag/interview_priority.py`, re-applied with `python -m slide_rag.interview_priority`). The 132 scoring 8+, or 7+ on a tier-3 topic (156 after the 2026-10-03 repairs), are `"curated": true`, listed first in each bank file (most-asked first, then by score), and are the only ones new interviews use (`CAP_CURATED_ONLY`, default on): CN 18, DBMS 29, DSA 20, OOAD 36, OS 29. The selector multiplies each candidate's weight by x6 / x1 / x0.2 by tier, so 87% of questions asked come from tier-3 topics (47% without it) while no single topic appears in more than ~34% of sessions and a user taking 5 interviews in a row sees no repeated question; every 8-question interview still gets 8 distinct topics (checked on 3,000 simulated sessions). DSA has no curated hard question, so its hard slot falls back to a curated easy/medium one. 41 tier-3 topics had no curated question (30 after the 2026-10-03 repairs; e.g. OSI model, DNS, paging, round robin, quick sort, hashing, SQL views) — listed in the review file for generation. Low scores flag false key points (e.g. "TCP guarantees minimum throughput", "the last level of a complete binary tree is always odd"), references to text the candidate never sees ("the code provided", "the example provided") and vague questions. Full list: `question_bank/quality_review.md`; bank backup: `archive/question_bank_backup_2026-09-30/`. Lookups by id (`question_by_id`) and the grader-eval scripts still see every active question.
+- **Grader and bank update (2026-10-02/03).** The key numbers are below; the detailed log is kept outside the repository.
+  - *Measurement:* `grader_eval/benchmark.py` grades every labelled set and fails on a regression against `baseline.json`. Sets: 400 LLM-written; 40 typed by a team member; 193 human-style team answers (`grader_eval/real_set/`, written to `ANSWER_PROMPT.md` and checked by each member). The team set is split by question into tune/test halves, plus a **fresh** set (Surya's 50) that is never tuned on. `grader_eval/sanity_check.py` needs no labels: every served question must pass its own reference answer and give < 0.5 to other questions' reference answers.
+  - *Contradiction cap:* the NLI model checks whether the reference answer contradicts the whole answer; if so (≥ 0.5) the score is capped at 0.2. A recovered follow-up can't lift it. Per-point and per-sentence checks were rejected (they also fire on correct answers).
+  - *Abbreviations (`terms.py`):* "DFS", "3NF", "LRU" etc. are expanded on both sides before grading, scoped per subject. Before this, "DFS explores…" got 0.34 from "Depth-first search explores…".
+  - *Similarity floor:* no key-point credit when the answer is unrelated to the point (similarity < 0.25). The NLI model had given 0.99 entailment for "List allows duplicate elements" from a paragraph about `super`.
+  - *Key-point repair:* 49 questions rewritten in hand-checked batches (`question_bank/repairs/batch1…3`, applied with `python -m slide_rag.apply_repairs`, slide quotes kept and re-checked). Rule learned by measurement: points must be **short, one claim, naming the specific mechanism, with no lists of examples**; detail goes in the reference answer. 4 questions deactivated (false premise or trivia). Served pool 132 → 156; all served questions now pass their own reference answer (12 failed before).
+  - *Results on fresh human answers (never tuned on):* same move-on decision as a human 64% → 66%, score correlation 0.44 → 0.55, confidently-wrong answers 0.42 → 0.29. Still open: the grader under-scores correct real answers (avg 0.54 vs the humans' 0.66), and it accepts 29% of wrong follow-up replies.
 - **Offline enrichment (`slide_rag/enrich_bank.py`, Qwen3-8B once, 79 min):** writes informal variants of each key point, short correct follow-up replies and each question's main idea into the bank; contradicting and generic paraphrases are filtered out. Measured by part: the follow-up replies (near-exact match only) raise follow-ups to 35/40 with wrong replies still at 9% → **on by default**; the key-point variants and main idea let fluent wrong answers through (confidently wrong 0.21 → 0.53, same move-on decision as a human 357 → 294 / 400) → **off** (`CAP_GRADER_ENRICHMENT`).
 - **Phase 3 (frontend) — done:** in `templates/index.html`, both Home cards run the question-bank interview. The Technical Interview card (10 questions) goes straight to the rules, with no subject picker. The Full Interview's Round 2 asks 8. Follow-ups and clarification requests appear as their own chat turns, with no live scores. The standalone results page and Round 2 of the combined report show score, grade, per-subject bars, "worth revising" topics and per-question cards (answer, key points ✓/~/✗, follow-ups, model answer); history uses the same cards. The fill-in-the-blank quiz is gone from the UI; its routes (`/api/next_question`, `/api/evaluate`, `/api/technical-sessions`) remain in the backend, unused. Test: `node test_tech_interview_ui.js`.
 
@@ -1472,7 +1512,7 @@ pip install -r Requirements_Global.txt          # the project's requirements fil
 cd main_cap/cap
 python app.py                                   # http://localhost:5000
 ```
-Startup logs show which evaluator is active: `hybrid-v1` if the weights are present, otherwise `heuristic-v1` (a missing weights file is detected up front, and no model is downloaded). The database and its migrations are created and applied automatically; there are no manual DB steps.
+Startup logs show which evaluator is active: `averaged-heuristic-v1+overall-single-…` when the v5_1088 weights are present (Git LFS), otherwise an older tier or `heuristic-v1` (a missing weights file is detected up front, and no model is downloaded). The database and its migrations are created and applied automatically; there are no manual DB steps.
 
 **Startup speed (`model_warmup.py`).** When every model is already downloaded, the app loads them without asking huggingface.co for updates (`HF_HUB_OFFLINE=1`; on a fresh machine they download on first use as before). `python app.py` then loads all models in a background thread (~7 s), so no user action waits for one. Measured: server start ~6.8 s → 2.1 s; the first technical answer 16.2 s → 0.2 s. The legacy `rag_integration` module is imported only if the old `/api/next_question` route is used (it cost ~4.6 s of every start). `CAP_MODEL_WARMUP=0` turns the warm-up off. The frontend's typing effect and pauses are deliberate pacing and were left unchanged.
 
@@ -1483,7 +1523,7 @@ Startup logs show which evaluator is active: `hybrid-v1` if the weights are pres
    2. **Continue with this resume** → `POST /api/resumes/<id>/use`, or upload a different one → `POST /api/classify-resume` (saved as current).
    3. → Briefing.
 3. **Rules + start:** CTA → `showInterviewRules("full")` → full screen → `POST /api/resume-discussion-v2/start` → `start_conversation` → `begin_resume_discussion` (DB) → first question. The rules are armed.
-4. **Round 1 turns (≤ 10):** `POST .../reply` → `build_request` → `HybridEvaluator` or `HeuristicEvaluator` → ledger → `planner.advance` → turn saved → next question.
+4. **Round 1 turns (≤ 10):** `POST .../reply` → `build_request` → `AveragedEvaluator` (or a fallback tier) → `answer_gate` → ledger → `planner.advance` → turn saved → next question.
 5. **Round 1 end:** `POST .../end {integrity, attention_metrics}` → session saved → Round 1 summary, still in full screen.
 6. **Round 2:** `POST /api/tech-interview/start {mode: "round2"}` → 8 main questions, each answered with `POST /api/tech-interview/<id>/answer` (which may return a follow-up or a clarification request, ≤ 2 per question, and saves the turn) → `POST /api/tech-interview/<id>/end` → final combined results. Full screen is released only now.
 7. **Afterwards:** Home shows the updated stats and "Focus next"; Sessions lists both rounds.
@@ -1617,10 +1657,10 @@ The code has no literal `TODO` markers. The items below come from docstrings, co
    Answered turns are safe in SQLite, but live state is per-process, and `_candidate_profiles` entries are never evicted. The app can't run with multiple workers as-is.
 2. **Flask development server only.** There is no production WSGI server, container or CI.
 3. **No login rate limiting, and no email verification yet.** `email_verified` exists but nothing checks it.
-4. **Model weights are absent:** `deployed_model/best_checkpoint_weights.pt` and the resume-classifier `bert_resume_model/`. A clone runs on the heuristic evaluator. (Startup now detects the missing weights and skips the DeBERTa download.)
+4. **Some model weights are absent:** the old Experiment 4 `deployed_model/best_checkpoint_weights.pt` and the resume-classifier `bert_resume_model/`. The production Round 1 weights are in Git LFS; a clone made without Git LFS runs on the heuristic evaluator. (Startup now detects the missing weights and skips the DeBERTa download.)
 5. **Client-side enforcement.** The session-integrity rules and the attention monitoring can be bypassed with DevTools, and the backend trusts the sanitised integrity record.
 6. **The two rounds of a full interview aren't linked in the database.** Sessions lists them as two entries, and the combined results exist only live at the end of the interview.
-7. **Question bank coverage (resolved: the old 5 hardcoded networking questions are gone).** The slide pipeline (§4.24) and the 422-question bank (§4.25) now drive both the standalone Technical Interview and Round 2. Remaining work: 41 most-asked topics (e.g. OSI model, DNS, paging, round robin, quick sort, hashing, SQL views) have no curated question yet and are listed in `question_bank/quality_review.md` for generation; the 30-question MCQ test (`mcq_tobedone.md`) is not built.
+7. **Question bank coverage (resolved: the old 5 hardcoded networking questions are gone).** The slide pipeline (§4.24) and the 422-question bank (§4.25) now drive both the standalone Technical Interview and Round 2. Remaining work: 41 most-asked topics (e.g. OSI model, DNS, paging, round robin, quick sort, hashing, SQL views) have no curated question yet and are listed in `question_bank/quality_review.md` for generation; the 30-question MCQ test (`docs/internal/mcq_tobedone.md`) is not built.
 
 **Evaluation and ML**
 
@@ -1673,11 +1713,11 @@ The code has no literal `TODO` markers. The items below come from docstrings, co
 
 **Frontend**
 
-26. **Speech warnings can talk over Resume Discussion dictation** (`speakAttentionWarning` checks only the technical recognizer's `isRecording`).
+26. ~~Speech warnings can talk over Resume Discussion dictation~~ **Fixed 2026-09-30:** `speakAttentionWarning` mutes while either microphone is on (`isRecording` or `rdIsRecording`).
 27. **Technical round gaps:** `loadQuestion` and `handleSubmission` have no try/catch (a network error leaves the typing indicator up), and `#subject-select` on the practice setup screen is never read.
 28. **`/api/evaluate` quirks:** an empty fill-mask answer is counted correct (`"" in ref`), and scoring uses raw token overlap without stopword removal.
 29. **Resume Discussion error handling:** `rdShowStageError` is a dead end with no retry button. A reply racing with termination can show a turn with grade "n/a".
-30. **The single 8,600-line `index.html`** holds all CSS, markup and JS, which is hard to maintain. The practice setup screen (`#subject-selection-section`) still uses the older, pre-redesign styling.
+30. **The single 9,300-line `index.html`** holds all CSS, markup and JS, which is hard to maintain. The practice setup screen (`#subject-selection-section`) still uses the older, pre-redesign styling.
 
 **Supporting subsystems**
 
@@ -1708,22 +1748,22 @@ The code has no literal `TODO` markers. The items below come from docstrings, co
     - OCR recovers prose but not tables or formulas (Stage 3 covers those).
 40. **Evaluation limits:** the gold questions and their page labels were written by one person (the assistant) with a no-peeking rule; sets are small (22–27 per subject), so differences of a few points between settings are noise. CN and OS have no fair old-index baseline.
 41. **Question-bank gaps:** 29 of 279 topics have no questions — 20 in CN (OSI and TCP/IP models, Encapsulation, Transmission media, Multiplexing, Principles of reliable data transfer, Stop-and-wait, 802.11, Private/public IP, Subnetting, IPv4 datagram, Forwarding vs routing, Router architecture, TCP segment, TCP reliable transfer, Socket programming, HTTP, Cookies, Email, URL-to-webpage), DBMS (Three-schema architecture, DELETE vs TRUNCATE vs DROP), DSA (Separate chaining, Dynamic programming & knapsack, Generating permutations), OOAD (OOP vs procedural, Access modifiers, final keyword, Aggregation vs composition). Causes: content mostly in diagrams (vision text is not accepted as evidence), a few wrong topic→slide mappings (e.g. reliable data transfer mapped to roadmap slides), and some not yet explained (HTTP, Cookies). Option agreed for later: allow vision text as evidence for diagram-only topics, with those questions marked NEEDS REVIEW.
-42. **Question-bank accuracy limits:** checks verify that key points are supported by slide text, but the 8B judge is lenient on reasoning — a pilot hard question built on an invented schema had a wrong reference answer and passed the judge (invented examples are now banned). Hard questions (96) are flagged `needs_review` and mostly held back by the ranking (32 active). No human review of the bank has been done yet.
+42. **Question-bank accuracy limits:** checks verify that key points are supported by slide text, but the 8B judge is lenient on reasoning — a pilot hard question built on an invented schema had a wrong reference answer and passed the judge (invented examples are now banned). Hard questions (96) are flagged `needs_review` and mostly held back by the ranking (32 active). All 282 active questions were hand-scored on 2026-09-30 (`quality_review.md`), and 49 were repaired on 2026-10-03 (§4.25).
 
 **Documentation drift**
 
-41. **`README.md`:**
+43. **`README.md`:** *(resolved 2026-09-30: README rewritten; points kept for history)*
     - It says `GEMINI_API_KEY` is needed for resume upload; it isn't since the Milestone 7 cutover.
     - It says the heuristic evaluator is authoritative; Round 3 made DeBERTa authoritative.
     - It says to `pip install -r main_cap/cap/requirements.txt`, which doesn't exist.
     - It doesn't cover accounts, the database, session history, the Home/Sessions/Profile pages, the full two-round interview, or the session-integrity rules. This document does.
-42. **`docs/architecture/ResumeDiscussion_v2.md`:**
+44. **`docs/architecture/ResumeDiscussion_v2.md`:**
     - It describes v1 behaviour: random jitter, a 12/20 question target, adaptive follow-ups, SBERT dedup.
     - Its evaluator chapters (§19.6 / §19.9) describe the v1 result shape.
-43. **`WORKFLOW_INTEGRATION_GUIDE.md` (archived 2026-09-30):**
+45. **`WORKFLOW_INTEGRATION_GUIDE.md` (archived 2026-09-30):**
     - It documents endpoints that don't exist (`/predict`, `/rag/*`, `/workflow/interview`).
     - It names the wrong models: FLAN-T5 (actually Qwen2.5) and RoBERTa-base (actually distilroberta).
-44. **Other docs:**
+46. **Other docs:**
     - `WEBCAM_AND_GAZE_MONITORING.md` (archived 2026-09-30) differed from the code on the liveness challenge format, the watchdog, and head/gaze fusion.
     - `Experiment4_TrackB_APIFree.md` still says "pilot only".
 
@@ -1733,7 +1773,7 @@ The code has no literal `TODO` markers. The items below come from docstrings, co
 
 | Suite | Location | How to run | Size / coverage |
 |---|---|---|---|
-| Resume engine | `main_cap/cap/resume_engine/tests/` | `python -m pytest resume_engine/tests -q` (from `main_cap/cap`) | 510 tests (incl. the Phase 1 tests and `test_integration_fixes.py`); golden corpus of 31 resume fixtures (PDF/DOCX; 3 expected-failure cases) plus seed-synthesis fixtures. Old-vs-new comparison and Round 1 smoke run: `integration_checks/` |
+| Resume engine | `main_cap/cap/resume_engine/tests/` | `python -m pytest resume_engine/tests -q` (from `main_cap/cap`) | 511 tests (incl. the Phase 1 tests and `test_integration_fixes.py`); golden corpus of 31 resume fixtures (PDF/DOCX; 3 expected-failure cases) plus seed-synthesis fixtures. Old-vs-new comparison and Round 1 smoke run: `integration_checks/` |
 | Planning / discussion | `test_topic_pool.py` (32), `test_question_specification.py` (43), `test_question_families.py` (40), `test_question_realizer.py` (30), `test_discussion_policy.py` (28), `test_lifecycle_hardening.py` (24), `test_traceability.py` (22), `test_conversation_engine.py` (20, incl. 4 integrity), `test_conversation_memory.py`, `test_planner.py`, `test_coverage_tracker.py`, `test_legacy_topic_pool_adapter.py`, `test_integration_planning.py`, `test_interview_question.py` | `python -m pytest test_*.py` | Determinism, traceability, lifecycle invariants, anti-repetition, import boundaries |
 | Evaluation | `test_hybrid_evaluator.py` (72), `test_heuristic_evaluator.py` (41), `test_evaluation_result.py` (38), `test_evaluation_engine.py` (26), `test_model_*.py`, `test_deployment_evaluator.py`, `test_reasoning_dimension_relevance.py`, `test_expected_concepts_registry.py`, `test_evaluator_*.py`, `test_evaluation_request.py` | pytest | Contracts, calibration bands, guardrail cases reproduced from real bugs, fallback, CORAL maths |
 | Coaching | `test_strong_answer.py` (40), `test_concept_analysis.py` (11) | pytest | Grounded-only insertions, hide gates |
@@ -1741,7 +1781,9 @@ The code has no literal `TODO` markers. The items below come from docstrings, co
 | Accounts & login | `test_accounts.py` (31, incl. 6 profile-photo), `test_app_auth_guard.py` (8) | `python -m pytest test_accounts.py test_app_auth_guard.py -q` | Signup validation (every field rule, diploma path, consent), duplicate emails, unreadable resumes leave nothing behind, 413 limit, login/logout, disabled accounts, profile edits, resumes (upload, make-current, delete, cross-device download), user isolation, account deletion incl. DB-level cascade, one real PDF through the real resume engine; the login guard on every API route; saved-resume `/use` and main-page uploads saving to the account |
 | Session history & Home | `test_session_history.py` (13), `test_insights_and_settings.py` (9) | pytest | Full Resume Discussion saved and reopened; terminated / abandoned (new interview, idle, restart); ownership of conversations and sessions; deletion; technical sessions incl. terminated; stats, trend, "Focus next" ranking and fallbacks; change password; consent toggle |
 | Deployment | `test_deployment_evaluator.py` (6) | pytest | Hybrid activation; fallbacks; missing weights or an unapproved decision never load the model |
-| Technical interview | `test_tech_interview.py` (19), `test_tech_interview_ui.js` | pytest / node | Selection, follow-up policy, live session, grader anchors on real models, API flow, frontend flow |
+| Technical interview | `test_tech_interview.py` (27), `test_tech_interview_ui.js` | pytest / node | Selection, curated serving, priority weighting, follow-up policy, live session, contradiction cap, grader anchors on real models, API flow, frontend flow |
+| Grader regression | `grader_eval/benchmark.py` + `baseline.json`, `test_grader_benchmark.py` (opt-in, `CAP_RUN_GRADER_BENCHMARK=1`); `grader_eval/sanity_check.py` | `python grader_eval/benchmark.py` | ~630 human-labelled answers in 5 sets (incl. a never-tuned fresh set); fails on any regression; the sanity check needs no labels |
+| Startup | `test_model_warmup.py` (5) | pytest | Offline mode only when every needed model (incl. the trained backbone when its weights exist) is cached |
 | Frontend | `test_report_*.js`, `test_session_integrity.js` (13), `test_startup_guard.js`, `test_typeline_race.js` | `node <file>` | Each test extracts the exact function source from `index.html` and runs it with Node `vm` + `assert` (no framework). The integrity tests stub the `interview*` hooks |
 
 Tests that need the real `app.py` import `_app_test_setup.py`. It sets an in-memory database and a temporary upload folder, and stubs the DeBERTa bootstrap.
@@ -1751,7 +1793,7 @@ Tests that need the real `app.py` import `_app_test_setup.py`. It sets an in-mem
 | Slide RAG retrieval evaluation | `slide_rag/retrieval_eval.py`, `slide_rag/eval/gold_{cn,dbms,dsa,ooad,os}.json` | `python -m slide_rag.retrieval_eval` | 122 hand-labelled questions + 750 generated probes; results and ablations in §4.24 |
 
 The Milestone 7 report recorded 416 passing tests at the time (resume engine plus the app-level selector, profile and e2e tests), and an earlier ML-track note recorded 1,213 passing tests across the whole suite. At the time of this update, the latest runs showed:
-- **1241 passed, 17 skipped** for the whole `main_cap/cap` suite excluding the resume engine (`python -m pytest --ignore=resume_engine/tests`), **511** for the resume engine (2026-09-30);
+- **1244 passed, 18 skipped** for the whole `main_cap/cap` suite excluding the resume engine (`python -m pytest --ignore=resume_engine/tests`), **511** for the resume engine (2026-10-03);
 - **6 passed** for deployment;
 - all 9 frontend test files passing (incl. `test_tech_interview_ui.js`, `test_session_integrity.js`);
 - the grader evaluations in §4.25 (tuning set, 400 held-out answers, the user's 40 answers; scripts in `grader_eval/`);
@@ -1788,7 +1830,10 @@ The remaining suites weren't re-run for this update.
 | **PipelineTrace** | Optional per-stage timing and diagnostics object for the resume engine |
 | **Shadow Mode** | Dev-only tooling comparing Gemini vs engine profiles without treating either as ground truth |
 | **Evaluator / Evaluator Registry** | The stable scoring interface and the name → implementation lookup with an active pointer |
-| **HeuristicEvaluator / HybridEvaluator / TrainedEvaluator** | Rule/SBERT-based / DeBERTa-primary combined / DeBERTa-only implementations |
+| **AveragedEvaluator** | Production Round 1 evaluator: 0.8 × the fine-tuned DeBERTa-v3 overall model + 0.2 × the heuristic |
+| **HeuristicEvaluator / HybridEvaluator / TrainedEvaluator** | Rule/SBERT-based / older DeBERTa-primary combined (fallback tier) / DeBERTa multi-task |
+| **Contradiction cap / similarity floor** | Technical grader safeguards: score ≤ 0.2 when the reference answer contradicts the answer; no key-point credit for unrelated text |
+| **Fresh set** | Labelled answers added after a round of changes and never used for tuning: the honest measure (`benchmark.py`) |
 | **Dimension** | A named score axis (technical_accuracy, completeness, communication, tradeoffs, ownership, …) |
 | **Agreement band** | high (≥ 0.85) / medium (≥ 0.60) / low agreement between the heuristic and DeBERTa per dimension |
 | **Plausibility guardrail** | A downgrade-only override of a DeBERTa dimension score when both signals flag it as implausible |
@@ -1815,7 +1860,7 @@ The remaining suites weren't re-run for this update.
 | **Topic list** | `topics/<subject>.txt`: the curated interview topics, each checked to have slides behind it |
 | **Gold set / probe set** | Hand-labelled questions with their answer pages / auto-generated bullet → slide queries, used to score retrieval |
 | **hit@k** | Share of queries whose top k results include a correct slide |
-| **Question bank** | `question_bank/<subject>.json`: offline-generated, checked technical-interview questions (reference answer, quote-backed key points, prepared follow-ups); 422 questions across five subjects; each with a confidence rank, quality score and interview-frequency tier; interviews draw the curated top tier first (§4.25). An MCQ bank is planned (`mcq_tobedone.md`) |
+| **Question bank** | `question_bank/<subject>.json`: offline-generated, checked technical-interview questions (reference answer, quote-backed key points, prepared follow-ups); 422 questions across five subjects; each with a confidence rank, quality score and interview-frequency tier; interviews draw the curated top tier first (§4.25). An MCQ bank is planned (`docs/internal/mcq_tobedone.md`) |
 | **Key point / quote** | A point a good answer must cover, plus the slide sentence that supports it (verified in code) |
 | **Confidence / active** | A question's 0–1 trust score from its generation evidence; only questions at or above the threshold are `active` (used by the app) |
 | **needs_review** | Flag on hard questions, whose reasoning the checks can't fully verify against the slides |

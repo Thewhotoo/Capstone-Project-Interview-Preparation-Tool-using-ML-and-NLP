@@ -353,11 +353,10 @@
   "reference_answer": "The Singleton pattern ensures that only one instance of a class is created by making the constructor private and providing a static method to access the instance. This method either creates the instance on first use or returns the existing one. The pattern also prevents external instantiation by restricting access to the constructor.",
   "key_points": [
    {
-    "point": "The Singleton pattern ensures that only one instance of a class is created.",
+    "point": "Only one object of the class can ever be created.",
     "quote": "The singleton pattern is a design pattern that restricts the instantiation of a class to one object.",
     "followup": "Why would you want to restrict instantiation to one object?",
     "followup_answer": "To ensure a global point of access and control over the object's lifecycle, which is useful for resources like configuration or database connections.",
-    "variants": [],
     "followup_replies": [
      "to control access",
      "global point of access",
@@ -367,17 +366,10 @@
     ]
    },
    {
-    "point": "The constructor is made private to prevent external instantiation.",
+    "point": "The constructor is made private so other classes cannot create objects.",
     "quote": "Make the constructor of the class private. The static method of the class will still be able to call the constructor, but not the other objects.",
     "followup": "What would happen if the constructor was not private?",
     "followup_answer": "Other classes could instantiate the Singleton class directly, violating the pattern's goal of having a single instance.",
-    "variants": [
-     "the constructor is private so no one can make new instances",
-     "private constructor stops others from creating the class",
-     "singleton uses private constructor to block external creation",
-     "private constructor stops other classes from making copies",
-     "singleton hides the constructor to stop outside use"
-    ],
     "followup_replies": [
      "other classes could make their own",
      "violate the singleton pattern",
@@ -387,16 +379,10 @@
     ]
    },
    {
-    "point": "A static method provides a global access point to the instance.",
+    "point": "A static method returns the single shared instance.",
     "quote": "A Singleton class also provides one unique global access point to the object so that each subsequent call to the access point returns only that particular object.",
     "followup": "Why is having a global access point important?",
     "followup_answer": "It ensures that all parts of the application access the same instance, maintaining consistency and shared state across the system.",
-    "variants": [
-     "singleton uses a static method to get the object",
-     "the static method is the way to access the instance",
-     "you use a static method to get the one instance",
-     "the static method provides the global access point"
-    ],
     "followup_replies": [
      "so everyone uses the same one",
      "keeps everything in sync",
@@ -446,9 +432,12 @@
    "stated_by_bank": 0.997
   },
   "quality_score": 9,
-  "quality_note": "classic",
+  "quality_note": "classic; key points reworded (repair 1)",
   "curated": true,
-  "interview_priority": 3
+  "interview_priority": 3,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "ooad.method_overriding.easy1",
@@ -2609,17 +2598,13 @@
   "topic_coverage": "good",
   "question": "Consider a scenario where a subclass overrides a method from its superclass. What is the potential violation of the Liskov Substitution Principle, and how does this relate to the behavior of programs that depend on the superclass?",
   "difficulty": "hard",
-  "reference_answer": "The Liskov Substitution Principle states that objects of a superclass should be replaceable with objects of its subclasses without altering the correctness of the program. If a subclass overrides a method and changes its behavior in a way that violates the expectations of the superclass, this can break the principle. For example, if a superclass method guarantees a certain outcome, and the subclass method does not uphold that guarantee, it can lead to incorrect behavior in programs that rely on the superclass's behavior.",
+  "reference_answer": "The Liskov Substitution Principle says that an object of a subclass must be usable anywhere an object of its superclass is expected, without breaking the program. An overriding method violates it when it changes what the parent method promised: for example by demanding more from its inputs, guaranteeing less in its result, throwing new exceptions or doing less than the parent. Code written against the superclass then behaves incorrectly when it is handed the subclass, even though the types still match.",
   "key_points": [
    {
-    "point": "The Liskov Substitution Principle requires that derived types must be completely substitutable for their base types.",
+    "point": "A subclass object must be usable wherever the superclass is expected.",
     "quote": "Let S be a subtype of T, then for each object o1 of type S there is an object o2 of type T such that for all programs P defined in terms of T, the behaviour of P is unchanged when o1 is substituted for o2.",
     "followup": "What happens if a subclass changes the behavior of a method in a way that breaks the expectations of the superclass?",
     "followup_answer": "It can cause incorrect behavior in programs that rely on the superclass's behavior, violating the Liskov Substitution Principle.",
-    "variants": [
-     "lisk, if subclass breaks superclass method, it's a violation",
-     "you can't replace superclass with subclass if method behavior changes"
-    ],
     "followup_replies": [
      "it breaks the program",
      "program breaks",
@@ -2629,18 +2614,10 @@
     ]
    },
    {
-    "point": "A child class should never change the characteristics of its parent class.",
+    "point": "An overriding method in the child class must not change the characteristics the parent promises.",
     "quote": "A child class should never change the characteristics of its parent class.",
     "followup": "Why would changing the characteristics of a parent class be problematic in an inheritance hierarchy?",
     "followup_answer": "Because it breaks the expectations of programs that rely on the parent class's behavior, making substitution impossible without introducing errors.",
-    "variants": [
-     "changing parent class behavior breaks what programs expect",
-     "child can't change parent's behavior or it breaks things",
-     "parent's behavior is expected, child can't change it",
-     "if child changes parent's behavior, it's a problem",
-     "parent's characteristics can't be altered by child",
-     "child shouldn't change parent's behavior or it breaks substitution"
-    ],
     "followup_replies": [
      "it breaks expectations",
      "expectations are broken",
@@ -2650,18 +2627,10 @@
     ]
    },
    {
-    "point": "Derived classes should never do less than their base class.",
+    "point": "A subclass must not do less than its parent class.",
     "quote": "Derived classes should never do less than their base class.",
     "followup": "What does it mean for a derived class to 'do less than' its base class?",
     "followup_answer": "It means the derived class fails to provide the full functionality expected from the base class, which can break the substitutability required by the Liskov Substitution Principle.",
-    "variants": [
-     "derived class must do at least what base class does",
-     "base class functionality must be fully provided by derived",
-     "derived class can't do less than base class",
-     "if derived class does less, it breaks substitutability",
-     "derived class must match base class behavior",
-     "derived class can't skip base class features"
-    ],
     "followup_replies": [
      "it breaks substitutability",
      "substitutability fails",
@@ -2704,9 +2673,12 @@
    "stated_by_bank": 0.271
   },
   "quality_score": 7,
-  "quality_note": "fine",
+  "quality_note": "fine; reference answer and key points reworded (repair 1)",
   "curated": true,
-  "interview_priority": 3
+  "interview_priority": 3,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "ooad.factory_pattern.medium1",
@@ -3255,21 +3227,13 @@
   "topic_coverage": "good",
   "question": "Explain what the Builder pattern is, and why it is useful in object-oriented design.",
   "difficulty": "easy",
-  "reference_answer": "The Builder pattern is a creational design pattern that deals with the construction of complex objects. It separates the instantiation process from the object's representation, allowing for the creation of different representations of the same object. This pattern is useful because it simplifies the creation of complex objects by encapsulating the construction process in a separate builder object, making the code more readable and maintainable.",
+  "reference_answer": "The Builder pattern is a creational pattern for constructing complex objects. Instead of one constructor with many parameters, a separate builder object constructs the object step by step, and the finished object is returned at the end. Because the construction process is separated from the object's representation, the same construction process can create different representations of the object by using different builders. It makes the creation of objects with many optional parts readable and less error-prone.",
   "key_points": [
    {
-    "point": "The Builder pattern is a creational design pattern that deals with the construction of complex objects.",
+    "point": "The Builder pattern is a creational pattern for constructing complex objects.",
     "quote": "The Builder Design Pattern is another creational pattern designed to deal with the construction of comparatively complex objects.",
     "followup": "What is the main purpose of the Builder pattern?",
     "followup_answer": "The main purpose is to deal with the construction of complex objects by separating the instantiation process from the object's representation.",
-    "variants": [
-     "the builder pattern handles creating complex objects",
-     "it's a creational pattern for building complex objects",
-     "the builder pattern is used when you need to build complex objects",
-     "the main job of the builder is to create complex objects",
-     "the builder pattern is for constructing complicated objects",
-     "it's a way to build complex objects in OOP"
-    ],
     "followup_replies": [
      "to build complex objects",
      "to separate construction from representation",
@@ -3279,16 +3243,10 @@
     ]
    },
    {
-    "point": "The Builder pattern separates the instantiation process from the object's representation.",
+    "point": "A separate builder object constructs the object step by step.",
     "quote": "The Builder pattern can separate out the instantiation process by using another object (a builder) to construct the object.",
     "followup": "Why would you want to separate the instantiation process from the object's representation?",
     "followup_answer": "Separating the process makes the code more readable, maintainable, and allows for different representations of the same object to be created easily.",
-    "variants": [
-     "the builder separates how you make an object from what the object is",
-     "it keeps the building process apart from the object's structure",
-     "the builder pattern decouples construction from the object's design",
-     "you can build an object without knowing its internal structure"
-    ],
     "followup_replies": [
      "to make code easier to read and maintain",
      "because it keeps the code organized",
@@ -3298,18 +3256,10 @@
     ]
    },
    {
-    "point": "The Builder pattern allows for the creation of different representations of the same object.",
+    "point": "The same construction process can create different representations of the object.",
     "quote": "A class (the same construction process) can delegate to different Builder objects to create different representations of a complex object.",
     "followup": "How does the Builder pattern support creating different representations of an object?",
     "followup_answer": "By delegating the construction process to different Builder objects, the same class can create various representations of a complex object.",
-    "variants": [
-     "the builder lets you make different versions of the same object",
-     "it allows for multiple representations of one object",
-     "the builder can create various forms of the same class",
-     "you can build different object states with the same class",
-     "the builder supports multiple object configurations",
-     "it enables building different object variants"
-    ],
     "followup_replies": [
      "by using different builder classes",
      "through separate builder implementations",
@@ -3352,9 +3302,12 @@
    "stated_by_bank": 0.998
   },
   "quality_score": 8,
-  "quality_note": "good",
+  "quality_note": "good; generic key points made specific (they credited unrelated answers) (repair 3)",
   "curated": true,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "repairs": [
+   "batch3_2026-10-03"
+  ]
  },
  {
   "id": "ooad.facade_and_proxy_patterns.easy1",
@@ -3366,21 +3319,13 @@
   "topic_coverage": "good",
   "question": "Explain what the Proxy Design Pattern is and one of its main purposes.",
   "difficulty": "easy",
-  "reference_answer": "The Proxy Design Pattern is a pattern where a proxy object provides a surrogate or placeholder for another object to control access to it. One of its main purposes is to allow a class to represent the functionality of another class, enabling controlled access to the original object.",
+  "reference_answer": "The Proxy pattern puts a placeholder object in front of another object: the proxy stands in for the real object and the client uses it through the same interface as the real object. Its main purpose is to control access to the real object, so it can do something before or after passing a request on, for example checking permissions, caching results or creating an expensive object only when it is first needed.",
   "key_points": [
    {
-    "point": "The proxy object acts as a surrogate or placeholder for another object.",
+    "point": "A proxy is a placeholder object that stands in for another object.",
     "quote": "A proxy object provide a surrogate or placeholder for another object to control access to it.",
     "followup": "What is the role of the proxy in relation to the original object?",
     "followup_answer": "The proxy controls access to the original object, allowing actions to be performed before or after the request gets through to the original object.",
-    "variants": [
-     "the proxy stands in for another object",
-     "it's a stand-in for the real object",
-     "the proxy acts as a substitute for the actual object",
-     "the proxy is like a placeholder for the real object",
-     "the proxy is a surrogate for the original object",
-     "the proxy represents the real object in its place"
-    ],
     "followup_replies": [
      "it controls access",
      "to manage how it's used",
@@ -3390,17 +3335,10 @@
     ]
    },
    {
-    "point": "The proxy controls access to the original object.",
+    "point": "The proxy controls access to the real object.",
     "quote": "A proxy controls access to the original object, allowing you to perform something either before or after the request gets through to the original object.",
     "followup": "Why would you want to control access to the original object?",
     "followup_answer": "To implement features like lazy loading, access control, or to add additional behavior without modifying the original object.",
-    "variants": [
-     "the proxy manages how the object is accessed",
-     "it controls when and how the object is used",
-     "the proxy regulates access to the object",
-     "the proxy acts as a gatekeeper for the object",
-     "the proxy handles access to the original object"
-    ],
     "followup_replies": [
      "to add features like lazy loading",
      "for access control",
@@ -3410,18 +3348,10 @@
     ]
    },
    {
-    "point": "The proxy allows a class to represent the functionality of another class.",
+    "point": "The client uses the proxy through the same interface as the real object.",
     "quote": "Using the proxy pattern, a class represents the functionality of another class.",
     "followup": "How does this help in software design?",
     "followup_answer": "It allows for abstraction and decoupling, making the system more flexible and easier to maintain.",
-    "variants": [
-     "the proxy lets one class represent another",
-     "it allows a class to act like another class",
-     "the proxy represents the functionality of another class",
-     "it acts as a stand-in for another class",
-     "the proxy mimics the behavior of another class",
-     "it allows one class to represent another"
-    ],
     "followup_replies": [
      "it makes the system more flexible",
      "it helps with abstraction",
@@ -3470,9 +3400,12 @@
    "stated_by_bank": 0.994
   },
   "quality_score": 8,
-  "quality_note": "good",
+  "quality_note": "good; generic key points made specific (they credited unrelated answers) (repair 3)",
   "curated": true,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "repairs": [
+   "batch3_2026-10-03"
+  ]
  },
  {
   "id": "ooad.this_and_super_keywords.medium1",
@@ -3811,14 +3744,10 @@
   "reference_answer": "The Adapter pattern enables incompatible classes to work together by converting the interface of a class into another interface that a client wants. This is achieved by implementing the target interface and wrapping the adaptee's functionality. It is considered a structural design pattern because it focuses on how classes and objects are composed to form larger structures, rather than on algorithms or data flow.",
   "key_points": [
    {
-    "point": "The Adapter pattern allows two or more previously incompatible objects to interact.",
+    "point": "An adapter lets incompatible classes work together.",
     "quote": "Adapter lets classes work together that couldn't otherwise because of incompatible interfaces.",
     "followup": "What is the main purpose of the Adapter pattern in terms of class interaction?",
     "followup_answer": "The main purpose is to enable previously incompatible classes to work together by adapting their interfaces.",
-    "variants": [
-     "adapter makes sure different classes can talk to each other",
-     "it bridges the gap between incompatible interfaces"
-    ],
     "followup_replies": [
      "so they can work together",
      "to make them compatible",
@@ -3828,17 +3757,10 @@
     ]
    },
    {
-    "point": "The Adapter pattern is a structural design pattern.",
+    "point": "Adapter is a structural design pattern.",
     "quote": "The Adapter Pattern is also known as Wrapper. Adapter is a structural design pattern that",
     "followup": "Why is the Adapter pattern classified as a structural design pattern?",
     "followup_answer": "It is classified as a structural design pattern because it focuses on how classes and objects are composed to form larger structures.",
-    "variants": [
-     "adapter is a structural pattern because it focuses on composition",
-     "it's structural since it's about how classes are put together",
-     "structural because it's about how objects are connected",
-     "adapter is structural, not behavioral",
-     "it's a structural pattern because it's about class composition"
-    ],
     "followup_replies": [
      "because it's about composition",
      "it's about how classes are structured",
@@ -3848,18 +3770,10 @@
     ]
    },
    {
-    "point": "The Adapter pattern provides the interface according to client requirements.",
+    "point": "It converts the interface of a class into the interface the client expects.",
     "quote": "Adapter Pattern says that 'convert the interface of a class into another interface that a client wants'.",
     "followup": "How does the Adapter pattern ensure that the client's needs are met?",
     "followup_answer": "The Adapter pattern ensures that the client's needs are met by converting the interface of a class into one that matches the client's expected interface.",
-    "variants": [
-     "adapter matches the client's interface to the adaptee",
-     "it changes the interface to fit the client's needs",
-     "adapter ensures the client gets the right interface",
-     "it adapts the class to the client's expectations",
-     "adapter provides the interface the client wants",
-     "adapter translates the adaptee's interface to the client's"
-    ],
     "followup_replies": [
      "by matching the client's interface",
      "it changes the interface to fit the client",
@@ -3906,9 +3820,12 @@
    "stated_by_bank": 0.002
   },
   "quality_score": 8,
-  "quality_note": "good",
+  "quality_note": "good; key points shortened (repair 3)",
   "curated": true,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "repairs": [
+   "batch3_2026-10-03"
+  ]
  },
  {
   "id": "ooad.information_expert.medium1",
@@ -4053,15 +3970,10 @@
   "reference_answer": "Hybrid inheritance combines two or more types of inheritance, such as hierarchical and multiple inheritance. Java does not support multiple inheritance via classes, so it uses interfaces to achieve hybrid structures. This allows for more flexible and complex class hierarchies while avoiding the limitations of class-based multiple inheritance.",
   "key_points": [
    {
-    "point": "Hybrid inheritance combines two or more types of inheritance.",
+    "point": "Hybrid inheritance combines two or more types of inheritance in one hierarchy.",
     "quote": "Two or more types of inheritance—such as single, multiple, multilevel, or hierarchical—are combined to create a complex class hierarchy",
     "followup": "Why would you need more than one type of inheritance in a class hierarchy?",
     "followup_answer": "To model complex relationships between classes, such as when a class needs to inherit from multiple parents or build upon multiple levels of inheritance.",
-    "variants": [
-     "you need multiple inheritance types for complex class hierarchies",
-     "mixing different inheritance types makes hybrid inheritance",
-     "combining hierarchical and multiple inheritance is hybrid"
-    ],
     "followup_replies": [
      "to model complex relationships",
      "because classes need to inherit from multiple parents",
@@ -4071,17 +3983,10 @@
     ]
    },
    {
-    "point": "Hybrid inheritance typically merges hierarchical and multiple inheritance.",
+    "point": "It often mixes hierarchical and multiple inheritance.",
     "quote": "It typically merges patterns like hierarchical and multiple inheritance or single and multilevel inheritance.",
     "followup": "What is the difference between hierarchical and multiple inheritance?",
     "followup_answer": "Hierarchical inheritance involves one parent class with multiple child classes, while multiple inheritance involves a child class inheriting from multiple parent classes.",
-    "variants": [
-     "hybrid inheritance mixes hierarchical and multiple",
-     "it combines hierarchical with multiple inheritance",
-     "hierarchical and multiple are the main types in hybrid",
-     "hybrid is when you have both types of inheritance",
-     "hybrid combines hierarchical and multiple inheritance"
-    ],
     "followup_replies": [
      "hierarchical has one parent with many children",
      "multiple has one child with many parents",
@@ -4090,13 +3995,10 @@
     ]
    },
    {
-    "point": "Java uses interfaces to support hybrid inheritance.",
+    "point": "Java does not allow multiple inheritance of classes, so it uses interfaces for hybrid inheritance.",
     "quote": "Java does not support multiple inheritance via classes; must use interfaces to achieve hybrid structures.",
     "followup": "Why can't Java support multiple inheritance via classes?",
     "followup_answer": "Because multiple inheritance via classes can lead to ambiguity in method resolution, which Java avoids by using interfaces instead.",
-    "variants": [
-     "java needs interfaces for hybrid structures"
-    ],
     "followup_replies": [
      "method resolution ambiguity",
      "it causes conflicts in method resolution",
@@ -4140,10 +4042,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.02
   },
-  "quality_score": 6,
-  "quality_note": "ok",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "key points reworded (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "ooad.interface_segregation_principle.medium2",
@@ -4158,17 +4063,10 @@
   "reference_answer": "The Interface Segregation Principle helps avoid unnecessary dependencies by ensuring that clients are not forced to implement methods they do not use. This is because it encourages the creation of smaller, more specific interfaces tailored to individual clients. By breaking down a fat interface into leaner, role-based interfaces, the principle reduces the burden on implementing classes to define unused methods. This leads to more flexible and maintainable code. As a result, clients only depend on the methods they actually need, which improves design clarity and reduces potential errors.",
   "key_points": [
    {
-    "point": "Clients are not forced to implement methods they do not use.",
+    "point": "Clients should not be forced to implement methods they do not use.",
     "quote": "Clients should not be forced to implement a function they do not need.",
     "followup": "What happens if a client is required to implement a method it doesn't use?",
     "followup_answer": "It creates unnecessary dependencies and may lead to code that is harder to maintain and more error-prone.",
-    "variants": [
-     "clients don't have to implement methods they don't need.",
-     "clients aren't forced to use methods they don't care about.",
-     "interfaces are split so clients only get what they need.",
-     "isp stops clients from having to write code for unused methods.",
-     "clients only implement the methods that are relevant to them."
-    ],
     "followup_replies": [
      "unnecessary complexity",
      "harder to maintain",
@@ -4178,16 +4076,10 @@
     ]
    },
    {
-    "point": "ISP encourages the creation of smaller, more specific interfaces.",
+    "point": "Large interfaces should be split into small, client-specific ones.",
     "quote": "Make fine grained interfaces that are client-specific.",
     "followup": "Why would you prefer a small, client-specific interface over a large general-purpose one?",
     "followup_answer": "Because a small interface is more focused and reduces the need for clients to implement unused methods, improving clarity and flexibility.",
-    "variants": [
-     "interfaces are made smaller and more specific to each client.",
-     "isp creates interfaces tailored to individual clients.",
-     "interfaces are split into smaller, focused ones.",
-     "interfaces are designed to match client needs exactly."
-    ],
     "followup_replies": [
      "it's more focused",
      "reduces unused methods",
@@ -4197,17 +4089,10 @@
     ]
    },
    {
-    "point": "ISP reduces the burden on implementing classes to define unused methods.",
+    "point": "Otherwise classes depend on, and must define, methods they do not need.",
     "quote": "Failure to comply with this principle means that in our implementations we will have dependencies on methods that we do not need but that we are obliged to define.",
     "followup": "What is the consequence of having to define methods you don't need?",
     "followup_answer": "It introduces unnecessary complexity and can lead to code that is harder to understand and maintain.",
-    "variants": [
-     "implementing classes don't have to define methods they don't use.",
-     "classes aren't forced to write code for unused methods.",
-     "classes only need to implement what they actually use.",
-     "implementing classes avoid writing unused code.",
-     "classes are lighter because they don't have to define unused methods."
-    ],
     "followup_replies": [
      "code becomes harder to understand",
      "increases complexity",
@@ -4248,10 +4133,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.99
   },
-  "quality_score": 6,
-  "quality_note": "overlaps the easy ISP question",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "overlaps the easy ISP question; key points reworded (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "ooad.interfaces.medium2",
@@ -4348,7 +4236,7 @@
    "grounding": 0.75,
    "coverage": 1.0
   },
-  "active": true,
+  "active": false,
   "core_point": {
    "point": "Interfaces in Java support multiple inheritance through method signatures without implementation, allowing a class to implement multiple interfaces.",
    "variants": [
@@ -4360,9 +4248,12 @@
    "stated_by_bank": 0.02
   },
   "quality_score": 5,
-  "quality_note": "provided/required interface is UML-component trivia",
+  "quality_note": "deactivated (repair 2): the provided/required interface part is UML-component trivia, and multiple inheritance through interfaces is covered by ooad.interfaces.easy1",
   "curated": false,
-  "interview_priority": 3
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "ooad.abstraction_vs_encapsulation.easy1",
@@ -4374,21 +4265,13 @@
   "topic_coverage": "good",
   "question": "What is the difference between abstraction and encapsulation in object-oriented programming?",
   "difficulty": "easy",
-  "reference_answer": "Abstraction and encapsulation are both fundamental concepts in object-oriented programming, but they serve different purposes. Abstraction focuses on hiding complex implementation details and exposing only the necessary features of an object, as described by 'Provides higher-level abstraction by allowing the creation of abstract classes and interfaces.' Encapsulation, on the other hand, is about bundling data and methods into a single unit and restricting direct access to an object's internal state, as stated by 'The wrapping up of data and functions into a single unit is known as encapsulation.' While abstraction is about simplifying complexity, encapsulation is about controlling access to data.",
+  "reference_answer": "Abstraction means showing only the essential features of an object and hiding the background details, so you use something through what it does rather than how it does it; in Java it is achieved with interfaces and abstract classes. Encapsulation means bundling the data and the methods that work on it into one unit, a class, and hiding the data so that outside code can reach it only through those methods, for example private fields with getters and setters. Abstraction is about hiding complexity at the design level, while encapsulation is about protecting the internal state.",
   "key_points": [
    {
-    "point": "Encapsulation bundles data and methods into a single unit.",
+    "point": "Encapsulation bundles data and the methods that use it into one unit, a class.",
     "quote": "The wrapping up of data and functions into a single unit is known as encapsulation.",
     "followup": "Why would you want to bundle data and methods together?",
     "followup_answer": "To control access to the data and provide a clear interface for interacting with the object.",
-    "variants": [
-     "encapsulation groups data and functions together in a class.",
-     "you bundle data and methods into a single unit with encapsulation.",
-     "encapsulation is when you wrap data and functions in a class.",
-     "data and methods are combined in a single unit through encapsulation.",
-     "encapsulation bundles data and methods into one class.",
-     "you put data and functions together in a class using encapsulation."
-    ],
     "followup_replies": [
      "to control access",
      "protect data",
@@ -4398,18 +4281,10 @@
     ]
    },
    {
-    "point": "Encapsulation restricts direct access to an object's internal state.",
+    "point": "Encapsulation hides the internal data so outside code can reach it only through methods.",
     "quote": "The data is not accessible to the outside world, only those functions which are wrapped in can access it.",
     "followup": "What is the benefit of not allowing direct access to data?",
     "followup_answer": "It protects the integrity of the data and allows for more flexible and secure design of the system.",
-    "variants": [
-     "encapsulation limits direct access to an object's data.",
-     "you restrict direct access to data with encapsulation.",
-     "encapsulation hides the internal data from direct access.",
-     "data is protected from direct access through encapsulation.",
-     "encapsulation prevents direct modification of internal data.",
-     "encapsulation stops direct access to the object's state."
-    ],
     "followup_replies": [
      "protects data integrity",
      "enables secure design",
@@ -4417,6 +4292,12 @@
      "makes data safer",
      "supports flexible design"
     ]
+   },
+   {
+    "point": "Abstraction shows only the essential features of an object and hides the background details.",
+    "quote": "Abstraction refers to the act of representing essential features without including the background details or explanations.",
+    "followup": "Can you give an example of abstraction?",
+    "followup_answer": "Driving a car through the steering wheel and pedals without knowing how the engine works; in Java, using an interface or abstract class without knowing the implementation."
    }
   ],
   "source_pages": [
@@ -4455,10 +4336,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.996
   },
-  "quality_score": 5,
-  "quality_note": "key points cover only encapsulation",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 8,
+  "quality_note": "abstraction was missing from the key points; added (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "ooad.classes_and_objects.hard2",
@@ -4469,21 +4353,14 @@
   "priority": "high",
   "topic_coverage": "good",
   "question": "How does the concept of a class as a blueprint influence the creation and behavior of objects in Java, and what role does the Object class play in this context?",
-  "difficulty": "hard",
+  "difficulty": "medium",
   "reference_answer": "A class serves as a blueprint that defines the structure and behavior of objects, which are instances of that class. The Object class, being the root of the class hierarchy, ensures that all objects in Java inherit common methods like equals(), hashCode(), and toString(). This inheritance allows for a consistent interface across all objects, enabling polymorphism and uniform handling of objects through a reference of type Object.",
   "key_points": [
    {
-    "point": "A class is a blueprint that defines the structure and behavior of objects.",
+    "point": "A class is a blueprint; objects are instances created from it, each with its own state.",
     "quote": "A class is a description of a set of objects that share the same attributes, operations, relationships and semantics.",
     "followup": "What happens if two objects have different attributes but are based on the same class?",
     "followup_answer": "They would still share the same structure and behavior defined by the class, but can have different state values.",
-    "variants": [
-     "a class is like a blueprint that tells you how to make objects",
-     "classes define what objects can do and what they look like",
-     "the blueprint of a class determines the structure and behavior of objects",
-     "a class is the template that objects are built from",
-     "the class blueprint sets the rules for how objects behave"
-    ],
     "followup_replies": [
      "they share the same structure and behavior",
      "same structure, different state",
@@ -4493,18 +4370,10 @@
     ]
    },
    {
-    "point": "The Object class provides a common interface for all objects in Java.",
+    "point": "Every Java class directly or indirectly extends Object, the root of the class hierarchy.",
     "quote": "Class Object is the root of the class hierarchy. Every class has Object as a superclass.",
     "followup": "Why would you want to use a reference variable of type Object to refer to any object?",
     "followup_answer": "Because it allows for polymorphism, enabling a single reference to handle objects of different types that share a common superclass.",
-    "variants": [
-     "the object class is the base for all java objects",
-     "every object in java inherits from the object class",
-     "object is the root of the class hierarchy",
-     "all objects have the same methods because of object",
-     "object provides common methods for all objects",
-     "object is the parent of every class in java"
-    ],
     "followup_replies": [
      "it allows for polymorphism",
      "it lets you use a single reference for any object",
@@ -4514,18 +4383,10 @@
     ]
    },
    {
-    "point": "Inheritance from Object ensures all objects have basic functionality.",
+    "point": "So every object inherits methods such as equals(), hashCode() and toString() from Object.",
     "quote": "All objects, including arrays, implement the methods of this class.",
     "followup": "What would happen if a class did not inherit from Object?",
     "followup_answer": "It would not have access to the fundamental methods like equals() and hashCode(), which are essential for object comparison and hashing.",
-    "variants": [
-     "inheriting from object gives objects basic functionality",
-     "all objects get methods like equals and hashcode from object",
-     "object provides essential methods for all objects",
-     "without object, objects would lack basic methods",
-     "object is the foundation for all object behavior",
-     "inheriting from object ensures common methods"
-    ],
     "followup_replies": [
      "it loses essential methods",
      "no equals or hashcode",
@@ -4573,10 +4434,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.997
   },
-  "quality_score": 5,
-  "quality_note": "vague",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "vague key points made concrete; difficulty corrected to medium (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "ooad.dependency_inversion_principle.medium1",

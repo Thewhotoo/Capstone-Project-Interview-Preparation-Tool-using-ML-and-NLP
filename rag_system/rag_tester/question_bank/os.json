@@ -569,21 +569,13 @@
   "topic_coverage": "good",
   "question": "Explain how context switching affects the performance of a process in a round-robin scheduling system, and why the choice of time quantum is important.",
   "difficulty": "medium",
-  "reference_answer": "Context switching introduces overhead that can slow down process execution, especially when the time quantum is small. A smaller quantum leads to more frequent context switches, which increases the total execution time. However, a larger quantum may reduce context switches but could lead to longer waiting times for processes. The choice of time quantum is a trade-off between minimizing context-switch overhead and ensuring fair CPU allocation among processes.",
+  "reference_answer": "In round-robin scheduling every quantum ends with a context switch, which is pure overhead: the CPU saves one process's state and loads another's instead of doing useful work. A smaller time quantum causes more context switches, so more time is lost to overhead, while a very large quantum makes round robin behave like first-come first-served and hurts response time. In modern systems a context switch takes far less time than one quantum (microseconds versus milliseconds), so a reasonable quantum keeps the overhead small. A context switch is much more costly if processes must be swapped in and out of memory.",
   "key_points": [
    {
-    "point": "The time quantum directly influences the number of context switches.",
+    "point": "A smaller time quantum causes more context switches.",
     "quote": "If the quantum is 6 time units, the process requires 2 quanta, resulting in one context switch.",
     "followup": "What happens if the quantum is reduced further?",
     "followup_answer": "The number of context switches increases, which can slow down the overall execution of the process.",
-    "variants": [
-     "a smaller time quantum means more context switches.",
-     "the time quantum controls how often context switches happen.",
-     "when the quantum is small, the process gets switched out more often.",
-     "the number of context switches depends on the time quantum size.",
-     "smaller quanta lead to more frequent context switches.",
-     "the time quantum directly affects how often processes are switched."
-    ],
     "followup_replies": [
      "more context switches",
      "it increases context switches",
@@ -593,18 +585,10 @@
     ]
    },
    {
-    "point": "Context switch time is a small fraction of the time quantum in modern systems.",
+    "point": "A context switch normally takes far less time than one quantum.",
     "quote": "The time required for a context switch is typically less than 10 microseconds. Thus, the context-switch time is a small fraction of the time quantum.",
     "followup": "Why is it important that context-switch time is small relative to the quantum?",
     "followup_answer": "Because a larger fraction of the quantum would be spent on context switching, reducing the effective CPU time available for the process.",
-    "variants": [
-     "context switch time is much smaller than the time quantum.",
-     "the quantum is much bigger than the context switch time.",
-     "most of the quantum is used for actual process execution.",
-     "context switch time is a small part of the quantum.",
-     "the quantum is large enough to minimize context switch impact.",
-     "context switching takes a tiny fraction of the quantum."
-    ],
     "followup_replies": [
      "it leaves more time for the process to run",
      "more CPU time is available",
@@ -614,18 +598,10 @@
     ]
    },
    {
-    "point": "Context switching can be costly if it involves swapping processes in and out of memory.",
+    "point": "A context switch is much more costly if processes must be swapped in and out of memory.",
     "quote": "If next processes to be put on CPU is not in memory, need to swap out a process and swap in target process.",
     "followup": "What could make a context switch particularly expensive?",
     "followup_answer": "If the process being switched in or out is large, or if swapping is required, the context switch can take significantly longer.",
-    "variants": [
-     "context switching can be expensive if memory is involved.",
-     "swapping processes in and out is costly.",
-     "context switching can involve memory swapping.",
-     "if memory is swapped, context switching is more expensive.",
-     "context switches can be costly if memory is used.",
-     "memory swapping during context switch increases cost."
-    ],
     "followup_replies": [
      "if the process is large",
      "if swapping is needed",
@@ -673,9 +649,12 @@
    "stated_by_bank": 0.004
   },
   "quality_score": 8,
-  "quality_note": "good",
+  "quality_note": "good; reference now states every key point (repair 3)",
   "curated": true,
-  "interview_priority": 3
+  "interview_priority": 3,
+  "repairs": [
+   "batch3_2026-10-03"
+  ]
  },
  {
   "id": "os.fragmentation.medium2",
@@ -888,20 +867,13 @@
   "topic_coverage": "good",
   "question": "Explain what the producer-consumer problem is, and why it is important in operating systems.",
   "difficulty": "easy",
-  "reference_answer": "The producer-consumer problem is a paradigm for cooperating processes where a producer process generates data and a consumer process uses that data. It is important in operating systems because it models real-world scenarios where data production and consumption happen at different rates, requiring synchronization to prevent data corruption and resource starvation.",
+  "reference_answer": "In the producer-consumer problem a producer process puts items into a shared, bounded buffer and a consumer process takes them out; it is the standard example of cooperating processes. They must be synchronized: the producer has to wait when the buffer is full, the consumer has to wait when it is empty, and only one of them may change the buffer at a time. It is usually solved with semaphores: mutex for exclusive access to the buffer, full to count filled slots and empty to count free slots. It matters because many parts of an operating system, such as I/O buffers, pipes and print spooling, follow this pattern, and without synchronization data is lost or corrupted.",
   "key_points": [
    {
-    "point": "The producer-consumer problem is a paradigm for cooperating processes.",
+    "point": "A producer process produces data that a consumer process consumes, through a shared buffer.",
     "quote": "Paradigm for cooperating processes, producer process produces information that is consumed by a consumer process",
     "followup": "What is the main purpose of having a producer and a consumer in this model?",
     "followup_answer": "The main purpose is to model situations where data is produced at one rate and consumed at another, requiring coordination to avoid data loss or buffer overflow.",
-    "variants": [
-     "the producer-consumer problem is about processes working together to share data",
-     "it's a model where one process makes data and another uses it",
-     "this problem shows how processes can cooperate by producing and consuming data",
-     "the main idea is that producers and consumers work in sync to manage data flow",
-     "the problem is about coordinating producers and consumers to avoid issues"
-    ],
     "followup_replies": [
      "to coordinate data flow",
      "to manage data production and consumption",
@@ -911,18 +883,10 @@
     ]
    },
    {
-    "point": "The problem highlights the need for synchronization mechanisms such as semaphores.",
+    "point": "The producer and consumer must be synchronized, for example with semaphores.",
     "quote": "Semaphore mutex initialized to the value 1; Semaphore full initialized to the value 0; Semaphore empty initialized to the value n",
     "followup": "What role does the 'mutex' semaphore play in this problem?",
     "followup_answer": "The 'mutex' semaphore ensures mutual exclusion when accessing the shared buffer, preventing race conditions.",
-    "variants": [
-     "the problem shows why we need things like semaphores to control access",
-     "it's a reason for using synchronization tools like semaphores",
-     "semaphores are used to manage access to shared resources in this problem",
-     "this problem requires mechanisms like semaphores to prevent race conditions",
-     "the need for semaphores comes from the producer-consumer problem",
-     "semaphores help in managing the shared buffer in this scenario"
-    ],
     "followup_replies": [
      "to protect the shared buffer",
      "to prevent race conditions",
@@ -964,9 +928,12 @@
    "stated_by_bank": 0.0
   },
   "quality_score": 8,
-  "quality_note": "good",
+  "quality_note": "good; semaphores added to the reference (repair 3)",
   "curated": true,
-  "interview_priority": 3
+  "interview_priority": 3,
+  "repairs": [
+   "batch3_2026-10-03"
+  ]
  },
  {
   "id": "os.semaphores.hard2",
@@ -1633,20 +1600,13 @@
   "topic_coverage": "good",
   "question": "Explain how contiguous memory allocation strategies like first-fit, best-fit, and worst-fit impact memory fragmentation and efficiency, and why some are preferred over others.",
   "difficulty": "medium",
-  "reference_answer": "Contiguous memory allocation strategies impact fragmentation and efficiency differently. First-fit is generally faster and better than worst-fit in terms of storage utilization. Best-fit minimizes leftover space but requires searching the entire list, which can be slower. Worst-fit, while producing the largest leftover hole, is less efficient in memory usage. External fragmentation is a concern in all strategies, but compaction can help reduce it if relocation is dynamic.",
+  "reference_answer": "First-fit takes the first hole that is big enough, so it can stop searching early and is fast. Best-fit takes the smallest hole that fits, which leaves the smallest leftover piece, but it must search the whole list unless the list is sorted by size. Worst-fit takes the largest hole, leaving the largest leftover piece; it also searches the whole list. In practice first-fit and best-fit are better than worst-fit in both speed and memory use. All three suffer from external fragmentation, which compaction can reduce if relocation is dynamic.",
   "key_points": [
    {
-    "point": "First-fit is generally faster and better than worst-fit in terms of storage utilization.",
+    "point": "First-fit and best-fit are better than worst-fit in speed and memory use.",
     "quote": "First-fit and best-fit better than worst-fit in terms of speed and storage utilization",
     "followup": "Why might first-fit be considered better than worst-fit in terms of storage utilization?",
-    "followup_answer": "Because first-fit allocates the first suitable block, leaving larger holes for future allocations, which improves overall memory utilization.",
-    "variants": [
-     "first-fit is faster and uses memory better than worst-fit",
-     "first-fit is more efficient than worst-fit because it doesn't waste as much space",
-     "first-fit works better than worst-fit because it finds the first hole that fits",
-     "first-fit is more storage-efficient than worst-fit",
-     "first-fit is better for memory utilization than worst-fit"
-    ],
+    "followup_answer": "Worst-fit keeps breaking up the largest holes, so later large requests may not fit anywhere, while first-fit is faster and tends to leave usable holes.",
     "followup_replies": [
      "leaves bigger holes",
      "first available hole",
@@ -1656,18 +1616,10 @@
     ]
    },
    {
-    "point": "Best-fit minimizes leftover space but requires searching the entire list, which can be slower.",
+    "point": "Best-fit picks the smallest hole that fits but must search the whole list.",
     "quote": "Best-fit: Allocate the smallest hole that is big enough; must search entire list, unless ordered by size",
     "followup": "What is a potential downside of using best-fit in contiguous memory allocation?",
     "followup_answer": "Best-fit can be slower because it requires searching the entire list of free holes to find the smallest suitable one.",
-    "variants": [
-     "best-fit uses the smallest hole, but it's slower",
-     "best-fit finds the perfect fit, but takes longer",
-     "best-fit minimizes leftover space but requires checking all holes",
-     "best-fit is slower because it searches the whole list",
-     "best-fit uses the smallest hole, which is efficient but slow",
-     "best-fit is efficient but takes more time"
-    ],
     "followup_replies": [
      "slower because it checks all holes",
      "it searches the whole list",
@@ -1677,18 +1629,10 @@
     ]
    },
    {
-    "point": "Worst-fit produces the largest leftover hole, which is less efficient in memory usage.",
+    "point": "Worst-fit picks the largest hole and leaves the largest leftover.",
     "quote": "Worst-fit: Allocate the largest hole; must also search entire list - Produces the largest leftover hole",
     "followup": "Why is worst-fit considered less efficient in terms of memory usage?",
     "followup_answer": "Because worst-fit leaves the largest possible unused space, which may not be usable for future allocations, increasing external fragmentation.",
-    "variants": [
-     "worst-fit leaves the biggest hole, which is inefficient",
-     "worst-fit is bad because it wastes more space",
-     "worst-fit creates the largest unused block, which is not good",
-     "worst-fit is less efficient because it leaves big holes",
-     "worst-fit is inefficient since it leaves large unused space",
-     "worst-fit leaves the largest hole, which is worse for memory"
-    ],
     "followup_replies": [
      "leaves large unused space",
      "creates big holes",
@@ -1698,18 +1642,10 @@
     ]
    },
    {
-    "point": "External fragmentation is a concern in all strategies, but compaction can help reduce it if relocation is dynamic.",
+    "point": "External fragmentation can be reduced by compaction.",
     "quote": "Reduce external fragmentation by compaction - Compaction is possible only if relocation is dynamic, and is done at execution time",
     "followup": "What is one way to mitigate external fragmentation in contiguous memory allocation?",
     "followup_answer": "Compaction can be used to shuffle memory contents and consolidate free space into a single block, provided relocation is dynamic.",
-    "variants": [
-     "external fragmentation is a problem in all strategies, but compaction helps",
-     "compaction can reduce external fragmentation if relocation is dynamic",
-     "external fragmentation happens in all strategies, but compaction can fix it",
-     "compaction helps with external fragmentation if relocation is allowed",
-     "external fragmentation is common, but compaction can reduce it",
-     "compaction is a way to handle external fragmentation"
-    ],
     "followup_replies": [
      "compaction",
      "shuffle memory",
@@ -1754,9 +1690,12 @@
    "stated_by_bank": 0.193
   },
   "quality_score": 9,
-  "quality_note": "classic",
+  "quality_note": "classic; reference answer and key points reworded (repair 1)",
   "curated": true,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "os.user_mode_vs_kernel_mode.medium1",
@@ -1972,19 +1911,13 @@
   "topic_coverage": "good",
   "question": "Explain how the operating system handles a page fault and how it manages the page-fault frequency to avoid thrashing.",
   "difficulty": "medium",
-  "reference_answer": "When a page fault occurs, the operating system first checks if the reference is invalid. If not, it finds a free frame, swaps in the required page, updates the page tables, and restarts the instruction. To manage page-fault frequency, the system adjusts the number of frames allocated to a process based on its actual page-fault rate. If the rate is too low, the process loses a frame; if too high, it gains a frame. This helps control thrashing by balancing memory allocation with usage patterns.",
+  "reference_answer": "On a page fault the operating system first checks whether the reference is invalid, in which case the process is aborted, or the page is just not in memory. In that case it finds a free frame, reads the page into it from disk, updates the page table and restarts the instruction. To manage page-fault frequency, the system sets an acceptable fault rate for each process: if a process's fault rate is too high it gains frames, and if it is too low it loses frames. Controlling page-fault frequency this way avoids thrashing, because no process is left with too few frames.",
   "key_points": [
    {
-    "point": "The operating system first checks if the page reference is invalid or not in memory.",
+    "point": "The OS first checks whether the reference is invalid or the page is just not in memory.",
     "quote": "Operating system looks at another table to decide: Invalid reference ⇒abort; Just not in memory",
     "followup": "What happens if the page reference is invalid?",
     "followup_answer": "The operating system aborts the process because the reference is invalid.",
-    "variants": [
-     "the os checks if the page is invalid or not in memory",
-     "when a page fault happens, the os checks if the reference is invalid",
-     "the system determines if the page reference is valid or not",
-     "the os first checks if the page is valid or not"
-    ],
     "followup_replies": [
      "process is aborted",
      "it kills the process",
@@ -1994,18 +1927,10 @@
     ]
    },
    {
-    "point": "The system finds a free frame and swaps the required page into memory.",
+    "point": "It finds a free frame and reads the page into it from disk.",
     "quote": "Find free frame; Swap page into frame via scheduled disk operation",
     "followup": "What happens if there are no free frames available?",
     "followup_answer": "The system may have to evict a page from memory using a page replacement algorithm.",
-    "variants": [
-     "the system finds a free frame and loads the page into memory",
-     "the os swaps the needed page into a free frame",
-     "when there's a free frame, the page is brought into memory",
-     "the system uses a free frame to bring the page in",
-     "the os swaps the required page into a free frame",
-     "the system brings the page into a free frame"
-    ],
     "followup_replies": [
      "it evicts a page using a replacement algorithm",
      "page replacement",
@@ -2015,18 +1940,10 @@
     ]
    },
    {
-    "point": "The system adjusts the number of frames allocated to a process based on its page-fault rate.",
+    "point": "A process gains frames if its page-fault rate is too high and loses frames if it is too low.",
     "quote": "Establish 'acceptable' page-fault frequency (PFF) rate and use local replacement policy; If actual rate too low, process loses frame; If actual rate too high, process gains frame.",
     "followup": "Why would a process lose a frame?",
     "followup_answer": "Because its page-fault rate is too low, indicating it's not using memory efficiently.",
-    "variants": [
-     "the os changes the number of frames based on the page-fault rate",
-     "the system adjusts frames according to how often pages are faulted",
-     "the os reallocates frames depending on the page-fault frequency",
-     "frames are allocated based on the process's page-fault rate",
-     "the system dynamically adjusts frame allocation",
-     "frame count changes with page-fault rate"
-    ],
     "followup_replies": [
      "because it's not using memory well",
      "low usage",
@@ -2036,15 +1953,10 @@
     ]
    },
    {
-    "point": "Managing page-fault frequency helps avoid thrashing.",
+    "point": "Controlling page-fault frequency avoids thrashing.",
     "quote": "With the working-set strategy, we may have to swap out a process. If page fault increases and no free frames available",
     "followup": "What is thrashing and how does page-fault frequency help avoid it?",
     "followup_answer": "Thrashing is when the system spends more time swapping pages than executing instructions. Controlling page-fault frequency helps prevent this by balancing memory allocation.",
-    "variants": [
-     "controlling page-faults stops thrashing",
-     "page-fault management stops thrashing",
-     "page-fault frequency balances memory use"
-    ],
     "followup_replies": [
      "thrashing is when swapping happens too much",
      "it's when the system swaps more than executes",
@@ -2077,9 +1989,12 @@
   },
   "active": true,
   "quality_score": 8,
-  "quality_note": "good",
+  "quality_note": "good; key points shortened, reference aligned (repair 3)",
   "curated": true,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "repairs": [
+   "batch3_2026-10-03"
+  ]
  },
  {
   "id": "os.user_level_vs_kernel_level_threads.medium2",
@@ -2422,18 +2337,10 @@
   "reference_answer": "A wait-for graph is used to detect deadlocks by representing the waiting relationships between processes. The graph is derived from the resource-allocation graph by removing resource nodes and collapsing edges. A deadlock exists if and only if the wait-for graph contains a cycle. This cycle indicates that a set of processes are waiting for each other to release resources, forming a circular dependency. The presence of a cycle is the only condition under which a deadlock can occur in this model.",
   "key_points": [
    {
-    "point": "The wait-for graph is derived from the resource-allocation graph by removing resource nodes and collapsing edges.",
+    "point": "The wait-for graph is the resource-allocation graph without the resource nodes.",
     "quote": "We obtain wait-for graph from the resource-allocation graph by removing the resource nodes and collapsing the appropriate edges.",
     "followup": "Why would you remove resource nodes from the resource-allocation graph?",
     "followup_answer": "Resource nodes are removed to focus on the waiting relationships between processes, which is essential for detecting deadlocks based on circular dependencies.",
-    "variants": [
-     "the wait-for graph is made by taking the resource-allocation graph and removing the resource nodes",
-     "you take the resource-allocation graph and remove the resources to make the wait-for graph",
-     "the wait-for graph is derived by removing resource nodes from the resource-allocation graph",
-     "to create the wait-for graph, you remove the resource nodes from the resource-allocation graph",
-     "the wait-for graph is formed by collapsing the resource nodes and removing them from the resource-allocation graph",
-     "you remove the resource nodes to make the wait, for graph from the resource-allocation graph"
-    ],
     "followup_replies": [
      "to focus on process dependencies",
      "so we can look at process waiting relationships",
@@ -2443,18 +2350,10 @@
     ]
    },
    {
-    "point": "An edge from Pi to Pj in the wait-for graph indicates that Pi is waiting for Pj to release a resource.",
+    "point": "An edge from Pi to Pj means Pi is waiting for Pj to release a resource.",
     "quote": "An edge from Pi to Pj implies that process Pi is waiting for process Pj to release a resource that Pi needs.",
     "followup": "How does this edge represent a deadlock condition?",
     "followup_answer": "This edge represents a direct dependency where Pi is waiting for Pj, and if such edges form a cycle, it indicates that each process in the cycle is waiting for another, creating a deadlock.",
-    "variants": [
-     "an edge from pi to pj means pi is waiting for pj to release a resource",
-     "pi is waiting for pj in the wait-for graph",
-     "the edge shows pi is waiting for pj to free up a resource",
-     "pi is waiting for pj to release something in the wait-for graph",
-     "the edge indicates pi is waiting for pj to give up a resource",
-     "in the wait-for graph, pi is waiting for pj to release a resource"
-    ],
     "followup_replies": [
      "because it creates a cycle that shows mutual waiting",
      "it forms a cycle which means each is waiting for another",
@@ -2462,6 +2361,12 @@
      "it creates a loop that indicates deadlock",
      "the cycle shows a mutual waiting condition"
     ]
+   },
+   {
+    "point": "A cycle in the wait-for graph means there is a deadlock.",
+    "quote": "A deadlock exists in the system if and only if the wait-for graph contains a cycle.",
+    "followup": "What does a cycle in the wait-for graph tell you?",
+    "followup_answer": "That the processes in the cycle are deadlocked: each one waits for a resource held by the next one in the cycle, so none can proceed."
    }
   ],
   "source_pages": [
@@ -2496,9 +2401,12 @@
    "stated_by_bank": 0.995
   },
   "quality_score": 8,
-  "quality_note": "good",
+  "quality_note": "good; key points reworded and the missing core idea (cycle = deadlock) added (repair 1)",
   "curated": true,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "os.multilevel_page_tables.hard2",
@@ -2850,18 +2758,10 @@
   "reference_answer": "The circular wait condition can be prevented by assigning a numerical number to each resource and requiring that processes request resources in increasing order of numbering. This ensures that a cycle of waiting cannot form. By enforcing this ordering, the system can avoid the circular wait condition, which is one of the four necessary conditions for deadlock.",
   "key_points": [
    {
-    "point": "Processes must request resources in increasing order of their assigned numerical numbers.",
+    "point": "Number all resources and make processes request them only in increasing order.",
     "quote": "Each resource will be assigned with a numerical number. A process can request the resources increasing/decreasing order of numbering.",
     "followup": "What happens if a process requests resources in a non-ordered way?",
     "followup_answer": "The system may allow a circular wait, which could lead to a deadlock.",
-    "variants": [
-     "you have to ask for resources in order from lowest to highest number",
-     "processes can only ask for resources in the order they're numbered",
-     "using a numbering system, processes request resources in order",
-     "you assign numbers to resources and request them in order",
-     "resources are numbered and processes ask for them in order",
-     "processes must request resources in increasing numerical order"
-    ],
     "followup_replies": [
      "deadlock",
      "circular wait",
@@ -2871,17 +2771,10 @@
     ]
    },
    {
-    "point": "This is one of the four conditions that must be violated to prevent deadlock.",
+    "point": "This removes circular wait, one of the four necessary conditions for deadlock.",
     "quote": "Deadlock can arise if four conditions hold simultaneously. ... Circular wait: there exists a set {P0, P1, …, Pn} of waiting processes such that P0 is waiting for a resource that is held by P1, P1 is waiting for a resource that is held by P2, …, Pn–1 is waiting for a resource that is held by Pn, and Pn is waiting for a resource that is held by P0.",
     "followup": "What would happen if all four conditions were satisfied?",
     "followup_answer": "A deadlock would occur, as all four necessary conditions for deadlock are met.",
-    "variants": [
-     "this is one of the four deadlock conditions that need to be broken",
-     "breaking this condition helps prevent deadlock",
-     "this is a condition that must be violated to avoid deadlock",
-     "this is one of the four conditions that must be violated",
-     "violating this condition helps prevent deadlock"
-    ],
     "followup_replies": [
      "deadlock",
      "all four conditions are met",
@@ -2926,9 +2819,12 @@
    "stated_by_bank": 0.003
   },
   "quality_score": 8,
-  "quality_note": "good",
+  "quality_note": "good; second key point now names the condition (repair 3)",
   "curated": true,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "repairs": [
+   "batch3_2026-10-03"
+  ]
  },
  {
   "id": "os.inter_process_communication.medium1",
@@ -3146,21 +3042,13 @@
   "topic_coverage": "good",
   "question": "Explain how the four deadlock conditions are interdependent in the occurrence of a deadlock.",
   "difficulty": "medium",
-  "reference_answer": "The four deadlock conditions—mutual exclusion, hold and wait, no preemption, and circular wait—are all necessary for a deadlock to occur. Mutual exclusion ensures that resources are not sharable, which is a prerequisite for the other conditions. Hold and wait allows a process to hold some resources while waiting for others, which is essential for the deadlock to persist. No preemption prevents resources from being forcibly taken, allowing the deadlock to continue. Circular wait creates the cyclic dependency that ties all four conditions together to form a deadlock.",
+  "reference_answer": "Deadlock can arise only if four conditions hold at the same time. Mutual exclusion: at least one resource can be used by only one process at a time. Hold and wait: a process holds some resources while waiting for others. No preemption: a resource is released only voluntarily by the process holding it. Circular wait: there is a cycle of processes, each waiting for a resource held by the next. The conditions depend on each other because the cycle only forms if resources cannot be shared, are held while waiting, and cannot be taken away, so breaking any one of the four prevents deadlock.",
   "key_points": [
    {
-    "point": "Mutual exclusion is a prerequisite for the other deadlock conditions.",
+    "point": "Mutual exclusion: at least one resource can be used by only one process at a time.",
     "quote": "Mutual exclusion: only one process at a time can use a resource (sharable resources like Read-only files do not require mutually exclusive access and thus cannot be involved in a deadlock.",
     "followup": "What would happen if mutual exclusion was not a condition?",
     "followup_answer": "Without mutual exclusion, resources could be shared, and thus a deadlock could not occur because there would be no exclusive resource contention.",
-    "variants": [
-     "mutual exclusion is needed for the other conditions to happen",
-     "without mutual exclusion, the other conditions can't exist",
-     "mutual exclusion is the base for the other deadlock conditions",
-     "the other conditions depend on mutual exclusion being true",
-     "mutual exclusion makes resources non-shareable, which is needed for deadlock",
-     "if there's no mutual exclusion, there's no deadlock"
-    ],
     "followup_replies": [
      "nope",
      "resources could be shared",
@@ -3170,18 +3058,10 @@
     ]
    },
    {
-    "point": "Hold and wait allows a process to hold some resources while waiting for others.",
+    "point": "Hold and wait: a process holds some resources while waiting for others.",
     "quote": "Hold and wait: a process holding at least one resource is waiting to acquire additional resources held by other processes",
     "followup": "Why is it important for a process to hold some resources while waiting for others?",
     "followup_answer": "It is important because it creates a situation where a process is partially allocated resources, which can lead to a deadlock when combined with other conditions.",
-    "variants": [
-     "hold and wait lets a process keep some resources while waiting for others",
-     "a process can hold some resources and wait for more",
-     "hold and wait is when a process holds some resources and waits for others",
-     "hold and wait allows partial allocation of resources",
-     "hold and wait is necessary for deadlock to occur",
-     "without hold and wait, deadlock can't happen"
-    ],
     "followup_replies": [
      "it creates partial allocation",
      "it allows partial resource allocation",
@@ -3191,16 +3071,10 @@
     ]
    },
    {
-    "point": "No preemption prevents resources from being forcibly taken, allowing the deadlock to continue.",
+    "point": "No preemption: a resource is released only voluntarily by the process holding it.",
     "quote": "No preemption: a resource can be released only voluntarily by the process holding it, after that process has completed its task",
     "followup": "What would happen if a process could be preempted?",
     "followup_answer": "If preemption were allowed, a process could be forced to release its resources, breaking the deadlock cycle and preventing a deadlock from occurring.",
-    "variants": [
-     "no preemption means resources can't be taken away",
-     "no preemption prevents resource reclamation",
-     "no preemption keeps resources locked by a process",
-     "no preemption allows deadlocks to persist"
-    ],
     "followup_replies": [
      "it breaks the deadlock cycle",
      "deadlock can't happen",
@@ -3210,18 +3084,10 @@
     ]
    },
    {
-    "point": "Circular wait creates the cyclic dependency that ties all four conditions together.",
+    "point": "Circular wait: a cycle of processes, each waiting for a resource held by the next.",
     "quote": "Circular wait: there exists a set {P0, P1, …, Pn} of waiting processes such that P0 is waiting for a resource that is held by P1, P1 is waiting for a resource that is held by P2, …, Pn–1 is waiting for a resource that is held by Pn, and Pn is waiting for a resource that is held by P0.",
     "followup": "How does circular wait contribute to the deadlock?",
     "followup_answer": "Circular wait creates a cycle of resource dependencies that, when combined with mutual exclusion, hold and wait, and no preemption, results in a deadlock.",
-    "variants": [
-     "circular wait creates a cycle of resource requests",
-     "circular wait is when processes wait in a loop",
-     "circular wait forms a cycle of dependencies",
-     "circular wait ties the four conditions together",
-     "circular wait is the final piece for deadlock",
-     "circular wait ensures a cycle in resource allocation"
-    ],
     "followup_replies": [
      "it creates a cycle",
      "it forms a loop",
@@ -3265,10 +3131,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.006
   },
-  "quality_score": 6,
-  "quality_note": "a key point is dubious",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "dubious key point fixed; points restated as the four conditions (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "os.race_condition.medium2",
@@ -3283,16 +3152,10 @@
   "reference_answer": "A race condition can occur with `fork` when the logic after the call depends on whether the parent or child runs first, which is unpredictable. This can lead to incorrect behavior if the program assumes a specific order of execution. Using wait functions properly ensures that the parent process waits for the child to finish, avoiding race conditions by synchronizing the processes.",
   "key_points": [
    {
-    "point": "The outcome of a race condition depends on the unpredictable order of process execution.",
+    "point": "A race condition happens when the result depends on the order in which processes run.",
     "quote": "A race condition occurs when multiple processes are trying to do something with shared data and the final outcome depends on the order in which the processes run.",
     "followup": "What would happen if the order of execution was predictable?",
     "followup_answer": "If the order was predictable, the race condition would not occur, as the outcome would be consistent regardless of which process ran first.",
-    "variants": [
-     "the order of execution after fork is unpredictable, so the result can vary.",
-     "the race condition happens because we don't know which process runs first.",
-     "the race condition is caused by the unpredictable order of process execution.",
-     "the result depends on which process runs first, which is random."
-    ],
     "followup_replies": [
      "nope",
      "no race condition",
@@ -3302,18 +3165,10 @@
     ]
    },
    {
-    "point": "The `fork` system call is a common source of race conditions due to the uncertainty of which process runs first.",
+    "point": "After fork, it is unpredictable whether the parent or the child runs first.",
     "quote": "The fork function is a lively breeding ground for race conditions, if the logic after the fork either explicitly or implicitly depends on whether the parent or child runs first after the fork.",
     "followup": "Why is `fork` a common source of race conditions?",
     "followup_answer": "Because the logic after `fork` may depend on which process (parent or child) runs first, and this order is unpredictable.",
-    "variants": [
-     "fork is a common source of race conditions because we don't know which process runs first.",
-     "the fork system call can cause race conditions because the order is unknown.",
-     "fork is a source of race conditions because the parent and child can run in any order.",
-     "the fork call can lead to race conditions due to the unpredictable process order.",
-     "fork is a common cause of race conditions because the order is not determined.",
-     "the fork system call can create race conditions because the execution order is random."
-    ],
     "followup_replies": [
      "because the order is unknown",
      "unpredictable execution",
@@ -3323,18 +3178,10 @@
     ]
    },
    {
-    "point": "Proper use of wait functions is essential to avoid race conditions in process synchronization.",
+    "point": "The parent should call wait() to wait for the child to finish.",
     "quote": "A process that wants to wait for a child to terminate must call one of the wait functions.",
     "followup": "What would happen if a process didn't call a wait function after `fork`?",
     "followup_answer": "The parent process might proceed before the child completes, leading to a race condition and potentially incorrect behavior.",
-    "variants": [
-     "using wait functions properly avoids race conditions by syncing processes.",
-     "wait functions are essential to prevent race conditions in process synchronization.",
-     "proper wait functions ensure the parent waits for the child, avoiding race conditions.",
-     "wait functions help prevent race conditions by controlling process execution order.",
-     "without wait functions, race conditions can occur due to unpredictable process order.",
-     "wait functions are needed to avoid race conditions by ensuring correct process order."
-    ],
     "followup_replies": [
      "the parent might proceed before the child",
      "parent runs before child",
@@ -3375,10 +3222,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.001
   },
-  "quality_score": 6,
-  "quality_note": "ok",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "key points reworded (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "os.threads.medium1",
@@ -3393,18 +3243,10 @@
   "reference_answer": "Threads improve scalability by allowing a process to take advantage of multiprocessor architectures. Threads can run on multiple cores in parallel, which is essential for handling complex tasks efficiently. This is important for modern applications because most applications are multithreaded, and they often need to perform multiple tasks simultaneously, such as downloading and watching a video.",
   "key_points": [
    {
-    "point": "Threads enable scalability by running on multiple cores in parallel.",
+    "point": "The threads of one process can run in parallel on multiple cores.",
     "quote": "Scalability – process can take advantage of multiprocessor architectures. Threads can run on multiple cores parallelly",
     "followup": "Why would a system with multiple cores benefit from threads?",
     "followup_answer": "Because threads can be scheduled on different cores, allowing true parallel execution and improving performance.",
-    "variants": [
-     "threads let a process use multiple cores at once",
-     "multiple cores can run threads in parallel",
-     "threads can run on different cores, which helps scale",
-     "parallel execution on multiple cores is possible with threads",
-     "threads enable parallel processing on multiple cores",
-     "using multiple cores with threads improves scalability"
-    ],
     "followup_replies": [
      "true parallelism",
      "parallel execution",
@@ -3414,17 +3256,10 @@
     ]
    },
    {
-    "point": "Scalability is important for modern applications that perform multiple tasks simultaneously.",
+    "point": "Modern applications run many tasks at once as separate threads.",
     "quote": "Most modern applications are multithreaded. Threads run within application. Multiple tasks with the application can be implemented by separate threads.",
     "followup": "Can you give an example of a modern application that benefits from thread scalability?",
     "followup_answer": "A web browser is an example, as it can load content, play videos, and fetch data from the network using separate threads.",
-    "variants": [
-     "modern apps need to do many things at once",
-     "scalability helps apps manage multiple simultaneous tasks",
-     "apps need scalability to handle concurrent operations",
-     "doing multiple tasks at once requires scalable systems",
-     "scalability is key for apps that multitask"
-    ],
     "followup_replies": [
      "web browser",
      "video player",
@@ -3434,17 +3269,10 @@
     ]
    },
    {
-    "point": "Thread scalability reduces the need for multiple processes, which are more resource-intensive.",
+    "point": "Creating a thread is much lighter than creating a process.",
     "quote": "Process creation is heavy-weight while thread creation is light-weight. Process creation if time consuming, resource intensive",
     "followup": "How does thread creation being lightweight affect scalability?",
     "followup_answer": "Lightweight thread creation allows more threads to be created quickly, enabling better utilization of multiple cores and improving overall system performance.",
-    "variants": [
-     "threads are lighter than processes, so they scale better",
-     "processes are heavier, so threads are better for scaling",
-     "thread creation is faster, which helps scalability",
-     "using threads instead of processes improves scalability",
-     "lightweight threads allow more scalable systems"
-    ],
     "followup_replies": [
      "faster creation",
      "lightweight",
@@ -3491,10 +3319,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.99
   },
-  "quality_score": 6,
-  "quality_note": "ok",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "key points reworded (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "os.semaphores.medium1",
@@ -3509,16 +3340,10 @@
   "reference_answer": "Incorrect use of semaphore operations, such as calling wait() multiple times without a corresponding signal(), can lead to deadlock, where processes are waiting indefinitely for an event that can only be caused by one of them. Starvation occurs when a process is indefinitely blocked from the semaphore queue. The implementation of semaphores with busy waiting is problematic because it leads to wasted CPU time as processes spin in a loop while waiting, which is inefficient when the critical section is rarely used.",
   "key_points": [
    {
-    "point": "Starvation is a possible outcome of incorrect semaphore usage.",
+    "point": "Incorrect use of wait() and signal() can cause starvation: a process may never leave the semaphore queue.",
     "quote": "Starvation – indefinite blocking – A process may never be removed from the semaphore queue in which it is suspended",
     "followup": "Why might a process never be removed from the semaphore queue?",
     "followup_answer": "Because the semaphore implementation may not prioritize processes, leading to indefinite blocking.",
-    "variants": [
-     "starvation can happen if a process never gets a turn at the semaphore.",
-     "semaphore queues can leave processes waiting forever if not managed properly.",
-     "a process might never get removed from the queue if the semaphore isn't fair.",
-     "without priority, a process can be stuck waiting for a semaphore indefinitely."
-    ],
     "followup_replies": [
      "no priority",
      "no fairness",
@@ -3528,16 +3353,10 @@
     ]
    },
    {
-    "point": "Busy waiting in semaphore implementation is inefficient.",
+    "point": "Busy waiting wastes CPU time while a process spins waiting for the semaphore.",
     "quote": "Could now have busy waiting in critical section implementation 4 But implementation code is short 4 Little busy waiting if critical section rarely occupied",
     "followup": "Why is busy waiting considered inefficient in some cases?",
     "followup_answer": "Because processes spend time spinning in a loop instead of doing useful work when the critical section is not frequently accessed.",
-    "variants": [
-     "busy waiting wastes CPU time when the critical section is not used often.",
-     "busy waiting uses CPU cycles unnecessarily when the resource is available.",
-     "if the critical section is rarely accessed, busy waiting is a waste.",
-     "busy waiting is inefficient because it keeps the CPU busy waiting."
-    ],
     "followup_replies": [
      "spinning in a loop",
      "wastes CPU time",
@@ -3545,6 +3364,12 @@
      "CPU busy waiting",
      "no useful work"
     ]
+   },
+   {
+    "point": "Deadlock: processes wait forever for a signal that only another waiting process can give.",
+    "quote": "Deadlock – two or more processes are waiting indefinitely for an",
+    "followup": "Can you give an example of semaphores causing a deadlock?",
+    "followup_answer": "P0 does wait(S) then wait(Q) while P1 does wait(Q) then wait(S); each holds one semaphore and waits forever for the other."
    }
   ],
   "source_pages": [
@@ -3586,10 +3411,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.001
   },
-  "quality_score": 6,
-  "quality_note": "ok",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "deadlock was missing from the key points; added (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "os.segmentation.medium2",
@@ -3604,18 +3432,10 @@
   "reference_answer": "Segmentation handles logical addresses by splitting them into a segment number and an offset. The segment number is used to index the segment table, which contains the base and limit of each segment. When an offset is invalid—meaning it exceeds the segment limit—the system traps to the operating system. This ensures that the process cannot access memory outside its allocated segments.",
   "key_points": [
    {
-    "point": "Segmentation splits logical addresses into a segment number and an offset.",
+    "point": "A logical address is a segment number plus an offset within that segment.",
     "quote": "A logical address consists of two parts: a segment number, s, and an offset into that segment, d.",
     "followup": "What is the purpose of splitting the logical address into two parts?",
     "followup_answer": "Splitting the logical address into a segment number and an offset allows the system to locate the correct segment and then determine the position within that segment.",
-    "variants": [
-     "segmentation breaks the address into a segment and an offset.",
-     "you split the logical address into segment and offset parts.",
-     "segmentation uses a segment number and an offset to address memory.",
-     "the address is divided into a segment identifier and an offset.",
-     "segmentation splits the address into segment and offset fields.",
-     "segmentation separates the address into segment and offset components."
-    ],
     "followup_replies": [
      "to find the right segment and position.",
      "to locate the segment and offset in memory.",
@@ -3625,18 +3445,10 @@
     ]
    },
    {
-    "point": "The segment table contains base and limit information for each segment.",
+    "point": "The segment table gives each segment's base address and limit.",
     "quote": "The segment table is thus essentially an array of base– limit register pairs.",
     "followup": "What role does the segment table play in address translation?",
     "followup_answer": "The segment table stores the base address and limit of each segment, which are used to translate logical addresses into physical memory addresses.",
-    "variants": [
-     "the segment table has the base and limit for each segment.",
-     "each segment has a base and limit stored in the segment table.",
-     "the segment table holds the base and limit of segments.",
-     "the segment table contains the base and limit for each segment.",
-     "the segment table stores base and limit information for segments.",
-     "the segment table keeps track of base and limit for each segment."
-    ],
     "followup_replies": [
      "it translates logical addresses to physical ones.",
      "it helps convert logical to physical memory addresses.",
@@ -3644,6 +3456,12 @@
      "it allows address translation between logical and physical.",
      "it translates logical addresses into physical addresses."
     ]
+   },
+   {
+    "point": "If the offset is beyond the segment's limit, the hardware traps to the operating system.",
+    "quote": "The offset d of the logical address must be between 0 and the segment limit. If it is not, we trap to the operating system (logical addressing attempt beyond end of segment).",
+    "followup": "What happens if a program uses an offset larger than its segment's limit?",
+    "followup_answer": "The hardware traps to the operating system with an addressing error, which usually ends the program (a segmentation fault)."
    }
   ],
   "source_pages": [
@@ -3670,10 +3488,13 @@
    "coverage": 1.0
   },
   "active": true,
-  "quality_score": 6,
-  "quality_note": "key points skip the invalid-offset trap",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 8,
+  "quality_note": "the invalid-offset trap added as a key point (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "os.banker_s_algorithm.medium1",
@@ -3685,42 +3506,19 @@
   "topic_coverage": "good",
   "question": "Explain how the Banker’s algorithm ensures that a system remains in a safe state when allocating resources to processes.",
   "difficulty": "medium",
-  "reference_answer": "The Banker’s algorithm ensures a safe state by simulating resource allocation and checking if there exists a sequence of process completions that allows all processes to finish. It uses the Work and Finish vectors to determine if a process can be safely allocated resources without leading to a deadlock. If a process can be allocated resources and still leave the system in a safe state, it is granted the resources, otherwise, it must wait.",
+  "reference_answer": "Before granting a request, the Banker's algorithm pretends to grant it and runs the safety check. The state is safe if there is some order (a safe sequence) in which every process can get the resources it may still need, up to its declared maximum, from the available resources plus those released by the processes before it, and then finish. The check uses a Work vector of available resources and a Finish flag per process. If the resulting state is safe the request is granted; otherwise the process waits, so the system never enters an unsafe state that could lead to deadlock.",
   "key_points": [
    {
-    "point": "The algorithm uses the Work vector to represent the available resources after allocation.",
-    "quote": "Work = Work + Allocationi",
-    "followup": "Why is the Work vector updated after a process is allocated resources?",
-    "followup_answer": "To reflect the new available resources after the process completes its execution and releases its allocated resources.",
-    "variants": [
-     "the banker's algorithm uses the work vector to track available resources after allocation.",
-     "work vector shows how much resources are left after a process gets them.",
-     "the work vector is updated to show available resources once a process is done.",
-     "after a process is allocated, the work vector changes to show new available resources.",
-     "the work vector helps track available resources after a process finishes.",
-     "the work vector is used to show what resources are available after a process completes."
-    ],
-    "followup_replies": [
-     "system could deadlock",
-     "it would be unsafe",
-     "deadlock might occur",
-     "unsafe state",
-     "deadlock risk"
-    ]
+    "point": "A request is granted only if the system would still be in a safe state afterwards; otherwise the process waits.",
+    "quote": "A state is safe if the system can allocate resources to each process (up to its maximum) in some order and still avoid a deadlock.",
+    "followup": "What happens if granting a request would leave the system in an unsafe state?",
+    "followup_answer": "The request is not granted; the process waits until it can be granted safely."
    },
    {
-    "point": "The algorithm ensures that all processes can eventually complete by checking if all Finish[i] are true.",
-    "quote": "If Finish[i] == true for all i, then the system is in a safe state.",
+    "point": "The state is safe if some order exists in which every process can get its maximum need and finish.",
+    "quote": "More formally, a system is in a safe state only if there exists a safe sequence.",
     "followup": "What would happen if not all Finish[i] are true after the algorithm completes?",
     "followup_answer": "The system is in an unsafe state, and there is a possibility of deadlock.",
-    "variants": [
-     "the banker's algorithm checks if all finish[i] are true to ensure safety.",
-     "if all finish[i] are true, the system is safe.",
-     "the algorithm ensures all processes can finish by checking finish[i].",
-     "finish[i] being true means the process can complete.",
-     "the algorithm confirms all processes can finish by verifying finish[i].",
-     "finish[i] is used to confirm all processes can complete."
-    ],
     "followup_replies": [
      "system could deadlock",
      "it would be unsafe",
@@ -3767,10 +3565,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.993
   },
-  "quality_score": 6,
-  "quality_note": "key points are implementation variables",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "implementation-variable key points replaced by the safe-state idea (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "os.mutex_locks.medium2",
@@ -3782,21 +3583,13 @@
   "topic_coverage": "good",
   "question": "Why are spinlocks considered problematic in real-time systems, and how does this relate to the use of busy waiting?",
   "difficulty": "medium",
-  "reference_answer": "Spinlocks are considered problematic in real-time systems because they involve busy waiting, which wastes CPU cycles. Busy waiting means that a process repeatedly checks the lock status instead of yielding the CPU, which can prevent other processes from executing. This is inefficient in real-time systems where predictable and timely execution is critical.",
+  "reference_answer": "A spinlock makes a waiting process busy-wait: it keeps checking the lock in a loop instead of blocking, which wastes CPU cycles. This is a problem in real-time systems, because the spinning task occupies the CPU and delays other tasks unpredictably, and real-time tasks must meet deadlines. Spinlocks are only worth using when the lock is held for a very short time, typically on multiprocessors, where spinning is cheaper than putting the process to sleep and waking it up again.",
   "key_points": [
    {
-    "point": "Spinlocks involve busy waiting, which wastes CPU cycles.",
+    "point": "A spinlock busy-waits: the waiting process keeps checking the lock and wastes CPU cycles.",
     "quote": "Busy waiting wastes CPU cycles.",
     "followup": "What happens to the CPU when a process is waiting on a spinlock?",
     "followup_answer": "The CPU is repeatedly checked by the waiting process, which consumes cycles without making progress.",
-    "variants": [
-     "spinlocks use busy waiting, which uses up the CPU.",
-     "when a process waits on a spinlock, it keeps checking the CPU.",
-     "spinlocks make the CPU busy wait, which is a waste.",
-     "busy waiting in spinlocks takes up CPU time without doing anything.",
-     "spinlocks cause the CPU to loop without progress.",
-     "the CPU is busy waiting while a spinlock is held."
-    ],
     "followup_replies": [
      "it blocks other tasks",
      "it wastes CPU time",
@@ -3806,45 +3599,16 @@
     ]
    },
    {
-    "point": "Spinlocks are problematic in real-time systems due to their inefficiency.",
+    "point": "This is a problem in real-time systems, because the spinning delays other tasks unpredictably.",
     "quote": "It is problem in real time systems.",
     "followup": "Why would a real-time system be concerned about the inefficiency of spinlocks?",
     "followup_answer": "Real-time systems require predictable and timely execution, and spinlocks can introduce unpredictable delays due to busy waiting.",
-    "variants": [
-     "spinlocks are bad in real-time systems because they're inefficient.",
-     "real-time systems need predictability, and spinlocks mess that up.",
-     "spinlocks can cause unpredictable delays in real-time systems.",
-     "real-time systems can't handle the delays from busy waiting.",
-     "spinlocks are inefficient, which is bad for real-time.",
-     "real-time systems need timely execution, which spinlocks break."
-    ],
     "followup_replies": [
      "predictable execution is needed",
      "unpredictable delays",
      "real-time needs timing",
      "it's not timely",
      "it's unpredictable"
-    ]
-   },
-   {
-    "point": "Busy waiting is a characteristic of spinlocks and not of other locking mechanisms.",
-    "quote": "But this solution requires busy waiting.",
-    "followup": "What is the difference between a spinlock and a lock that does not use busy waiting?",
-    "followup_answer": "A spinlock uses busy waiting, whereas other locks may block the process and allow the CPU to be used by other tasks.",
-    "variants": [
-     "spinlocks use busy waiting, unlike other locks.",
-     "other locks don't use busy waiting, but spinlocks do.",
-     "spinlocks are different because they busy wait.",
-     "spinlocks are busy waiting, not blocking.",
-     "busy waiting is what makes spinlocks different.",
-     "spinlocks busy wait, other locks don't."
-    ],
-    "followup_replies": [
-     "it blocks the process",
-     "it yields the CPU",
-     "it allows other tasks",
-     "it doesn't busy wait",
-     "it blocks and yields"
     ]
    }
   ],
@@ -3879,10 +3643,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.994
   },
-  "quality_score": 5,
-  "quality_note": "a key point is dubious",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "false key point removed (other locks can busy-wait too) (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "os.context_switching.hard2",
@@ -3980,7 +3747,7 @@
    "grounding": 0.75,
    "coverage": 1.0
   },
-  "active": true,
+  "active": false,
   "core_point": {
    "point": "Context switch time increases with process size due to more memory state to save and restore.",
    "variants": [
@@ -3994,9 +3761,12 @@
    "stated_by_bank": 0.001
   },
   "quality_score": 5,
-  "quality_note": "conflates context switch with swapping",
+  "quality_note": "deactivated (repair 2): confuses context-switch time with swapping time",
   "curated": false,
-  "interview_priority": 3
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "os.deadlock_avoidance.easy1",
@@ -6200,21 +5970,13 @@
   "topic_coverage": "good",
   "question": "What happens to a process if it is preempted for a resource, and how does this relate to deadlock prevention?",
   "difficulty": "hard",
-  "reference_answer": "If a process is preempted for a resource, it must release all resources it currently holds. This is part of the 'no preemption' condition, which is one of the four necessary conditions for deadlock. By enforcing no preemption, the system ensures that a process cannot hold resources while waiting for others, thereby preventing deadlock. The preempted resources are added to the process's waiting list, and the process will be restarted only when it can regain all its previously held resources and the new ones it is requesting.",
+  "reference_answer": "Under this prevention scheme, if a process that holds some resources requests another resource that cannot be given to it immediately, it releases all the resources it currently holds. The released resources are added to the list of resources it is waiting for, and it is restarted only when it can get back its old resources as well as the new one. This removes the 'no preemption' condition, one of the four conditions that must all hold for deadlock, so deadlock cannot occur.",
   "key_points": [
    {
-    "point": "A process must release all resources it currently holds if it is preempted.",
+    "point": "A process that cannot get a resource releases all the resources it holds.",
     "quote": "If a process that is holding some resources requests another resource that cannot be immediately allocated to it, then all resources currently being held are released.",
     "followup": "What is the consequence of a process being preempted for a resource?",
     "followup_answer": "The process must release all resources it currently holds, and it will be restarted only when it can regain all its previously held resources and the new ones it is requesting.",
-    "variants": [
-     "if a process is preempted, it has to let go of all its resources",
-     "preemption means the process must release its resources",
-     "when a process is preempted, it gives up all its held resources",
-     "preemption forces the process to release any resources it's holding",
-     "a preempted process must drop all resources it currently owns",
-     "resources are released by the process when it's preempted"
-    ],
     "followup_replies": [
      "it releases its resources",
      "it gives up its resources",
@@ -6224,39 +5986,16 @@
     ]
    },
    {
-    "point": "Preemption is a mechanism used to prevent deadlock by breaking the 'hold and wait' condition.",
+    "point": "This breaks the no-preemption condition for deadlock.",
     "quote": "No preemption – If a process that is holding some resources requests another resource that cannot be immediately allocated to it, then all resources currently being held are released.",
-    "followup": "How does preemption help prevent deadlock?",
-    "followup_answer": "Preemption breaks the 'hold and wait' condition by forcing a process to release resources it is holding when it cannot immediately acquire additional ones, thereby preventing a deadlock scenario.",
-    "variants": [
-     "preemption breaks the hold and wait condition",
-     "preemption stops the process from holding and waiting",
-     "preemption prevents the hold and wait deadlock condition",
-     "preemption stops a process from holding resources while waiting",
-     "preemption breaks the 'hold and wait' condition",
-     "preemption stops the hold and wait scenario"
-    ],
-    "followup_replies": [
-     "it breaks hold and wait",
-     "it prevents hold and wait",
-     "it stops hold and wait",
-     "it breaks the condition",
-     "it stops the hold and wait"
-    ]
+    "followup": "Which of the four deadlock conditions does this scheme remove?",
+    "followup_answer": "The 'no preemption' condition: resources can now be taken away from a process that is waiting."
    },
    {
-    "point": "The preempted resources are added to the process's waiting list.",
+    "point": "The preempted resources are added to the list of resources the process is waiting for.",
     "quote": "Preempted resources are added to the list of resources for which the process is waiting.",
     "followup": "What happens to the resources that are preempted?",
     "followup_answer": "The preempted resources are added to the list of resources for which the process is waiting, and the process will be restarted only when it can regain all its previously held resources and the new ones it is requesting.",
-    "variants": [
-     "preempted resources are added to the process's waiting list",
-     "when a process is preempted, its resources go to the waiting list",
-     "the process's waiting list gets the preempted resources",
-     "resources are moved to the waiting list when preempted",
-     "preempted resources are queued for the process",
-     "the process waits for the resources it was preempted from"
-    ],
     "followup_replies": [
      "they go to the waiting list",
      "they are added to the waiting list",
@@ -6300,10 +6039,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.012
   },
-  "quality_score": 3,
-  "quality_note": "key point is wrong: preemption breaks 'no preemption', not 'hold and wait'",
+  "quality_score": 7,
+  "quality_note": "wrong key point fixed: preemption breaks 'no preemption', not 'hold and wait' (repair 1)",
   "curated": false,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "os.linux_and_windows_scheduling.easy1",

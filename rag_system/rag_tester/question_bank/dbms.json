@@ -2961,21 +2961,13 @@
   "topic_coverage": "thin",
   "question": "Explain how correlated subqueries differ from regular nested queries in terms of execution and their impact on query results.",
   "difficulty": "medium",
-  "reference_answer": "Correlated subqueries are evaluated once for each tuple in the outer query, and they reference attributes from the outer query. This means the subquery depends on the outer query's tuple for its execution. In contrast, regular nested queries are evaluated once and do not depend on the outer query's tuples. This difference in execution leads to different results, as correlated subqueries can produce different results for each row of the outer query.",
+  "reference_answer": "A regular nested query does not depend on the outer query, so it is evaluated only once and its result is reused. A correlated subquery refers to a value from the current tuple of the outer query, so it is evaluated again for each tuple of the outer query, and its result can differ from row to row. Correlated subqueries are often used with EXISTS or NOT EXISTS, to check for each outer row whether matching rows exist. Because they run once per outer row, they can be much slower on large tables.",
   "key_points": [
    {
-    "point": "A correlated nested query is evaluated once for each tuple (or combination of tuples) of the relation in the outer query.",
+    "point": "A correlated subquery is evaluated again for each tuple of the outer query.",
     "quote": "For each EMPLOYEE tuple, the nested query is evaluated, and the Essn values of all DEPENDENT tuples with the same Gender as that of the EMPLOYEE tuple are retrieved.",
     "followup": "What happens if the subquery does not reference the outer query's attributes?",
     "followup_answer": "The subquery would be treated as a regular nested query and evaluated once, not once per tuple from the outer query.",
-    "variants": [
-     "correlated subqueries run once for each row in the outer query",
-     "they check each row from the outer query one by one",
-     "the subquery depends on the outer query's data",
-     "they're like a loop over the outer query's rows",
-     "each row in the outer query triggers a new subquery",
-     "the subquery uses values from the outer query's row"
-    ],
     "followup_replies": [
      "it's treated like a normal subquery",
      "it runs once",
@@ -2985,18 +2977,10 @@
     ]
    },
    {
-    "point": "Correlated subqueries are often used with EXISTS or NOT EXISTS to check for the presence of tuples.",
+    "point": "Correlated subqueries are often used with EXISTS or NOT EXISTS.",
     "quote": "EXISTS and NOT EXISTS are typically used in conjunction with a correlated nested query.",
     "followup": "Why would you use EXISTS with a correlated subquery?",
     "followup_answer": "To check if there is at least one matching tuple in the subquery result for a given row in the outer query.",
-    "variants": [
-     "exists is used with correlated subqueries to check for matches",
-     "you use exists to find rows that have related data",
-     "exists helps find if a row has a matching entry",
-     "correlated subqueries often use exists for filtering",
-     "exists checks if a row exists in the subquery",
-     "exists is common with correlated subqueries for existence checks"
-    ],
     "followup_replies": [
      "to check if a row exists in the subquery",
      "to find matching rows",
@@ -3042,9 +3026,12 @@
    "stated_by_bank": 0.003
   },
   "quality_score": 8,
-  "quality_note": "good",
+  "quality_note": "good; key points reworded (repair 1)",
   "curated": true,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "dbms.vector_databases_and_embeddings.medium1",
@@ -3288,23 +3275,15 @@
   "unit": "SQL",
   "priority": "high",
   "topic_coverage": "good",
-  "question": "Can you explain what an Inner Join does in SQL, based on what you've learned?",
+  "question": "Explain what an inner join does in SQL.",
   "difficulty": "easy",
   "reference_answer": "An Inner Join combines records from two related tables based on a join predicate. It compares each row of the first table with each row of the second table to find all pairs that satisfy the join condition. When the condition is met, the column values from both tables are combined into a result row. This is the default type of join in SQL, and it is also known as an Equijoin.",
   "key_points": [
    {
-    "point": "Inner Join combines records from two related tables based on a join predicate.",
+    "point": "An inner join combines rows from two related tables using a join condition.",
     "quote": "SQL Inner Join is a type of join that is used to combine records from two related tables, based and select the rows depending on the condition (join predicate)",
     "followup": "What happens if there's no matching row in one of the tables?",
     "followup_answer": "No rows are returned from that table, as Inner Join only includes rows that satisfy the join condition.",
-    "variants": [
-     "inner join combines rows from two tables when they match the condition",
-     "when tables are related, inner join brings their rows together",
-     "it uses a condition to link rows between two tables",
-     "inner join only includes rows that meet the join condition",
-     "you get rows from both tables if they satisfy the join predicate",
-     "the join condition determines which rows are combined in an inner join"
-    ],
     "followup_replies": [
      "no rows from that table",
      "nothing is returned",
@@ -3314,18 +3293,10 @@
     ]
    },
    {
-    "point": "Inner Join compares each row of the first table with each row of the second table to find all pairs that satisfy the join predicate.",
+    "point": "It compares each row of one table with each row of the other and keeps the pairs that satisfy the condition.",
     "quote": "Inner Join query compares each row of the first table with each row of the second table to find all pairs of rows that satisfy the join-predicate.",
     "followup": "How does this process affect performance?",
     "followup_answer": "It can be computationally expensive if the tables are large, as it may require checking many row pairs.",
-    "variants": [
-     "inner join checks every row pair between two tables",
-     "it compares all rows to find matching ones",
-     "the join process looks at every row combination",
-     "it pairs rows from both tables to find matches",
-     "each row is matched against every other row",
-     "the join compares all possible row combinations"
-    ],
     "followup_replies": [
      "it can be slow with big tables",
      "performance depends on table size",
@@ -3335,18 +3306,10 @@
     ]
    },
    {
-    "point": "Inner Join is the default type of join in SQL.",
+    "point": "INNER JOIN is the default join, so a plain JOIN is an inner join.",
     "quote": "The Inner Join is a default join; i.e., even if the 'Join' keyword is used instead of 'Inner Join', tables are joined using matching records of common columns, by default.",
     "followup": "What is the difference between using 'Inner Join' and 'Join' in SQL?",
     "followup_answer": "There is no difference in the result; both keywords produce the same behavior, which is to return only matching rows from both tables.",
-    "variants": [
-     "inner join is the default in sql",
-     "if you just say join, it's an inner join",
-     "sql automatically uses inner join",
-     "join is the same as inner join",
-     "you don't need to specify inner",
-     "the default join type is inner"
-    ],
     "followup_replies": [
      "same result",
      "no difference",
@@ -3389,10 +3352,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.01
   },
-  "quality_score": 6,
-  "quality_note": "odd phrasing ('based on what you've learned')",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 8,
+  "quality_note": "question wording fixed; key points reworded (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "dbms.third_normal_form_3nf.medium1",
@@ -3407,17 +3373,10 @@
   "reference_answer": "Third normal form (3NF) addresses transitive dependencies by ensuring that no non-prime attribute is transitively dependent on the primary key. This is achieved by requiring that for every functional dependency X → A in the relation, either X is a superkey or A is a prime attribute. This prevents situations where a non-prime attribute depends on another non-prime attribute, which would create a transitive dependency.",
   "key_points": [
    {
-    "point": "A relation schema R is in third normal form (3NF) if whenever a FD X → A holds in R, then either X is a superkey of R or A is a prime attribute of R.",
+    "point": "In 3NF, for every dependency X → A, either X is a superkey or A is a prime attribute.",
     "quote": "A relation schema R is in third normal form (3NF) if whenever a FD X → A holds in R, then either: (a) X is a superkey of R, or (b) A is a prime attribute of R",
     "followup": "What happens if a non-prime attribute depends on another non-prime attribute?",
     "followup_answer": "This creates a transitive dependency, which violates 3NF because the non-prime attribute is not directly dependent on the primary key.",
-    "variants": [
-     "3nf says if x points to a then x must be a superkey or a is a prime attribute",
-     "in 3nf, any dependency where x points to a must have x as a superkey or a as a prime",
-     "to be in 3nf, every dependency must have x as a superkey or a as a prime attribute",
-     "3nf stops transitive dependencies by making sure non-prime attributes don't depend on other non-prime attributes",
-     "if a non-prime attribute depends on another non-prime, that's a transitive dependency and breaks 3nf"
-    ],
     "followup_replies": [
      "it creates a transitive dependency",
      "it's a transitive dependency",
@@ -3427,16 +3386,10 @@
     ]
    },
    {
-    "point": "Transitive dependencies are resolved by ensuring that non-prime attributes are fully functionally dependent on every key of R and are non-transitively dependent on every key of R.",
+    "point": "A non-prime attribute must not depend on the key through another non-prime attribute.",
     "quote": "A relation schema R is in third normal form (3NF) if every non-prime attribute in R meets both of these conditions: It is fully functionally dependent on every key of R and it is non-transitively dependent on every key of R",
     "followup": "Why is it important for a non-prime attribute to be non-transitively dependent on every key of R?",
     "followup_answer": "This ensures that the attribute is directly dependent on the key, avoiding any indirect or transitive dependencies that could lead to data redundancy and anomalies.",
-    "variants": [
-     "3nf makes sure non-prime attributes are fully dependent on every key",
-     "non-prime attributes must be directly dependent on every key in 3nf",
-     "3nf ensures non-prime attributes aren't indirectly dependent on keys",
-     "to be in 3nf, non-prime attributes must be directly dependent on keys"
-    ],
     "followup_replies": [
      "to avoid data redundancy and anomalies",
      "to prevent data redundancy and anomalies",
@@ -3446,16 +3399,10 @@
     ]
    },
    {
-    "point": "The definition of 3NF allows for some transitive dependencies if the dependent attribute is a candidate key.",
+    "point": "A transitive dependency through a candidate key is allowed in 3NF.",
     "quote": "When Y is a candidate key, there is no problem with the transitive dependency. E.g., Consider EMP (SSN, Emp#, Salary ). Here, SSN -> Emp# -> Salary and Emp# is a candidate key.",
     "followup": "Why is it acceptable for a candidate key to be part of a transitive dependency?",
     "followup_answer": "Because the candidate key is a prime attribute, the transitive dependency does not violate 3NF, as the definition allows for dependencies where the dependent is a prime attribute.",
-    "variants": [
-     "3nf allows transitive dependencies if the dependent is a candidate key",
-     "if the dependent is a candidate key, 3nf is okay with transitive dependencies",
-     "if the dependent is a prime, transitive dependencies are allowed in 3nf",
-     "in 3nf, transitive dependencies are okay if the dependent is a prime"
-    ],
     "followup_replies": [
      "because it's a prime attribute",
      "it's a prime attribute",
@@ -3501,10 +3448,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.998
   },
-  "quality_score": 6,
-  "quality_note": "formal; one key point is imprecise",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "key points shortened; imprecise point fixed (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "dbms.first_normal_form_1nf.hard2",
@@ -3515,22 +3465,14 @@
   "priority": "high",
   "topic_coverage": "thin",
   "question": "What is the significance of disallowing nested relations in the context of First Normal Form (1NF)?",
-  "difficulty": "hard",
+  "difficulty": "medium",
   "reference_answer": "Disallowing nested relations in 1NF ensures that all attribute values are atomic and indivisible, which is essential for relational database systems to process and query data efficiently. This restriction prevents the storage of complex or hierarchical data structures within a single attribute, which could complicate data retrieval and integrity. By enforcing atomicity, 1NF aligns with the relational model's requirement that each cell in a table contain a single value from the domain of that attribute.",
   "key_points": [
    {
-    "point": "Nested relations are disallowed in 1NF to ensure atomicity of attribute values.",
+    "point": "1NF disallows nested relations so that every attribute value is atomic.",
     "quote": "Disallows ... nested relations; attributes whose values for an individual tuple are non-atomic",
     "followup": "Why would allowing nested relations cause problems for relational databases?",
     "followup_answer": "Allowing nested relations would introduce non-atomic values, making it difficult to perform standard relational operations like selection and join, which require flat, atomic data structures.",
-    "variants": [
-     "disallowing nested relations in 1nf makes sure all data is atomic",
-     "1nf stops nested relations to keep values simple and indivisible",
-     "nested relations are not allowed in 1nf because they aren't atomic",
-     "so you can't have lists or objects in a single cell in 1nf",
-     "1nf requires flat data, so nested relations are out",
-     "no nested data in 1nf because it breaks atomicity"
-    ],
     "followup_replies": [
      "hard to join",
      "breaks relational operations",
@@ -3540,18 +3482,10 @@
     ]
    },
    {
-    "point": "1NF requires that each attribute's domain contains only atomic values.",
+    "point": "Each attribute must hold a single value, not a set or a list of values.",
     "quote": "The domain of an attribute must include only atomic values (single value from the domain of attribute)",
     "followup": "How does the requirement for atomic values in 1NF affect data storage and querying?",
     "followup_answer": "Atomic values ensure that each piece of data is stored in a single cell, simplifying data storage and enabling precise querying and manipulation through relational operations.",
-    "variants": [
-     "1nf needs atomic values, so each cell is a single value",
-     "each attribute must be indivisible in 1nf",
-     "1nf forces data to be stored in single cells",
-     "no complex data in a single column in 1nf",
-     "atomic values are required for 1nf",
-     "1nf makes sure data is flat and simple"
-    ],
     "followup_replies": [
      "easier to query",
      "simplifies storage",
@@ -3561,18 +3495,10 @@
     ]
    },
    {
-    "point": "1NF is a prerequisite for higher normal forms and relational database design.",
+    "point": "Most relational DBMSs only allow tables that are in first normal form.",
     "quote": "Most RDBMSs allow only those relations to be defined that are in First Normal Form",
     "followup": "What would happen if a database schema violated the 1NF requirement for atomicity?",
     "followup_answer": "A database schema that violates 1NF would not be compatible with standard relational database systems, leading to potential data integrity issues and difficulties in querying and maintaining the data.",
-    "variants": [
-     "1nf is the first step before higher normal forms",
-     "you can't go to 2nf without being in 1nf",
-     "1nf is the base for relational design",
-     "higher forms depend on 1nf being met",
-     "1nf is required before normalization",
-     "without 1nf, you can't do proper normalization"
-    ],
     "followup_replies": [
      "data integrity issues",
      "can't use joins properly",
@@ -3617,10 +3543,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.998
   },
-  "quality_score": 6,
-  "quality_note": "not really hard",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 7,
+  "quality_note": "difficulty corrected to medium; key points reworded (repair 2)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch2_2026-10-03"
+  ]
  },
  {
   "id": "dbms.aggregate_functions_and_group_by.medium2",
@@ -4233,18 +4162,13 @@
   "topic_coverage": "good",
   "question": "How does the INTERSECT operator differ from the UNION operator in SQL, and what implications does this have for the data being combined?",
   "difficulty": "medium",
-  "reference_answer": "The INTERSECT operator returns only the tuples that are present in both relations, whereas the UNION operator returns all tuples from both relations, eliminating duplicates. This difference means that INTERSECT requires the relations to be union compatible, just like UNION, but it also enforces that the result must contain only the common tuples. This has implications for data redundancy and the uniqueness of results.",
+  "reference_answer": "INTERSECT returns only the rows that appear in the results of both queries, while UNION returns every row that appears in either result. Both operators need union-compatible inputs, meaning the same number of columns with compatible types in the same order, and both remove duplicate rows from the result unless the ALL form is used. So INTERSECT narrows the data down to what the two sets have in common, while UNION combines everything into one set.",
   "key_points": [
    {
-    "point": "INTERSECT returns only the tuples that are present in both relations.",
+    "point": "INTERSECT returns only the rows present in both results.",
     "quote": "The result of R ∩ S, is a relation that includes all tuples that are in both R and S.",
     "followup": "What happens if a tuple appears in one relation but not the other?",
     "followup_answer": "It would be excluded from the result of the INTERSECT operation.",
-    "variants": [
-     "so if a row isn't in both, it doesn't show up in the result",
-     "intersect requires the same rows to be present in both relations",
-     "the intersect operation excludes rows that aren't shared"
-    ],
     "followup_replies": [
      "nope",
      "it's excluded",
@@ -4254,16 +4178,10 @@
     ]
    },
    {
-    "point": "INTERSECT and UNION both require the relations to be union compatible.",
+    "point": "INTERSECT and UNION both need union-compatible inputs.",
     "quote": "These operations can be applied on the relations which are union compatible.",
     "followup": "What would happen if the relations were not union compatible?",
     "followup_answer": "The operation would fail because the attributes would not match in type or number.",
-    "variants": [
-     "intersect and union both need the same number and type of columns",
-     "they both need to be union compatible to work",
-     "intersect and union require the same structure for the tables",
-     "the columns must be compatible for either operation to work"
-    ],
     "followup_replies": [
      "it fails",
      "it doesn't work",
@@ -4273,18 +4191,10 @@
     ]
    },
    {
-    "point": "INTERSECT enforces uniqueness in the result, similar to UNION.",
+    "point": "INTERSECT and UNION both remove duplicate rows.",
     "quote": "Duplicate tuples are eliminated.",
     "followup": "Does INTERSECT allow duplicate tuples in the result?",
     "followup_answer": "No, INTERSECT also eliminates duplicate tuples, ensuring the result contains only distinct values.",
-    "variants": [
-     "intersect also removes duplicates, like union does",
-     "the result from intersect has no repeated rows",
-     "intersect ensures all results are unique",
-     "so duplicates are not allowed in the intersect output",
-     "intersect automatically filters out duplicate rows",
-     "the intersect result is guaranteed to be distinct"
-    ],
     "followup_replies": [
      "no",
      "it doesn't allow duplicates",
@@ -4328,10 +4238,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.002
   },
-  "quality_score": 7,
-  "quality_note": "fine",
-  "curated": false,
-  "interview_priority": 2
+  "quality_score": 8,
+  "quality_note": "fine; key points reworded (repair 1)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "dbms.participation_constraints.easy1",
@@ -5104,20 +5017,13 @@
   "topic_coverage": "good",
   "question": "Explain how lossless decomposition ensures that a relation can be reconstructed without data loss after decomposition.",
   "difficulty": "medium",
-  "reference_answer": "Lossless decomposition ensures that when decomposed relations are joined back together, the original relation can be perfectly reconstructed without any loss of data or introduction of spurious tuples. This is critical because it guarantees that no information is lost during the decomposition process. The decomposition must satisfy the non additive join property, which is extremely critical and must be achieved at any cost. This property ensures that the join of the decomposed relations results in the original relation without any extraneous data.",
+  "reference_answer": "A decomposition is lossless when joining the decomposed tables back together (natural join) gives exactly the original table, with no rows lost and no extra (spurious) rows added. For a decomposition of R into R1 and R2, this is guaranteed when the attributes they share functionally determine all the attributes of R1 or all the attributes of R2, i.e. the common attributes form a key of one of the two tables. Losslessness is essential, because a lossy decomposition produces spurious tuples and wrong query results.",
   "key_points": [
    {
-    "point": "Lossless decomposition ensures that a relation can be reconstructed without any loss of data or introduction of spurious tuples.",
+    "point": "Joining the decomposed tables gives back exactly the original table.",
     "quote": "a lossless join refers to a property of a decomposition where a relation (table) is",
     "followup": "What happens if the decomposition is not lossless?",
     "followup_answer": "Spurious tuples may be introduced, leading to incorrect or incomplete data when the relations are joined back together.",
-    "variants": [
-     "lossless decomposition means you can rebuild the original table without any missing data.",
-     "when you split a table, lossless ensures joining it back gives the same data.",
-     "it's about making sure no extra or missing rows appear when you join tables.",
-     "the join of decomposed tables must exactly match the original table.",
-     "lossless decomposition avoids spurious tuples during the join process."
-    ],
     "followup_replies": [
      "spurious tuples appear.",
      "data is wrong or missing.",
@@ -5127,37 +5033,16 @@
     ]
    },
    {
-    "point": "The non additive join property is extremely critical and must be achieved at any cost.",
-    "quote": "Property i) is extremely critical and must be achieved at any cost",
-    "followup": "Why is the non additive join property considered more critical than dependency preservation?",
-    "followup_answer": "Because it ensures the original relation can be accurately reconstructed, whereas dependency preservation is a desirable but optional property.",
-    "variants": [
-     "non additive join is super important and can't be skipped.",
-     "you must have non additive join to keep the original data.",
-     "non additive join is the most important thing in decomposition.",
-     "without non additive join, you can't get the original table back.",
-     "non additive join is a must-have for accurate joins.",
-     "you can't afford to lose the non additive join property."
-    ],
-    "followup_replies": [
-     "because it ensures accurate data.",
-     "it's for data accuracy.",
-     "it's more important for data recovery.",
-     "it's required for correct joins.",
-     "it's the main reason for decomposition."
-    ]
+    "point": "The decomposition is lossless if the common attributes are a key of one of the tables.",
+    "quote": "A decomposition D = {R1, R2} of R has the lossless join property with respect to a set of functional dependencies F on R if and only if either",
+    "followup": "How can you test whether splitting R into R1 and R2 is lossless?",
+    "followup_answer": "Check whether the attributes common to R1 and R2 functionally determine all of R1 or all of R2, i.e. whether they form a key of one of the two tables."
    },
    {
-    "point": "Lossless decomposition is essential for ensuring that the join of decomposed relations results in the original relation.",
+    "point": "If it is lossy, joining the smaller relations back creates spurious tuples instead of the original relation.",
     "quote": "when these smaller relations are joined back together, the original relation can",
     "followup": "What is the main consequence of not having a lossless decomposition?",
     "followup_answer": "The original relation cannot be accurately reconstructed, which leads to data loss or incorrect data being generated.",
-    "variants": [
-     "without lossless, you can't get the original table back.",
-     "join must not lose data or add extra rows.",
-     "you need lossless to prevent data loss during joins.",
-     "the join must exactly match the original relation."
-    ],
     "followup_replies": [
      "data loss or wrong data.",
      "can't rebuild the table.",
@@ -5200,10 +5085,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.815
   },
-  "quality_score": 5,
-  "quality_note": "circular question; a key point is filler",
+  "quality_score": 7,
+  "quality_note": "circular question; filler key point replaced by the lossless-join test (repair 1)",
   "curated": false,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "dbms.transaction_states.medium2",
@@ -5325,21 +5213,13 @@
   "topic_coverage": "good",
   "question": "Suppose we have a weak entity set that is identified by more than one strong entity set. How does this affect the primary key of the weak entity set, and what implications does this have for the design of the database schema?",
   "difficulty": "hard",
-  "reference_answer": "The primary key of a weak entity set consists of the union of the primary keys of the identifying entity sets, plus the discriminator of the weak entity set. This ensures that each instance of the weak entity is uniquely identified by the combination of its identifying entities and its own discriminator. This design allows for a more precise and flexible representation of relationships where a weak entity depends on multiple strong entities for its existence.",
+  "reference_answer": "A weak entity set has no key of its own, so it is identified through its identifying (owner) entity sets. When there are several identifying entity sets, each weak entity is identified by a combination of entities, one from each of them, and its primary key is the union of the primary keys of all identifying entity sets plus its own discriminator (partial key). In the relational schema, the weak entity's table gets a foreign key to each owner table, and those foreign keys together with the discriminator form its primary key.",
   "key_points": [
    {
-    "point": "The primary key of a weak entity set includes the primary keys of all identifying entity sets.",
+    "point": "Its primary key includes the primary keys of all its identifying entity sets.",
     "quote": "The primary key of the weak entity set would consist of the union of the primary keys of the identifying entity sets, plus the discriminator of the weak entity set.",
     "followup": "What happens if a weak entity is identified by two different strong entity sets?",
     "followup_answer": "The weak entity's primary key would include the primary keys of both strong entity sets, ensuring that each instance is uniquely identified by the combination of these keys and the discriminator.",
-    "variants": [
-     "the weak entity's primary key needs the primary keys of all the strong entities that identify it",
-     "you combine the strong entities' primary keys into the weak entity's key",
-     "the primary key of a weak entity is made from the primary keys of the identifying entities",
-     "when a weak entity is identified by multiple strong entities, its key includes their keys",
-     "the weak entity's key is the union of the identifying entities' keys",
-     "the primary key of the weak entity is formed by merging the keys of the strong entities"
-    ],
     "followup_replies": [
      "because it depends on both",
      "two strong entities",
@@ -5349,13 +5229,10 @@
     ]
    },
    {
-    "point": "A weak entity set can be identified by more than one strong entity set.",
+    "point": "A weak entity can depend on more than one identifying entity set.",
     "quote": "It is also possible to have a weak entity set with more than one identifying entity set. A particular weak entity would then be identified by a combination of entities, one from each identifying entity set.",
     "followup": "Why would a weak entity need to be identified by more than one strong entity set?",
     "followup_answer": "This allows for a more complex and accurate representation of real-world dependencies, where an entity's existence is contingent on multiple other entities.",
-    "variants": [
-     "a weak entity may depend on multiple strong entities for existence"
-    ],
     "followup_replies": [
      "to model complex dependencies",
      "to show multiple dependencies",
@@ -5365,18 +5242,10 @@
     ]
    },
    {
-    "point": "The design of the database schema must reflect the combination of identifying entities and the discriminator.",
+    "point": "Its primary key also includes its own discriminator (partial key).",
     "quote": "The primary key of the weak entity set would consist of the union of the primary keys of the identifying entity sets, plus the discriminator of the weak entity set.",
     "followup": "How does this affect the way relationships are modeled in the database?",
     "followup_answer": "It ensures that the relationships are explicitly modeled through the primary key, which includes the identifying entities and the discriminator, making the dependencies clear and enforceable.",
-    "variants": [
-     "the schema must include the identifying entities and the discriminator",
-     "the design includes the identifying entities and the weak entity's own key",
-     "the schema reflects the combination of the identifying entities and the discriminator",
-     "the database must model the identifying entities and the weak entity's key",
-     "the schema includes the identifying entities and the weak entity's unique identifier",
-     "the design includes the identifying entities and the weak entity's discriminator"
-    ],
     "followup_replies": [
      "relationships are modeled through the primary key",
      "the primary key models the relationships",
@@ -5429,10 +5298,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.048
   },
-  "quality_score": 5,
-  "quality_note": "odd scenario",
+  "quality_score": 7,
+  "quality_note": "odd scenario; key points and reference rewritten (repair 1)",
   "curated": false,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "dbms.schema_vs_instance.medium2",
@@ -5737,7 +5609,7 @@
    "grounding": 0.75,
    "coverage": 1.0
   },
-  "active": true,
+  "active": false,
   "core_point": {
    "point": "The trigger fires before the insert operation is executed.",
    "variants": [
@@ -5751,9 +5623,12 @@
    "stated_by_bank": 0.998
   },
   "quality_score": 2,
-  "quality_note": "key points are wrong (cascades don't insert; cascaded actions don't fire triggers in MySQL)",
+  "quality_note": "deactivated (repair 1): false premise - foreign-key cascades update or delete rows, they do not insert them, and in MySQL cascaded actions do not fire triggers",
   "curated": false,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "repairs": [
+   "batch1_2026-10-03"
+  ]
  },
  {
   "id": "dbms.query_processing_and_join_algorithms.easy1",

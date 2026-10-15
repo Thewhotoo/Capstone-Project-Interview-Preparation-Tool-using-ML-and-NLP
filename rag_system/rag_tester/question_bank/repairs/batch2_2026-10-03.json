@@ -1,0 +1,323 @@
+{
+ "about": "Key-point repair batch 2 (2026-10-03): the 22 active, not-yet-served questions on most-asked (tier 3) topics scored 5-7. Same rule as batch 1: key points are short, one claim each, in plain words, naming the specific mechanism; detail goes in the reference answer. Wrong or dubious points fixed, missing core ideas added with a verified slide quote, two low-value questions deactivated.",
+ "questions": {
+  "cn.dhcp.medium1": {
+   "quality_score": 8,
+   "quality_note": "key points reworded; DORA exchange made a key point (repair 2)",
+   "key_points": [
+    {
+     "point": "DHCP gives hosts their IP addresses automatically (dynamically)."
+    },
+    {
+     "point": "DHCP supports mobile users who join and leave the network."
+    },
+    {
+     "point": "The client and server exchange four messages: discover, offer, request and ACK."
+    }
+   ],
+   "reference_answer": "DHCP gives hosts their IP addresses automatically, so nobody has to configure each machine by hand. A new host broadcasts a DHCP discover message, a DHCP server replies with an offer, the host sends a request for that address, and the server confirms it with an ACK: four messages, discover, offer, request and ACK. Addresses are leased for a time and reused when hosts leave. This matters for network management because it supports mobile users who join and leave the network, avoids address conflicts and lets a limited pool of addresses be shared."
+  },
+  "cn.cidr.medium1": {
+   "quality_score": 7,
+   "quality_note": "key points reworded; efficiency argument added to the reference (repair 2)",
+   "reference_answer": "With classful addressing a network got a fixed block: class A, B or C, with 8, 16 or 24 network bits. An organisation needing about 2,000 addresses had to take a class B block of 65,536 addresses and waste most of it. CIDR (classless inter-domain routing) lets the network prefix have any length, written a.b.c.d/x where x is the number of prefix bits, so the same organisation can get a /21 block of 2,048 addresses. Blocks can be sized to what is actually needed, which wastes far fewer addresses, and contiguous blocks can also be aggregated into one route.",
+   "key_points": [
+    {
+     "point": "CIDR lets the network prefix have any length instead of a fixed class size."
+    },
+    {
+     "point": "CIDR addresses are written as a.b.c.d/x, where x is the number of prefix bits."
+    }
+   ]
+  },
+  "cn.mac_addressing.medium2": {
+   "quality_score": 7,
+   "quality_note": "key points reworded (repair 2)",
+   "key_points": [
+    {
+     "point": "Every network interface has its own unique 48-bit MAC address."
+    },
+    {
+     "point": "The MAC address is burned into the NIC's ROM by the manufacturer."
+    }
+   ]
+  },
+  "dbms.inner_join.easy1": {
+   "quality_score": 8,
+   "quality_note": "question wording fixed; key points reworded (repair 2)",
+   "question": "Explain what an inner join does in SQL.",
+   "key_points": [
+    {
+     "point": "An inner join combines rows from two related tables using a join condition."
+    },
+    {
+     "point": "It compares each row of one table with each row of the other and keeps the pairs that satisfy the condition."
+    },
+    {
+     "point": "INNER JOIN is the default join, so a plain JOIN is an inner join."
+    }
+   ]
+  },
+  "dbms.third_normal_form_3nf.medium1": {
+   "quality_score": 7,
+   "quality_note": "key points shortened; imprecise point fixed (repair 2)",
+   "key_points": [
+    {
+     "point": "In 3NF, for every dependency X → A, either X is a superkey or A is a prime attribute."
+    },
+    {
+     "point": "A non-prime attribute must not depend on the key through another non-prime attribute."
+    },
+    {
+     "point": "A transitive dependency through a candidate key is allowed in 3NF."
+    }
+   ]
+  },
+  "dbms.first_normal_form_1nf.hard2": {
+   "quality_score": 7,
+   "difficulty": "medium",
+   "quality_note": "difficulty corrected to medium; key points reworded (repair 2)",
+   "key_points": [
+    {
+     "point": "1NF disallows nested relations so that every attribute value is atomic."
+    },
+    {
+     "point": "Each attribute must hold a single value, not a set or a list of values."
+    },
+    {
+     "point": "Most relational DBMSs only allow tables that are in first normal form."
+    }
+   ]
+  },
+  "dsa.asymptotic_notations.easy1": {
+   "quality_score": 8,
+   "quality_note": "key points reworded (repair 2)",
+   "key_points": [
+    {
+     "point": "t(n) in Ω(g(n)) means t(n) grows at least as fast as g(n): g is a lower bound."
+    },
+    {
+     "point": "Formally, t(n) ≥ c·g(n) for some positive constant c and all n ≥ n₀."
+    }
+   ]
+  },
+  "dsa.open_addressing.medium1": {
+   "quality_score": 7,
+   "quality_note": "key points reworded; clustering trade-off in the reference (not in the slides, so not a key point) (repair 2)",
+   "reference_answer": "Both resolve a collision by probing other slots of the same table. Linear probing tries the next slots one after another, h(key)+1, h(key)+2, and so on modulo the table size. It is simple and cache-friendly, but occupied slots form long runs (primary clustering) that make later insertions and searches slower. Quadratic probing jumps by squares, h(key)+1², h(key)+2², h(key)+3², modulo the table size, which spreads colliding keys out and avoids primary clustering, at the cost that it may not find an empty slot unless the table size is prime and the table is less than half full. So linear probing suits lightly loaded tables, and quadratic probing is preferred when collisions are frequent.",
+   "key_points": [
+    {
+     "point": "Quadratic probing tries the slots h + 1², h + 2², h + 3², … (mod table size) after a collision."
+    },
+    {
+     "point": "Linear probing tries the next slots one by one: h + 1, h + 2, … (mod table size)."
+    }
+   ]
+  },
+  "dsa.merge_sort.medium2": {
+   "quality_score": 7,
+   "quality_note": "inaccurate key point fixed (repair 2)",
+   "reference_answer": "The merge step takes two subarrays that are already sorted. It repeatedly compares the first remaining element of each and copies the smaller one to the output, and when one subarray runs out it copies the rest of the other. Because each half is sorted, the smallest remaining element overall is always one of the two being compared, so the output comes out in sorted order. Every comparison places one element, so merging n elements takes at most n - 1 comparisons, even in the worst case.",
+   "key_points": [
+    {
+     "point": "Merging repeatedly compares the first remaining elements of the two sorted halves and copies the smaller one."
+    },
+    {
+     "point": "Each comparison places one element, so merging n elements takes at most n − 1 comparisons.",
+     "followup_answer": "Every comparison moves one element to the output, and once one half runs out the rest are copied without comparing, so at most n - 1 comparisons are made."
+    },
+    {
+     "point": "Because both halves are already sorted, the merged output comes out in sorted order."
+    }
+   ]
+  },
+  "ooad.types_of_inheritance.medium1": {
+   "quality_score": 7,
+   "quality_note": "key points reworded (repair 2)",
+   "key_points": [
+    {
+     "point": "Hybrid inheritance combines two or more types of inheritance in one hierarchy."
+    },
+    {
+     "point": "It often mixes hierarchical and multiple inheritance."
+    },
+    {
+     "point": "Java does not allow multiple inheritance of classes, so it uses interfaces for hybrid inheritance."
+    }
+   ]
+  },
+  "ooad.interface_segregation_principle.medium2": {
+   "quality_score": 7,
+   "quality_note": "overlaps the easy ISP question; key points reworded (repair 2)",
+   "key_points": [
+    {
+     "point": "Clients should not be forced to implement methods they do not use."
+    },
+    {
+     "point": "Large interfaces should be split into small, client-specific ones."
+    },
+    {
+     "point": "Otherwise classes depend on, and must define, methods they do not need."
+    }
+   ]
+  },
+  "ooad.interfaces.medium2": {
+   "active": false,
+   "quality_note": "deactivated (repair 2): the provided/required interface part is UML-component trivia, and multiple inheritance through interfaces is covered by ooad.interfaces.easy1"
+  },
+  "ooad.abstraction_vs_encapsulation.easy1": {
+   "quality_score": 8,
+   "quality_note": "abstraction was missing from the key points; added (repair 2)",
+   "reference_answer": "Abstraction means showing only the essential features of an object and hiding the background details, so you use something through what it does rather than how it does it; in Java it is achieved with interfaces and abstract classes. Encapsulation means bundling the data and the methods that work on it into one unit, a class, and hiding the data so that outside code can reach it only through those methods, for example private fields with getters and setters. Abstraction is about hiding complexity at the design level, while encapsulation is about protecting the internal state.",
+   "key_points": [
+    {
+     "point": "Encapsulation bundles data and the methods that use it into one unit, a class."
+    },
+    {
+     "point": "Encapsulation hides the internal data so outside code can reach it only through methods."
+    },
+    {
+     "point": "Abstraction shows only the essential features of an object and hides the background details.",
+     "quote": "Abstraction refers to the act of representing essential features without including the background details or explanations.",
+     "followup": "Can you give an example of abstraction?",
+     "followup_answer": "Driving a car through the steering wheel and pedals without knowing how the engine works; in Java, using an interface or abstract class without knowing the implementation."
+    }
+   ]
+  },
+  "ooad.classes_and_objects.hard2": {
+   "quality_score": 7,
+   "difficulty": "medium",
+   "quality_note": "vague key points made concrete; difficulty corrected to medium (repair 2)",
+   "key_points": [
+    {
+     "point": "A class is a blueprint; objects are instances created from it, each with its own state."
+    },
+    {
+     "point": "Every Java class directly or indirectly extends Object, the root of the class hierarchy."
+    },
+    {
+     "point": "So every object inherits methods such as equals(), hashCode() and toString() from Object."
+    }
+   ]
+  },
+  "os.deadlock_conditions.medium1": {
+   "quality_score": 7,
+   "quality_note": "dubious key point fixed; points restated as the four conditions (repair 2)",
+   "reference_answer": "Deadlock can arise only if four conditions hold at the same time. Mutual exclusion: at least one resource can be used by only one process at a time. Hold and wait: a process holds some resources while waiting for others. No preemption: a resource is released only voluntarily by the process holding it. Circular wait: there is a cycle of processes, each waiting for a resource held by the next. The conditions depend on each other because the cycle only forms if resources cannot be shared, are held while waiting, and cannot be taken away, so breaking any one of the four prevents deadlock.",
+   "key_points": [
+    {
+     "point": "Mutual exclusion: at least one resource can be used by only one process at a time."
+    },
+    {
+     "point": "Hold and wait: a process holds some resources while waiting for others."
+    },
+    {
+     "point": "No preemption: a resource is released only voluntarily by the process holding it."
+    },
+    {
+     "point": "Circular wait: a cycle of processes, each waiting for a resource held by the next."
+    }
+   ]
+  },
+  "os.race_condition.medium2": {
+   "quality_score": 7,
+   "quality_note": "key points reworded (repair 2)",
+   "key_points": [
+    {
+     "point": "A race condition happens when the result depends on the order in which processes run."
+    },
+    {
+     "point": "After fork, it is unpredictable whether the parent or the child runs first."
+    },
+    {
+     "point": "The parent should call wait() to wait for the child to finish."
+    }
+   ]
+  },
+  "os.threads.medium1": {
+   "quality_score": 7,
+   "quality_note": "key points reworded (repair 2)",
+   "key_points": [
+    {
+     "point": "The threads of one process can run in parallel on multiple cores."
+    },
+    {
+     "point": "Modern applications run many tasks at once as separate threads."
+    },
+    {
+     "point": "Creating a thread is much lighter than creating a process."
+    }
+   ]
+  },
+  "os.semaphores.medium1": {
+   "quality_score": 7,
+   "quality_note": "deadlock was missing from the key points; added (repair 2)",
+   "key_points": [
+    {
+     "point": "Incorrect use of wait() and signal() can cause starvation: a process may never leave the semaphore queue."
+    },
+    {
+     "point": "Busy waiting wastes CPU time while a process spins waiting for the semaphore."
+    },
+    {
+     "point": "Deadlock: processes wait forever for a signal that only another waiting process can give.",
+     "quote": "Deadlock – two or more processes are waiting indefinitely for an",
+     "followup": "Can you give an example of semaphores causing a deadlock?",
+     "followup_answer": "P0 does wait(S) then wait(Q) while P1 does wait(Q) then wait(S); each holds one semaphore and waits forever for the other."
+    }
+   ]
+  },
+  "os.segmentation.medium2": {
+   "quality_score": 8,
+   "quality_note": "the invalid-offset trap added as a key point (repair 2)",
+   "key_points": [
+    {
+     "point": "A logical address is a segment number plus an offset within that segment."
+    },
+    {
+     "point": "The segment table gives each segment's base address and limit."
+    },
+    {
+     "point": "If the offset is beyond the segment's limit, the hardware traps to the operating system.",
+     "quote": "The offset d of the logical address must be between 0 and the segment limit. If it is not, we trap to the operating system (logical addressing attempt beyond end of segment).",
+     "followup": "What happens if a program uses an offset larger than its segment's limit?",
+     "followup_answer": "The hardware traps to the operating system with an addressing error, which usually ends the program (a segmentation fault)."
+    }
+   ]
+  },
+  "os.banker_s_algorithm.medium1": {
+   "quality_score": 7,
+   "quality_note": "implementation-variable key points replaced by the safe-state idea (repair 2)",
+   "reference_answer": "Before granting a request, the Banker's algorithm pretends to grant it and runs the safety check. The state is safe if there is some order (a safe sequence) in which every process can get the resources it may still need, up to its declared maximum, from the available resources plus those released by the processes before it, and then finish. The check uses a Work vector of available resources and a Finish flag per process. If the resulting state is safe the request is granted; otherwise the process waits, so the system never enters an unsafe state that could lead to deadlock.",
+   "key_points": [
+    {
+     "point": "A request is granted only if the system would still be in a safe state afterwards; otherwise the process waits.",
+     "quote": "A state is safe if the system can allocate resources to each process (up to its maximum) in some order and still avoid a deadlock.",
+     "followup": "What happens if granting a request would leave the system in an unsafe state?",
+     "followup_answer": "The request is not granted; the process waits until it can be granted safely."
+    },
+    {
+     "point": "The state is safe if some order exists in which every process can get its maximum need and finish.",
+     "quote": "More formally, a system is in a safe state only if there exists a safe sequence."
+    }
+   ]
+  },
+  "os.mutex_locks.medium2": {
+   "quality_score": 7,
+   "quality_note": "false key point removed (other locks can busy-wait too) (repair 2)",
+   "key_points": [
+    {
+     "point": "A spinlock busy-waits: the waiting process keeps checking the lock and wastes CPU cycles."
+    },
+    {
+     "point": "This is a problem in real-time systems, because the spinning delays other tasks unpredictably."
+    }
+   ],
+   "reference_answer": "A spinlock makes a waiting process busy-wait: it keeps checking the lock in a loop instead of blocking, which wastes CPU cycles. This is a problem in real-time systems, because the spinning task occupies the CPU and delays other tasks unpredictably, and real-time tasks must meet deadlines. Spinlocks are only worth using when the lock is held for a very short time, typically on multiprocessors, where spinning is cheaper than putting the process to sleep and waking it up again."
+  },
+  "os.context_switching.hard2": {
+   "active": false,
+   "quality_note": "deactivated (repair 2): confuses context-switch time with swapping time"
+  }
+ }
+}

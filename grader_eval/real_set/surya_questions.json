@@ -1,0 +1,837 @@
+[
+ {
+  "question_id": "dbms.deadlocks_in_dbms.easy1",
+  "subject": "DBMS",
+  "topic": "Deadlocks in DBMS",
+  "difficulty": "easy",
+  "question": "Explain what a deadlock is in the context of database transactions.",
+  "key_points": [
+   "A deadlock is a situation where two or more transactions are waiting for each other to release locks.",
+   "Deadlock results in a cycle where no transaction can make progress.",
+   "Deadlock resolution requires one transaction to be rolled back."
+  ],
+  "reference_answer": "A deadlock occurs when two or more transactions are waiting for each other to release locks, creating a cycle where none can proceed. In such a situation, neither transaction can make progress. One of the transactions must be rolled back to resolve the deadlock. Deadlocks are a common issue in lock-based protocols where transactions hold locks and request new ones in a conflicting order.",
+  "followup_question": "What is the implication of having to roll back a transaction in a deadlock?",
+  "followup_expected": "Rolling back a transaction can lead to loss of work, but it is necessary to break the deadlock and allow other transactions to proceed.",
+  "target_style": "good",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "cn.switching_and_vlans.easy1",
+  "subject": "CN",
+  "topic": "Switching and VLANs",
+  "difficulty": "easy",
+  "question": "Explain how a self-learning switch builds its MAC address table.",
+  "key_points": [
+   "A self-learning switch learns which hosts are connected by recording the sender's MAC address and the interface it was received on.",
+   "The MAC address table is used to selectively forward frames to the correct port."
+  ],
+  "reference_answer": "A self-learning switch builds its MAC address table by recording the sender's MAC address and the interface it was received on. When a frame is received, the switch examines the source MAC address and associates it with the incoming port. This process is automatic and requires no manual configuration. The switch updates its table whenever it receives a new frame from a device, allowing it to forward future frames more efficiently.",
+  "followup_question": "What happens if the destination MAC address is not in the switch's table?",
+  "followup_expected": "The switch forwards the frame to all ports except the one it was received on, using a process called flooding.",
+  "target_style": "dont_know",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "ooad.polymorphism.medium2",
+  "subject": "OOAD",
+  "topic": "Polymorphism",
+  "difficulty": "medium",
+  "question": "Explain how polymorphism allows objects of different classes to be treated as objects of a common superclass, and why this is important for software design.",
+  "key_points": [
+   "Polymorphism allows objects of different classes to be treated as objects of a common superclass.",
+   "Polymorphism enables a single interface to work with objects of different types.",
+   "Polymorphism supports dynamic method dispatch, which determines the method to call at runtime."
+  ],
+  "reference_answer": "Polymorphism allows objects of different classes to be treated as objects of a common superclass, which is essential for writing flexible and reusable code. This is achieved through inclusion polymorphism, also known as subtyping, where derived classes can be used through base class references. This enables a single interface to work with objects of different types, allowing for dynamic method dispatch and making it easier to replace one implementation with another without changing the client code.",
+  "followup_question": "How does dynamic method dispatch differ from static method binding?",
+  "followup_expected": "Dynamic method dispatch determines the method to call at runtime based on the actual object type, whereas static method binding resolves the method at compile time based on the reference type.",
+  "target_style": "partial",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "ooad.chain_of_responsibility_pattern.medium1",
+  "subject": "OOAD",
+  "topic": "Chain of responsibility pattern",
+  "difficulty": "medium",
+  "question": "Explain how the Chain of Responsibility pattern allows for dynamic decision-making in handling requests, and why this is important for loose coupling.",
+  "key_points": [
+   "The Chain of Responsibility pattern allows multiple objects to handle a request.",
+   "The chain can be decided dynamically at runtime.",
+   "The pattern promotes loose coupling between the sender and the receiver."
+  ],
+  "reference_answer": "The Chain of Responsibility pattern allows for dynamic decision-making by letting the client decide at runtime which objects form the chain and the order in which they handle requests. This is important for loose coupling because it decouples the sender of a request from its receiver, allowing multiple objects to handle the request without the sender needing to know which one will ultimately do so.",
+  "followup_question": "How does giving multiple objects an opportunity to handle the request contribute to loose coupling?",
+  "followup_expected": "It allows the sender to remain unaware of which specific object will handle the request, reducing dependencies between components.",
+  "target_style": "confident_wrong",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "dbms.primary_key.hard2",
+  "subject": "DBMS",
+  "topic": "Primary key",
+  "difficulty": "hard",
+  "question": "Explain how the primary key of a weak entity set is determined, and what role the identifying relationship plays in this process.",
+  "key_points": [
+   "The primary key of a weak entity set includes the primary key of the identifying entity set.",
+   "The discriminator of the weak entity set is part of the primary key.",
+   "The identifying relationship enforces a foreign key constraint.",
+   "The combination of the identifying entity's primary key and the weak entity's discriminator ensures uniqueness."
+  ],
+  "reference_answer": "The primary key of a weak entity set is formed by combining the primary key of the identifying entity set with the discriminator of the weak entity set. This ensures that each weak entity instance is uniquely identified in relation to its identifying entity. The identifying relationship ensures that the weak entity is always associated with a valid instance of the identifying entity, which is enforced through a foreign key constraint.",
+  "followup_question": "Can a weak entity have a primary key that doesn't include the identifying entity's primary key?",
+  "followup_expected": "No, because the weak entity's existence depends on the identifying entity, and its primary key must include the identifying entity's primary key to ensure uniqueness.",
+  "target_style": "short_casual",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "os.user_mode_vs_kernel_mode.medium1",
+  "subject": "OS",
+  "topic": "User mode vs kernel mode",
+  "difficulty": "medium",
+  "question": "Explain how user mode and kernel mode help protect the operating system from user programs.",
+  "key_points": [
+   "User mode and kernel mode use a hardware-provided mode bit to distinguish between user and kernel code.",
+   "Privileged instructions can only be executed in kernel mode.",
+   "System calls allow user programs to request kernel services while maintaining mode separation."
+  ],
+  "reference_answer": "User mode and kernel mode help protect the operating system by using a mode bit provided by hardware to distinguish between user code and kernel code. Some instructions are designated as privileged and can only be executed in kernel mode, preventing user programs from directly accessing critical system resources. System calls allow user programs to request services from the kernel, temporarily switching to kernel mode, and then returning to user mode after the call completes.",
+  "followup_question": "What would happen if a system call didn't switch to kernel mode?",
+  "followup_expected": "The user program would be able to directly execute privileged instructions, which could lead to unauthorized access to system resources and compromise the integrity of the operating system.",
+  "target_style": "good",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dbms.foreign_key.medium2",
+  "subject": "DBMS",
+  "topic": "Foreign key",
+  "difficulty": "medium",
+  "question": "How do the `ON DELETE CASCADE` and `ON UPDATE CASCADE` options affect the child table when changes are made to the parent table?",
+  "key_points": [
+   "The `ON DELETE CASCADE` option deletes corresponding rows in the child table when a row in the parent table is deleted.",
+   "The `ON UPDATE CASCADE` option updates corresponding rows in the child table when a row in the parent table is updated."
+  ],
+  "reference_answer": "The `ON DELETE CASCADE` option automatically deletes corresponding rows in the child table when a row in the parent table is deleted. The `ON UPDATE CASCADE` option automatically updates corresponding rows in the child table when a row in the parent table is updated. Both options ensure that the child table remains consistent with the parent table by propagating the changes.",
+  "followup_question": "Can `ON UPDATE CASCADE` be used to automatically update the child table when the primary key of the parent table changes?",
+  "followup_expected": "Yes, `ON UPDATE CASCADE` ensures that the child table is automatically updated to reflect the new primary key value in the parent table.",
+  "target_style": "partial",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "ooad.constructors.medium2",
+  "subject": "OOAD",
+  "topic": "Constructors",
+  "difficulty": "medium",
+  "question": "How does the use of a parameterized constructor differ from a default constructor in Java, and what are the implications for object initialization?",
+  "key_points": [
+   "A parameterized constructor allows you to pass arguments to initialize an object's instance variables with specific values.",
+   "The default constructor provides default values to the object's instance variables.",
+   "Defining a parameterized constructor affects the availability of the default constructor."
+  ],
+  "reference_answer": "A parameterized constructor allows you to pass arguments to initialize an object's instance variables with specific values, while a default constructor provides default values. The parameterized constructor is used when you want to set initial values during object creation, whereas the default constructor is used when no specific values are needed. When you define a parameterized constructor, the default constructor is no longer available, which means you must explicitly define it if needed. This affects how objects are initialized and can influence design decisions when multiple initialization scenarios are required.",
+  "followup_question": "Why would you choose a parameterized constructor over a default constructor in a real-world scenario?",
+  "followup_expected": "You would choose a parameterized constructor when you need to initialize an object with specific values, ensuring that the object is in a valid state upon creation.",
+  "target_style": "partial",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "os.priority_scheduling.medium1",
+  "subject": "OS",
+  "topic": "Priority scheduling",
+  "difficulty": "medium",
+  "question": "Explain how priority scheduling can lead to starvation and what is a common solution to this problem.",
+  "key_points": [
+   "Priority scheduling can lead to starvation.",
+   "Starvation is a problem in priority scheduling.",
+   "Aging is a common solution to starvation in priority scheduling."
+  ],
+  "reference_answer": "Priority scheduling can lead to starvation because low-priority processes may never execute if higher-priority processes keep arriving. A common solution to this problem is aging, which gradually increases the priority of processes over time to ensure they eventually get executed.",
+  "followup_question": "How can we prevent low-priority processes from being starved?",
+  "followup_expected": "By using aging, which increases the priority of waiting processes over time.",
+  "target_style": "short_casual",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "cn.go_back_n_and_selective_repeat.medium2",
+  "subject": "CN",
+  "topic": "Go-Back-N and Selective Repeat",
+  "difficulty": "medium",
+  "question": "Explain how the sender and receiver manage retransmissions and window advancement in Selective Repeat, and why this approach is more efficient than Go-Back-N in certain scenarios.",
+  "key_points": [
+   "The sender retransmits only the unacknowledged packets individually.",
+   "The receiver acknowledges each correctly received packet individually.",
+   "The sender advances the window base only when the smallest unacknowledged packet is acknowledged."
+  ],
+  "reference_answer": "In Selective Repeat, the sender retransmits only the unacknowledged packets individually, while the receiver acknowledges each correctly received packet individually. This allows the sender to advance the window base only when the smallest unacknowledged packet is acknowledged, which improves efficiency in cases of partial packet loss. The receiver buffers out-of-order packets and delivers them in order once the sequence is complete, which reduces the need for retransmitting multiple packets in case of a single lost packet.",
+  "followup_question": "How does this differ from Go-Back-N's window advancement?",
+  "followup_expected": "In Go-Back-N, the window advances when any packet in the window is acknowledged, whereas in Selective Repeat, it only advances when the smallest unacknowledged packet is acknowledged.",
+  "target_style": "partial",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "os.deadlock_avoidance.medium2",
+  "subject": "OS",
+  "topic": "Deadlock avoidance",
+  "difficulty": "medium",
+  "question": "How does the concept of a safe state influence the decision-making process when a process requests a resource in a deadlock avoidance system?",
+  "key_points": [
+   "The system must ensure that granting a resource request will not leave it in an unsafe state.",
+   "A safe state guarantees that the system can avoid deadlocks.",
+   "The behavior of processes can lead to unsafe states, which may result in deadlocks."
+  ],
+  "reference_answer": "The concept of a safe state ensures that the system remains in a state where a deadlock cannot occur. When a process requests a resource, the system must determine if granting the request will leave the system in a safe state. If it does, the request is granted; otherwise, the process must wait. This decision is based on the idea that the system must always remain in a safe state to avoid deadlocks.",
+  "followup_question": "How does the behavior of processes affect the system's ability to avoid deadlocks?",
+  "followup_expected": "If processes request resources in a way that leads to an unsafe state, the system may not be able to avoid a deadlock, even if it was initially in a safe state.",
+  "target_style": "partial",
+  "target_followup": "wrong"
+ },
+ {
+  "question_id": "dsa.postfix_expression_evaluation.medium2",
+  "subject": "DSA",
+  "topic": "Postfix expression evaluation",
+  "difficulty": "medium",
+  "question": "Explain how the postfix expression evaluation algorithm ensures that operators are applied to the correct operands.",
+  "key_points": [
+   "Each operator in a postfix string refers to the previous two operands.",
+   "When an operator is reached, its operands will be the top two elements on the stack.",
+   "The two elements are popped out, the indicated operation is performed on them and result is pushed on the stack so that it will be available for use as an operand of the next operator."
+  ],
+  "reference_answer": "The postfix expression evaluation algorithm ensures that operators are applied to the correct operands by using a stack to store operands as they are read. When an operator is encountered, the top two elements from the stack are popped, and the operator is applied to these two operands. This ensures that each operator always acts on the most recent two operands, which is a key property of postfix notation.",
+  "followup_question": "Why is it necessary to push the result back onto the stack after performing an operation?",
+  "followup_expected": "It is necessary to push the result back onto the stack so that it can be used as an operand for subsequent operators, maintaining the correct order of operations in the postfix expression.",
+  "target_style": "short_casual",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "dsa.breadth_first_search.easy1",
+  "subject": "DSA",
+  "topic": "Breadth-first search",
+  "difficulty": "easy",
+  "question": "Can you explain what breadth-first search does in terms of node exploration?",
+  "key_points": [
+   "BFS explores all neighbour nodes in the first level before moving to the next level.",
+   "BFS ensures nodes are visited in order of their distance from the starting node."
+  ],
+  "reference_answer": "Breadth-first search explores all the neighbour nodes in the first level from an arbitrary node before moving to the next level of neighbouring nodes. This ensures that nodes are visited in order of their distance from the starting node. It uses a queue to manage the order of exploration, which guarantees that each level of nodes is fully processed before moving to the next.",
+  "followup_question": "How does this property affect the algorithm's use in real-world applications?",
+  "followup_expected": "This property makes BFS ideal for finding the shortest path in unweighted graphs, such as in network routing or social network connections.",
+  "target_style": "good_own_words",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dbms.integrity_constraints.medium1",
+  "subject": "DBMS",
+  "topic": "Integrity constraints",
+  "difficulty": "medium",
+  "question": "Explain how referential integrity constraints work in SQL and why they are important for maintaining data consistency.",
+  "key_points": [
+   "Referential integrity constraints ensure that foreign key values must match existing primary key values or be null.",
+   "Referential integrity constraints help maintain logical relationships between tables.",
+   "Referential integrity constraints can be modified with referential triggered actions like CASCADE, SET NULL, or SET DEFAULT."
+  ],
+  "reference_answer": "Referential integrity constraints ensure that foreign key values in a table must match existing primary key values in another table, or be null. This prevents orphaned records and maintains consistency between related tables. These constraints are important because they enforce logical relationships between tables, ensuring that data remains accurate and consistent across the database.",
+  "followup_question": "What is the purpose of the CASCADE option in referential integrity?",
+  "followup_expected": "The CASCADE option automatically updates or deletes related records in other tables when a record is updated or deleted in the referenced table.",
+  "target_style": "short_casual",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "cn.network_devices.hard2",
+  "subject": "CN",
+  "topic": "Network devices",
+  "difficulty": "hard",
+  "question": "Consider a scenario where a network administrator is deciding between using a Repeater and a Switch to connect two segments of a network. What are the key differences in their operation and how might these differences affect network performance?",
+  "key_points": [
+   "A Repeater regenerates signals to extend the reach of a network.",
+   "A Repeater broadcasts all data to all connected devices.",
+   "A Switch uses MAC addresses to forward data directly to the intended device.",
+   "A Switch reduces collisions by only forwarding data to the intended recipient."
+  ],
+  "reference_answer": "A Repeater operates at the Physical Layer and regenerates signals to extend the reach of a network, while a Switch operates at the Data Link Layer and uses MAC addresses to forward data directly to the intended device. The Repeater broadcasts all data to all connected devices, which can lead to increased collisions and reduced network efficiency. In contrast, a Switch reduces collisions by only forwarding data to the intended recipient, improving overall network performance. These differences mean that a Repeater is suitable for extending a single segment, whereas a Switch is better for managing multiple devices in a more intelligent and efficient manner.",
+  "followup_question": "How does this compare to the behavior of a Repeater?",
+  "followup_expected": "A Repeater broadcasts all data, leading to more collisions, while a Switch forwards data only to the intended recipient, minimizing collisions.",
+  "target_style": "partial",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "ooad.composition_over_inheritance.medium1",
+  "subject": "OOAD",
+  "topic": "Composition over inheritance",
+  "difficulty": "medium",
+  "question": "Explain how composition differs from inheritance in terms of how they model relationships between objects, and why composition is often preferred in object-oriented design.",
+  "key_points": [
+   "Composition models a 'has-a' relationship.",
+   "Composition allows for dynamic behavior changes at runtime.",
+   "Composition provides better test-ability."
+  ],
+  "reference_answer": "Composition models a 'has-a' relationship, where one object contains another, while inheritance models an 'is-a' relationship. Composition allows for greater flexibility and reusability, as it enables dynamic behavior changes at runtime.",
+  "followup_question": "Why might test-ability be an important factor in choosing composition over inheritance?",
+  "followup_expected": "Better test-ability means that individual components can be tested in isolation, which simplifies debugging and maintenance.",
+  "target_style": "good_own_words",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dbms.outer_joins.medium1",
+  "subject": "DBMS",
+  "topic": "Outer joins",
+  "difficulty": "medium",
+  "question": "Explain how a Full Outer Join differs from a Left or Right Outer Join, and why it might be useful in a database query.",
+  "key_points": [
+   "A Full Outer Join returns all records from both tables, including unmatched rows, which are padded with NULL values.",
+   "Full Outer Join is useful when you need to combine data from both tables regardless of whether there is a match.",
+   "Full Outer Join cannot be directly implemented in MySQL and requires combining LEFT and RIGHT Outer Joins with UNION."
+  ],
+  "reference_answer": "A Full Outer Join returns all records from both tables, including unmatched rows, which are padded with NULL values. This is different from a Left or Right Outer Join, which only returns all records from one table (left or right) and unmatched rows from the other. Full Outer Join is useful when you need to combine data from both tables regardless of whether there is a match, ensuring no data is lost.",
+  "followup_question": "What is a common workaround for implementing Full Outer Join in MySQL?",
+  "followup_expected": "Using a combination of LEFT OUTER JOIN and RIGHT OUTER JOIN with the UNION operator to merge their results.",
+  "target_style": "good_own_words",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "cn.tcp_flow_control.medium1",
+  "subject": "CN",
+  "topic": "TCP flow control",
+  "difficulty": "medium",
+  "question": "Explain how TCP flow control prevents the sender from overwhelming the receiver's buffer.",
+  "key_points": [
+   "The receiver advertises its available buffer space through the rwnd field in the TCP header.",
+   "TCP flow control guarantees the receiver's buffer will not overflow."
+  ],
+  "reference_answer": "TCP flow control ensures the sender does not overwhelm the receiver's buffer by having the receiver advertise its available buffer space through the rwnd field in the TCP header. The sender limits the amount of unACKed data it can transmit based on this advertised window size. This mechanism guarantees that the receiver's buffer will not overflow, even if the network layer delivers data faster than the application layer can process it.",
+  "followup_question": "How does the sender know how much data it can send at any time?",
+  "followup_expected": "The sender uses the receiver's advertised window size in the TCP header to determine the maximum amount of data it can send without overwhelming the receiver.",
+  "target_style": "short_casual",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "os.deadlock_prevention.medium1",
+  "subject": "OS",
+  "topic": "Deadlock prevention",
+  "difficulty": "medium",
+  "question": "Explain how the 'circular wait' condition can be prevented in a system with multiple processes and shared resources.",
+  "key_points": [
+   "Processes must request resources in increasing order of their assigned numerical numbers.",
+   "This is one of the four conditions that must be violated to prevent deadlock."
+  ],
+  "reference_answer": "The circular wait condition can be prevented by assigning a numerical number to each resource and requiring that processes request resources in increasing order of numbering. This ensures that a cycle of waiting cannot form. By enforcing this ordering, the system can avoid the circular wait condition, which is one of the four necessary conditions for deadlock.",
+  "followup_question": "What would happen if all four conditions were satisfied?",
+  "followup_expected": "A deadlock would occur, as all four necessary conditions for deadlock are met.",
+  "target_style": "hesitant",
+  "target_followup": "wrong"
+ },
+ {
+  "question_id": "dbms.stored_procedures_and_functions.easy1",
+  "subject": "DBMS",
+  "topic": "Stored procedures and functions",
+  "difficulty": "easy",
+  "question": "Explain what a stored procedure is and why it is useful in a database system.",
+  "key_points": [
+   "A stored procedure is a collection of pre-compiled SQL statements stored inside the database.",
+   "Stored procedures reduce duplication of effort and improve software modularity.",
+   "Stored procedures can reduce data transfer and communication cost between the client and server."
+  ],
+  "reference_answer": "A stored procedure is a collection of pre-compiled SQL statements stored inside the database. It is useful because it allows a database program to be stored at the server and invoked by any application program, reducing duplication of effort and improving software modularity. It also reduces data transfer and communication cost between the client and server in certain situations.",
+  "followup_question": "In what situations might stored procedures reduce communication costs?",
+  "followup_expected": "Stored procedures can reduce communication costs when complex operations are performed on the server, minimizing the need to send large amounts of data between the client and server.",
+  "target_style": "confident_wrong",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "cn.tcp_vs_udp.easy1",
+  "subject": "CN",
+  "topic": "TCP vs UDP",
+  "difficulty": "easy",
+  "question": "Explain one key difference between TCP and UDP in terms of reliability and connection setup.",
+  "key_points": [
+   "TCP requires a connection setup.",
+   "UDP does not provide reliability."
+  ],
+  "reference_answer": "TCP provides reliable transport and requires a connection setup between client and server, while UDP does not provide reliability and has no connection setup. This means TCP guarantees data delivery and order, whereas UDP sends datagrams without ensuring they arrive or are in the correct sequence.",
+  "followup_question": "Why would an application choose UDP over TCP?",
+  "followup_expected": "Because UDP is faster and more efficient for applications that can tolerate packet loss, such as streaming media.",
+  "target_style": "good_own_words",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dsa.stacks_and_recursion.easy1",
+  "subject": "DSA",
+  "topic": "Stacks and recursion",
+  "difficulty": "easy",
+  "question": "Explain how a stack is used in the execution of recursive functions.",
+  "key_points": [
+   "Each recursive function call creates an activation record that is pushed onto the stack.",
+   "The stack ensures that the most recent function call is executed first, and the most recent call is removed first.",
+   "The stack stores the return address so that the program can resume execution after the function call completes."
+  ],
+  "reference_answer": "A stack is used in the execution of recursive functions because each function call creates an activation record that is pushed onto the stack. This activation record contains the function's local variables and return address. The last-in, first-out (LIFO) property of the stack ensures that when a recursive function completes, the most recent call is removed from the stack, allowing control to return to the previous call in the call chain.",
+  "followup_question": "What happens to the return address when a function call is made?",
+  "followup_expected": "The return address is stored in the activation record on the stack so that the program can resume execution at the correct location after the function call completes.",
+  "target_style": "good_own_words",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dsa.stack_operations.easy1",
+  "subject": "DSA",
+  "topic": "Stack operations",
+  "difficulty": "easy",
+  "question": "Explain how a stack can be implemented using a linked list.",
+  "key_points": [
+   "A stack can be implemented through the linked list.",
+   "Push operation inserts an element at the front of the list.",
+   "Pop operation removes an element from the front of the list."
+  ],
+  "reference_answer": "A stack implemented with a linked list uses a pointer called 'top' that points to the head of the list. Push operations insert new nodes at the front of the list, and pop operations remove nodes from the front. This ensures that the most recently added element is always the first to be removed, maintaining the LIFO property.",
+  "followup_question": "What is the effect of popping an element from a linked list-based stack?",
+  "followup_expected": "The element at the front of the list is removed, and the top pointer is updated to point to the next node in the list.",
+  "target_style": "confident_wrong",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "os.fifo_page_replacement.easy1",
+  "subject": "OS",
+  "topic": "FIFO page replacement",
+  "difficulty": "easy",
+  "question": "Explain how the FIFO page replacement algorithm works in the context of page faults and memory frames.",
+  "key_points": [
+   "FIFO uses a queue to track the order of pages in memory.",
+   "FIFO can lead to Belady’s Anomaly."
+  ],
+  "reference_answer": "The FIFO page replacement algorithm uses a queue to track the order in which pages were loaded into memory. When a page fault occurs and there are no available frames, the page that has been in memory the longest is replaced. This is based on the idea that pages that were loaded earlier are less likely to be needed soon. However, this approach can sometimes lead to Belady’s Anomaly, where adding more frames can increase the number of page faults.",
+  "followup_question": "What is an example of a situation where FIFO might cause more page faults with more memory?",
+  "followup_expected": "Belady’s Anomaly occurs when increasing the number of frames leads to more page faults, which can happen in FIFO due to the order in which pages are replaced.",
+  "target_style": "good_own_words",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "cn.tcp_connection_establishment.medium2",
+  "subject": "CN",
+  "topic": "TCP connection establishment",
+  "difficulty": "medium",
+  "question": "Why does TCP use a three-way handshake to establish a connection, rather than a two-way handshake?",
+  "key_points": [
+   "TCP uses a three-way handshake to ensure both parties agree to establish the connection.",
+   "A two-way handshake would not guarantee mutual acknowledgment of the connection request."
+  ],
+  "reference_answer": "TCP uses a three-way handshake to ensure both the sender and receiver agree to establish the connection and to synchronize their initial sequence numbers. A two-way handshake would not guarantee that both parties are ready to communicate, which could lead to lost data or failed connections. The three-way handshake allows each side to confirm the other's willingness to connect and to exchange initial sequence numbers, ensuring reliable communication.",
+  "followup_question": "What is the risk of using a two-way handshake in a network with packet loss?",
+  "followup_expected": "The receiving side might not receive the connection request, leading to a failed connection and potential retransmission issues.",
+  "target_style": "good_own_words",
+  "target_followup": "wrong"
+ },
+ {
+  "question_id": "cn.ipv6.medium1",
+  "subject": "CN",
+  "topic": "IPv6",
+  "difficulty": "medium",
+  "question": "Explain how IPv6 datagrams can be transmitted across a network that contains both IPv6 and IPv4 routers, and why this is important for network transition.",
+  "key_points": [
+   "IPv6 datagrams can be transmitted across a network with mixed IPv6 and IPv4 routers through tunneling.",
+   "Tunneling allows for gradual migration without requiring all routers to be upgraded simultaneously."
+  ],
+  "reference_answer": "IPv6 datagrams can be transmitted across a network with mixed IPv6 and IPv4 routers through tunneling, where the IPv6 datagram is encapsulated within an IPv4 datagram. This allows IPv6 traffic to traverse IPv4-only segments of the network. This is important for network transition because it enables gradual migration without requiring all routers to be upgraded simultaneously, avoiding the need for a 'flag day' that could disrupt existing services.",
+  "followup_question": "What would happen if all routers were upgraded at once?",
+  "followup_expected": "A 'flag day' would occur, which could disrupt existing services and require a complete network shutdown for the transition.",
+  "target_style": "good_own_words",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dsa.topological_sorting.easy1",
+  "subject": "DSA",
+  "topic": "Topological sorting",
+  "difficulty": "easy",
+  "question": "Explain what topological sorting is and why it is important for directed acyclic graphs.",
+  "key_points": [
+   "Topological sorting is listing vertices of a directed graph in such an order that for every edge in the graph, the vertex where the edge starts is listed before the vertex where the edge ends.",
+   "Topological sorting is only possible for directed acyclic graphs (DAGs).",
+   "Topological sorting is used for modeling problems with prerequisite constraints."
+  ],
+  "reference_answer": "Topological sorting is listing vertices of a directed graph in such an order that for every edge in the graph, the vertex where the edge starts is listed before the vertex where the edge ends. It is important for directed acyclic graphs (DAGs) because it allows us to linearly order the vertices in a way that respects the direction of edges, which is essential for modeling problems with prerequisite constraints.",
+  "followup_question": "What kind of real-world problems can be modeled using topological sorting?",
+  "followup_expected": "Problems like construction projects and document version control, where certain tasks or documents must be completed before others.",
+  "target_style": "short_casual",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "cn.tcp_connection_establishment.easy1",
+  "subject": "CN",
+  "topic": "TCP connection establishment",
+  "difficulty": "easy",
+  "question": "Explain what happens during the TCP connection establishment process.",
+  "key_points": [
+   "TCP connection establishment involves a handshake to agree to establish a connection.",
+   "TCP connection establishment includes agreement on connection parameters such as starting sequence numbers."
+  ],
+  "reference_answer": "During TCP connection establishment, the sender and receiver perform a handshake to agree to establish a connection and to agree on connection parameters such as starting sequence numbers. This handshake ensures both sides are ready to communicate. The process begins with the sender sending a SYN segment to the receiver.",
+  "followup_question": "Why is it important to agree on starting sequence numbers during connection establishment?",
+  "followup_expected": "It is important to agree on starting sequence numbers so that both sides can correctly track and acknowledge data transmission, ensuring reliable communication.",
+  "target_style": "confident_wrong",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "cn.https_and_tls.easy1",
+  "subject": "CN",
+  "topic": "HTTPS and TLS",
+  "difficulty": "easy",
+  "question": "Explain how HTTPS ensures secure communication between a browser and a server.",
+  "key_points": [
+   "HTTPS uses TLS to encrypt all communications between the browser and the server.",
+   "HTTPS relies on public and private key pairs for secure communication."
+  ],
+  "reference_answer": "HTTPS ensures secure communication by using TLS to encrypt all data exchanged between the browser and the server. This encryption is bi-directional, meaning both the client and server encrypt and decrypt data. The process involves the use of public and private keys, where the server's public key is used to encrypt a symmetric key that is then used for efficient data encryption during the session.",
+  "followup_question": "How does the server prove it is who it says it is?",
+  "followup_expected": "The server provides a certificate signed by a trusted Certificate Authority, which the browser verifies to confirm the server's identity.",
+  "target_style": "hesitant",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "os.page_faults.medium1",
+  "subject": "OS",
+  "topic": "Page faults",
+  "difficulty": "medium",
+  "question": "Explain how the operating system handles a page fault and how it manages the page-fault frequency to avoid thrashing.",
+  "key_points": [
+   "The operating system first checks if the page reference is invalid or not in memory.",
+   "The system finds a free frame and swaps the required page into memory.",
+   "The system adjusts the number of frames allocated to a process based on its page-fault rate.",
+   "Managing page-fault frequency helps avoid thrashing."
+  ],
+  "reference_answer": "When a page fault occurs, the operating system first checks if the reference is invalid. If not, it finds a free frame, swaps in the required page, updates the page tables, and restarts the instruction. To manage page-fault frequency, the system adjusts the number of frames allocated to a process based on its actual page-fault rate. If the rate is too low, the process loses a frame; if too high, it gains a frame. This helps control thrashing by balancing memory allocation with usage patterns.",
+  "followup_question": "What is thrashing and how does page-fault frequency help avoid it?",
+  "followup_expected": "Thrashing is when the system spends more time swapping pages than executing instructions. Controlling page-fault frequency helps prevent this by balancing memory allocation.",
+  "target_style": "partial",
+  "target_followup": "wrong"
+ },
+ {
+  "question_id": "ooad.method_overloading.medium1",
+  "subject": "OOAD",
+  "topic": "Method overloading",
+  "difficulty": "medium",
+  "question": "Explain how method overloading allows a class to have multiple methods with the same name but different behaviors, and why this is considered compile-time polymorphism.",
+  "key_points": [
+   "Method overloading allows a class to have more than one method with the same name if their argument lists are different.",
+   "The compiler decides which method to call based on the method signature at compile time.",
+   "Method overloading is considered compile-time polymorphism or static polymorphism."
+  ],
+  "reference_answer": "Method overloading allows a class to have multiple methods with the same name but different parameter lists, enabling the same method name to perform different actions based on the input. This is considered compile-time polymorphism because the compiler determines which method to call based on the method signature at compile time, not at runtime. The key is that the method name remains the same, but the parameter list differs in number, type, or order, allowing flexibility in method invocation.",
+  "followup_question": "What does 'early binding' mean in this context?",
+  "followup_expected": "Early binding means that the method to be called is determined at compile time, which improves performance and allows for more predictable execution.",
+  "target_style": "partial",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dsa.dijkstra_s_algorithm.easy1",
+  "subject": "DSA",
+  "topic": "Dijkstra's algorithm",
+  "difficulty": "easy",
+  "question": "Explain how Dijkstra’s algorithm finds the shortest paths in a weighted graph.",
+  "key_points": [
+   "Dijkstra’s algorithm selects the vertex with the smallest tentative distance.",
+   "The algorithm updates the shortest path to neighboring vertices using outgoing edges."
+  ],
+  "reference_answer": "Dijkstra’s algorithm finds the shortest paths by iteratively selecting the vertex with the smallest tentative distance. It uses a tree of vertices that have already been processed, and for each of these, it considers their outgoing edges to update the shortest path to neighboring vertices. The algorithm ensures that once a vertex is added to the tree, its shortest path is finalized.",
+  "followup_question": "How does the algorithm use the weight of an edge to update distances?",
+  "followup_expected": "The weight of an edge is added to the shortest path to v to compute a potential new shortest path to u.",
+  "target_style": "partial",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dsa.expression_trees.easy1",
+  "subject": "DSA",
+  "topic": "Expression trees",
+  "difficulty": "easy",
+  "question": "Explain what an expression tree is and how it represents an arithmetic expression.",
+  "key_points": [
+   "An expression tree is a data structure that represents an arithmetic expression in a hierarchical form.",
+   "The tree is constructed such that operands are leaves and operators are internal nodes.",
+   "Each operator connects to its operands as children."
+  ],
+  "reference_answer": "An expression tree is a data structure that represents an arithmetic expression in a hierarchical form. It is built to translate code as data and then analyze and evaluate expressions. The tree is constructed such that operands are leaves and operators are internal nodes, with each operator connecting to its operands as children.",
+  "followup_question": "How does an operator node relate to its operands in the tree?",
+  "followup_expected": "An operator node connects to its operands as its left and right children.",
+  "target_style": "short_casual",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "dbms.window_functions.medium2",
+  "subject": "DBMS",
+  "topic": "Window functions",
+  "difficulty": "medium",
+  "question": "How do ranking window functions like RANK(), DENSE_RANK(), and ROW_NUMBER() differ in their behavior when there are ties in the data?",
+  "key_points": [
+   "RANK() skips the next rank after ties.",
+   "DENSE_RANK() does not skip ranks after ties.",
+   "ROW_NUMBER() assigns unique ranks to all rows, even with ties."
+  ],
+  "reference_answer": "Ranking window functions like RANK(), DENSE_RANK(), and ROW_NUMBER() differ in how they handle ties. RANK() assigns the same rank to tied rows and skips the next rank, as stated: 'Ties (equal values) get the same rank, and the next rank is skipped.' DENSE_RANK() also assigns the same rank to tied rows, but it does not skip the next rank, as noted: 'No ranks are skipped (this is the main difference from RANK()).' ROW_NUMBER() assigns unique sequential numbers to each row, regardless of ties, as explained: 'Unlike RANK() or DENSE_RANK(), there are no ties → every row gets its own distinct number, even if values are equal.'",
+  "followup_question": "What is the rank of the next row if two rows have the same value and are using ROW_NUMBER()?",
+  "followup_expected": "The next row will receive a rank of 2, even though the values are the same.",
+  "target_style": "vague",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "cn.throughput_and_bottleneck_link.medium1",
+  "subject": "CN",
+  "topic": "Throughput and bottleneck link",
+  "difficulty": "medium",
+  "question": "In a network with multiple client-server pairs sharing a common middle link, how does the bottleneck link affect the end-to-end throughput for each pair?",
+  "key_points": [
+   "The bottleneck link limits the maximum end-to-end throughput for each client-server pair.",
+   "The shared link capacity is divided among all pairs when it is fairly shared.",
+   "The throughput for each pair is constrained by the minimum of the server link, client link, and shared link capacity divided by the number of pairs."
+  ],
+  "reference_answer": "The bottleneck link limits the maximum end-to-end throughput for each client-server pair because it is the link with the smallest capacity in the path. When the middle link is fairly shared, its capacity is divided among all pairs, reducing the effective capacity available to each. This means the throughput for each pair is constrained by the minimum of the server link capacity, the client link capacity, and the shared link capacity divided by the number of pairs.",
+  "followup_question": "How does the number of pairs affect the shared link capacity available to each pair?",
+  "followup_expected": "The number of pairs reduces the effective capacity of the shared link for each pair, as the capacity is divided equally among them.",
+  "target_style": "confident_wrong",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "cn.network_delays.medium2",
+  "subject": "CN",
+  "topic": "Network delays",
+  "difficulty": "medium",
+  "question": "How does the store-and-forward mechanism in packet switching affect the end-to-end delay in a network with multiple hops?",
+  "key_points": [
+   "The transmission delay of each hop is added to the end-to-end delay.",
+   "The propagation delay of each link is also added to the end-to-end delay."
+  ],
+  "reference_answer": "The store-and-forward mechanism requires that an entire packet must arrive at a router before it can be transmitted on the next link. This means that the transmission delay of each hop is added to the end-to-end delay, as the packet cannot move to the next link until it has fully arrived. Additionally, the propagation delay of each link is also added, as the signal must travel the physical distance of the link. Therefore, the total end-to-end delay is the sum of all transmission and propagation delays across the network hops.",
+  "followup_question": "How does the physical distance of a link affect the end-to-end delay?",
+  "followup_expected": "The longer the physical distance of a link, the greater the propagation delay, which increases the total end-to-end delay.",
+  "target_style": "partial",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "cn.persistent_vs_non_persistent_http.medium1",
+  "subject": "CN",
+  "topic": "Persistent vs non-persistent HTTP",
+  "difficulty": "medium",
+  "question": "Explain how persistent HTTP improves the response time for downloading multiple objects compared to non-persistent HTTP.",
+  "key_points": [
+   "Persistent HTTP reuses a single TCP connection for multiple objects.",
+   "Non-persistent HTTP requires two RTTs per object."
+  ],
+  "reference_answer": "Persistent HTTP improves response time by reusing a single TCP connection for multiple objects, reducing the number of round trips needed. In non-persistent HTTP, each object requires a new TCP connection, which adds two RTTs per object. Persistent HTTP allows multiple objects to be sent over a single TCP connection, reducing the total number of RTTs and improving efficiency.",
+  "followup_question": "Why does non-persistent HTTP have two RTTs per object?",
+  "followup_expected": "Because it requires one RTT to establish the TCP connection and another RTT for the HTTP request and initial response.",
+  "target_style": "vague",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "os.preemptive_vs_non_preemptive_scheduling.medium1",
+  "subject": "OS",
+  "topic": "Preemptive vs non-preemptive scheduling",
+  "difficulty": "medium",
+  "question": "Explain how preemptive scheduling differs from non-preemptive scheduling in terms of when scheduling decisions occur and the implications for system behavior.",
+  "key_points": [
+   "Preemptive scheduling allows the operating system to interrupt a running process.",
+   "Non-preemptive scheduling decisions only occur when a process transitions to waiting or terminates.",
+   "Preemptive scheduling may require mechanisms like mutex locks to prevent race conditions."
+  ],
+  "reference_answer": "Preemptive scheduling allows the operating system to interrupt a running process and switch to another process, which can occur during transitions such as running to waiting, running to ready, or waiting to ready. Non-preemptive scheduling does not allow such interruptions, and scheduling decisions only happen when a process transitions to the waiting or terminated state. This difference impacts system responsiveness and the potential for race conditions, as preemptive scheduling may require mechanisms like mutex locks to protect shared data.",
+  "followup_question": "What is a potential downside of preemptive scheduling?",
+  "followup_expected": "Preemptive scheduling can lead to race conditions if shared data is accessed without proper synchronization, requiring additional mechanisms like mutex locks to ensure data consistency.",
+  "target_style": "good_own_words",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "os.inter_process_communication.medium1",
+  "subject": "OS",
+  "topic": "Inter-process communication",
+  "difficulty": "medium",
+  "question": "Explain how message passing differs from shared memory in terms of how processes communicate and synchronize.",
+  "key_points": [
+   "Message passing uses send and receive operations to communicate.",
+   "Message passing does not rely on shared variables."
+  ],
+  "reference_answer": "Message passing allows processes to communicate without using shared variables, relying instead on send and receive operations. Shared memory, on the other hand, involves direct access to a common memory space. These differences impact how processes synchronize and manage data, with message passing often requiring explicit coordination to avoid race conditions.",
+  "followup_question": "Why would a system prefer message passing over shared memory?",
+  "followup_expected": "Message passing avoids the complexity of managing shared variables and synchronization, making it easier to implement in distributed systems.",
+  "target_style": "partial",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "ooad.parameter_passing_in_java.medium1",
+  "subject": "OOAD",
+  "topic": "Parameter passing in Java",
+  "difficulty": "medium",
+  "question": "In Java, what is the difference between how primitive types and objects are passed as parameters, and what are the implications of this behavior?",
+  "key_points": [
+   "In Java, all parameters are passed by value.",
+   "Changes to primitive parameters do not affect the original value in the caller.",
+   "For objects, a copy of the reference is passed, not the object itself."
+  ],
+  "reference_answer": "In Java, all parameters are passed by value. For primitive types, this means a copy of the value is made, and changes to the parameter do not affect the original value in the caller. For objects, a copy of the reference is passed, meaning the method can modify the object's state, but cannot change the reference itself to point to a different object. This distinction is important because it affects how data is manipulated and shared between methods.",
+  "followup_question": "Can a method that receives an object as a parameter change the reference that the caller holds?",
+  "followup_expected": "No, the method cannot change the reference that the caller holds, but it can modify the object's state if it has access to the same instance.",
+  "target_style": "hesitant",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "ooad.method_overloading.hard2",
+  "subject": "OOAD",
+  "topic": "Method overloading",
+  "difficulty": "hard",
+  "question": "What happens if two overloaded methods differ only in their return types, and how does this affect the compiler's ability to resolve the correct method call?",
+  "key_points": [
+   "The return type is not part of the method signature used for method overloading.",
+   "A difference in return type alone does not allow the compiler to resolve which method to call.",
+   "Method overloading relies solely on the method name and parameter list, not the return type."
+  ],
+  "reference_answer": "If two overloaded methods differ only in their return types, the compiler will not be able to resolve which method to call, resulting in a compilation error. This is because the return type is not part of the method signature used for overloading. The compiler relies solely on the method name and parameter list to determine which method to invoke. This highlights that return type cannot be used to distinguish between overloaded methods.",
+  "followup_question": "Why is the return type not considered when resolving overloaded methods?",
+  "followup_expected": "Because the return type does not affect the method signature, which is what the compiler uses to determine which method to call at compile time.",
+  "target_style": "short_casual",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dsa.binary_search.medium1",
+  "subject": "DSA",
+  "topic": "Binary search",
+  "difficulty": "medium",
+  "question": "Explain how binary search uses the decrease-by-a-constant-factor approach to solve a problem efficiently.",
+  "key_points": [
+   "Binary search reduces the problem size by a constant factor at each step.",
+   "Binary search is a recursive algorithm that reduces the problem to smaller instances."
+  ],
+  "reference_answer": "Binary search uses the decrease-by-a-constant-factor approach by dividing the problem size by two at each step. This is reflected in the recurrence T(n) = aT(n/b) + f(n), where a = 1, b = 2. The algorithm exploits the relationship between a solution to a given instance and a smaller instance by comparing the target with the middle element, thereby reducing the problem size by half each time.",
+  "followup_question": "Can binary search be implemented iteratively? Why or why not?",
+  "followup_expected": "Yes, it can be implemented iteratively, but the recursive approach naturally aligns with the decrease-by-a-constant-factor strategy.",
+  "target_style": "partial",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "dbms.first_normal_form_1nf.medium1",
+  "subject": "DBMS",
+  "topic": "First normal form (1NF)",
+  "difficulty": "medium",
+  "question": "Explain how First Normal Form (1NF) ensures that a relation is properly structured for relational database systems.",
+  "key_points": [
+   "All attributes must be atomic.",
+   "Composite and multivalued attributes are disallowed.",
+   "1NF is a prerequisite for higher normal forms."
+  ],
+  "reference_answer": "First Normal Form (1NF) ensures that all attributes in a relation are atomic, meaning they contain only single, indivisible values. This prevents composite, multivalued, or nested attributes from being part of the relation. By enforcing atomicity, 1NF aligns with the fundamental definition of a relation in relational databases. Most RDBMSs only allow relations that are in 1NF, which ensures data can be efficiently stored and queried.",
+  "followup_question": "Why is 1NF considered a foundational normal form?",
+  "followup_expected": "Because all higher normal forms (like 2NF and 3NF) require the relation to already be in 1NF, ensuring atomicity and proper structure.",
+  "target_style": "confident_wrong",
+  "target_followup": "wrong"
+ },
+ {
+  "question_id": "dsa.circular_queue.easy1",
+  "subject": "DSA",
+  "topic": "Circular queue",
+  "difficulty": "easy",
+  "question": "Explain how a circular queue solves the problem of wasted space in a simple queue.",
+  "key_points": [
+   "A circular queue allows the rear pointer to wrap around to the beginning of the array.",
+   "A circular queue reuses space that was previously occupied by removed elements.",
+   "A circular queue behaves like a circular data structure."
+  ],
+  "reference_answer": "A circular queue solves the problem of wasted space by allowing the rear pointer to wrap around to the beginning of the array once it reaches the end. This enables the queue to reuse the space that was previously occupied by removed elements. In a simple queue, once the queue is full, no new elements can be inserted even if some elements are removed, but in a circular queue, this space is made available again by moving the rear pointer to the start of the queue.",
+  "followup_question": "How does a circular queue behave differently from a simple queue?",
+  "followup_expected": "A circular queue behaves like a circular data structure by allowing the rear pointer to start from the first position after the last, making space available for new insertions.",
+  "target_style": "hesitant",
+  "target_followup": "wrong"
+ },
+ {
+  "question_id": "os.fragmentation.medium2",
+  "subject": "OS",
+  "topic": "Fragmentation",
+  "difficulty": "medium",
+  "question": "Explain how external fragmentation affects memory allocation and why compaction is a solution, but has limitations.",
+  "key_points": [
+   "External fragmentation is when the total memory space exists to satisfy a request, but it is not contiguous.",
+   "Compaction is a solution to external fragmentation by consolidating free memory into a single block.",
+   "Compaction has limitations due to I/O problems and the need for dynamic relocation."
+  ],
+  "reference_answer": "External fragmentation occurs when the total memory space exists to satisfy a request, but it is not contiguous. Compaction is a solution because it shuffles memory contents to place all free memory together in one large block. However, compaction has limitations because it requires relocation to be dynamic and is done at execution time, which can cause I/O problems by latching a job in memory during I/O operations.",
+  "followup_question": "How does I/O affect the ability to compact memory?",
+  "followup_expected": "I/O operations can prevent compaction by latching a job in memory, making it impossible to shuffle memory contents during I/O.",
+  "target_style": "short_casual",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "dbms.aggregate_functions_and_group_by.easy1",
+  "subject": "DBMS",
+  "topic": "Aggregate functions and GROUP BY",
+  "difficulty": "easy",
+  "question": "Explain what aggregate functions do and how they are used in SQL queries.",
+  "key_points": [
+   "Aggregate functions take a collection of values and return a single value.",
+   "Aggregate functions are used to summarize information from multiple tuples into a single tuple summary.",
+   "Aggregate functions are used with GROUP BY to compute summaries for each group."
+  ],
+  "reference_answer": "Aggregate functions take a collection of values and return a single value, such as SUM, MAX, MIN, AVG, or COUNT. They are used to summarize information from multiple tuples into a single tuple summary. When used with the GROUP BY clause, they allow you to compute these summaries for each group of tuples that share the same value for the grouping attribute.",
+  "followup_question": "What happens if you include a non-aggregated attribute in the SELECT clause with GROUP BY?",
+  "followup_expected": "It will result in an error, because the non-aggregated attribute is not part of the grouping and cannot be uniquely determined for each group.",
+  "target_style": "partial",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "os.peterson_s_solution.easy1",
+  "subject": "OS",
+  "topic": "Peterson's solution",
+  "difficulty": "easy",
+  "question": "Explain how Peterson’s solution ensures mutual exclusion between two processes.",
+  "key_points": [
+   "Peterson’s solution uses a flag array to indicate if a process is ready to enter the critical section.",
+   "The turn variable is used to determine which process can enter the critical section next."
+  ],
+  "reference_answer": "Peterson’s solution ensures mutual exclusion by using a combination of a flag array and a turn variable. The flag array indicates whether a process is ready to enter the critical section, and the turn variable determines which process can enter next. Mutual exclusion is achieved because a process will only enter the critical section if the other process is not ready or it is not its turn.",
+  "followup_question": "Why is the turn variable necessary for mutual exclusion?",
+  "followup_expected": "The turn variable ensures that only one process can enter the critical section at a time, even if both flags are set to true.",
+  "target_style": "confident_wrong",
+  "target_followup": "wrong"
+ },
+ {
+  "question_id": "ooad.open_closed_principle.easy1",
+  "subject": "OOAD",
+  "topic": "Open-closed principle",
+  "difficulty": "easy",
+  "question": "Explain the Open-Closed Principle in your own words.",
+  "key_points": [
+   "Classes and modules should be open for extension but closed for modification.",
+   "The principle encourages using OOP features like inheritance and interfaces for extension.",
+   "Modifying existing code can lead to unexpected behavior."
+  ],
+  "reference_answer": "The Open-Closed Principle states that classes, modules, and other code units should be open for extension but closed for modification. This means that existing code should not need to be changed when new features are added. Instead, we should extend the behavior of existing code using OOP features like inheritance and interfaces. The principle helps minimize the risk of introducing bugs by avoiding direct modifications to working code.",
+  "followup_question": "Why is it risky to modify existing code?",
+  "followup_expected": "Modifying existing code can introduce bugs or break existing functionality that depends on it.",
+  "target_style": "partial",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "ooad.abstraction.medium1",
+  "subject": "OOAD",
+  "topic": "Abstraction",
+  "difficulty": "medium",
+  "question": "Explain how abstraction in object-oriented programming helps in managing complexity in software design.",
+  "key_points": [
+   "Abstraction hides implementation details from users.",
+   "Abstraction allows interaction through an interface."
+  ],
+  "reference_answer": "Abstraction in object-oriented programming helps manage complexity by hiding the internal implementation details of an entity and exposing only its essential features. This allows users to interact with the entity through its interface without needing to understand its internal workings. By focusing on what an object does rather than how it does it, abstraction reduces the cognitive load on developers and makes systems easier to maintain and scale.",
+  "followup_question": "What is the role of an interface in abstraction?",
+  "followup_expected": "An interface provides a way for other objects to interact with the entity without needing to know its internal structure, which is a key aspect of abstraction.",
+  "target_style": "partial",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "dbms.denormalization.easy1",
+  "subject": "DBMS",
+  "topic": "Denormalization",
+  "difficulty": "easy",
+  "question": "Explain what denormalization is and why it might be used in a database.",
+  "key_points": [
+   "Denormalization is a database optimization technique where redundant data is added to one or more tables.",
+   "Denormalization is used when retrieving data is prioritized over update efficiency.",
+   "Denormalization allows for simpler queries and faster data retrieval."
+  ],
+  "reference_answer": "Denormalization is a database optimization technique where redundant data is added to one or more tables to avoid costly joins. It is used when retrieving data is prioritized over update efficiency, and when the cost of joins becomes a performance bottleneck. This approach allows for simpler queries and faster data retrieval, but at the expense of increased storage and potential data inconsistency.",
+  "followup_question": "How does denormalization affect query complexity?",
+  "followup_expected": "Denormalization reduces query complexity by requiring fewer tables to be joined, making queries simpler and less error-prone.",
+  "target_style": "confident_wrong",
+  "target_followup": "correct"
+ }
+]

@@ -123,7 +123,7 @@ class TestSignup(AccountsTestCase):
             self.assertFalse(user.consent_training)
             resume = user.resumes[0]
             self.assertEqual(resume.parsed_profile["candidate_name"], "Asha Rao")
-            self.assertTrue(resume.file_path.startswith(os.path.join("resumes", str(user.id))))
+            self.assertTrue(resume.file_path.startswith(f"resumes/{user.id}/"))
             with open(resume_store.absolute_path(resume.file_path), "rb") as f:
                 self.assertEqual(f.read(), PDF_BYTES)
         self.query(check)
@@ -284,6 +284,26 @@ class TestResumes(AccountsTestCase):
         self.assertEqual(file_response.status_code, 200)
         self.assertEqual(file_response.data, PDF_BYTES)
         self.assertIn("attachment", file_response.headers["Content-Disposition"])
+        file_response.close()
+
+    def test_stored_path_uses_forward_slashes(self):
+        # So a database written on Windows still works on Linux (Docker).
+        path = self.query(lambda: db.session.get(Resume, self.resumes()[0]["id"]).file_path)
+        self.assertNotIn("\\", path)
+        self.assertTrue(path.startswith("resumes/"))
+
+    def test_file_with_a_windows_style_stored_path_is_still_served(self):
+        resume_id = self.resumes()[0]["id"]
+
+        def to_backslashes():
+            row = db.session.get(Resume, resume_id)
+            row.file_path = row.file_path.replace("/", "\\")
+            db.session.commit()
+
+        self.query(to_backslashes)
+        file_response = self.client.get(f"/api/resumes/{resume_id}/file")
+        self.assertEqual(file_response.status_code, 200)
+        self.assertEqual(file_response.data, PDF_BYTES)
         file_response.close()
 
     def test_cannot_delete_the_only_resume(self):

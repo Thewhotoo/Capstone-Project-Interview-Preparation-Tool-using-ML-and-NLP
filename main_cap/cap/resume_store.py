@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import posixpath
 import shutil
 import uuid
 from dataclasses import dataclass
@@ -48,7 +49,9 @@ def _upload_root() -> str:
 
 
 def absolute_path(relative_path: str) -> str:
-    return os.path.join(_upload_root(), relative_path)
+    # Stored paths use "/" so a database moves between Windows and Linux
+    # (Docker); rows written on Windows before that used "\\", so accept both.
+    return os.path.join(_upload_root(), *relative_path.replace("\\", "/").split("/"))
 
 
 def _extension_of(file: FileStorage | None) -> str:
@@ -63,7 +66,7 @@ def _extension_of(file: FileStorage | None) -> str:
 def _user_folder(user_id: int | None) -> str:
     # Signup parses the resume before the account row exists, so the file is
     # staged in a shared "_pending" folder and then moved (claim_for_user).
-    return os.path.join("resumes", str(user_id) if user_id is not None else "_pending")
+    return posixpath.join("resumes", str(user_id) if user_id is not None else "_pending")
 
 
 def save_resume_file(file: FileStorage | None, user_id: int | None) -> StoredResume:
@@ -75,7 +78,7 @@ def save_resume_file(file: FileStorage | None, user_id: int | None) -> StoredRes
     if not data:
         raise ResumeUploadError("The uploaded resume is empty.")
 
-    relative_path = os.path.join(_user_folder(user_id), f"{uuid.uuid4().hex}{extension}")
+    relative_path = posixpath.join(_user_folder(user_id), f"{uuid.uuid4().hex}{extension}")
     target = absolute_path(relative_path)
     os.makedirs(os.path.dirname(target), exist_ok=True)
     with open(target, "wb") as f:
@@ -92,7 +95,7 @@ def save_resume_file(file: FileStorage | None, user_id: int | None) -> StoredRes
 
 def claim_for_user(stored: StoredResume, user_id: int) -> StoredResume:
     """Move a file saved with `user_id=None` into that user's folder."""
-    new_relative = os.path.join(_user_folder(user_id), os.path.basename(stored.relative_path))
+    new_relative = posixpath.join(_user_folder(user_id), posixpath.basename(stored.relative_path))
     target = absolute_path(new_relative)
     os.makedirs(os.path.dirname(target), exist_ok=True)
     os.replace(absolute_path(stored.relative_path), target)
@@ -121,4 +124,4 @@ def delete_resume_file(relative_path: str) -> None:
 
 
 def delete_user_files(user_id: int) -> None:
-    shutil.rmtree(absolute_path(os.path.join("resumes", str(user_id))), ignore_errors=True)
+    shutil.rmtree(absolute_path(posixpath.join("resumes", str(user_id))), ignore_errors=True)

@@ -83,6 +83,13 @@ Open **http://localhost:5000**.
 - **The trained Round 1 evaluator** is not in the image: it is mounted from `main_cap/cap/deployed_model_overall_single_v5_1088/`, so run `git lfs pull` first (without it, Round 1 uses the heuristic evaluator).
 - **After changing the code**, `docker compose up --build -d` rebuilds only the code layer (seconds).
 - **Optional settings** (port, database password, secret key, threads): copy `.env.example` to `.env`.
+- **Bringing over your simple-mode data** (accounts, resumes, sessions from the SQLite file): with the stack running, from the repository root:
+  ```bash
+  docker compose cp main_cap/cap/instance/app.db app:/tmp/app.db
+  docker compose cp main_cap/cap/instance/uploads app:/tmp/uploads
+  docker compose exec app python copy_database.py --from sqlite:////tmp/app.db --from-uploads /tmp/uploads --replace
+  ```
+  `--replace` first deletes everything already in the Docker database. `copy_database.py` works between any two databases (`--to`, `--to-uploads`).
 
 ---
 

@@ -5,8 +5,12 @@ Flask-Migrate (Alembic).
 SQLite was chosen for this stage of the project: nothing to install, the
 whole database is one file under `instance/`, and it comfortably handles
 this app's write pattern (one row per answered question). Everything goes
-through SQLAlchemy, so moving to PostgreSQL later is a change of
-`CAP_DATABASE_URL`, not of code.
+through SQLAlchemy, so PostgreSQL (production mode) is a change of
+`CAP_DATABASE_URL`, not of code:
+
+    CAP_DATABASE_URL=postgresql+psycopg://user:password@host:5432/dbname
+
+PostgreSQL connections are pinned to UTC (see `configure_database`).
 
 Everything the app stores on disk at runtime lives under `instance/`
 (git-ignored): the database file, uploaded resumes, and the generated
@@ -85,6 +89,14 @@ def configure_database(
         "SQLALCHEMY_DATABASE_URI",
         database_url or os.environ.get("CAP_DATABASE_URL", DEFAULT_DATABASE_URL),
     )
+    if str(app.config["SQLALCHEMY_DATABASE_URI"]).startswith("postgresql"):
+        # Every stored datetime is UTC. Pin the session timezone so PostgreSQL
+        # never shifts a timezone-aware value into the server's local time
+        # when writing it to a `timestamp without time zone` column.
+        app.config.setdefault("SQLALCHEMY_ENGINE_OPTIONS", {
+            "connect_args": {"options": "-c timezone=UTC"},
+            "pool_pre_ping": True,
+        })
     app.config.setdefault("UPLOAD_DIR", upload_dir or os.environ.get("CAP_UPLOAD_DIR", DEFAULT_UPLOAD_DIR))
     if not app.config.get("SECRET_KEY"):
         app.config["SECRET_KEY"] = _load_or_create_secret_key()

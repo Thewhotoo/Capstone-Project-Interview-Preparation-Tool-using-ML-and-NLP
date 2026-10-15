@@ -268,5 +268,25 @@ class TestAccountDeletionRemovesHistory(HistoryTestCase):
         self.assertEqual(db_query(lambda: db.session.query(InterviewSession).filter_by(user_id=user_id).count()), 0)
 
 
+class TestOverlongTextIsTrimmed(HistoryTestCase):
+    def test_resume_derived_text_longer_than_its_column_still_saves(self):
+        """A badly parsed resume can yield a 'project title' longer than its
+        column. PostgreSQL would reject it (SQLite doesn't care), so it is
+        trimmed instead of losing the answer."""
+        self.start_discussion()
+
+        def add_turn():
+            session = db.session.query(InterviewSession).order_by(InterviewSession.id.desc()).first()
+            turn = SessionTurn(session_id=session.id, turn_number=999, question_text="q",
+                               project_reference="P" * 400, source_id="S" * 400, category="C" * 80)
+            db.session.add(turn)
+            db.session.commit()
+            db.session.expire_all()
+            saved = db.session.get(SessionTurn, turn.id)
+            return len(saved.project_reference), len(saved.source_id), len(saved.category)
+
+        self.assertEqual(db_query(add_turn), (300, 300, 50))
+
+
 if __name__ == "__main__":
     unittest.main()

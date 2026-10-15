@@ -69,7 +69,7 @@ All optional; set as environment variables.
 
 | Variable | Default | Effect |
 |---|---|---|
-| `CAP_DATABASE_URL` | `sqlite:///main_cap/cap/instance/app.db` | Database (any SQLAlchemy URL) |
+| `CAP_DATABASE_URL` | `sqlite:///main_cap/cap/instance/app.db` | Database: SQLite by default, or PostgreSQL (`postgresql+psycopg://user:password@host:5432/dbname`) |
 | `CAP_UPLOAD_DIR` | `main_cap/cap/instance/uploads` | Where uploaded resumes are stored |
 | `CAP_SECRET_KEY` | generated once into `instance/secret_key` | Flask session secret; set explicitly in production |
 | `CAP_TRAINED_EVALUATOR` | on | `0` forces the heuristic Round 1 evaluator |

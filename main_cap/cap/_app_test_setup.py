@@ -1,6 +1,7 @@
 """
-Shared setup for tests that import the real app.py: an in-memory
-database, a temporary upload folder, and the DeBERTa bootstrap stubbed out
+Shared setup for tests that import the real app.py: a test database
+(in-memory SQLite, or PostgreSQL when `CAP_TEST_DATABASE_URL` is set; see
+`_test_db.py`), a temporary upload folder, and the DeBERTa bootstrap stubbed out
 (it would otherwise download the model at import time). Import this module
 instead of `app` so the environment is configured exactly once per test run.
 
@@ -17,8 +18,10 @@ from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from _test_db import APP_DATABASE_URL
+
 UPLOAD_DIR = tempfile.mkdtemp()
-os.environ["CAP_DATABASE_URL"] = "sqlite://"
+os.environ["CAP_DATABASE_URL"] = APP_DATABASE_URL
 os.environ["CAP_UPLOAD_DIR"] = UPLOAD_DIR
 atexit.register(shutil.rmtree, UPLOAD_DIR, True)
 

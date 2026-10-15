@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from flask import Flask
 
 import resume_store
+from _test_db import UNIT_DATABASE_URL
 from account_routes import init_accounts
 from candidate_profile_generator import CandidateProfile
 from database import db
@@ -68,7 +69,7 @@ class AccountsTestCase(unittest.TestCase):
         self.upload_dir = tempfile.mkdtemp()
         self.app = Flask(__name__)
         self.app.config.update(TESTING=True, SECRET_KEY="test-secret")
-        init_accounts(self.app, database_url="sqlite://", upload_dir=self.upload_dir, auto_upgrade=False)
+        init_accounts(self.app, database_url=UNIT_DATABASE_URL, upload_dir=self.upload_dir, auto_upgrade=False)
         with self.app.app_context():
             db.create_all()
         self.client = self.app.test_client()

@@ -174,7 +174,7 @@ Packages the code imports that are **missing from `Requirements_Global.txt`**: `
 **SQLite**, one file at `main_cap/cap/instance/app.db`, accessed through Flask-SQLAlchemy. Its schema is versioned with Alembic migrations in `main_cap/cap/migrations/`, which are applied automatically when the app starts.
 - **Tables:** `users`, `student_profiles`, `resumes`, `interview_sessions`, `session_turns` (see §4.21).
 - **Resume files:** stored on the server's disk under `instance/uploads/resumes/<user_id>/`; the database keeps their paths.
-- **Moving to PostgreSQL:** set `CAP_DATABASE_URL`. No code changes are needed.
+- **PostgreSQL (production mode, verified 2026-10-15):** set `CAP_DATABASE_URL=postgresql+psycopg://user:password@host:5432/dbname` (driver `psycopg` 3). The migrations, all app tests and a live end-to-end run pass unchanged on PostgreSQL 16. Two PostgreSQL-specific safeguards: connections are pinned to UTC (`database.configure_database`), and interview text taken from parsed resumes is trimmed to its column length before saving (`models._fit_strings_to_columns`; SQLite ignores `VARCHAR` lengths, PostgreSQL rejects longer values). SQLite stays the default.
 
 **Still in memory:** the live state of an interview in progress:
 - `conversation_engine._conversations` (planner, evaluator, memory);
@@ -1153,6 +1153,7 @@ Resume engine internals: TextSpan → DocumentModel → Section → ParserResult
 | `DEPLOYED_MODEL_DIR`, `_DEPLOYED_MAX_LENGTH` | `deployed_model/`, 128 | `deployment_evaluator.py` |
 | `PROCTOR_BLUR_GRACE_MS` | 1500 | Session-integrity blur grace (JS) |
 | `CAP_DATABASE_URL` | `sqlite:///main_cap/cap/instance/app.db` | Database URL (any SQLAlchemy URL, e.g. PostgreSQL) |
+| `CAP_TEST_DATABASE_URL` | unset (in-memory SQLite) | Run the test suite on PostgreSQL instead, e.g. `postgresql+psycopg://cap:cap@localhost:5432/cap_test`; uses databases `cap_test` and `cap_test_unit`, created if missing and emptied at the start of each run (`_test_db.py`) |
 | `CAP_UPLOAD_DIR` | `main_cap/cap/instance/uploads` | Where resume files are stored |
 | `CAP_SECRET_KEY` | generated once into `instance/secret_key` | Flask session secret; set explicitly in production |
 | `MAX_UPLOAD_BYTES` / `MAX_CONTENT_LENGTH` | 10 MB | Upload limit; larger requests get a JSON 413 |
@@ -1786,14 +1787,14 @@ The code has no literal `TODO` markers. The items below come from docstrings, co
 | Startup | `test_model_warmup.py` (5) | pytest | Offline mode only when every needed model (incl. the trained backbone when its weights exist) is cached |
 | Frontend | `test_report_*.js`, `test_session_integrity.js` (13), `test_startup_guard.js`, `test_typeline_race.js` | `node <file>` | Each test extracts the exact function source from `index.html` and runs it with Node `vm` + `assert` (no framework). The integrity tests stub the `interview*` hooks |
 
-Tests that need the real `app.py` import `_app_test_setup.py`. It sets an in-memory database and a temporary upload folder, and stubs the DeBERTa bootstrap.
+Tests that need the real `app.py` import `_app_test_setup.py`. It sets the test database (in-memory SQLite by default), a temporary upload folder, and stubs the DeBERTa bootstrap. **On PostgreSQL:** `CAP_TEST_DATABASE_URL=postgresql+psycopg://cap:cap@localhost:5432/cap_test python -m pytest --ignore=resume_engine/tests` (PostgreSQL in Docker: `docker start cap-postgres`). 1,245 passed on both SQLite and PostgreSQL 16 (2026-10-15).
 | Legacy | `test_e2e.py` | `python test_e2e.py` | A script with PASS/FAIL counters for v1; pytest collects nothing from it |
 | Legacy RAG | `rag_system/rag_tester/test_*.py` | — | Stale (expect old layouts) |
 | Slide RAG unit tests | `rag_system/rag_tester/slide_rag/tests/test_pipeline.py` (19, incl. personal-note stripping) | `python -m pytest slide_rag/tests -q` (from `rag_system/rag_tester`) | Synthetic slide PDFs built with PyMuPDF: header/footer and slide-number removal, title detection, diagram labels set aside, deck titles, contents/admin slides, incremental builds, "(contd.)" merging, title normalisation (incl. `IPv4`), generic stems, quiz detection, problem + solution stitching, section size cap, BM25 tokenizer parity |
 | Slide RAG retrieval evaluation | `slide_rag/retrieval_eval.py`, `slide_rag/eval/gold_{cn,dbms,dsa,ooad,os}.json` | `python -m slide_rag.retrieval_eval` | 122 hand-labelled questions + 750 generated probes; results and ablations in §4.24 |
 
 The Milestone 7 report recorded 416 passing tests at the time (resume engine plus the app-level selector, profile and e2e tests), and an earlier ML-track note recorded 1,213 passing tests across the whole suite. At the time of this update, the latest runs showed:
-- **1244 passed, 18 skipped** for the whole `main_cap/cap` suite excluding the resume engine (`python -m pytest --ignore=resume_engine/tests`), **511** for the resume engine (2026-10-03);
+- **1245 passed, 18 skipped** (on SQLite and on PostgreSQL, 2026-10-15) for the whole `main_cap/cap` suite excluding the resume engine (`python -m pytest --ignore=resume_engine/tests`), **511** for the resume engine (2026-10-03);
 - **6 passed** for deployment;
 - all 9 frontend test files passing (incl. `test_tech_interview_ui.js`, `test_session_integrity.js`);
 - the grader evaluations in §4.25 (tuning set, 400 held-out answers, the user's 40 answers; scripts in `grader_eval/`);

@@ -51,8 +51,10 @@ from flask_login import current_user
 import live_store
 import session_history
 from session_routes import sessions_bp
+from speech_to_text import speech_bp
 init_accounts(app)
 app.register_blueprint(sessions_bp)
+app.register_blueprint(speech_bp)
 
 # With the default in-memory live store no live interview survives a restart,
 # so any session the database still shows as in progress is now abandoned.

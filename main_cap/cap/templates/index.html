@@ -2034,6 +2034,16 @@
             background: rgba(239, 68, 68, 0.1) !important;
         }
 
+        /* Waiting for the microphone, or turning the recording into text. */
+        .mic-busy {
+            cursor: progress;
+            animation: mic-busy-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes mic-busy-pulse {
+            50% { opacity: 0.4; }
+        }
+
         /* --- DASHBOARD UI --- */
         #dashboard-container {
             display: none;
@@ -4569,18 +4579,17 @@
         }
 
         // ─── VOICE INPUT (speech-to-text) — shared by both answer boxes ───
-        // One click starts listening, the next click stops it; everything said
-        // in between is written into the answer box, after anything already
-        // typed there. The browser's recognizer (Web Speech API, Chrome/Edge)
-        // ends a session by itself after a pause or about a minute, so while
-        // the candidate hasn't turned it off it is started again, keeping the
-        // text. Errors are shown, never silently swallowed.
+        // One click starts recording, the next click stops it; the recording
+        // is turned into text on our server (POST /api/transcribe, Whisper --
+        // speech_to_text.py) and added to the answer box after anything already
+        // typed there. Recording (MediaRecorder) works in every current browser;
+        // the browser's own speech recognition only works in Chrome and Edge
+        // (Brave, Firefox and others fail), so it isn't used.
+        const VOICE_MAX_SECONDS = 300;
         const VOICE_ERRORS = {
-            "not-allowed": "Microphone blocked. Allow it from the \u{1F512} icon in the address bar, then try again.",
-            "service-not-allowed": "This browser doesn't allow voice input here. Use Chrome or Edge.",
-            "audio-capture": "No microphone found. Plug one in and try again.",
-            "network": "Voice input needs an internet connection (the browser's speech service couldn't be reached).",
-            "language-not-supported": "Voice input doesn't support this browser's language setting.",
+            blocked: "Microphone blocked. Allow it from the \u{1F512} icon in the address bar, then try again.",
+            missing: "No microphone found. Plug one in and try again.",
+            failed: "Couldn't turn the recording into text. Please try again or type your answer.",
         };
 
         function _voiceJoin(a, b) {
@@ -4588,104 +4597,143 @@
             return a + " " + b;
         }
 
+        function _voiceMimeType() {
+            const types = ["audio/webm;codecs=opus", "audio/ogg;codecs=opus", "audio/mp4", "audio/webm"];
+            return types.find((t) => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || "";
+        }
+
+        // onStateChange(state, seconds): state is "off" | "starting" | "recording" | "transcribing".
         function createVoiceInput({ button, input, onStateChange, onTextChange }) {
-            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SR) {
+            if (!window.MediaRecorder || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 if (button) button.style.display = "none";
                 return null;
             }
-            const rec = new SR();
-            rec.continuous = true;
-            rec.interimResults = true;
-            rec.lang = navigator.language || "en-US";
+            let state = "off";
+            let recorder = null, stream = null, chunks = [], timer = null, startedAt = 0;
+            let generation = 0;      // bumped to drop a recording / transcription still in flight
+            let afterIdle = null;    // run once the box is idle again (send pressed while busy)
 
-            let wanted = false;      // the candidate has it switched on
-            let running = false;     // the browser's recognizer is running
-            let accepting = false;   // results still go into the box
-            let base = "", committed = "";
-            let startedAt = 0, quickEnds = 0, suspending = false;
-
-            function settle() {
-                if (suspending) { suspending = false; proctorResumeBlur(); }
+            function setState(next, seconds = 0) {
+                state = next;
+                button.classList.toggle("mic-active", next === "recording");
+                button.classList.toggle("mic-busy", next === "starting" || next === "transcribing");
+                button.setAttribute("aria-pressed", next === "recording" ? "true" : "false");
+                button.title = next === "recording" ? "Stop recording" : next === "transcribing" ? "Turning speech into text..." : "Voice input";
+                if (onStateChange) onStateChange(next, seconds);
+                if (next === "off" && afterIdle) { const run = afterIdle; afterIdle = null; run(); }
             }
-            function setOn(on) {
-                button.classList.toggle("mic-active", on);
-                button.setAttribute("aria-pressed", on ? "true" : "false");
-                button.title = on ? "Stop voice input" : "Voice input";
-                if (onStateChange) onStateChange(on);
-            }
-            function render(interim) {
-                input.value = _voiceJoin(_voiceJoin(base, committed), interim);
-                if (onTextChange) onTextChange(input.value);
-            }
-            function begin() {
-                startedAt = Date.now();
-                try { rec.start(); } catch (e) { /* already running */ }
+            function release() {
+                clearInterval(timer);
+                timer = null;
+                if (stream) stream.getTracks().forEach((t) => t.stop());
+                stream = null;
             }
 
-            rec.onstart = () => { running = true; settle(); };
-            rec.onresult = (event) => {
-                if (!accepting) return;
-                let interim = "";
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const text = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) committed = _voiceJoin(committed, text.trim());
-                    else interim = _voiceJoin(interim, text.trim());
-                }
-                quickEnds = 0;
-                render(interim);
-            };
-            rec.onerror = (event) => {
-                const message = VOICE_ERRORS[event.error];
-                if (message) {          // "no-speech" / "aborted": the restart below handles them
-                    wanted = false;
-                    setOn(false);
-                    showToast(message, "error", 7000);
-                }
-            };
-            rec.onend = () => {
-                running = false;
-                settle();
-                if (wanted) {
-                    // Ending again and again right after starting means something is wrong
-                    // with the microphone; don't spin.
-                    quickEnds = Date.now() - startedAt < 1500 ? quickEnds + 1 : 0;
-                    if (quickEnds < 3) { begin(); return; }
-                    wanted = false;
-                    setOn(false);
-                    showToast("Voice input keeps stopping, so it was turned off. Check your microphone and try again.", "error", 7000);
-                }
-                if (accepting) render("");   // drop words that never became final
-                accepting = false;
-            };
-
-            function start() {
-                if (wanted || running) return;   // running && !wanted: still finishing the last stop
-                wanted = true;
-                accepting = true;
-                quickEnds = 0;
-                base = input.value;
-                committed = "";
-                setOn(true);
+            async function start() {
+                if (state !== "off") return;
+                const gen = ++generation;
+                setState("starting");
                 // In case the browser still has to ask for the microphone: its prompt
                 // can take focus, which must not count as leaving the interview.
-                if (!suspending) { suspending = true; proctorSuspendBlur(); }
-                begin();
+                proctorSuspendBlur();
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+                } catch (e) {
+                    proctorResumeBlur();
+                    if (gen === generation) {
+                        setState("off");
+                        showToast(e && e.name === "NotFoundError" ? VOICE_ERRORS.missing : VOICE_ERRORS.blocked, "error", 7000);
+                    }
+                    return;
+                }
+                proctorResumeBlur();
+                if (gen !== generation) { release(); return; }   // stopped while waiting for the mic
+                const mimeType = _voiceMimeType();
+                chunks = [];
+                recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+                recorder.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+                recorder.onstop = () => finish(gen, recorder.mimeType || mimeType);
+                recorder.start(1000);
+                startedAt = Date.now();
+                setState("recording", 0);
+                timer = setInterval(() => {
+                    const seconds = Math.floor((Date.now() - startedAt) / 1000);
+                    if (seconds >= VOICE_MAX_SECONDS) {
+                        showToast("Voice answers are limited to 5 minutes, so recording stopped.", "info", 6000);
+                        stop();
+                    } else if (onStateChange) {
+                        onStateChange("recording", seconds);
+                    }
+                }, 1000);
             }
-            // discard: the answer was sent or the box is being disabled, so words
-            // still on their way must not land in it.
+
+            async function finish(gen, mimeType) {
+                release();
+                const blob = new Blob(chunks, { type: mimeType || "audio/webm" });
+                chunks = [];
+                if (gen !== generation) return;          // discarded
+                if (!blob.size) { setState("off"); return; }
+                setState("transcribing");
+                try {
+                    const form = new FormData();
+                    form.append("audio", blob, "answer");
+                    const response = await fetch("/api/transcribe", { method: "POST", body: form });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) throw new Error(data.error || VOICE_ERRORS.failed);
+                    if (gen !== generation) return;
+                    const text = (data.text || "").trim();
+                    if (text) {
+                        input.value = _voiceJoin(input.value, text);
+                        if (onTextChange) onTextChange(input.value);
+                    } else {
+                        showToast("No speech was heard in that recording.", "info", 4000);
+                    }
+                } catch (e) {
+                    if (gen === generation) showToast((e && e.message) || VOICE_ERRORS.failed, "error", 7000);
+                } finally {
+                    if (gen === generation) setState("off");
+                }
+            }
+
+            // discard: the answer was sent or the box is being disabled, so a
+            // recording or transcription still in flight must not land in it.
             function stop({ discard = false } = {}) {
-                const wasOn = wanted;
-                wanted = false;
-                if (discard) accepting = false;
-                if (running) discard ? rec.abort() : rec.stop();   // a normal stop still delivers the last words
-                if (wasOn) setOn(false);
+                if (discard) {
+                    generation++;
+                    afterIdle = null;
+                    if (recorder && recorder.state !== "inactive") recorder.stop(); else release();
+                    if (state !== "off") setState("off");
+                } else if (state === "recording") {
+                    clearInterval(timer);
+                    recorder.stop();                     // -> finish -> transcribe
+                } else if (state === "starting") {
+                    generation++;
+                    setState("off");
+                }
             }
+
             return {
-                toggle() { wanted ? stop() : start(); },
+                toggle() {
+                    if (state === "off") start();
+                    else if (state === "recording" || state === "starting") stop();
+                    // transcribing: wait for the text
+                },
                 stop,
-                isOn: () => wanted,
+                isOn: () => state === "recording" || state === "starting",
+                busy: () => state !== "off",
+                state: () => state,
+                // Send pressed while recording or transcribing: finish, add the text, then send.
+                whenIdle(fn) {
+                    if (state === "off") { fn(); return; }
+                    if (afterIdle) return;               // already waiting to send
+                    afterIdle = fn;
+                    if (state === "recording" || state === "starting") stop();
+                },
             };
+        }
+
+        function _voiceClock(seconds) {
+            return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
         }
 
         // Round 1 composer.
@@ -4693,10 +4741,11 @@
         const rdVoice = rdMicBtn ? createVoiceInput({
             button: rdMicBtn,
             input: rdInput,
-            onStateChange: (on) => {
-                rdIsRecording = on;
-                if (on) setSystemLog("Listening... click the mic again to stop.");
-                else if (!rdInput.disabled) { setSystemLog("Awaiting your response."); rdInput.focus(); }
+            onStateChange: (state, seconds) => {
+                rdIsRecording = state === "recording";
+                if (state === "recording") setSystemLog(`Recording ${_voiceClock(seconds)} \u2014 click the mic again to stop.`);
+                else if (state === "transcribing") setSystemLog("Turning your answer into text...");
+                else if (state === "off" && !rdInput.disabled) { setSystemLog("Awaiting your response."); rdInput.focus(); }
             },
             onTextChange: (text) => rdSendBtn.classList.toggle("ready", text.trim().length > 0),
         }) : null;
@@ -4728,6 +4777,8 @@
 
         function rdHandleSubmission() {
             if (rdInput.disabled) return;
+            // Still recording / transcribing: add that text first, then send.
+            if (rdVoice && rdVoice.busy()) { rdVoice.whenIdle(rdHandleSubmission); return; }
             const text = rdInput.value.trim();
             if (!text) return;
             rdStopMic({ discard: true });
@@ -5955,10 +6006,13 @@
         const techVoice = createVoiceInput({
             button: micBtn,
             input: inputField,
-            onStateChange: (on) => {
-                isRecording = on;
-                inputField.placeholder = on ? "Listening... click the mic again to stop."
-                                            : "Enter response... (Shift+Enter for a new line)";
+            onStateChange: (state, seconds) => {
+                isRecording = state === "recording";
+                if (inputField.disabled) return;
+                inputField.placeholder =
+                    state === "recording" ? `Recording ${_voiceClock(seconds)} \u2014 click the mic again to stop.`
+                    : state === "transcribing" ? "Turning your answer into text..."
+                    : "Enter response... (Shift+Enter for a new line)";
             },
         });
 
@@ -9025,6 +9079,8 @@
 
         async function handleSubmission() {
             if (inputField.disabled || interviewFlow.phase !== "technical" || techSessionId === null) return;
+            // Still recording / transcribing: add that text first, then send.
+            if (techVoice && techVoice.busy()) { techVoice.whenIdle(handleSubmission); return; }
             const text = inputField.value.trim();
             if (!text) return;
 

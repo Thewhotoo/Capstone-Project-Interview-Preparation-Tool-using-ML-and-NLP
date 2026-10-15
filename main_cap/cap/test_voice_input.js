@@ -1,11 +1,12 @@
-// Voice input (speech-to-text) -- templates/index.html's VOICE INPUT block:
-// one click on, one click off, everything said in between written into the
-// answer box after any typed text; restarted when the browser ends a session
-// by itself; errors shown; words still arriving after the answer was sent
-// are dropped.
+// Voice input -- templates/index.html's VOICE INPUT block: one click starts
+// recording, the next stops it; the recording is sent to /api/transcribe and
+// the text is added to the answer box after anything typed; sending while
+// recording finishes the text first; a sent answer drops anything in flight;
+// errors are shown.
 //
 // Same convention as test_session_integrity.js: extracts the EXACT source of
-// the block and runs it in Node's `vm` with a fake SpeechRecognition.
+// the block and runs it in Node's `vm` with a fake microphone, MediaRecorder
+// and server.
 //
 // Run: node test_voice_input.js
 
@@ -22,142 +23,175 @@ const endIdx = src.indexOf(END, startIdx);
 if (startIdx === -1 || endIdx === -1) throw new Error("VOICE INPUT block not found");
 const block = src.slice(startIdx, endIdx);
 
-class FakeRecognition {
-    constructor() { FakeRecognition.last = this; this.starts = 0; this.stops = 0; this.aborts = 0; }
-    start() { this.starts++; this.onstart && this.onstart(); }
-    stop() { this.stops++; }
-    abort() { this.aborts++; }
-    // test helpers
-    say(parts, resultIndex = 0) {   // parts: [[text, isFinal], ...] = the whole session's results so far
-        const results = parts.map(([t, f]) => Object.assign([{ transcript: t }], { isFinal: f }));
-        this.onresult({ resultIndex, results });
-    }
-    end() { this.onend(); }
-    fail(error) { this.onerror({ error }); }
-}
+const settle = async () => { for (let i = 0; i < 10; i++) await new Promise((r) => setImmediate(r)); };
 
-function setup({ supported = true, typed = "" } = {}) {
-    const toasts = [];
-    let now = 0;
+function setup({ typed = "", supported = true, micError = null, reply = { ok: true, body: { text: "I used Redis" } } } = {}) {
+    const toasts = [], states = [], requests = [];
+    let now = 0, interval = null;
+    const tracks = [{ stopped: false, stop() { this.stopped = true; } }];
     const button = {
         style: {}, title: "", attrs: {},
         setAttribute(k, v) { this.attrs[k] = v; },
         classList: { _s: new Set(), toggle(c, on) { on ? this._s.add(c) : this._s.delete(c); }, contains(c) { return this._s.has(c); } },
     };
     const input = { value: typed };
-    const states = [];
-    const window = supported ? { webkitSpeechRecognition: FakeRecognition } : {};
+
+    class FakeRecorder {
+        static isTypeSupported(t) { return t === "audio/webm;codecs=opus"; }
+        constructor(stream, opts) { FakeRecorder.last = this; this.mimeType = opts && opts.mimeType; this.state = "inactive"; }
+        start() { this.state = "recording"; }
+        stop() { this.state = "inactive"; this.ondataavailable({ data: { size: 1200 } }); this.onstop(); }
+    }
     const sandbox = {
-        window, navigator: { language: "en-IN" }, Date: { now: () => now },
+        window: supported ? { MediaRecorder: FakeRecorder } : {},
+        MediaRecorder: FakeRecorder,
+        navigator: {
+            mediaDevices: {
+                getUserMedia: async () => { if (micError) { const e = new Error(micError); e.name = micError; throw e; } return { getTracks: () => tracks }; },
+            },
+        },
+        Blob: class { constructor(parts, opts) { this.size = parts.reduce((n, p) => n + p.size, 0); this.type = opts.type; } },
+        FormData: class { constructor() { this.fields = {}; } append(k, v) { this.fields[k] = v; } },
+        fetch: async (url, opts) => {
+            requests.push({ url, body: opts.body });
+            return { ok: reply.ok, json: async () => reply.body };
+        },
+        Date: { now: () => now },
+        setInterval: (fn) => (interval = fn), clearInterval: () => (interval = null),
         showToast: (m, type) => toasts.push({ m, type }),
         proctorSuspendBlur() { sandbox.suspended++; }, proctorResumeBlur() { sandbox.suspended--; },
         suspended: 0,
+        String,
     };
     vm.createContext(sandbox);
     vm.runInContext(block + "\nthis.createVoiceInput = createVoiceInput;", sandbox);
-    const voice = sandbox.createVoiceInput({ button, input, onStateChange: (on) => states.push(on) });
-    return { voice, rec: FakeRecognition.last, button, input, states, toasts, sandbox,
-             advance(ms) { now += ms; } };
+    const voice = sandbox.createVoiceInput({ button, input, onStateChange: (s, sec) => states.push([s, sec]),
+                                             onTextChange: () => states.push(["text"]) });
+    return {
+        voice, button, input, states, toasts, requests, tracks, sandbox,
+        recorder: () => FakeRecorder.last,
+        tick(ms) { now += ms; if (interval) interval(); },
+    };
 }
 
 let passed = 0;
-function test(name, fn) { fn(); passed++; console.log("ok -", name); }
+async function test(name, fn) { await fn(); passed++; console.log("ok -", name); }
 
-test("one click on, one click off; what was said is in the box", () => {
-    const t = setup();
-    t.voice.toggle();
-    assert.strictEqual(t.rec.starts, 1);
-    assert.ok(t.button.classList.contains("mic-active"));
-    assert.strictEqual(t.rec.continuous, true);
-    t.rec.say([["I used", false]]);
-    assert.strictEqual(t.input.value, "I used");
-    t.rec.say([["I used Redis", true]]);
-    t.advance(5000);
-    t.voice.toggle();
-    assert.strictEqual(t.rec.stops, 1);
-    assert.ok(!t.button.classList.contains("mic-active"));
-    t.rec.say([["I used Redis", true], ["for caching", true]], 1);   // last words arrive after the click
-    t.rec.end();
-    assert.strictEqual(t.input.value, "I used Redis for caching");
-    assert.strictEqual(t.rec.starts, 1, "not restarted after the user turned it off");
-    assert.deepStrictEqual(t.states, [true, false]);
-    assert.strictEqual(t.sandbox.suspended, 0);
-});
+(async () => {
+    await test("one click records, the next turns it into text in the box", async () => {
+        const t = setup();
+        t.voice.toggle();
+        await settle();
+        assert.strictEqual(t.voice.state(), "recording");
+        assert.ok(t.button.classList.contains("mic-active"));
+        assert.strictEqual(t.recorder().mimeType, "audio/webm;codecs=opus");
+        t.tick(3000);
+        assert.deepStrictEqual(t.states.at(-1), ["recording", 3]);
+        t.voice.toggle();
+        await settle();
+        assert.strictEqual(t.requests.length, 1);
+        assert.strictEqual(t.requests[0].url, "/api/transcribe");
+        assert.strictEqual(t.requests[0].body.fields.audio.size, 1200);
+        assert.strictEqual(t.input.value, "I used Redis");
+        assert.strictEqual(t.voice.state(), "off");
+        assert.ok(t.tracks[0].stopped, "microphone released");
+        assert.ok(t.states.some(([s]) => s === "transcribing"));
+        assert.strictEqual(t.sandbox.suspended, 0);
+    });
 
-test("keeps text that was already typed", () => {
-    const t = setup({ typed: "My project" });
-    t.voice.toggle();
-    t.rec.say([["used Docker", true]]);
-    assert.strictEqual(t.input.value, "My project used Docker");
-});
+    await test("adds to text that was already typed", async () => {
+        const t = setup({ typed: "My project" });
+        t.voice.toggle(); await settle();
+        t.voice.toggle(); await settle();
+        assert.strictEqual(t.input.value, "My project I used Redis");
+    });
 
-test("restarted when the browser ends the session by itself, text kept", () => {
-    const t = setup();
-    t.voice.toggle();
-    t.rec.say([["first part", true]]);
-    t.advance(8000);
-    t.rec.end();                       // pause / time limit
-    assert.strictEqual(t.rec.starts, 2);
-    assert.ok(t.button.classList.contains("mic-active"));
-    t.rec.say([["second part", true]]);   // a new session's results start again at 0
-    assert.strictEqual(t.input.value, "first part second part");
-});
+    await test("Send while recording: finishes the text, then sends", async () => {
+        const t = setup();
+        let sentWith = null;
+        t.voice.toggle(); await settle();
+        t.voice.whenIdle(() => { sentWith = t.input.value; });
+        t.voice.whenIdle(() => { throw new Error("sent twice"); });   // second press while waiting
+        await settle();
+        assert.strictEqual(sentWith, "I used Redis");
+    });
 
-test("no-speech is not an error: it keeps listening", () => {
-    const t = setup();
-    t.voice.toggle();
-    t.advance(8000);
-    t.rec.fail("no-speech");
-    t.rec.end();
-    assert.strictEqual(t.rec.starts, 2);
-    assert.strictEqual(t.toasts.length, 0);
-});
+    await test("a discarded recording never reaches the server or the box", async () => {
+        const t = setup();
+        t.voice.toggle(); await settle();
+        t.voice.stop({ discard: true });
+        await settle();
+        assert.strictEqual(t.requests.length, 0);
+        assert.strictEqual(t.input.value, "");
+        assert.strictEqual(t.voice.state(), "off");
+        assert.ok(t.tracks[0].stopped);
+    });
 
-test("a blocked microphone is reported and turns it off", () => {
-    const t = setup();
-    t.voice.toggle();
-    t.rec.fail("not-allowed");
-    t.rec.end();
-    assert.strictEqual(t.rec.starts, 1);
-    assert.ok(!t.button.classList.contains("mic-active"));
-    assert.strictEqual(t.toasts.length, 1);
-    assert.match(t.toasts[0].m, /Microphone blocked/);
-});
+    await test("text arriving after the answer was sent is dropped", async () => {
+        const t = setup();
+        t.voice.toggle(); await settle();
+        t.voice.toggle();                       // stop -> transcription request in flight
+        t.voice.stop({ discard: true });        // answer sent meanwhile
+        t.input.value = "";
+        await settle();
+        assert.strictEqual(t.input.value, "");
+    });
 
-test("ending straight after starting three times stops it with a message", () => {
-    const t = setup();
-    t.voice.toggle();
-    for (let i = 0; i < 3; i++) { t.advance(100); t.rec.end(); }
-    assert.strictEqual(t.rec.starts, 3);
-    assert.ok(!t.voice.isOn());
-    assert.match(t.toasts[0].m, /keeps stopping/);
-});
+    await test("a blocked microphone is reported", async () => {
+        const t = setup({ micError: "NotAllowedError" });
+        t.voice.toggle(); await settle();
+        assert.strictEqual(t.voice.state(), "off");
+        assert.match(t.toasts[0].m, /Microphone blocked/);
+        assert.strictEqual(t.sandbox.suspended, 0);
+    });
 
-test("after the answer is sent, late words don't land in the empty box", () => {
-    const t = setup();
-    t.voice.toggle();
-    t.rec.say([["my answer", false]]);
-    t.voice.stop({ discard: true });
-    t.input.value = "";                // the box is cleared when the answer is sent
-    t.rec.say([["my answer", true]]);
-    t.rec.end();
-    assert.strictEqual(t.rec.aborts, 1);
-    assert.strictEqual(t.input.value, "");
-});
+    await test("no microphone is reported", async () => {
+        const t = setup({ micError: "NotFoundError" });
+        t.voice.toggle(); await settle();
+        assert.match(t.toasts[0].m, /No microphone found/);
+    });
 
-test("a second click while the last stop is finishing doesn't double up", () => {
-    const t = setup();
-    t.voice.toggle();
-    t.voice.toggle();                  // stop requested, browser not ended yet
-    t.voice.toggle();
-    assert.strictEqual(t.rec.starts, 1);
-    assert.ok(!t.voice.isOn());
-});
+    await test("a server error is shown and the box is untouched", async () => {
+        const t = setup({ typed: "keep me", reply: { ok: false, body: { error: "The recording couldn't be read." } } });
+        t.voice.toggle(); await settle();
+        t.voice.toggle(); await settle();
+        assert.strictEqual(t.input.value, "keep me");
+        assert.match(t.toasts[0].m, /couldn't be read/);
+        assert.strictEqual(t.voice.state(), "off");
+    });
 
-test("browsers without speech recognition hide the mic button", () => {
-    const t = setup({ supported: false });
-    assert.strictEqual(t.voice, null);
-    assert.strictEqual(t.button.style.display, "none");
-});
+    await test("silence: a message, no text", async () => {
+        const t = setup({ reply: { ok: true, body: { text: "" } } });
+        t.voice.toggle(); await settle();
+        t.voice.toggle(); await settle();
+        assert.strictEqual(t.input.value, "");
+        assert.match(t.toasts[0].m, /No speech/);
+    });
 
-console.log(`\n${passed} passed`);
+    await test("stops by itself at 5 minutes and still transcribes", async () => {
+        const t = setup();
+        t.voice.toggle(); await settle();
+        t.tick(300 * 1000);
+        await settle();
+        assert.match(t.toasts[0].m, /5 minutes/);
+        assert.strictEqual(t.input.value, "I used Redis");
+    });
+
+    await test("clicks while transcribing are ignored", async () => {
+        const t = setup();
+        t.voice.toggle(); await settle();
+        t.voice.toggle();                       // now transcribing
+        t.voice.toggle();
+        await settle();
+        assert.strictEqual(t.requests.length, 1);
+        assert.strictEqual(t.voice.state(), "off");
+    });
+
+    await test("browsers that can't record hide the mic button", async () => {
+        const t = setup({ supported: false });
+        assert.strictEqual(t.voice, null);
+        assert.strictEqual(t.button.style.display, "none");
+    });
+
+    console.log(`\n${passed} passed`);
+})().catch((e) => { console.error(e); process.exit(1); });

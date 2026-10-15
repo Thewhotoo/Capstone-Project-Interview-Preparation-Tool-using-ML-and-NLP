@@ -7,6 +7,7 @@ missing, the app still works: it downloads the model on first use (and logs
 "Models not downloaded yet") when the container has internet.
 """
 
+from faster_whisper.utils import download_model
 from sentence_transformers import CrossEncoder, SentenceTransformer
 from transformers import AutoModel, AutoTokenizer
 
@@ -18,5 +19,8 @@ CrossEncoder("cross-encoder/nli-deberta-v3-base")               # technical grad
 # are mounted at run time, so adding them later needs no rebuild.
 AutoTokenizer.from_pretrained("microsoft/deberta-v3-base")
 AutoModel.from_pretrained("microsoft/deberta-v3-base")
+
+# Voice answers (speech_to_text.py, CAP_WHISPER_MODEL): Systran/faster-whisper-base.en.
+download_model("base.en")
 
 print("models downloaded")

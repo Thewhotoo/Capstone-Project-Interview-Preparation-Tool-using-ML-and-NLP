@@ -30,12 +30,21 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+
+def _speech_model_repo() -> str:
+    # Same rule as speech_to_text.hub_repo_id (CAP_WHISPER_MODEL, default base.en),
+    # without importing that module here.
+    name = os.environ.get("CAP_WHISPER_MODEL", "base.en")
+    return name if "/" in name else f"Systran/faster-whisper-{name}"
+
+
 # Every Hugging Face model a normal request can load (the trained backbone only
 # when its weights exist -- see deployment_evaluator.py).
 REQUIRED_MODELS = (
     "sentence-transformers/all-MiniLM-L6-v2",   # Round 1 evaluator, resume parsing, tech grader
     "cross-encoder/nli-MiniLM2-L6-H768",        # Round 1 evaluator
     "cross-encoder/nli-deberta-v3-base",        # tech grader
+    _speech_model_repo(),                       # voice answers (speech_to_text.py)
 )
 # The trained Round 1 evaluator's backbone (tokenizer + architecture), needed only
 # when its weights file is installed. Without this, a machine that first ran the app
@@ -90,6 +99,7 @@ def _warm() -> None:
             logger.warning("Model warm-up: %s failed: %s", name, exc)
 
     import heuristic_evaluator
+    import speech_to_text
     from resume_engine import sections
     from resume_engine.parsers import project_parser
     from tech_interview import grader
@@ -100,6 +110,7 @@ def _warm() -> None:
     step("resume-sections", sections._LazySemanticModel.get)
     step("resume-keybert", project_parser._LazyKeyBERT.get)
     step("question-bank", load_bank)
+    step("speech-to-text", speech_to_text._LazyModel.get)
 
     def tech_grader():
         grader._LazyModels.embedder()

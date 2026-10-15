@@ -40,6 +40,7 @@ function makeSandbox(responses) {
         interviewFlow: { mode: "technical", phase: "technical" },
         techSessionId: null, techPrompt: null,
         inputField: { value: "", disabled: false },
+        techVoice: null,          // no voice input (see test_voice_input.js)
         messagesDiv: { lastElementChild: null },
         dashboardContainer: { innerHTML: "", style: {} },
         console: { error() {} },

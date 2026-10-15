@@ -48,7 +48,7 @@ Windows: `certutil -hashfile best_checkpoint_weights.pt SHA256`. Linux/macOS: `s
 
 **Without the file the app still works**: Round 1 uses the heuristic evaluator instead, and the startup log says which one is active (`Production evaluator ACTIVE: ...`).
 
-### Models downloaded automatically on the first run (about 1.8 GB)
+### Models downloaded automatically on the first run (about 2 GB)
 
 From Hugging Face, into `~/.cache/huggingface/hub/`:
 
@@ -57,13 +57,14 @@ From Hugging Face, into `~/.cache/huggingface/hub/`:
 | `sentence-transformers/all-MiniLM-L6-v2` | ~90 MB | Resume parsing, Round 1 evaluator, technical grader |
 | `cross-encoder/nli-MiniLM2-L6-H768` | ~320 MB | Round 1 evaluator |
 | `cross-encoder/nli-deberta-v3-base` | ~720 MB | Technical grader |
+| `Systran/faster-whisper-base.en` | ~145 MB | Voice answers: speech-to-text on the server (`speech_to_text.py`) |
 | `microsoft/deberta-v3-base` | ~710 MB | Round 1 trained evaluator (only if the weights file above is installed) |
 
 The first start is therefore slow; after that the app loads them offline in a background thread (a running server in about 2 s). On Windows, Hugging Face may warn that symlinks are unavailable. That is harmless; turning on Windows Developer Mode silences it and saves some disk space.
 
 ### Browser and hardware for the interview itself
 
-- **Google Chrome or Microsoft Edge** (recent version). Voice answers use the browser's built-in speech recognition, which only Chromium browsers provide and which needs internet.
+- **A recent browser.** The app is mostly tested in Google Chrome and Microsoft Edge. Voice answers work in any current browser (Chrome, Edge, Brave, Firefox, Safari): the browser only records, and the server turns the recording into text (Whisper, below), so no Google or Microsoft speech service is involved.
 - A **webcam** (required: the interview won't start without one, and the camera setup check runs first), plus a **microphone** if you want to answer by voice.
 - Allow **camera, microphone and full screen** when the browser asks. The interview is proctored: leaving full screen, switching tabs or copy-pasting ends it.
 - A reasonably lit room: the camera check and the live monitor warn about low light, blur and a second person in frame.

@@ -4170,7 +4170,8 @@
         // permission prompt has settled -- proctorArm waits for it: browser
         // permission prompts can steal focus or drop full screen, and must
         // not count against the candidate. The voice-input mic prompt is handled the same way
-        // (proctorSuspendBlur / rdMicSettled).
+        // (proctorSuspendBlur in createVoiceInput); the app also asks for the
+        // microphone up front (requestMediaPermissions) so it rarely appears.
         const PROCTOR_BLUR_GRACE_MS = 1500;
         const PROCTOR_VIOLATION_LABELS = {
             tab_switch: "Switched to another tab",
@@ -4486,7 +4487,6 @@
         function proctorReset() {
             proctorDisarm({ exitFullscreen: true });
             proctorState = proctorFreshState();
-            rdMicSuspending = false;
             rdEnding = false;
             proctorHideOverlay();
         }
@@ -4568,75 +4568,150 @@
             }
         }
 
-        // ─── Voice input — a dedicated recognizer for the composer, kept
-        // separate from the Adaptive Interview's `recognition`/`micBtn` so
-        // the two flows never fight over the same handlers. Same Web
-        // Speech API, same "listening" concept, just scoped to #rd-container. ───
-        let rdRecognition = null;
-        let rdIsRecording = false;
-        // True from rdToggleMic's start() until recognition starts or fails:
-        // the first use may show a mic permission prompt, which can steal
-        // focus and must not count as a session-integrity violation.
-        let rdMicSuspending = false;
+        // ─── VOICE INPUT (speech-to-text) — shared by both answer boxes ───
+        // One click starts listening, the next click stops it; everything said
+        // in between is written into the answer box, after anything already
+        // typed there. The browser's recognizer (Web Speech API, Chrome/Edge)
+        // ends a session by itself after a pause or about a minute, so while
+        // the candidate hasn't turned it off it is started again, keeping the
+        // text. Errors are shown, never silently swallowed.
+        const VOICE_ERRORS = {
+            "not-allowed": "Microphone blocked. Allow it from the \u{1F512} icon in the address bar, then try again.",
+            "service-not-allowed": "This browser doesn't allow voice input here. Use Chrome or Edge.",
+            "audio-capture": "No microphone found. Plug one in and try again.",
+            "network": "Voice input needs an internet connection (the browser's speech service couldn't be reached).",
+            "language-not-supported": "Voice input doesn't support this browser's language setting.",
+        };
 
-        function rdMicSettled() {
-            if (!rdMicSuspending) return;
-            rdMicSuspending = false;
-            proctorResumeBlur();
+        function _voiceJoin(a, b) {
+            if (!a || !b || /\s$/.test(a) || /^\s/.test(b)) return a + b;
+            return a + " " + b;
         }
 
-        if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+        function createVoiceInput({ button, input, onStateChange, onTextChange }) {
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            rdRecognition = new SR();
-            rdRecognition.continuous = false;
-            rdRecognition.interimResults = true;
+            if (!SR) {
+                if (button) button.style.display = "none";
+                return null;
+            }
+            const rec = new SR();
+            rec.continuous = true;
+            rec.interimResults = true;
+            rec.lang = navigator.language || "en-US";
 
-            rdRecognition.onstart = () => {
-                rdMicSettled();
-                rdIsRecording = true;
-                rdMicBtn.classList.add("mic-active");
-                setSystemLog("Listening...");
+            let wanted = false;      // the candidate has it switched on
+            let running = false;     // the browser's recognizer is running
+            let accepting = false;   // results still go into the box
+            let base = "", committed = "";
+            let startedAt = 0, quickEnds = 0, suspending = false;
+
+            function settle() {
+                if (suspending) { suspending = false; proctorResumeBlur(); }
+            }
+            function setOn(on) {
+                button.classList.toggle("mic-active", on);
+                button.setAttribute("aria-pressed", on ? "true" : "false");
+                button.title = on ? "Stop voice input" : "Voice input";
+                if (onStateChange) onStateChange(on);
+            }
+            function render(interim) {
+                input.value = _voiceJoin(_voiceJoin(base, committed), interim);
+                if (onTextChange) onTextChange(input.value);
+            }
+            function begin() {
+                startedAt = Date.now();
+                try { rec.start(); } catch (e) { /* already running */ }
+            }
+
+            rec.onstart = () => { running = true; settle(); };
+            rec.onresult = (event) => {
+                if (!accepting) return;
+                let interim = "";
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const text = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) committed = _voiceJoin(committed, text.trim());
+                    else interim = _voiceJoin(interim, text.trim());
+                }
+                quickEnds = 0;
+                render(interim);
             };
-            rdRecognition.onresult = (event) => {
-                let transcript = "";
-                for (let i = 0; i < event.results.length; i++) transcript += event.results[i][0].transcript;
-                rdInput.value = transcript;
-                rdSendBtn.classList.toggle("ready", transcript.trim().length > 0);
+            rec.onerror = (event) => {
+                const message = VOICE_ERRORS[event.error];
+                if (message) {          // "no-speech" / "aborted": the restart below handles them
+                    wanted = false;
+                    setOn(false);
+                    showToast(message, "error", 7000);
+                }
             };
-            rdRecognition.onerror = () => { rdMicSettled(); rdStopMic(); };
-            rdRecognition.onend = () => { rdMicSettled(); rdStopMic(); };
-        } else if (rdMicBtn) {
-            rdMicBtn.style.display = "none";
+            rec.onend = () => {
+                running = false;
+                settle();
+                if (wanted) {
+                    // Ending again and again right after starting means something is wrong
+                    // with the microphone; don't spin.
+                    quickEnds = Date.now() - startedAt < 1500 ? quickEnds + 1 : 0;
+                    if (quickEnds < 3) { begin(); return; }
+                    wanted = false;
+                    setOn(false);
+                    showToast("Voice input keeps stopping, so it was turned off. Check your microphone and try again.", "error", 7000);
+                }
+                if (accepting) render("");   // drop words that never became final
+                accepting = false;
+            };
+
+            function start() {
+                if (wanted || running) return;   // running && !wanted: still finishing the last stop
+                wanted = true;
+                accepting = true;
+                quickEnds = 0;
+                base = input.value;
+                committed = "";
+                setOn(true);
+                // In case the browser still has to ask for the microphone: its prompt
+                // can take focus, which must not count as leaving the interview.
+                if (!suspending) { suspending = true; proctorSuspendBlur(); }
+                begin();
+            }
+            // discard: the answer was sent or the box is being disabled, so words
+            // still on their way must not land in it.
+            function stop({ discard = false } = {}) {
+                const wasOn = wanted;
+                wanted = false;
+                if (discard) accepting = false;
+                if (running) discard ? rec.abort() : rec.stop();   // a normal stop still delivers the last words
+                if (wasOn) setOn(false);
+            }
+            return {
+                toggle() { wanted ? stop() : start(); },
+                stop,
+                isOn: () => wanted,
+            };
         }
+
+        // Round 1 composer.
+        let rdIsRecording = false;
+        const rdVoice = rdMicBtn ? createVoiceInput({
+            button: rdMicBtn,
+            input: rdInput,
+            onStateChange: (on) => {
+                rdIsRecording = on;
+                if (on) setSystemLog("Listening... click the mic again to stop.");
+                else if (!rdInput.disabled) { setSystemLog("Awaiting your response."); rdInput.focus(); }
+            },
+            onTextChange: (text) => rdSendBtn.classList.toggle("ready", text.trim().length > 0),
+        }) : null;
 
         function rdToggleMic() {
-            if (!rdRecognition || rdInput.disabled) return;
-            if (rdIsRecording) {
-                rdRecognition.stop();
-                return;
-            }
-            if (!rdMicSuspending) {
-                rdMicSuspending = true;
-                proctorSuspendBlur();
-            }
-            try {
-                rdRecognition.start();
-            } catch (err) {
-                rdMicSettled();
-            }
+            if (!rdVoice || rdInput.disabled) return;
+            rdVoice.toggle();
         }
 
-        function rdStopMic() {
-            if (!rdRecognition || !rdIsRecording) return;
-            rdIsRecording = false;
-            rdMicBtn.classList.remove("mic-active");
-            if (!rdInput.disabled) {
-                setSystemLog("Awaiting your response.");
-                rdInput.focus();
-            }
+        function rdStopMic({ discard = false } = {}) {
+            if (rdVoice) rdVoice.stop({ discard });
         }
 
         function rdDisableInput() {
+            rdStopMic({ discard: true });
             rdInput.disabled = true;
             rdSendBtn.disabled = true;
             if (rdMicBtn) rdMicBtn.disabled = true;
@@ -4655,7 +4730,7 @@
             if (rdInput.disabled) return;
             const text = rdInput.value.trim();
             if (!text) return;
-            if (rdIsRecording) rdStopMic();
+            rdStopMic({ discard: true });
             rdInput.value = "";
             rdSendBtn.classList.remove("ready");
             rdHandleReply(text);
@@ -4976,8 +5051,8 @@
         }
 
         function interviewStopMic() {
-            if (rdIsRecording && rdRecognition) rdRecognition.stop();
-            stopMic();
+            rdStopMic({ discard: true });
+            stopMic({ discard: true });
         }
 
         function interviewTerminate() {
@@ -5875,60 +5950,25 @@
             showCameraSetup(() => showInterviewRules("technical"));
         }
 
-        // --- SPEECH RECOGNITION LOGIC ---
-        let recognition;
+        // --- SPEECH RECOGNITION (technical composer; see VOICE INPUT) ---
         let isRecording = false;
-
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = true;
-
-            recognition.onstart = function () {
-                rdMicSettled();
-                isRecording = true;
-                micBtn.classList.add("mic-active");
-                inputField.placeholder = "Listening...";
-            };
-
-            recognition.onresult = function (event) {
-                let transcript = "";
-                for (let i = 0; i < event.results.length; i++) {
-                    transcript += event.results[i][0].transcript;
-                }
-                inputField.value = transcript;
-            };
-
-            recognition.onerror = function (event) { rdMicSettled(); stopMic(); };
-            recognition.onend = function () { rdMicSettled(); stopMic(); };
-        } else {
-            micBtn.style.display = "none";
-        }
+        const techVoice = createVoiceInput({
+            button: micBtn,
+            input: inputField,
+            onStateChange: (on) => {
+                isRecording = on;
+                inputField.placeholder = on ? "Listening... click the mic again to stop."
+                                            : "Enter response... (Shift+Enter for a new line)";
+            },
+        });
 
         function toggleMic() {
-            if (isRecording) { stopMic(); return; }
-            if (!recognition) return;
-            // The first use may show a mic permission prompt, which can steal
-            // focus -- not a session-integrity violation (same as rdToggleMic).
-            if (!rdMicSuspending) {
-                rdMicSuspending = true;
-                proctorSuspendBlur();
-            }
-            try {
-                recognition.start();
-            } catch (err) {
-                rdMicSettled();
-            }
+            if (!techVoice || inputField.disabled) return;
+            techVoice.toggle();
         }
 
-        function stopMic() {
-            if (recognition && isRecording) {
-                recognition.stop();
-                isRecording = false;
-                micBtn.classList.remove("mic-active");
-                inputField.placeholder = "Enter response... (Shift+Enter for a new line)";
-            }
+        function stopMic({ discard = false } = {}) {
+            if (techVoice) techVoice.stop({ discard });
         }
 
         function showGazeWarning(msg) {
@@ -7620,7 +7660,41 @@
             }
         }
 
+        // Ask for the camera and the microphone together when the app opens, so
+        // the browser doesn't have to ask in the middle of a full-screen
+        // interview (its prompt drops full screen). Nothing is recorded: the
+        // tracks stop at once; the browser remembers the answer for this site.
+        // Asked again by the camera check (before full screen) if still pending.
+        let _micNoticeShown = false;
+
+        async function _permissionState(name) {
+            try { return (await navigator.permissions.query({ name })).state; }
+            catch (e) { return "prompt"; }   // browsers that can't query: just ask
+        }
+
+        async function requestMediaPermissions() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+            const [camera, mic] = await Promise.all([_permissionState("camera"), _permissionState("microphone")]);
+            if (camera === "granted" && mic === "granted") return;
+            let micOk = mic === "granted";
+            if (mic !== "denied") {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: camera !== "denied", audio: true });
+                    stream.getTracks().forEach((t) => t.stop());
+                    micOk = true;
+                } catch (e) {
+                    micOk = (await _permissionState("microphone")) === "granted";
+                }
+            }
+            if (!micOk && !_micNoticeShown) {
+                _micNoticeShown = true;
+                showToast("Microphone not allowed, so voice answers are off (you can still type). To turn them on, " +
+                          "click the \u{1F512} icon in the address bar \u2192 Microphone \u2192 Allow.", "info", 9000);
+            }
+        }
+
         function enterApp(account) {
+            requestMediaPermissions();
             currentAccount = account;
             homeGreetingTyped = false;
             renderProfileMenu();
@@ -8680,7 +8754,7 @@
         }
 
         function disableInput() {
-            stopMic();
+            stopMic({ discard: true });
             inputField.disabled = true;
             sendBtn.disabled = true;
             micBtn.disabled = true;
@@ -9181,6 +9255,10 @@
             document.getElementById('cs-continue-btn').onclick = _csOnContinue;
             document.getElementById('cs-retry-btn').onclick = _csOnRetry;
             overlay.classList.add('visible');
+
+            // The microphone too, now and not mid-interview (no-op once both are granted).
+            await requestMediaPermissions();
+            if (session !== _csSession) return;
 
             // ── Camera (BLOCKING if unavailable) ──
             let stream = webcamStream;

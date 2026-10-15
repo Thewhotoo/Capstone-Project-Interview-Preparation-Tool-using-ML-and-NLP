@@ -948,7 +948,12 @@ A single page with inline CSS and JS, and no framework. Screens are top-level co
 **Other mechanisms:**
 - **Answer boxes:** both (`#user-input`, `#rd-user-input`) are multi-line `<textarea class="answer-box">`: Enter sends, Shift+Enter adds a line.
 - **Profile photo:** `fillAvatar(el, url, fallback)` puts the photo (or initials) in the top-right circle, on the Profile page and next to the candidate's technical-chat messages; picker on signup step 1 (`setSignupPhoto`) and on the Profile page (`renderProfilePhoto`, `removeProfilePhoto`).
-- **Voice input:** two Web Speech API recognizers, `rdRecognition` (Round 1) and `recognition` (technical). Both suspend the blur check while a mic permission prompt may be open (`proctorSuspendBlur` / `rdMicSettled`).
+- **Voice input** (`createVoiceInput`, one controller per answer box: `rdVoice` for Round 1, `techVoice` for technical; Web Speech API, Chrome/Edge only). Click once to start and again to stop; everything said in between goes into the box after any typed text. Why it works this way:
+  - **`continuous` mode, restarted while on:** the browser ends a session by itself after a pause or about a minute. The old single-phrase mode stopped at the first pause, so the mic seemed to switch off immediately. The controller restarts it while the candidate hasn't turned it off; three ends within 1.5 s of starting turn it off with a message, so a broken mic can't loop.
+  - **Errors are shown** (`VOICE_ERRORS`: blocked mic, no mic, no internet for the speech service), instead of the button silently switching off; `no-speech` just keeps listening.
+  - **Sending the answer discards words still on their way** (`stop({discard: true})` aborts the recognizer), so they don't land in the emptied box; a normal stop keeps the last words.
+  - **Permissions up front:** `requestMediaPermissions()` asks for the camera and microphone together when the app opens (`enterApp`) and again in the camera check (before full screen) if either is still undecided. A mic prompt in the middle of an interview used to drop full screen. Nothing is recorded; the tracks stop at once. If the mic is refused, a message says voice answers are off and how to allow them. The blur check is still suspended around starting the recognizer, in case a prompt appears anyway.
+  - Tested by `test_voice_input.js` (a fake recognizer).
 - **Typewriter:** `typeLine(el, text)` uses a per-element cancellation token, so a superseded call stops and its promise never resolves (the fix for a race condition).
 - **System log:** `setSystemLog` plus an idle cycle.
 - **Escaping:** `esc()` HTML-escapes user and server text everywhere, including the technical chat (`addMessage` escapes plain-text messages; questions, topics and feedback are escaped).

@@ -36,60 +36,67 @@ Details, main files and LOC per module: [`PROJECT_DOCUMENTATION.md` §1.1](PROJE
 
 ---
 
-## Quick start
+## Quick start (Docker, recommended)
 
-**Requirements:** Python 3.12, about 8 GB RAM, Chrome or Edge with a webcam, and internet on the first run. Node.js only for the frontend tests. A GPU is **not** needed to run the app. Full list (disk space, models, the weights file, browser permissions): [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
+Docker builds everything for you: Python, every package and every model go into the image, and the app runs with PostgreSQL and Redis. Nothing to install except Docker.
+
+**You need:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) (on Windows it also needs WSL 2), [Git LFS](https://git-lfs.com) for the trained Round 1 evaluator, about 8 GB RAM and 10 GB free disk, and a browser with a webcam. Full list: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
 
 ```bash
-pip install -r Requirements_Global.txt
-cd main_cap/cap
-python app.py
+git lfs install                  # once per machine, before cloning
+git clone https://github.com/Thewhotoo/Capstone-Project-Interview-Preparation-Tool-using-ML-and-NLP.git
+cd Capstone-Project-Interview-Preparation-Tool-using-ML-and-NLP
+docker compose up --build -d     # first time ~15 min (downloads ~3 GB); later starts take seconds
 ```
 
-Open **http://localhost:5000**, sign up with a resume, and start an interview from Home.
+Open **http://localhost:5000**, sign up with a resume, and start an interview from Home. `docker compose logs -f app` shows the server starting (Ctrl+C stops watching, not the app).
 
-- The SQLite database and its migrations are created automatically on first start (`main_cap/cap/instance/`, not in git).
-- The first start downloads the Hugging Face models the graders use; later starts load them offline in a background thread (~2 s to a running server).
+| Task | Command (from the repository root) |
+|---|---|
+| Stop | `docker compose down` (your data is kept) |
+| Start again | `docker compose up -d` |
+| After pulling or changing code | `docker compose up --build -d` (rebuilds only the code layer, seconds) |
+| Logs | `docker compose logs -f app` |
+| Database shell | `docker compose exec postgres psql -U cap cap` |
+
+- **Your data** (accounts, resumes, sessions, interviews in progress) lives in Docker volumes and is kept across `down` / `up` and rebuilds. **`docker compose down -v` deletes it.**
+- **The trained Round 1 evaluator** is mounted from `main_cap/cap/deployed_model_overall_single_v5_1088/` (Git LFS, below). Without it Round 1 uses the heuristic evaluator; the startup log says which one is active.
+- **Optional settings** (port, database password, secret key, threads): copy `.env.example` to `.env`.
+- **Bringing over data from a non-Docker install** (the SQLite file and its resumes): with the stack running, from the repository root:
+  ```bash
+  docker compose cp main_cap/cap/instance/app.db app:/tmp/app.db
+  docker compose cp main_cap/cap/instance/uploads app:/tmp/uploads
+  docker compose exec app python copy_database.py --from sqlite:////tmp/app.db --from-uploads /tmp/uploads --replace
+  ```
+  `--replace` first deletes everything already in the Docker database.
+
+### Without Docker (for development and running the tests)
+
+Needed only to work on the code or run the test suite. **Requirements:** Python 3.12, about 8 GB RAM and internet on the first run (about 2 GB of models download then). Node.js only for the frontend tests. Details: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
+
+```bash
+pip install torch --index-url https://download.pytorch.org/whl/cpu   # no NVIDIA GPU: small CPU-only PyTorch
+pip install -r Requirements_Global.txt
+cd main_cap/cap
+python app.py                    # http://localhost:5000
+```
+
+| | Docker (default) | `python app.py` |
+|---|---|---|
+| Install | Docker only | Python 3.12 + packages + models |
+| Database | PostgreSQL | SQLite file (`main_cap/cap/instance/`, created automatically) |
+| Interviews in progress | Redis; survive a restart | Process memory; a restart ends them |
+| Server | waitress (`serve.py`) | Flask development server |
 
 ### Round 1 evaluator weights (Git LFS)
 
-The trained Round 1 evaluator's weights (`best_checkpoint_weights.pt`, ~735 MB) are stored with **Git LFS**. Install Git LFS and run `git lfs install` **before cloning**, or run `git lfs pull` afterwards. Without Git LFS you get a small pointer file instead of the model. Details, and the monthly download allowance: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
+The trained Round 1 evaluator's weights (`best_checkpoint_weights.pt`, ~735 MB) are stored with **Git LFS** (used by both ways of running). Run `git lfs install` **before cloning**, or `git lfs pull` afterwards. Without Git LFS you get a small pointer file instead of the model. Details, and the monthly download allowance: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
 
 ```
 main_cap/cap/deployed_model_overall_single_v5_1088/best_checkpoint_weights.pt
 ```
 
 Without the real file the app still runs: Round 1 falls back to the heuristic evaluator (the startup log says which evaluator is active).
-
-### Production mode with Docker (optional)
-
-One command runs the app with PostgreSQL and Redis, without installing Python or any package. You need only [Docker Desktop](https://www.docker.com/products/docker-desktop/) (on Windows it also needs WSL 2; see [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md#docker-optional)). From the repository root:
-
-```bash
-docker compose up --build -d     # first time ~15 min (downloads ~3 GB); later starts take seconds
-docker compose logs -f app       # watch it start (Ctrl+C stops watching, not the app)
-```
-
-Open **http://localhost:5000**.
-
-| | `python app.py` (simple mode) | `docker compose up` (production mode) |
-|---|---|---|
-| Database | SQLite file | PostgreSQL container |
-| Interviews in progress | This process's memory; a restart ends them | Redis container; survive a restart |
-| Server | Flask development server | waitress (`serve.py`) |
-| Install | Python 3.12 + packages | Docker only |
-
-- **Your data** (accounts, resumes, sessions, interviews in progress) lives in Docker volumes and is kept across `docker compose down` / `up`. `docker compose down -v` deletes it.
-- **The trained Round 1 evaluator** is not in the image: it is mounted from `main_cap/cap/deployed_model_overall_single_v5_1088/`, so run `git lfs pull` first (without it, Round 1 uses the heuristic evaluator).
-- **After changing the code**, `docker compose up --build -d` rebuilds only the code layer (seconds).
-- **Optional settings** (port, database password, secret key, threads): copy `.env.example` to `.env`.
-- **Bringing over your simple-mode data** (accounts, resumes, sessions from the SQLite file): with the stack running, from the repository root:
-  ```bash
-  docker compose cp main_cap/cap/instance/app.db app:/tmp/app.db
-  docker compose cp main_cap/cap/instance/uploads app:/tmp/uploads
-  docker compose exec app python copy_database.py --from sqlite:////tmp/app.db --from-uploads /tmp/uploads --replace
-  ```
-  `--replace` first deletes everything already in the Docker database. `copy_database.py` works between any two databases (`--to`, `--to-uploads`).
 
 ---
 

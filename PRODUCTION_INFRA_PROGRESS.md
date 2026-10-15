@@ -111,7 +111,7 @@ Why replay is safe: planning is deterministic (crc32, no `random` or `hash()`). 
   - `docker compose restart app` in the middle of Round 1 and of a technical interview: both carried on, still logged in;
   - `docker compose down` then `up`: account, uploaded resume file and both completed sessions still there;
   - Linux test run inside the image: 1,252 app tests passed (24 skipped), 511 resume-engine tests passed. Two Gemini developer-tool tests needed `google-genai`, which the image leaves out on purpose; they now skip when it isn't installed (and pass when it is).
-- [x] Docs: README ("Production mode with Docker"), SETUP_PREREQUISITES ("Docker (optional)"), PROJECT_DOCUMENTATION (§3.5, §3.6, §7).
+- [x] Docs: README ("Quick start (Docker, recommended)"), SETUP_PREREQUISITES (section 1, Docker as the default), PROJECT_DOCUMENTATION (§3.5, §3.6, §7).
 
 **Done when:** a fresh `docker compose up` gives a working app at `localhost:5000` with everything working. ✅
 

@@ -1,30 +1,25 @@
 # Setup prerequisites: what you need before running this project
 
-Everything a new machine needs, beyond `git clone`. The short version is in [`README.md`](README.md#quick-start); this file lists the things that are easy to miss.
+Everything a new machine needs, beyond `git clone`. **The default is Docker** (section 1): install Docker Desktop and Git LFS, and Docker downloads everything else. Section 2 is only for working on the code without Docker. The short version is in [`README.md`](README.md).
 
 ---
 
-## 1. To run the app
+## 1. To run the app with Docker (recommended)
 
-### System
+The default way to run the app (README, "Quick start"): `docker compose up` builds an image with Python, every package and every model inside, and runs it with PostgreSQL and Redis. **You don't install Python, packages or models.** Only the machine that runs the server needs this; people taking interviews just use a browser.
 
 | Need | Details |
 |---|---|
-| **OS** | Tested on Windows 11. Nothing is Windows-specific, so Linux and macOS should work but haven't been tested. |
-| **Python 3.12** (64-bit) | Tested on 3.12.10. Tick "Add python.exe to PATH" when installing on Windows. |
-| **RAM** | The server uses about **2.8 GB** once all models are loaded (measured). 8 GB minimum; 16 GB is comfortable with a browser open. |
-| **Disk** | About **5 GB** free: Python packages (0.5 GB with CPU-only PyTorch, about 2.5 GB with the CUDA build), models downloaded on first run (about 1.8 GB, see below) and the evaluator weights (735 MB). |
-| **GPU** | **Not needed.** Everything the app does at interview time runs on the CPU. |
-| **Internet** | Needed on the **first run** (model downloads) and **whenever the page loads**: the browser fetches MediaPipe (face tracking) from `cdn.jsdelivr.net` and fonts from Google Fonts. |
+| **OS** | Tested on Windows 11 with Docker Desktop; the containers are Linux, so Linux and macOS work the same way. |
+| **Docker Desktop** | [docker.com](https://www.docker.com/products/docker-desktop/), tested with 29.8. On Linux, Docker Engine with the compose plugin is enough. |
+| **WSL 2** (Windows only) | Docker Desktop runs Linux containers inside it. If Docker Desktop says WSL is missing, run `wsl --install --no-distribution` in an administrator terminal and restart. |
+| **Disk** | About **6 GB** for the image (CPU-only PyTorch and the models are inside it), plus the database volume. |
+| **RAM** | About 3 GB for the app, plus a little for PostgreSQL and Redis. On Windows, containers may use up to half the machine's RAM by default, which is enough with 8 GB or more. |
+| **Internet** | Only for the first build (about 3 GB of downloads). The running container needs none, except the browser still loads MediaPipe and fonts from the internet. |
+| **GPU** | **Not needed.** The image uses CPU-only PyTorch. |
+| **Git LFS** | For the trained Round 1 evaluator, which is mounted from the repository (next section). Without it Round 1 uses the heuristic evaluator. |
 
-### Python packages
-
-```bash
-# no NVIDIA GPU? install the small CPU-only PyTorch first:
-pip install torch --index-url https://download.pytorch.org/whl/cpu
-
-pip install -r Requirements_Global.txt
-```
+**Deploying for other people:** the webcam only works on `http://localhost` or over **HTTPS**, so a server that others reach by its address needs HTTPS in front of it (a reverse proxy with a certificate, or a tunnel). Set `CAP_SECRET_KEY` and `POSTGRES_PASSWORD` in `.env` before the first start.
 
 ### Git LFS, for the Round 1 evaluator weights
 
@@ -48,7 +43,42 @@ Windows: `certutil -hashfile best_checkpoint_weights.pt SHA256`. Linux/macOS: `s
 
 **Without the file the app still works**: Round 1 uses the heuristic evaluator instead, and the startup log says which one is active (`Production evaluator ACTIVE: ...`).
 
+### Browser and hardware for the interview itself
+
+- **A recent browser.** The app is mostly tested in Google Chrome and Microsoft Edge. Voice answers work in any current browser (Chrome, Edge, Brave, Firefox, Safari): the browser only records, and the server turns the recording into text (Whisper), so no Google or Microsoft speech service is involved.
+- A **webcam** (required: the interview won't start without one, and the camera setup check runs first), plus a **microphone** if you want to answer by voice.
+- Allow **camera, microphone and full screen** when the browser asks. The interview is proctored: leaving full screen, switching tabs or copy-pasting ends it.
+- A reasonably lit room: the camera check and the live monitor warn about low light, blur and a second person in frame.
+
+---
+
+## 2. To run without Docker (development and tests)
+
+Only needed to work on the code or run the test suite.
+
+### System (without Docker)
+
+| Need | Details |
+|---|---|
+| **OS** | Tested on Windows 11. Nothing is Windows-specific, so Linux and macOS should work but haven't been tested. |
+| **Python 3.12** (64-bit) | Tested on 3.12.10. Tick "Add python.exe to PATH" when installing on Windows. |
+| **RAM** | The server uses about **2.8 GB** once all models are loaded (measured). 8 GB minimum; 16 GB is comfortable with a browser open. |
+| **Disk** | About **5 GB** free: Python packages (0.5 GB with CPU-only PyTorch, about 2.5 GB with the CUDA build), models downloaded on first run (about 1.8 GB, see below) and the evaluator weights (735 MB). |
+| **GPU** | **Not needed.** Everything the app does at interview time runs on the CPU. |
+| **Internet** | Needed on the **first run** (model downloads) and **whenever the page loads**: the browser fetches MediaPipe (face tracking) from `cdn.jsdelivr.net` and fonts from Google Fonts. |
+
+### Python packages
+
+```bash
+# no NVIDIA GPU? install the small CPU-only PyTorch first:
+pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+pip install -r Requirements_Global.txt
+```
+
 ### Models downloaded automatically on the first run (about 2 GB)
+
+With Docker these are downloaded once, while the image is built. Without Docker:
 
 From Hugging Face, into `~/.cache/huggingface/hub/`:
 
@@ -62,14 +92,7 @@ From Hugging Face, into `~/.cache/huggingface/hub/`:
 
 The first start is therefore slow; after that the app loads them offline in a background thread (a running server in about 2 s). On Windows, Hugging Face may warn that symlinks are unavailable. That is harmless; turning on Windows Developer Mode silences it and saves some disk space.
 
-### Browser and hardware for the interview itself
-
-- **A recent browser.** The app is mostly tested in Google Chrome and Microsoft Edge. Voice answers work in any current browser (Chrome, Edge, Brave, Firefox, Safari): the browser only records, and the server turns the recording into text (Whisper, below), so no Google or Microsoft speech service is involved.
-- A **webcam** (required: the interview won't start without one, and the camera setup check runs first), plus a **microphone** if you want to answer by voice.
-- Allow **camera, microphone and full screen** when the browser asks. The interview is proctored: leaving full screen, switching tabs or copy-pasting ends it.
-- A reasonably lit room: the camera check and the live monitor warn about low light, blur and a second person in frame.
-
-### Nothing else to configure
+### Nothing else to configure (without Docker)
 
 - The SQLite database, its migrations and the Flask secret key are created automatically on first start under `main_cap/cap/instance/` (not in git).
 - No API key is needed to run the app. `GEMINI_API_KEY` is used only by optional developer tools.
@@ -85,26 +108,11 @@ python app.py          # then open http://localhost:5000
 
 This is Flask's development server, fine for local use and demos, not a production deployment.
 
-### Docker (optional)
-
-To run **production mode** (PostgreSQL + Redis + the waitress server) with `docker compose up` instead of installing Python and the packages (README, "Production mode with Docker"). Only the machine that runs the server needs this; people taking interviews just use a browser.
-
-| Need | Details |
-|---|---|
-| **Docker Desktop** | [docker.com](https://www.docker.com/products/docker-desktop/), tested with 29.8. On Linux, Docker Engine with the compose plugin is enough. |
-| **WSL 2** (Windows only) | Docker Desktop runs Linux containers inside it. If Docker Desktop says WSL is missing, run `wsl --install --no-distribution` in an administrator terminal and restart. |
-| **Disk** | About **6 GB** for the image (CPU-only PyTorch and the models are inside it), plus the database volume. |
-| **RAM** | As above: about 3 GB for the app, plus a little for PostgreSQL and Redis. On Windows, containers may use up to half the machine's RAM by default, which is enough with 8 GB or more. |
-| **Internet** | Only for the first build (about 3 GB of downloads). The running container needs none, except the browser still loads MediaPipe and fonts from the internet. |
-| **Git LFS** | The trained evaluator weights are mounted from the repository, so pull them as described above. |
-
-**Deploying for other people:** the webcam only works on `http://localhost` or over **HTTPS**, so a server that others reach by its address needs HTTPS in front of it (a reverse proxy with a certificate, or a tunnel). Set `CAP_SECRET_KEY` and `POSTGRES_PASSWORD` in `.env` before the first start.
-
 ---
 
-## 2. To run the tests
+## 3. To run the tests
 
-- **pytest**, which is in `Requirements_Global.txt`.
+- The non-Docker setup (section 2); **pytest** is in `Requirements_Global.txt`.
 - **Node.js** 18 or newer (tested on 24) for the frontend tests (`node test_*.js`); no npm packages needed.
 - Some grader tests load the real models; `CAP_SKIP_MODEL_TESTS=1` skips them.
 - The parser benchmark in `parser_tests/` needs real resumes that are **not in git** (personal data); ask the team for them if you need that benchmark. The rest of the test suite doesn't depend on them.
@@ -113,7 +121,7 @@ Commands are in the README's Tests section.
 
 ---
 
-## 3. Only to rebuild the question bank (optional, offline)
+## 4. Only to rebuild the question bank (optional, offline)
 
 The app only reads `rag_system/rag_tester/question_bank/*.json`, which is in git. You need the following only to regenerate or extend the bank:
 
@@ -129,7 +137,7 @@ Steps are in the README ("Rebuilding the question bank").
 
 ---
 
-## 4. Things that are local-only by design (not in the repository)
+## 5. Things that are local-only by design (not in the repository)
 
 | What | Why | Where it lives locally |
 |---|---|---|

@@ -37,6 +37,7 @@
    - 4.23 [App shell & the full interview flow (frontend)](#423-app-shell--the-full-interview-flow)
    - 4.24 [Slide RAG pipeline (`rag_system/rag_tester/slide_rag/`)](#424-slide-rag-pipeline)
    - 4.25 [Question bank and session types](#425-question-bank-and-session-types)
+   - 4.26 [Live interview state and production mode (`live_store.py`, `serve.py`)](#426-live-interview-state-and-production-mode-live_storepy-servepy)
 5. [Entry Points & Execution Flow](#5-entry-points--execution-flow)
 6. [Error Handling & Edge Cases](#6-error-handling--edge-cases)
 7. [Known Limitations / Tech Debt / TODOs](#7-known-limitations--tech-debt--todos)
@@ -176,10 +177,12 @@ Packages the code imports that are **missing from `Requirements_Global.txt`**: `
 - **Resume files:** stored on the server's disk under `instance/uploads/resumes/<user_id>/`; the database keeps their paths.
 - **PostgreSQL (production mode, verified 2026-10-15):** set `CAP_DATABASE_URL=postgresql+psycopg://user:password@host:5432/dbname` (driver `psycopg` 3). The migrations, all app tests and a live end-to-end run pass unchanged on PostgreSQL 16. Two PostgreSQL-specific safeguards: connections are pinned to UTC (`database.configure_database`), and interview text taken from parsed resumes is trimmed to its column length before saving (`models._fit_strings_to_columns`; SQLite ignores `VARCHAR` lengths, PostgreSQL rejects longer values). SQLite stays the default.
 
-**Still in memory:** the live state of an interview in progress:
-- `conversation_engine._conversations` (planner, evaluator, memory);
-- `session_history._live`;
-- `app._candidate_profiles` / `_profile_owners`.
+**Live interview state** (an interview in progress) is kept in the **live store** (`live_store.py`), not in the database:
+- profile sessions (`app._put_profile_session`): the parsed profile loaded for one interview;
+- Round 1 conversations (`conversation_engine`): profile, pinned evaluator, answers and their evaluations;
+- links from a conversation to its database row, and the live technical interview (`session_history`).
+
+Two backends: **memory** (default; this process only) and **Redis** (`CAP_LIVE_STORE=redis`; shared by every worker and kept across restarts). Details in §4.26.
 
 Every answered turn is written to the database immediately, so a restart loses nothing already answered. Unfinished sessions are marked `abandoned`.
 
@@ -204,8 +207,8 @@ Every answered turn is written to the database immediately, so a restart loses n
        │ /api/sessions, /api/insights                       │                         │  <id>/end}
 ┌──────▼──────────────────▼───────────────────────────────▼────────────────────────▼──────────────┐
 │  Flask app (app.py)  ·  before_request login guard  ·  account_routes / session_routes blueprints │
-│  in-memory live state: _candidate_profiles(+owners) · conversation_engine._conversations ·       │
-│                        session_history._live                                                      │
+│  live interview state → live_store.py: memory (default) or Redis (shared by all workers)         │
+│                         profile sessions · Round 1 conversations · technical interviews           │
 └──────┬──────────────────┬───────────────────────────────┬────────────────────────┬──────────────┘
        │                  │                               │                        │
 ┌──────▼───────────┐ ┌────▼─────────────────────┐ ┌───────▼───────────────────┐ ┌──▼──────────────┐
@@ -347,12 +350,13 @@ Flow invariants:
   2. `bootstrap_production_evaluator()`;
   3. `init_accounts(app)`, which configures SQLite, applies pending migrations, loads or creates the secret key, and sets up Flask-Login and the 10 MB upload limit;
   4. register `sessions_bp`;
-  5. mark every still-`in_progress` session `abandoned`.
+  5. with the memory live store, mark every still-`in_progress` session `abandoned` (with Redis they survive and are kept).
 - **Runtime data** lives in `main_cap/cap/instance/` (git-ignored):
   - `app.db`: the database;
   - `uploads/`: resume files;
   - `secret_key`: the Flask secret, generated once so logins survive restarts.
-- It is a **single process**. Account and history data are durable (SQLite), but *live* interview state is in memory, so the app can't be scaled across workers as-is.
+- **Simple mode** (`python app.py`): one process, SQLite, live state in memory; a restart ends interviews in progress (their answered turns are kept).
+- **Production mode** (`python serve.py`, waitress): PostgreSQL + Redis live state + a shared `CAP_SECRET_KEY` and upload folder, so **several processes or servers can serve the same users** and an interview survives a restart. Verified 2026-10-15 with two servers sharing one PostgreSQL and one Redis, every request alternating between them and one server restarted mid-interview (§4.26). There is still no container or CI (planned: Docker, `PRODUCTION_INFRA_PROGRESS.md`).
 - **Model deployment** is file-based: copy `best_checkpoint_weights.pt`, `best_checkpoint.json` and `final_promotion_decision.json` into `main_cap/cap/deployed_model/`. `deployment_evaluator.bootstrap_production_evaluator()` checks that all three exist and that the promotion is approved *before* loading anything. Otherwise it skips the ~700 MB backbone download entirely and activates the heuristic evaluator.
 - **Training** ran on Google Colab (the `artifact_uri` in `best_checkpoint.json` is `/content/e4/artifacts/experiment_4_train/best_checkpoint_weights.pt`).
 
@@ -891,14 +895,14 @@ Planner over 36 profiles → CoverageUnit pool
 4. `init_accounts(app)` (database, migrations, secret key, Flask-Login, accounts routes, 413 handler), `register_blueprint(sessions_bp)`, `abandon_all_open_sessions()`.
 5. `_require_login_for_api` (`before_request`): every `/api/*` path answers **401** without a session, except `/api/auth/login` and `/api/auth/signup`. `/` and `/health` stay public.
 6. `sys.path` gets `resume_classifier/`, then `from rag_integration import rag_generator` is attempted (`_rag_available` evaluates to False; see §4.15), then `resume_classifier` is re-prioritised.
-7. Module-level stores: `_candidate_profiles`, `_profile_owners` (profile session id → `(user_id, resume_id)`), the RAG question pool, and `SAMPLE_QUESTIONS` (5 computer-networks questions with fill-mask).
+7. Profile sessions in the live store (`_put_profile_session` / `_profile_session` / `_get_profile`: profile session id → `{profile, user_id, resume_id}`, §4.26); module-level: the RAG question pool and `SAMPLE_QUESTIONS` (5 computer-networks questions with fill-mask).
 
 **Routes** (the accounts and history routes are in §4.20–4.21):
 | Route | Method | Used by the UI | Summary |
 |---|---|---|---|
 | `/` | GET | ✅ | Serves `index.html` |
 | `/health` | GET | — | `{"status":"ok"}` |
-| `/api/resumes/<id>/use` | POST | ✅ | Loads a **saved** resume's parsed profile into `_candidate_profiles` (no upload, no re-parse) and returns `profile_to_frontend_format` + `session_id` + `resume`. Other users' ids → 404 |
+| `/api/resumes/<id>/use` | POST | ✅ | Loads a **saved** resume's parsed profile into a profile session (live store; no upload, no re-parse) and returns `profile_to_frontend_format` + `session_id` + `resume`. Other users' ids → 404 |
 | `/api/classify-resume` | POST (multipart `file`) | ✅ | Main-page upload: `account_routes.add_resume_for_user` stores, parses and saves it as the **current** resume, then the same response as `/use`. Unreadable/unsupported → 400 (the saved resume is kept) |
 | `/api/resume-discussion-v2/start` | POST `{session_id}` | ✅ | Checks the profile session belongs to `current_user`; `conversation_engine.start_conversation`; then `session_history.begin_resume_discussion` |
 | `/api/resume-discussion-v2/reply` | POST `{session_id, answer}` | ✅ | Ownership check (`owns_conversation`), `advance_conversation`, then `record_resume_discussion_turn` |
@@ -1126,7 +1130,7 @@ Resume engine internals: TextSpan → DocumentModel → Section → ParserResult
 
 | Interface | Producer → Consumer | Contract |
 |---|---|---|
-| `CandidateProfile` dict | engine mapper → `Resume.parsed_profile` (DB) → `app._candidate_profiles` → `Planner`, `profile_to_frontend_format` | Pydantic schema §4.3; no `None`s |
+| `CandidateProfile` dict | engine mapper → `Resume.parsed_profile` (DB) → profile session (live store) → `Planner`, `profile_to_frontend_format` | Pydantic schema §4.3; no `None`s |
 | `session_history.*` | `app.py` interview routes, `session_routes` → SQLite | `begin_resume_discussion` / `record_resume_discussion_turn` / `finish_resume_discussion`; `begin_technical_session` / `record_technical_turn` / `finish_technical_session`; abandonment helpers |
 | `interview*` hooks | INTERVIEW FLOW → SESSION INTEGRITY (JS) | `interviewSessionActive`, `interviewCurrentTurn`, `interviewRoundLabel`, `interviewDisableInput`, `interviewResumeInput`, `interviewStopMic`, `interviewTerminate`, `startInterviewMode` |
 | `Planner.plan_next(ConversationState)` / `advance(spec_id, UnitStatus)` | planner → conversation engine | Returns a `QuestionSpecification` or `None` |
@@ -1175,6 +1179,10 @@ Resume engine internals: TextSpan → DocumentModel → Section → ParserResult
 | `CAP_QUESTION_BANK_DIR` | `rag_system/rag_tester/question_bank` | Where the app reads the question bank |
 | `CAP_TRAINED_EVALUATOR` | on | Round 1 uses the averaged evaluator when the v5_1088 model file is installed; `0` forces the heuristic evaluator |
 | `CAP_MODEL_WARMUP` | on | `python app.py` loads every model in a background thread at startup; `0` disables |
+| `CAP_LIVE_STORE` | `memory` | Where live interviews are kept: `memory` (one process) or `redis` (shared by workers, survives restarts) (§4.26) |
+| `CAP_REDIS_URL` | `redis://localhost:6379/0` | Redis for `CAP_LIVE_STORE=redis` |
+| `CAP_TEST_REDIS_URL` | unset | Run the Redis backend's own tests (`test_live_store.py`; that Redis database is flushed) |
+| `CAP_HOST` / `CAP_PORT` / `CAP_THREADS` | `127.0.0.1` / `5000` / `8` | `serve.py` (production server, waitress) |
 | `HF_HUB_OFFLINE` | set to `1` automatically when all models are cached | Loads models without checking huggingface.co (`model_warmup.use_local_models_only`); an explicit value is respected |
 | `tech_interview.grader` constants | `NLI_MODEL=cross-encoder/nli-deberta-v3-base`, covered entail ≥ 0.60 (or ≥ 0.20 with sim ≥ 0.80), `KEYPOINT_WEIGHT=0.85`, follow-ups: `FU_COVERED_ENTAIL=0.50`, `FU_PARTIAL_SIM=0.60`, `FU_REPLY_MATCH_SIM=0.85` | Grading thresholds (calibration in §4.25 and `grader_eval/`) |
 | `slide_rag.enrich_bank` constants | `PROMPT_VERSION=4`, `CORE_VERSION=5`, `VARIANT_MIN_SIM=0.35`, `VARIANT_MAX_CONTRADICTION=0.5`, `VARIANT_MAX_IMPLIED_BY_QUESTION=0.5` | Offline enrichment and its paraphrase filters |
@@ -1503,6 +1511,41 @@ Interviews serve the curated tier by default (`CAP_CURATED_ONLY=1`); `CAP_CURATE
 - **Offline enrichment (`slide_rag/enrich_bank.py`, Qwen3-8B once, 79 min):** writes informal variants of each key point, short correct follow-up replies and each question's main idea into the bank; contradicting and generic paraphrases are filtered out. Measured by part: the follow-up replies (near-exact match only) raise follow-ups to 35/40 with wrong replies still at 9% → **on by default**; the key-point variants and main idea let fluent wrong answers through (confidently wrong 0.21 → 0.53, same move-on decision as a human 357 → 294 / 400) → **off** (`CAP_GRADER_ENRICHMENT`).
 - **Phase 3 (frontend) — done:** in `templates/index.html`, both Home cards run the question-bank interview. The Technical Interview card (10 questions) goes straight to the rules, with no subject picker. The Full Interview's Round 2 asks 8. Follow-ups and clarification requests appear as their own chat turns, with no live scores. The standalone results page and Round 2 of the combined report show score, grade, per-subject bars, "worth revising" topics and per-question cards (answer, key points ✓/~/✗, follow-ups, model answer); history uses the same cards. The fill-in-the-blank quiz is gone from the UI; its routes (`/api/next_question`, `/api/evaluate`, `/api/technical-sessions`) remain in the backend, unused. Test: `node test_tech_interview_ui.js`.
 
+### 4.26 Live interview state and production mode (`live_store.py`, `serve.py`)
+
+**Why.** An interview in progress needs state between requests (which question is on screen, follow-ups used, answers so far). Kept in one process's memory, a second worker or server can't continue the interview, and a restart ends it. Production mode keeps that state in **Redis**, shared by every worker; **PostgreSQL** holds everything permanent. Redis and PostgreSQL never talk to each other; the app talks to both:
+
+```
+          ┌──► Redis       live interviews: small JSON records, expire after 2 h idle
+App ──────┤
+          └──► PostgreSQL  accounts, resumes, sessions, every answered turn (saved as it happens)
+```
+
+**The store.** `live_store.get_store()` picks the backend once from `CAP_LIVE_STORE`: `MemoryLiveStore` (default) or `RedisLiveStore`. Both store **plain JSON**, so the default mode runs the same code path as production. API: `get`, `put` (with a TTL of 2 h, matching `session_history.STALE_AFTER`), `delete`, and `lock(key)`, which is re-entrant: a thread lock in memory, a Redis lock across processes, so two requests for one interview can't overwrite each other.
+
+| Record | Owner | Holds |
+|---|---|---|
+| `profile:<id>` | `app.py` | The parsed profile loaded for one interview, its user and resume |
+| `conv:<id>` | `conversation_engine` | `{version, profile, evaluator: [name, version], turns: [{answer, evaluation}], current_question, ended}` |
+| `r1link:<conversation id>`, `r1by:<session id>` | `session_history` | Which database row a Round 1 conversation records into, and the question on screen |
+| `tech:<session id>` | `session_history` | `{version, user_id, state: TechInterview.to_state()}`: questions stored whole, index, records, current grades, pending follow-up |
+
+**Rebuilding.** A worker that didn't write the latest version rebuilds the objects from the record:
+- **Round 1 is replayed** (`conversation_engine._rebuild`): a new `Planner` from the stored profile, then every answered turn goes through the same planning steps as the live session (`_first_question`, `_plan_after_answer`); evaluations are restored from the record, never recomputed. This is exact because planning is deterministic (crc32, never `hash()` or `random`; verified identical across `PYTHONHASHSEED` values on 11 resumes) and never depends on evaluation results (flow invariant 3). It takes milliseconds. If a replay doesn't reach the stored current question (the planning code changed), the conversation is treated as expired.
+- **The technical interview is restored** (`TechInterview.from_state`); nothing is regraded.
+- **`LocalCache`** keeps the rebuilt objects per process and reuses them while the stored record's version is unchanged, so a single-process server never rebuilds.
+
+**Startup.** With the memory store, interviews still in progress are abandoned at startup (they can't continue). With Redis they're kept, because other workers may be running them; idle ones are abandoned after 2 h.
+
+**Production server.** `python serve.py` runs the same app under waitress (`CAP_HOST`, `CAP_PORT`, `CAP_THREADS`). Workers must share `CAP_DATABASE_URL` (PostgreSQL), `CAP_LIVE_STORE=redis` + `CAP_REDIS_URL`, `CAP_SECRET_KEY` (login cookies) and `CAP_UPLOAD_DIR`.
+
+**Verified (2026-10-15):**
+- The app suite passes with SQLite + memory, PostgreSQL + memory, and PostgreSQL + Redis.
+- `test_live_store.py`: store behaviour (both backends); a Round 1 conversation and a technical interview rebuilt from their record before **every** answer give exactly the same questions, scores and report as an uninterrupted run; a rebuild never re-evaluates.
+- Live: two `serve.py` processes sharing PostgreSQL and Redis; sign-up, a 10-question Round 1 and a 10-question technical interview with every request alternating between the servers, and server B killed and restarted mid-interview. All passed, and both sessions were saved completed.
+
+**Also fixed:** `migrations/env.py` applied `alembic.ini`'s logging config whenever migrations ran, which silenced the app's own loggers and raised the root level to WARN, so no INFO line appeared after startup. It now applies only when nothing has configured logging (`flask db` from the command line).
+
 ---
 
 ## 5. Entry Points & Execution Flow
@@ -1651,12 +1694,8 @@ Startup logs show which evaluator is active: `averaged-heuristic-v1+overall-sing
 The code has no literal `TODO` markers. The items below come from docstrings, comments, and inspection.
 
 **Architecture and runtime**
-1. **Live interview state is still in memory:**
-   - `_candidate_profiles` / `_profile_owners`, `conversation_engine._conversations` and `session_history._live`;
-   - the RAG pool.
-
-   Answered turns are safe in SQLite, but live state is per-process, and `_candidate_profiles` entries are never evicted. The app can't run with multiple workers as-is.
-2. **Flask development server only.** There is no production WSGI server, container or CI.
+1. **Multiple workers need production mode** (§4.26). With the default memory live store, live interviews are per-process and end on restart. (Fixed 2026-10-15: profile sessions used to be kept forever; every live record now expires after 2 h.) The legacy v1 discussion engine and the RAG pool still keep their own in-memory state; neither is used by the UI.
+2. **No container or CI yet.** A production server exists (`serve.py`, waitress); Docker is planned (`PRODUCTION_INFRA_PROGRESS.md`).
 3. **No login rate limiting, and no email verification yet.** `email_verified` exists but nothing checks it.
 4. **Some model weights are absent:** the old Experiment 4 `deployed_model/best_checkpoint_weights.pt` and the resume-classifier `bert_resume_model/`. The production Round 1 weights are in Git LFS; a clone made without Git LFS runs on the heuristic evaluator. (Startup now detects the missing weights and skips the DeBERTa download.)
 5. **Client-side enforcement.** The session-integrity rules and the attention monitoring can be bypassed with DevTools, and the backend trusts the sanitised integrity record.
@@ -1816,7 +1855,8 @@ The remaining suites weren't re-run for this update.
 | **Session (history)** | One saved interview round (`interview_sessions` row) with its turns; status `completed` / `terminated` / `abandoned` / `in_progress` |
 | **Abandoned** | A session that was never finished (restart, a new interview started, or 2 h idle); its answered turns are kept |
 | **Focus next** | Home-page list of the weaknesses that keep recurring in recent answers (`insights.py`) |
-| **Profile session id** | `profile_<hex>`: a key into the in-memory `_candidate_profiles` for one interview, owned by one user |
+| **Profile session id** | `profile_<hex>`: the key of a profile session in the live store (one resume's profile loaded for one interview, owned by one user) |
+| **Live store** | Where interviews in progress are kept between requests (`live_store.py`): this process's memory, or Redis shared by all workers (§4.26) |
 | **QuestionSpecification / unit** | An immutable record of *what* to ask and *why*, traceable to one profile entry |
 | **Category** | project_deep_dive, project_overview, experience, certification, skill_in_context |
 | **Family** | A phrasing angle (overview, tradeoffs, debugging, …) with 2 hand-written variants |

@@ -37,7 +37,7 @@ App ──────┤
 |---|---|---|
 | 0 · Prerequisites | ✅ Docker 29.8.2 + WSL 2 running; packages installed | ~30 min |
 | 1 · PostgreSQL | ✅ Done 2026-10-15: all tests + a live end-to-end run pass on PostgreSQL 16 | ~½ day |
-| 2 · Redis for live state | ⬜ | ~3–5 days |
+| 2 · Redis for live state | ✅ Done 2026-10-15: two servers share one interview; it survives a restart | ~3–5 days (took 1 day) |
 | 3 · Docker setup | ⬜ | ~½ day |
 
 ---
@@ -69,25 +69,35 @@ What exists: `database.py` already reads `CAP_DATABASE_URL` (SQLite by default) 
 
 **Done when:** all tests pass on both databases, and SQLite is still the default.
 
-## Step 2 · Redis for live interview state
+## Step 2 · Redis for live interview state ✅
 
-The five in-memory stores to move:
+**Design (as built):** `main_cap/cap/live_store.py` has one interface (`get`, `put` with a 2 h TTL, `delete`, re-entrant `lock`) and two backends: **memory** (default) and **Redis** (`CAP_LIVE_STORE=redis`, `CAP_REDIS_URL`). Both store **plain JSON**, so the default mode runs the production code path too. A per-process `LocalCache` reuses rebuilt objects while the stored record's version is unchanged.
 
-| Store | File | Holds | Difficulty |
-|---|---|---|---|
-| `_candidate_profiles`, `_profile_owners` | `app.py` | The loaded Candidate Profile per profile session, and its owner | Easy (plain dicts) |
-| `_live` | `session_history.py` | Which DB session a Round 1 conversation is recording into | Easy |
-| `_live_tech` | `session_history.py` | The live technical session (questions, follow-ups, grades) | Medium |
-| `_conversations` | `conversation_engine.py` | The Round 1 conversation: planner, topic pool, memory, evaluation ledger, pinned evaluator | Hard (complex objects; rebuild the planner by replaying turns) |
+| Store (before) | Now | How it is restored |
+|---|---|---|
+| `app._candidate_profiles`, `_profile_owners` | `profile:<id>` = `{profile, user_id, resume_id}` | Plain data |
+| `session_history._live` | `r1link:<conversation id>` + reverse `r1by:<session id>` | Plain data |
+| `session_history._live_tech` | `tech:<session id>` = `{version, user_id, state}` | `TechInterview.to_state()` / `from_state()`: questions stored whole, grades, pending follow-up; nothing regraded |
+| `conversation_engine._conversations` | `conv:<id>` = `{version, profile, evaluator, turns: [{answer, evaluation}], current_question, ended}` | **Replay**: new Planner from the profile, every answered turn through the same planning steps; evaluations restored, never recomputed |
 
-- [ ] Add `live_store.py`: one interface (`get`, `set` with TTL, `delete`), with a **memory** backend (default, today's behaviour) and a **Redis** backend (`CAP_LIVE_STORE=redis`).
-- [ ] Move the stores over, easiest first: profiles → `_live` → `_live_tech` → `_conversations`.
-- [ ] Each request: load state → update → save. Use a per-interview lock so two quick requests can't overwrite each other.
-- [ ] TTL of ~2 h on every live record; delete it when an interview ends.
-- [ ] Tests: unit tests for both backends; every interview flow run with the memory backend and with Redis.
-- [ ] Multi-worker test: 2 app processes against one Redis with requests alternating between them; restart the server halfway through an interview, and the interview must continue.
+Why replay is safe: planning is deterministic (crc32, no `random` or `hash()`). This was checked: the same questions came out under 3 different `PYTHONHASHSEED` values on 11 resumes, and the replay takes about 1 ms per conversation. Planning also never depends on scores. If a replay doesn't reach the stored question on screen, the conversation is treated as expired, never continued wrongly.
 
-**Done when:** a Full Interview completes across 2 workers and survives a restart halfway through, and the memory backend still passes every existing test.
+- [x] `live_store.py` (memory + Redis backends, TTL, re-entrant lock, `LocalCache`).
+- [x] All five stores moved: profiles → `_live` → `_live_tech` → `_conversations`.
+- [x] Each request: lock → load → update → save (Round 1: inside `conversation_engine`; technical: `session_history.tech_interview_lock` in `session_routes`).
+- [x] TTL 2 h on every record; records deleted when an interview ends or is abandoned. This also fixes a leak: profile sessions used to be kept forever.
+- [x] Startup: with Redis, unfinished interviews are **not** abandoned (other workers may be running them); with memory, as before.
+- [x] `serve.py`: production server (waitress; `CAP_HOST`, `CAP_PORT`, `CAP_THREADS`).
+- [x] Tests: `test_live_store.py`. The store contract runs on both backends (Redis when `CAP_TEST_REDIS_URL` is set). Round 1 and the technical interview are rebuilt from their record before **every** answer, and they match an uninterrupted run exactly (questions, scores, report); a rebuild never re-evaluates; a record that no longer replays → 404.
+- [x] Full app suite: **SQLite + memory 1,254 passed / 22 skipped** (the 4 Redis-only tests skipped); **PostgreSQL + memory 1,254 / 22**; **PostgreSQL + Redis 1,258 passed / 18 skipped**. All 9 frontend test files pass.
+- [x] Redis for development: `docker run -d --name cap-redis -p 6379:6379 redis:7` (later: `docker start cap-redis`).
+- [x] **Multi-worker test (live):** two `serve.py` processes (ports 5001/5002) sharing PostgreSQL + Redis + secret key + upload folder. Sign-up → 10-question Round 1 → 10-question technical interview, with **every request alternating between the servers**, and **server B killed and restarted mid-interview**: all passed; both sessions saved as completed. Script: `scratchpad/smoke/multiworker.py` (not in the repo).
+- [x] Found and fixed along the way: `migrations/env.py` applied alembic.ini's logging config at every startup, which silenced the app's own log lines (in every mode). It now applies only to command-line migrations.
+- [x] Docs: PROJECT_DOCUMENTATION §2, §3.1, §3.6, §4.10, §4.19, §4.26 (new), §7, glossary; README config table.
+
+**Done when:** a Full Interview completes across 2 workers and survives a restart halfway through, and the memory backend still passes every existing test. ✅
+
+**Not moved (not used by the UI):** the legacy v1 discussion engine (`discussion_engine.py`) and the legacy RAG question pool keep their own in-memory state.
 
 ## Step 3 · Docker setup
 
@@ -120,3 +130,4 @@ The five in-memory stores to move:
 - **2026-10-15:** Docker ready (WSL 2 installed, engine running). Pulled `postgres:16` (642 MB) and `redis:7` (182 MB). Started `cap-postgres`; all 3 migrations ran on PostgreSQL with no changes.
 - **2026-10-15:** Committed the two weeks of pending work as `43c719b`, after a full test run (1,244 app tests + 18 skipped, 511 resume-engine, 9/9 frontend, 19 slide-pipeline). Pushed it to `ninad_latest` and `main` (a fast-forward, no force). Moved the internal notes to `docs/internal/`; `interview_prep.md` and the Team187 PDF are git-ignored. Created the branch `prod-infra`.
 - **2026-10-15:** **Step 1 done.** Tests run on PostgreSQL through `CAP_TEST_DATABASE_URL`; the connection is pinned to UTC; over-long text is trimmed (a new test fails on PostgreSQL without the fix). 1,245 tests pass on both databases, and a live end-to-end run passes on PostgreSQL. Next: step 2 (Redis).
+- **2026-10-15:** **Step 2 done.** Live interview state moved to `live_store.py` (memory or Redis); Round 1 is rebuilt by deterministic replay, and the technical interview by `to_state`/`from_state`. Added `serve.py` (waitress). Two servers sharing PostgreSQL + Redis ran one interview with alternating requests and a mid-interview restart: all pass. Fixed the startup logging that alembic was silencing. Next: step 3 (Docker).

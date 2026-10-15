@@ -138,12 +138,12 @@ class TestFullConversationFlow(unittest.TestCase):
             if reply.get("is_completed"):
                 break
             # transition text isn't in the public payload; inspect the live session directly
-            session = ce._conversations[conversation_id]
+            session = ce._load(conversation_id)
             transitions.append(session["current_question"].transition_text)
         for a, b in zip(transitions, transitions[1:]):
             if a and b:
                 self.assertNotEqual(a, b)
-        ce._conversations.pop(conversation_id, None)
+        ce.end_conversation(conversation_id)
 
     def test_full_coverage_achieved(self):
         _, summary = _run_full_conversation(self.profile)

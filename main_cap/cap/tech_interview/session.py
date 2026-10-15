@@ -15,17 +15,19 @@ Per main question:
     interviewer would judge it;
   * at most MAX_FOLLOWUPS follow-ups (clarifications included), then the next
     main question.
-Live state is in memory only; each closed main question is returned as a plain
-dict for session_history to store.
+Each closed main question is returned as a plain dict for session_history to
+store. Between requests the live interview is kept as plain JSON
+(`to_state` / `from_state`, see live_store.py), so any worker can continue it;
+the questions are stored whole, so a bank change mid-interview can't alter it.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import asdict, dataclass, field, replace
 from typing import Callable, Optional
 
-from .bank import Question
+from .bank import KeyPoint, Question
 from .followup import Decision, decide
-from .grader import CONTRA_CAP, CORE_FLOORS, Grade, combine, followup_covers, grade_answer
+from .grader import CONTRA_CAP, CORE_FLOORS, Clarity, Grade, combine, followup_covers, grade_answer
 
 RECOVERED_CREDIT = 0.75
 
@@ -167,6 +169,57 @@ class TechInterview:
         self.records.append(record)
         return record
 
+    # ── saving and restoring ────────────────────────────────────────────────
+    def to_state(self) -> dict:
+        """Everything needed to continue this interview, as plain JSON data."""
+        cur = None if self.finished else {
+            "answer": self.current.answer,
+            "graded": _grade_to_state(self.current.graded),
+            "grade": _grade_to_state(self.current.grade),
+            "first_grade": self.current.first_grade,
+            "exchanges": self.current.exchanges,
+            "followups_used": self.current.followups_used,
+            "clarified": self.current.clarified,
+            "asked_points": sorted(self.current.asked_points),
+            "recovered": self.current.recovered,
+            "pending": None if self.current.pending is None else {
+                "kind": self.current.pending.kind, "text": self.current.pending.text,
+                "reason": self.current.pending.reason,
+                "key_point": None if self.current.pending.key_point is None
+                else asdict(self.current.pending.key_point),
+            },
+        }
+        return {"mode": self.mode, "questions": [asdict(q) for q in self.questions],
+                "index": self.index, "clarify_count": self.clarify_count,
+                "records": self.records, "current": cur}
+
+    @classmethod
+    def from_state(cls, state: dict) -> "TechInterview":
+        interview = cls([_question_from_state(q) for q in state["questions"]], mode=state["mode"])
+        interview.index = state["index"]
+        interview.clarify_count = state["clarify_count"]
+        interview.records = state["records"]
+        cur = state["current"]
+        if cur is not None:
+            pending = cur["pending"]
+            interview.current = _Current(
+                question=interview.questions[interview.index],
+                answer=cur["answer"],
+                graded=_grade_from_state(cur["graded"]),
+                grade=_grade_from_state(cur["grade"]),
+                first_grade=cur["first_grade"],
+                exchanges=cur["exchanges"],
+                followups_used=cur["followups_used"],
+                clarified=cur["clarified"],
+                asked_points=set(cur["asked_points"]),
+                recovered=cur["recovered"],
+                pending=None if pending is None else Decision(
+                    pending["kind"], pending["text"],
+                    None if pending["key_point"] is None else _keypoint_from_state(pending["key_point"]),
+                    pending["reason"]),
+            )
+        return interview
+
     # ── summary ─────────────────────────────────────────────────────────────
     def summary(self) -> dict:
         def avg(xs):
@@ -185,3 +238,26 @@ class TechInterview:
             "followups_asked": sum(len(r["exchanges"]) for r in self.records),
             "weak_topics": sorted({r["topic"] for r in self.records if r["score"] < 0.5}),
         }
+
+
+# ── plain-data helpers for to_state / from_state ────────────────────────────
+
+def _keypoint_from_state(d: dict) -> KeyPoint:
+    return KeyPoint(**{**d, "variants": tuple(d.get("variants", ())),
+                       "followup_replies": tuple(d.get("followup_replies", ()))})
+
+
+def _question_from_state(d: dict) -> Question:
+    return Question(**{**d, "key_points": tuple(_keypoint_from_state(k) for k in d["key_points"]),
+                       "source_pages": tuple(d.get("source_pages", ())),
+                       "core_variants": tuple(d.get("core_variants", ()))})
+
+
+def _grade_to_state(grade: Optional[Grade]) -> Optional[dict]:
+    return None if grade is None else asdict(grade)
+
+
+def _grade_from_state(d: Optional[dict]) -> Optional[Grade]:
+    if d is None:
+        return None
+    return Grade(**{**d, "clarity": Clarity(**d["clarity"])})

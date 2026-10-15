@@ -4,8 +4,8 @@ Session history — writes interviews to the database as they happen.
 Both interview types are saved turn by turn, so nothing already answered
 is lost if the server restarts or the browser closes:
 
-    Resume Discussion   conversation_engine runs the live session in memory
-                        (planner, evaluator, memory); the /api/resume-
+    Resume Discussion   conversation_engine runs the live session (planner,
+                        evaluator, memory; kept in live_store); the /api/resume-
                         discussion-v2/* routes in app.py call the
                         `*_resume_discussion` functions below around it.
                         conversation_engine itself stays unaware of the DB.
@@ -14,16 +14,20 @@ is lost if the server restarts or the browser closes:
                         turn, and .../end finishes it. (Legacy quiz flow.)
     Tech Interview      /api/tech-interview/* (session_routes.py): the
                         question-bank interview (tech_interview/). The live
-                        TechInterview is held in memory here; each main
+                        TechInterview is kept in live_store here; each main
                         question is saved as one turn when it closes
                         (follow-ups inside its evaluation).
+
+Live state (which DB row a conversation records into, the live technical
+interview) is kept in live_store: this process's memory by default, or Redis
+(CAP_LIVE_STORE=redis), where it survives restarts and is shared by workers.
 
 Session status:
     in_progress  -> completed   finished normally
                  -> terminated  ended by a session-integrity violation
-                 -> abandoned   never finished: the server restarted, the
-                                user started another interview, or it sat
-                                idle for STALE_AFTER
+                 -> abandoned   never finished: the server restarted (memory
+                                store only), the user started another
+                                interview, or it sat idle for STALE_AFTER
 
 A user runs one interview at a time — starting a new one abandons any
 other still in progress.
@@ -32,14 +36,15 @@ other still in progress.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from contextlib import contextmanager
 from datetime import timedelta
-from typing import Any, Optional
+from typing import Any, Iterator, Optional
 
 from sqlalchemy import select, update
 
 import conversation_engine
 from database import db
+from live_store import LocalCache, get_store
 from models import (
     SESSION_ABANDONED, SESSION_COMPLETED, SESSION_IN_PROGRESS, SESSION_TERMINATED,
     SESSION_TYPE_RESUME_DISCUSSION, SESSION_TYPE_TECHNICAL,
@@ -57,22 +62,26 @@ _ATTENTION_FIELDS = (
 )
 
 
-@dataclass
-class _LiveConversation:
-    """Links a live conversation_engine conversation to its database row,
-    and remembers the question on screen (the reply payload only carries
-    the *next* question)."""
-    session_id: int
-    user_id: int
-    current_question: dict
+# Live-store records owned by this module:
+#   r1link:<conversation_id>  {"session_id", "user_id", "current_question"}
+#       links a live conversation_engine conversation to its database row and
+#       remembers the question on screen (the reply payload only carries the
+#       *next* question);
+#   r1by:<session id>         {"conversation_id"}   the reverse link, for abandonment;
+#   tech:<session id>         {"version", "user_id", "state": TechInterview.to_state()}
+_tech_cache = LocalCache()
 
 
-# conversation_id -> live link. In memory, like conversation_engine's own
-# state: after a restart both are gone and the rows are marked abandoned.
-_live: dict[str, _LiveConversation] = {}
+def _link_key(conversation_id: str) -> str:
+    return f"r1link:{conversation_id}"
 
-# session id -> (user id, live tech_interview.TechInterview). Same lifetime rules.
-_live_tech: dict[int, tuple[int, Any]] = {}
+
+def _by_session_key(session_id: int) -> str:
+    return f"r1by:{session_id}"
+
+
+def _tech_key(session_id: int) -> str:
+    return f"tech:{session_id}"
 
 TECH_INTERVIEW_EVALUATOR = ("tech_interview_nli", "1")
 
@@ -152,14 +161,18 @@ def _finish(session: InterviewSession, status: str, *, summary: Optional[dict] =
 # ── Abandonment ─────────────────────────────────────────────────────────────
 
 def _drop_live_state(session_ids: set[int]) -> None:
-    """Forget live conversations for these sessions and free the engine's
-    in-memory state for them."""
-    for conversation_id, live in list(_live.items()):
-        if live.session_id in session_ids:
-            del _live[conversation_id]
-            conversation_engine.end_conversation(conversation_id)
+    """Forget live conversations / technical interviews for these sessions
+    and free the engine's live state for them."""
+    store = get_store()
     for session_id in session_ids:
-        _live_tech.pop(session_id, None)
+        by_session = store.get(_by_session_key(session_id))
+        if by_session is not None:
+            conversation_id = by_session["conversation_id"]
+            store.delete(_link_key(conversation_id))
+            store.delete(_by_session_key(session_id))
+            conversation_engine.end_conversation(conversation_id)
+        store.delete(_tech_key(session_id))
+        _tech_cache.drop(str(session_id))
 
 
 def _mark_abandoned(sessions: list[InterviewSession]) -> None:
@@ -209,28 +222,32 @@ def begin_resume_discussion(conversation_id: str, user_id: int, resume_id: Optio
                             first_question: dict) -> InterviewSession:
     session = _new_session(user_id, SESSION_TYPE_RESUME_DISCUSSION, resume_id,
                            conversation_engine.evaluator_info(conversation_id))
-    _live[conversation_id] = _LiveConversation(session.id, user_id, first_question)
+    store = get_store()
+    store.put(_link_key(conversation_id), {"session_id": session.id, "user_id": user_id,
+                                           "current_question": first_question})
+    store.put(_by_session_key(session.id), {"conversation_id": conversation_id})
     return session
 
 
 def owns_conversation(conversation_id: str, user_id: int) -> bool:
-    live = _live.get(conversation_id)
-    return live is not None and live.user_id == user_id
+    live = get_store().get(_link_key(conversation_id))
+    return live is not None and live["user_id"] == user_id
 
 
 def record_resume_discussion_turn(conversation_id: str, answer: str, reply: dict) -> None:
     """Save the question just answered, the answer, and its evaluation.
     `reply` is conversation_engine.advance_conversation's payload."""
-    live = _live.get(conversation_id)
+    store = get_store()
+    live = store.get(_link_key(conversation_id))
     evaluation = reply.get("evaluation")
     if live is None or evaluation is None:
         return
-    session = db.session.get(InterviewSession, live.session_id)
+    session = db.session.get(InterviewSession, live["session_id"])
     if session is None:  # deleted mid-interview
-        _live.pop(conversation_id, None)
+        store.delete(_link_key(conversation_id))
         return
 
-    question = live.current_question
+    question = live["current_question"]
     _add_turn(session, SessionTurn(
         turn_number=question.get("turn_number") or len(session.turns) + 1,
         question_text=question.get("text", ""),
@@ -247,15 +264,19 @@ def record_resume_discussion_turn(conversation_id: str, answer: str, reply: dict
         evaluation=evaluation,
     ))
     if reply.get("next_question"):
-        live.current_question = reply["next_question"]
+        live["current_question"] = reply["next_question"]
+    store.put(_link_key(conversation_id), live)   # also refreshes its expiry
 
 
 def finish_resume_discussion(conversation_id: str, end_payload: dict, attention_metrics: Any) -> None:
     """`end_payload` is conversation_engine.end_conversation's summary."""
-    live = _live.pop(conversation_id, None)
+    store = get_store()
+    live = store.get(_link_key(conversation_id))
     if live is None:
         return
-    session = db.session.get(InterviewSession, live.session_id)
+    store.delete(_link_key(conversation_id))
+    store.delete(_by_session_key(live["session_id"]))
+    session = db.session.get(InterviewSession, live["session_id"])
     if session is None:
         return
     integrity = end_payload.get("integrity") or {"terminated": False}
@@ -337,17 +358,49 @@ def technical_history(user_id: int) -> tuple[set[str], dict[str, float]]:
 
 def begin_tech_interview(user_id: int, interview: Any) -> InterviewSession:
     session = _new_session(user_id, SESSION_TYPE_TECHNICAL, evaluator=TECH_INTERVIEW_EVALUATOR)
-    _live_tech[session.id] = (user_id, interview)
+    get_store().put(_tech_key(session.id), {"version": 0, "user_id": user_id, "state": None})
+    save_tech_interview(session.id, interview)
     return session
 
 
+@contextmanager
+def tech_interview_lock(session_id: int) -> Iterator[None]:
+    """Hold while loading, answering and saving one technical interview, so
+    two requests for it can't overwrite each other (also across workers)."""
+    with get_store().lock(_tech_key(session_id)):
+        yield
+
+
 def live_tech_interview(session_id: Any, user_id: int) -> Optional[tuple[InterviewSession, Any]]:
-    """The user's in-progress question-bank interview and its live state."""
+    """The user's in-progress question-bank interview and its live state:
+    this process's cached object while the stored record is unchanged,
+    otherwise rebuilt from the record (TechInterview.from_state)."""
+    from tech_interview.session import TechInterview
+
     session = own_in_progress_technical_session(session_id, user_id)
-    live = _live_tech.get(session.id) if session is not None else None
-    if live is None or live[0] != user_id:
+    if session is None:
         return None
-    return session, live[1]
+    record = get_store().get(_tech_key(session.id))
+    if record is None or record["user_id"] != user_id or record["state"] is None:
+        _tech_cache.drop(str(session.id))
+        return None
+    interview = _tech_cache.get(str(session.id), record["version"])
+    if interview is None:
+        interview = TechInterview.from_state(record["state"])
+        _tech_cache.put(str(session.id), record["version"], interview)
+    return session, interview
+
+
+def save_tech_interview(session_id: int, interview: Any) -> None:
+    """Store the interview's state after it changed (start, each answer)."""
+    store = get_store()
+    record = store.get(_tech_key(session_id))
+    if record is None:   # finished, abandoned or deleted meanwhile
+        return
+    record["version"] += 1
+    record["state"] = interview.to_state()
+    store.put(_tech_key(session_id), record)
+    _tech_cache.put(str(session_id), record["version"], interview)
 
 
 def record_tech_interview_turn(session: InterviewSession, record: dict) -> None:
@@ -370,7 +423,8 @@ def record_tech_interview_turn(session: InterviewSession, record: dict) -> None:
 def finish_tech_interview(session: InterviewSession, summary: dict, attention_metrics: Any,
                           integrity: Any = None) -> None:
     clean = conversation_engine.sanitize_integrity(integrity)
-    _live_tech.pop(session.id, None)
+    get_store().delete(_tech_key(session.id))
+    _tech_cache.drop(str(session.id))
     _finish(session, SESSION_TERMINATED if clean["terminated"] else SESSION_COMPLETED,
             summary=summary, integrity=clean, attention_metrics=attention_metrics)
 

@@ -77,6 +77,9 @@ All optional; set as environment variables.
 | `CAP_GRADER_ENRICHMENT` | `replies` | How much of the offline bank enrichment the technical grader uses (`off` / `replies` / `all`) |
 | `CAP_QUESTION_BANK_DIR` | `rag_system/rag_tester/question_bank` | Where the question bank is read from |
 | `CAP_MODEL_WARMUP` | on | `0` disables background model loading at startup |
+| `CAP_LIVE_STORE` | `memory` | Where interviews in progress are kept: `memory` (one process) or `redis` (shared by several workers, survives restarts) |
+| `CAP_REDIS_URL` | `redis://localhost:6379/0` | Redis server for `CAP_LIVE_STORE=redis` |
+| `CAP_HOST` / `CAP_PORT` / `CAP_THREADS` | `127.0.0.1` / `5000` / `8` | Production server `python serve.py` (waitress) |
 | `GEMINI_API_KEY` | unset | Only for optional developer tooling (parser shadow mode, experiment scripts); **not** needed to run the app |
 
 The server port is 5000 (set in `app.run` at the bottom of `main_cap/cap/app.py`).

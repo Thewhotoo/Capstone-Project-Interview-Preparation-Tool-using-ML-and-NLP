@@ -47,17 +47,31 @@ import uuid as _uuid
 import question_realizer
 from conversation_memory import ConversationMemory
 from evaluation_engine import EvaluationLedger, build_request, evaluate
+from evaluation_result import EvaluationResult
 from evaluator import Evaluator
-from evaluator_registry import UnknownEvaluatorError, get_active_evaluator, register_evaluator
+from evaluator_registry import UnknownEvaluatorError, get_active_evaluator, get_evaluator, register_evaluator
 from heuristic_evaluator import HeuristicEvaluator
 from interview_question import InterviewQuestion
+from live_store import LocalCache, get_store
 from planner import ConversationState, Planner
 from question_specification import UnitStatus
 from concept_analysis import concept_coverage_percent
 from strong_answer import build_improved_answer, coaching_note
 from topic_pool import ProfileLike
 
-_conversations: dict[str, dict] = {}
+# Live conversations are kept in the live store (live_store.py: this
+# process's memory, or Redis shared by every worker) as a small JSON record:
+#
+#     {"version", "profile", "evaluator": [name, version],
+#      "turns": [{"answer", "evaluation"}], "current_question", "ended"}
+#
+# The planner, memory and ledger are not stored: they are rebuilt by
+# replaying the record (`_rebuild`). That is exact because planning is
+# deterministic (no `random`, crc32 not `hash()`; checked across hash seeds)
+# and never depends on evaluation results. `_cache` keeps the rebuilt objects
+# per process, reused while the stored record's version is unchanged, so a
+# single-process server never replays.
+_cache = LocalCache()
 
 # Interview budget (session 14, UX milestone): a real technical interview
 # doesn't exhaust a candidate's entire topic pool -- capping the number of
@@ -141,22 +155,127 @@ def _resolve_session_evaluator() -> Evaluator:
         return default
 
 
+def _key(conversation_id: str) -> str:
+    return f"conv:{conversation_id}"
+
+
+def _profile_dict(profile: ProfileLike) -> dict:
+    return profile.model_dump(mode="json") if hasattr(profile, "model_dump") else profile
+
+
+def _first_question(planner: Planner, memory: ConversationMemory):
+    spec = planner.plan_next(ConversationState())
+    if spec is None:
+        return None, None, None
+    question, variant_idx = question_realizer.realize(spec, memory, turn_number=1)
+    return spec, question, variant_idx
+
+
+def _plan_after_answer(planner: Planner, memory: ConversationMemory, last_category):
+    """The next specification once the current one is marked covered, or None
+    when the budget is spent or the pool is empty. Shared by live answers and
+    by replay, so both always take the same path."""
+    # Budget check BEFORE asking the planner for another unit -- this is
+    # the only way lower-priority units "never get scheduled" rather than
+    # scheduled-then-discarded; select_next() itself is never told to stop
+    # early, it simply isn't called again once the budget is spent.
+    if memory.turn_count() >= RESUME_DISCUSSION_QUESTION_BUDGET:
+        return None
+    return planner.plan_next(ConversationState(
+        last_category=last_category,
+        # soft cooldown so one project/job doesn't take several turns in a row
+        recent_source_ids=memory.recent_source_ids(),
+    ))
+
+
+def _save(conversation_id: str, session: dict) -> None:
+    record = session["record"]
+    record["version"] += 1
+    get_store().put(_key(conversation_id), record)
+    _cache.put(conversation_id, record["version"], session)
+
+
+def _pinned_evaluator(name: str) -> Evaluator:
+    try:
+        return get_evaluator(name)
+    except UnknownEvaluatorError:
+        logger.warning("Evaluator %r pinned to a live conversation is not registered in this "
+                       "process; using the active one", name)
+        return _resolve_session_evaluator()
+
+
+def _rebuild(record: dict) -> dict | None:
+    """Recreate a conversation's live objects from its record by replaying
+    every answered turn through the same planning steps the live session took.
+    Evaluations are restored from the record, never recomputed. Returns None
+    if the replay doesn't reach the question the candidate is looking at
+    (the profile or planning code changed since the record was written)."""
+    planner = Planner(record["profile"])
+    memory = ConversationMemory()
+    ledger = EvaluationLedger()
+    answer_history: dict[str, tuple[str, ...]] = {}
+
+    spec, question, variant_idx = _first_question(planner, memory)
+    for turn in record["turns"]:
+        if spec is None:
+            return None
+        spec_id = question.specification.id
+        ledger.append(EvaluationResult.model_validate(turn["evaluation"]))
+        answer_history[spec_id] = answer_history.get(spec_id, ()) + (turn["answer"],)
+        memory.record_turn(question, variant_idx, answer_text=turn["answer"])
+        planner.advance(spec_id, UnitStatus.COVERED)
+        spec = _plan_after_answer(planner, memory, spec.category)
+        if spec is not None:
+            question, variant_idx = question_realizer.realize(spec, memory, memory.turn_count() + 1)
+
+    if not record["ended"] and (spec is None or question.question_text != record["current_question"]["text"]):
+        logger.error("Replaying a live conversation did not reach its current question; dropping it")
+        return None
+    return {
+        "planner": planner,
+        "memory": memory,
+        "current_question": question,
+        "current_variant_idx": variant_idx,
+        "last_category": spec.category if spec is not None else None,
+        "ended": record["ended"],
+        "evaluator": _pinned_evaluator(record["evaluator"][0]),
+        "evaluation_ledger": ledger,
+        "answer_history": answer_history,
+        "record": record,
+    }
+
+
+def _load(conversation_id: str) -> dict | None:
+    """The live conversation's objects, from this process's cache when the
+    stored record is unchanged, otherwise rebuilt from the record."""
+    record = get_store().get(_key(conversation_id))
+    if record is None:
+        _cache.drop(conversation_id)
+        return None
+    session = _cache.get(conversation_id, record["version"])
+    if session is None:
+        session = _rebuild(record)
+        if session is None:
+            return None
+        _cache.put(conversation_id, record["version"], session)
+    return session
+
+
 def start_conversation(profile: ProfileLike) -> tuple[dict, int]:
     """Start a new Resume Discussion conversation from a Candidate Profile
-    (the real Pydantic model or its `.model_dump()` dict form — Planner
-    already accepts either)."""
+    (the real Pydantic model or its `.model_dump()` dict form). Planning runs
+    on the dict form, the same form a replay starts from."""
+    profile = _profile_dict(profile)
     planner = Planner(profile)
     memory = ConversationMemory()
     session_evaluator = _resolve_session_evaluator()
 
-    spec = planner.plan_next(ConversationState())
+    spec, question, variant_idx = _first_question(planner, memory)
     if spec is None:
         return {"error": "No discussion questions could be generated from this profile."}, 400
 
-    question, variant_idx = question_realizer.realize(spec, memory, turn_number=1)
-
     conversation_id = f"conv_{_uuid.uuid4().hex[:12]}"
-    _conversations[conversation_id] = {
+    session = {
         "planner": planner,
         "memory": memory,
         "current_question": question,
@@ -166,7 +285,16 @@ def start_conversation(profile: ProfileLike) -> tuple[dict, int]:
         "evaluator": session_evaluator,
         "evaluation_ledger": EvaluationLedger(),
         "answer_history": {},  # spec_id -> tuple[str, ...] of raw answers given (Phase 3)
+        "record": {
+            "version": 0,
+            "profile": profile,
+            "evaluator": [session_evaluator.name, session_evaluator.version],
+            "turns": [],
+            "current_question": _question_payload(question),
+            "ended": False,
+        },
     }
+    _save(conversation_id, session)
     return {
         "status": "success",
         "conversation_id": conversation_id,
@@ -178,11 +306,11 @@ def start_conversation(profile: ProfileLike) -> tuple[dict, int]:
 def evaluator_info(conversation_id: str) -> tuple[str, str] | None:
     """(name, version) of the evaluator pinned to this conversation, for
     session history — scores from different evaluators aren't comparable."""
-    session = _conversations.get(conversation_id)
-    if session is None:
+    record = get_store().get(_key(conversation_id))
+    if record is None:
         return None
-    evaluator = session["evaluator"]
-    return evaluator.name, evaluator.version
+    name, version = record["evaluator"]
+    return name, version
 
 
 def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
@@ -200,11 +328,20 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
     `ConversationMemory` still only ever receives answer-length metadata,
     never a score (Phase 2's approved boundary, untouched).
     """
-    session = _conversations.get(conversation_id)
-    if session is None:
-        return {"error": "Invalid or expired conversation"}, 404
-    if session["ended"]:
-        return {"status": "completed"}, 200
+    with get_store().lock(_key(conversation_id)):
+        session = _load(conversation_id)
+        if session is None:
+            return {"error": "Invalid or expired conversation"}, 404
+        if session["ended"]:
+            return {"status": "completed"}, 200
+        try:
+            return _advance(conversation_id, session, answer)
+        except Exception:
+            _cache.drop(conversation_id)   # objects may be half-updated; rebuild from the record next time
+            raise
+
+
+def _advance(conversation_id: str, session: dict, answer: str) -> tuple[dict, int]:
 
     planner: Planner = session["planner"]
     memory: ConversationMemory = session["memory"]
@@ -225,19 +362,10 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
 
     memory.record_turn(current_question, variant_idx, answer_text=answer)
     planner.advance(spec_id, UnitStatus.COVERED)
+    record = session["record"]
+    record["turns"].append({"answer": answer, "evaluation": result.model_dump(mode="json")})
 
-    # Budget check BEFORE asking the planner for another unit -- this is
-    # the only way lower-priority units "never get scheduled" rather than
-    # scheduled-then-discarded; select_next() itself is never told to stop
-    # early, it simply isn't called again once the budget is spent.
-    if memory.turn_count() >= RESUME_DISCUSSION_QUESTION_BUDGET:
-        next_spec = None
-    else:
-        next_spec = planner.plan_next(ConversationState(
-            last_category=session["last_category"],
-            # soft cooldown so one project/job doesn't take several turns in a row
-            recent_source_ids=memory.recent_source_ids(),
-        ))
+    next_spec = _plan_after_answer(planner, memory, session["last_category"])
     # Improved Answer / Coaching Note are derived here, at the one site
     # where the EvaluationResult, the InterviewQuestion (its grounding) AND
     # the raw candidate `answer` are all in scope. `_result_payload` stays a
@@ -266,7 +394,8 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
     turn_evaluation["concept_coverage_pct"] = concept_coverage_percent(result)
 
     if next_spec is None:
-        session["ended"] = True
+        session["ended"] = record["ended"] = True
+        _save(conversation_id, session)
         return {
             "status": "success", "next_question": None, "is_completed": True,
             "turn_number": memory.turn_count(),
@@ -278,6 +407,8 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
     session["current_question"] = next_question
     session["current_variant_idx"] = next_variant_idx
     session["last_category"] = next_spec.category
+    record["current_question"] = _question_payload(next_question)
+    _save(conversation_id, session)
 
     return {
         "status": "success",
@@ -337,9 +468,12 @@ def end_conversation(conversation_id: str, integrity: dict | None = None) -> tup
     `sanitize_integrity`); a terminated session is ended exactly like a
     completed one -- the session is discarded, so no further replies are
     accepted -- and the termination is recorded in the summary."""
-    session = _conversations.get(conversation_id)
-    if session is None:
-        return {"error": "Invalid or expired conversation"}, 404
+    with get_store().lock(_key(conversation_id)):
+        session = _load(conversation_id)
+        if session is None:
+            return {"error": "Invalid or expired conversation"}, 404
+        get_store().delete(_key(conversation_id))
+        _cache.drop(conversation_id)
 
     memory: ConversationMemory = session["memory"]
     ledger: EvaluationLedger = session["evaluation_ledger"]
@@ -375,5 +509,4 @@ def end_conversation(conversation_id: str, integrity: dict | None = None) -> tup
             "Conversation %s terminated for an integrity violation: %s at turn %s",
             conversation_id, summary["integrity"]["type"], summary["integrity"]["at_turn"],
         )
-    _conversations.pop(conversation_id, None)
     return summary, 200

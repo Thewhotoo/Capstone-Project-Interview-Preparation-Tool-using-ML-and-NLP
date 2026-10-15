@@ -139,18 +139,20 @@ def start_tech_interview():
 @sessions_bp.post("/api/tech-interview/<int:session_id>/answer")
 @login_required
 def answer_tech_interview(session_id: int):
-    live = session_history.live_tech_interview(session_id, current_user.id)
-    if live is None:
-        return jsonify({"error": "Interview not found or already finished."}), 404
-    session, interview = live
-    if interview.finished:
-        return jsonify({"error": "All questions are answered; end the interview."}), 409
     answer = (request.get_json(silent=True) or {}).get("answer")
-    if not isinstance(answer, str):
-        return jsonify({"error": "'answer' must be a string."}), 400
-    result = interview.submit(answer[:MAX_ANSWER_CHARS])
-    if result["record"] is not None:
-        session_history.record_tech_interview_turn(session, result["record"])
+    with session_history.tech_interview_lock(session_id):
+        live = session_history.live_tech_interview(session_id, current_user.id)
+        if live is None:
+            return jsonify({"error": "Interview not found or already finished."}), 404
+        session, interview = live
+        if interview.finished:
+            return jsonify({"error": "All questions are answered; end the interview."}), 409
+        if not isinstance(answer, str):
+            return jsonify({"error": "'answer' must be a string."}), 400
+        result = interview.submit(answer[:MAX_ANSWER_CHARS])
+        if result["record"] is not None:
+            session_history.record_tech_interview_turn(session, result["record"])
+        session_history.save_tech_interview(session.id, interview)
     return jsonify({"prompt": result["prompt"], "finished": result["finished"],
                     "questions_answered": len(interview.records)}), 200
 
@@ -159,11 +161,12 @@ def answer_tech_interview(session_id: int):
 @login_required
 def end_tech_interview(session_id: int):
     """Ends the interview (early or after the last question) and returns the report."""
-    live = session_history.live_tech_interview(session_id, current_user.id)
-    if live is None:
-        return jsonify({"error": "Interview not found or already finished."}), 404
-    session, interview = live
     data = request.get_json(silent=True) or {}
-    session_history.finish_tech_interview(session, interview.summary(),
-                                          data.get("attention_metrics"), data.get("integrity"))
+    with session_history.tech_interview_lock(session_id):
+        live = session_history.live_tech_interview(session_id, current_user.id)
+        if live is None:
+            return jsonify({"error": "Interview not found or already finished."}), 404
+        session, interview = live
+        session_history.finish_tech_interview(session, interview.summary(),
+                                              data.get("attention_metrics"), data.get("integrity"))
     return jsonify(_report(session, interview)), 200

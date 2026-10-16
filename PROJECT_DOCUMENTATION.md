@@ -344,7 +344,7 @@ Flow invariants:
 - **SQLite** (local file) by default; in production mode **PostgreSQL** and **Redis** (§4.26). There is no queue service.
 
 ### 3.6 Deployment / runtime architecture
-- **Two ways to run:** `python app.py` from `main_cap/cap/` (Flask's development server: `app.run(debug=False, port=5000, threaded=True, use_reloader=False)`), or `docker compose up` from the repository root (production mode, below). There is no CI or cloud config.
+- **Two ways to run:** `docker compose up --build -d` from the repository root is **the default** (production mode, below): Docker builds Python, every package and every model into the image, so nothing else is installed by hand. `python app.py` from `main_cap/cap/` (Flask's development server: `app.run(debug=False, port=5000, threaded=True, use_reloader=False)`) is for working on the code and running the tests. There is no CI or cloud config.
 - **Startup sequence:**
   1. load `.env`;
   2. `bootstrap_production_evaluator()`;
@@ -1572,8 +1572,14 @@ App ──────┤
 ## 5. Entry Points & Execution Flow
 
 ### 5.1 Running the application
+The default, with Docker (needs only Docker Desktop; §3.6, `SETUP_PREREQUISITES.md` section 1):
 ```bash
-pip install -r Requirements_Global.txt          # the project's requirements file; system needs: SETUP_PREREQUISITES.md
+docker compose up --build -d                    # from the repository root; http://localhost:5000
+docker compose down                             # stop (data is kept in volumes)
+```
+Without Docker, for development and the tests (`SETUP_PREREQUISITES.md` section 2):
+```bash
+pip install -r Requirements_Global.txt          # the project's requirements file
 cd main_cap/cap
 python app.py                                   # http://localhost:5000
 ```

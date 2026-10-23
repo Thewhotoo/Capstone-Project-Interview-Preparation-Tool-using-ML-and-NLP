@@ -33,7 +33,13 @@ from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_MODEL = "qwen2.5:3b"
+# Preference order when CAP_FACT_CHECK_MODEL isn't set: the first one Ollama has is used.
+# On the Mohler human-graded benchmark (248 answers, Pearson vs the experts' average):
+# qwen3:4b 0.73, phi3.5 0.64, qwen2.5:3b 0.54-0.58, gemma2:2b 0.44; two experts agree at 0.59.
+# qwen3:4b (2.5 GB) only partly fits a 4 GB GPU, so it is slower (~3.5 s per call) but runs in
+# the background re-grade; qwen2.5:3b (1.9 GB) is the fallback.
+PREFERRED_MODELS = ("qwen3:4b", "qwen2.5:3b")
+DEFAULT_MODEL = PREFERRED_MODELS[0]
 DEFAULT_URL = "http://localhost:11434"
 
 _SYSTEM_PROMPT = """You are a strict senior software engineer fact-checking a candidate's interview answer.
@@ -117,6 +123,11 @@ Score 0-4:
 0 worthless: non-answer, off-topic, or technically wrong
 Judge correctness and specificity. Do NOT reward length, confidence or jargon.
 Reply with JSON only: {"score": <0-4>}"""
+FALSE_CLAIMS_SCHEMA = {"type": "object", "required": ["false_claims"], "properties": {"false_claims": {
+    "type": "array", "items": {"type": "object", "required": ["claim", "correction"],
+                               "properties": {"claim": {"type": "string"}, "correction": {"type": "string"}}}}}}
+SCORE_SCHEMA = {"type": "object", "properties": {"score": {"type": "number"}}, "required": ["score"]}
+_SCORE_IN_TRUNCATED_JSON = re.compile(r'"score"\s*:\s*([0-9]+(?:\.[0-9]+)?)')
 _COLD_START_TIMEOUT = 90.0   # first call loads the model into VRAM (~20-40 s on a laptop GPU)
 
 
@@ -143,44 +154,75 @@ class OllamaFactChecker:
     def __init__(self, model: str | None = None, base_url: str | None = None, timeout: float | None = None,
                  contradiction_fn=None):
         self.contradiction_fn = contradiction_fn or _default_contradiction
-        self.model = model or os.environ.get("CAP_FACT_CHECK_MODEL", DEFAULT_MODEL)
+        explicit = model or os.environ.get("CAP_FACT_CHECK_MODEL")
+        self.model = explicit or DEFAULT_MODEL
+        self._model_resolved = bool(explicit)     # else: first installed of PREFERRED_MODELS
         self.base_url = (base_url or os.environ.get("CAP_OLLAMA_URL", DEFAULT_URL)).rstrip("/")
-        self.timeout = timeout if timeout is not None else float(os.environ.get("CAP_FACT_CHECK_TIMEOUT", "20"))
+        self.timeout = timeout if timeout is not None else float(os.environ.get("CAP_FACT_CHECK_TIMEOUT", "30"))
         self._warm = False
 
-    def _chat(self, system: str, user: str, max_tokens: int) -> dict:
+    def _installed_models(self, timeout: float) -> set[str] | None:
+        try:
+            with urllib.request.urlopen(f"{self.base_url}/api/tags", timeout=timeout) as resp:
+                models = json.loads(resp.read().decode()).get("models") or []
+        except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+            return None
+        names = {m.get("name", "") for m in models} | {m.get("model", "") for m in models}
+        return names | {n.removesuffix(":latest") for n in names}
+
+    def _resolve_model(self, installed: set[str]) -> None:
+        if not self._model_resolved:
+            self.model = next((m for m in PREFERRED_MODELS if m in installed), self.model)
+            self._model_resolved = True
+
+    def _chat(self, system: str, user: str, max_tokens: int, schema: dict | None = None) -> dict:
+        if not self._model_resolved:
+            installed = self._installed_models(timeout=5.0)
+            if installed is not None:
+                self._resolve_model(installed)
         payload = {
             "model": self.model,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-            "format": "json",
+            # a JSON schema makes Ollama emit exactly these fields (some models otherwise echo the
+            # question back first and run out of tokens before the score)
+            "format": schema or "json",
             "stream": False,
             "keep_alive": "5m",
             "options": {"temperature": 0, "num_ctx": 2048, "num_predict": max_tokens},
         }
+        if self.model.startswith(("qwen3", "deepseek-r1")):
+            payload["think"] = False      # reasoning models: skip the long hidden reasoning (too slow here)
         req = urllib.request.Request(f"{self.base_url}/api/chat", data=json.dumps(payload).encode(),
                                      headers={"Content-Type": "application/json"})
         timeout = self.timeout if self._warm else max(self.timeout, _COLD_START_TIMEOUT)
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             body = json.loads(resp.read().decode())
         self._warm = True
-        return json.loads(body["message"]["content"])
+        content = body["message"]["content"]
+        try:
+            return json.loads(content)
+        except ValueError:
+            # Some models add extra fields after the score and get cut off by the token limit
+            # ('{"score": 4, "reason": "The ans'); the score itself is still readable.
+            match = _SCORE_IN_TRUNCATED_JSON.search(content)
+            if match:
+                return {"score": float(match.group(1))}
+            raise
 
     def available(self, timeout: float = 2.0) -> bool:
         """True when the Ollama server answers and the model is pulled. Cheap (one
         local HTTP call); used to decide whether LLM re-grading is worth queueing."""
-        try:
-            with urllib.request.urlopen(f"{self.base_url}/api/tags", timeout=timeout) as resp:
-                models = json.loads(resp.read().decode()).get("models") or []
-        except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+        installed = self._installed_models(timeout)
+        if installed is None:
             return False
-        names = {m.get("name", "") for m in models} | {m.get("model", "") for m in models}
-        return self.model in names or f"{self.model}:latest" in names
+        self._resolve_model(installed)
+        return self.model in installed
 
     def grade(self, question: str, answer: str, context: str = "") -> float | None:
         """Direct 0..1 rubric grade, or None when the model is unavailable."""
         user = f"RESUME PROJECT: {context}\nQUESTION: {question}\nANSWER: {answer}"
         try:
-            score = float(self._chat(_GRADE_PROMPT, user, 20).get("score"))
+            score = float(self._chat(_GRADE_PROMPT, user, 20, schema=SCORE_SCHEMA).get("score"))
         except (urllib.error.URLError, TimeoutError, OSError, KeyError, ValueError, TypeError) as exc:
             logger.info("llm grade unavailable: %s", exc)
             return None
@@ -194,7 +236,7 @@ class OllamaFactChecker:
             user += f"CANDIDATE'S PROJECT (from their resume, assume true): {context}\n"
         user += f"ANSWER: {answer}"
         try:
-            content = self._chat(_SYSTEM_PROMPT, user, 300)
+            content = self._chat(_SYSTEM_PROMPT, user, 300, schema=FALSE_CLAIMS_SCHEMA)
             candidates = []
             for item in content.get("false_claims") or []:
                 if isinstance(item, dict) and str(item.get("claim", "")).strip():

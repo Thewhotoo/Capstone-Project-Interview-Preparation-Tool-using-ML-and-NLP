@@ -426,7 +426,8 @@ def _compose_overall_v2(ev: EvidenceBreakdown) -> float:
 
 FACT_CONFIRMED_FACTOR = 0.45
 FACT_SUSPECTED_FACTOR = 0.80   # fact_checker no longer reports 'suspected' (unconfirmed flags aren't penalised)
-LLM_BLEND_WEIGHT = 0.5   # share of the optional local-LLM rubric grade in the final score
+LLM_BLEND_WEIGHT = 0.6   # share of the optional local-LLM rubric grade; 0.6 chosen on benchmarks/evaluator/dev_set.json
+                         # (same ranking as 0.5, better calibration: QWK 0.77 -> 0.80 with qwen3:4b)
 
 
 # The live grade and the background LLM re-grade (conversation_engine) evaluate the

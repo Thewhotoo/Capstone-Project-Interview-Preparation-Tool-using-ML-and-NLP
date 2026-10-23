@@ -55,13 +55,13 @@ python app.py
 - CPU-only is fine; expect a few seconds per evaluated answer.
 
 ## Optional: sharper résumé-interview grading with a local LLM
-If [Ollama](https://ollama.com) is running with the `qwen2.5:3b` model, the Resume
+If [Ollama](https://ollama.com) is running with `qwen3:4b` (preferred) or `qwen2.5:3b`, the Resume
 Discussion automatically re-grades each answer in the background with it (a
 technical fact check plus a rubric grade), and the end-of-session report uses those
-grades. It needs a GPU with ~2.5 GB free (or patience on CPU) and nothing else:
+grades. qwen3:4b grades noticeably better; qwen2.5:3b is lighter (~2 GB vs ~3 GB of GPU memory):
 ```bash
 # Windows: winget install Ollama.Ollama   (macOS/Linux: see ollama.com)
-ollama pull qwen2.5:3b
+ollama pull qwen3:4b        # or: ollama pull qwen2.5:3b
 ```
 Without Ollama nothing changes: answers keep the fast built-in score. Set
 `CAP_FACT_CHECK=0` to turn it off even when Ollama is running, or `1` to force it.

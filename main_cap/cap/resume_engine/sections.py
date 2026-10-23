@@ -169,6 +169,30 @@ def _group_into_document_lines(spans: list[TextSpan]) -> list[_Line]:
     return [_Line(group) for group in groups]
 
 
+_RUNNING_HEADER_SCAN_DEPTH = 2  # only the first N lines of a page are candidates
+
+
+def _running_header_texts(lines: list[_Line]) -> frozenset[str]:
+    """A short line whose exact (normalized) text appears among the first
+    `_RUNNING_HEADER_SCAN_DEPTH` lines on 2+ DIFFERENT pages is a repeated
+    running header/footer -- a name/title banner printed on every page, a
+    real and common resume pattern. Generic position+repetition signal,
+    never resume-specific text. See `_build_sections`'s use: only the
+    SECOND and later occurrences are dropped (the first, page-1 occurrence
+    is the genuine name/contact banner and is left to the normal leading-
+    block handling, unchanged)."""
+    seen_on_page: dict[str, set[int]] = {}
+    pages_seen: dict[int, list[_Line]] = {}
+    for line in lines:
+        pages_seen.setdefault(line.page_num, []).append(line)
+    for page_num, page_lines in pages_seen.items():
+        for line in page_lines[:_RUNNING_HEADER_SCAN_DEPTH]:
+            text = normalize_heading(line.text)
+            if text:
+                seen_on_page.setdefault(text, set()).add(page_num)
+    return frozenset(text for text, pages in seen_on_page.items() if len(pages) >= 2)
+
+
 def _is_candidate_header_line(line: _Line, body_font_size: float) -> bool:
     """The structural pre-filter (Section 4.3 Tiers 2/3): a header line is
     short, standalone (already guaranteed -- it's its own _Line), and
@@ -202,7 +226,48 @@ def _is_candidate_header_line(line: _Line, body_font_size: float) -> bool:
         return False
     larger = body_font_size > 0 and line.max_font_size >= body_font_size * MIN_HEADER_FONT_RATIO
     all_caps = text.isupper() and any(c.isalpha() for c in text)
-    return larger or line.is_bold or all_caps
+    if larger or line.is_bold or all_caps:
+        return True
+    # Plain-style resumes: some real templates (confirmed on a two-column
+    # sidebar fixture) give section headers NO visual distinction at all --
+    # same font size, not bold, Title Case rather than ALL-CAPS. Without
+    # this, such a document has zero header-line candidates anywhere, so
+    # every section (including the real content, not just the name/contact
+    # block) silently collapses into the single pre-first-header "contact"
+    # catch-all in `_build_sections`. A short, standalone, CONFIDENTLY
+    # gazetteer-matched line (score >= FUZZY_CONFIDENT_THRESHOLD, the same
+    # bar Tier 2 already requires to label a visually-flagged header) is
+    # strong enough evidence of being a header on its own merit -- this is
+    # not "contains a keyword somewhere", it's a close match to a known
+    # section-name alias end to end, which body/entry text essentially never
+    # produces (see `_fuzzy_match_label`'s docstring on why token_sort_ratio
+    # was chosen specifically to avoid over-matching short phrases).
+    _, score = _fuzzy_match_label(text)
+    return score >= FUZZY_CONFIDENT_THRESHOLD
+
+
+def _is_allcaps_only_short_acronym(line: _Line, body_font_size: float) -> bool:
+    """True when a line qualified as header-like SOLELY through the
+    all-caps signal (not bold, not a larger font) AND is one or two short
+    tokens -- e.g. "SQL", "AWS", "API". This is the all-caps heuristic's
+    specific blind spot: a genuine section header that happens to be
+    written in all-caps with no other visual weight is virtually always a
+    real, recognizable word/phrase (SKILLS, EXPERIENCE, a plausible unseen
+    section name like LANGUAGES), so it still gets a confident-or-weak
+    gazetteer match. A short, unrecognized, all-caps-only acronym is
+    overwhelmingly a tech/skill token (a resume listing "SQL" on its own
+    line in a skills sidebar), not a section boundary -- see
+    `_build_sections`'s fold rule, the only caller. Deliberately does NOT
+    fire for a bold/larger-font line (a real visual header signal) or for
+    anything 3+ words (a multi-word unrecognized phrase like "Languages
+    Spoken" is still treated as a genuine, if unlabeled, new section)."""
+    text = normalize_heading(line.text)
+    if not text or len(text.split()) > 2:
+        return False
+    larger = body_font_size > 0 and line.max_font_size >= body_font_size * MIN_HEADER_FONT_RATIO
+    if larger or line.is_bold:
+        return False
+    return text.isupper() and any(c.isalpha() for c in text)
 
 
 def _is_docx_heading_style(line: _Line) -> bool:
@@ -365,7 +430,24 @@ def _build_sections(lines: list[_Line], body_font_size: float) -> list[Section]:
     current = leading
     found_real_section = False
 
+    running_headers = _running_header_texts(lines)
+    running_header_first_page: dict[str, int] = {}
+
     for line in lines:
+        text_norm = normalize_heading(line.text)
+        if text_norm in running_headers:
+            first_page = running_header_first_page.setdefault(text_norm, line.page_num)
+            if line.page_num != first_page:
+                # A later repeat of a running header/footer: not a section
+                # boundary, not real content either (it's decorative, and
+                # its own visual weight -- often bold, like the name banner
+                # it usually is -- would otherwise either fragment the
+                # currently-open section into a spurious "unknown" one, or,
+                # if merely appended as body text, get mis-clustered as a
+                # bogus new entry by downstream entry-clustering parsers).
+                # Dropped entirely; the FIRST occurrence (page 1) is left to
+                # the normal leading-contact-block handling, unchanged.
+                continue
         if _is_header_line(line, body_font_size):
             label, confidence, reason = _classify_header_line(line)
             if label == "unknown" and not found_real_section:
@@ -388,6 +470,22 @@ def _build_sections(lines: list[_Line], body_font_size: float) -> list[Section]:
                 and current.label != "unknown"
                 and confidence <= 0.4
                 and _looks_like_entry_content(normalize_heading(line.text))
+            ):
+                current.spans.extend(line.spans)
+                continue
+            # A short, unrecognized, all-caps-ONLY line (e.g. "SQL" alone on
+            # its own line in a skills sidebar) right inside a real section
+            # is body content, not a new section -- the all-caps heuristic's
+            # specific blind spot (see `_is_allcaps_only_short_acronym`).
+            # Never fires for a bold/larger-font line or a genuinely
+            # unrecognized multi-word phrase, which stay a real "unknown"
+            # section boundary as before (e.g. "Languages" -- bold, larger
+            # font -- regression-locked by ambiguous_header_pdf).
+            if (
+                found_real_section
+                and current.label != "unknown"
+                and label == "unknown"
+                and _is_allcaps_only_short_acronym(line, body_font_size)
             ):
                 current.spans.extend(line.spans)
                 continue

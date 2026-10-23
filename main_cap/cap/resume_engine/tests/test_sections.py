@@ -88,12 +88,16 @@ def test_candidate_header_line_rejects_long_all_caps_line(make_text_span):
 
 
 def test_candidate_header_line_font_ratio_boundary(make_text_span):
+    # Deliberately NOT a gazetteer alias (unlike "Experience") -- this test
+    # isolates the font-ratio signal alone; a confident gazetteer match is
+    # its own independent qualifying path (see _is_candidate_header_line)
+    # and would make this boundary pass regardless of font size.
     body_font_size = 10.0
     just_below = make_text_span(
-        text="Experience", bbox=(72.0, 72.0, 150.0, 82.0), font_size=body_font_size * (MIN_HEADER_FONT_RATIO - 0.01)
+        text="Noteworthy Details", bbox=(72.0, 72.0, 150.0, 82.0), font_size=body_font_size * (MIN_HEADER_FONT_RATIO - 0.01)
     )
     just_above = make_text_span(
-        text="Experience", bbox=(72.0, 72.0, 150.0, 82.0), font_size=body_font_size * (MIN_HEADER_FONT_RATIO + 0.01)
+        text="Noteworthy Details", bbox=(72.0, 72.0, 150.0, 82.0), font_size=body_font_size * (MIN_HEADER_FONT_RATIO + 0.01)
     )
     lines_below = _group_into_document_lines([just_below])
     lines_above = _group_into_document_lines([just_above])

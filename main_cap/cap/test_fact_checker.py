@@ -130,3 +130,14 @@ def test_unconfirmed_flags_are_not_shown_to_the_candidate():
     confirmed = FactCheckResult(status="checked", false_claims=({"claim": "bcrypt is reversible", "correction": "one-way"},),
                                 suspected_claims=({"claim": "bcrypt is reversible", "correction": "one-way"},), model="m")
     assert "bcrypt is reversible" in _fact_check_note(confirmed)
+
+
+def test_swapping_the_candidates_own_technology_choice_is_not_a_false_claim():
+    claims = [{"claim": "a worker claims a task with a lease in Postgres",
+               "correction": "a worker claims a task with a lease in Redis"},
+              {"claim": "Kafka deletes each message as soon as a consumer reads it",
+               "correction": "Kafka retains messages until the retention period expires"}]
+    checker = _ScriptedChecker(claims, {claims[0]["claim"]: 0.99, claims[1]["claim"]: 0.98})
+    result = checker.check("Tell me about Chronos", "a worker claims a task with a lease in Postgres and Kafka deletes each message",
+                           context="Chronos: FastAPI, PostgreSQL, RabbitMQ and Redis")
+    assert [c["claim"] for c in result.false_claims] == [claims[1]["claim"]]

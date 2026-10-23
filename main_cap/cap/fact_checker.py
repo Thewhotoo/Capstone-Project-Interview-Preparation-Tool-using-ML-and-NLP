@@ -79,6 +79,32 @@ def _is_personal_flip(claim: str, correction: str) -> bool:
     return bool(_PERSONAL.match(claim)) and bool(_PERSONAL.match(correction))
 
 
+_SWAP_STOPWORDS = frozenset("the a an and or of to in on for with is are was were it that this be as at by from so but if then".split())
+_tech_words: frozenset[str] | None = None
+
+
+def _words(text: str) -> set[str]:
+    return {w.strip(".") for w in re.findall(r"[a-z0-9#+.']+", text.lower())} - _SWAP_STOPWORDS
+
+
+def _is_choice_swap(claim: str, correction: str, context: str) -> bool:
+    """The "correction" only swaps technology names that the résumé or the tech gazetteer
+    knows ("lease in Postgres" -> "lease in Redis"): a disagreement about the candidate's
+    own design choice, which can't be a false fact. Found in a live run, where it confirmed
+    a 'false claim' in a correct answer; on the benchmark it removed no genuine catch."""
+    global _tech_words
+    if _tech_words is None:
+        try:
+            from resume_engine.technology_gazetteer import TECHNOLOGIES
+            _tech_words = frozenset(w for t in TECHNOLOGIES for w in re.findall(r"[a-z0-9#+.]+", t.lower())) | {
+                "postgres", "mongo", "node", "k8s"}
+        except Exception:
+            _tech_words = frozenset()
+    diff = _words(claim) ^ _words(correction)
+    context = context.lower()
+    return bool(diff) and all(w in _tech_words or w in context for w in diff)
+
+
 # Direct rubric grade (same 0-4 rubric as benchmarks/evaluator/label_answers.py). Blended 50/50 with
 # the evidence score: on the held-out benchmark the blend ranked answers better (82%) than either the
 # evidence scorer + fact check (80%) or this grade alone (78%) — their errors are complementary.
@@ -176,6 +202,7 @@ class OllamaFactChecker:
                                        "correction": str(item.get("correction", "")).strip()[:300]})
             confirmed = [c for c in candidates[:3]
                          if not _is_personal_flip(c["claim"], c["correction"])
+                         and not _is_choice_swap(c["claim"], c["correction"], context)
                          and self.contradiction_fn(c["claim"], c["correction"]) >= CONFIRM_CONTRADICTION]
         except (urllib.error.URLError, TimeoutError, OSError, KeyError, ValueError) as exc:
             logger.info("fact check unavailable: %s", exc)

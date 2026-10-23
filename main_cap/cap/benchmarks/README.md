@@ -85,3 +85,24 @@ Mean score by kind, v1 -> v2: keyword list 24 -> 11, textbook 49 -> 26, short-co
 58 -> 34 (now ordered correctly), short-wrong 54 -> 23. **Still unsolved:** fluent-but-wrong 65 vs strong 67
 (needs knowledge), strong answers score only ~67 (range still compressed), unsupported-tech 52 (the tech
 gazetteer doesn't know GPT-4/LangChain etc.).
+
+## Collecting human labels (the missing piece)
+
+Every evaluator number above is measured against labels Claude wrote. Real answers labelled by people are
+what turn "matches an LLM on our benchmark" into a defensible claim. About an hour of work:
+
+1. **Interviews (~30 min total).** 4–6 people each do one Resume Discussion in the app with their own
+   résumé (10 questions each, so 40–60 answers). Ask them to answer naturally, and to answer a couple of
+   questions badly on purpose (vague, wrong, off-topic), so every score range is represented. They must
+   tick the data-consent box; `collect_answers.py` skips anyone who didn't.
+2. **Export:** `py -3.13 benchmarks/evaluator/collect_answers.py` (safe to re-run; only adds new answers).
+3. **Label blind (~20 min per person):** two people each run
+   `py -3.13 benchmarks/evaluator/label_answers.py --annotator <name>` and score every answer 0–4 using the
+   rubric it prints. They should not discuss scores or look at the app's grades first.
+4. **Check agreement:** `label_answers.py --agreement`. QWK between the two people is the realistic ceiling;
+   an evaluator close to it is about as good as a second human grader.
+5. **Score:** `score_evaluator.py --factcheck --by-kind` now also reports a `## human` section.
+
+If the evaluator's ranking on real answers is well below the stress-set numbers, the stress sets are
+missing a kind of answer that real candidates give. Add examples of that kind to a NEW held-out file
+rather than tuning on the human set, which must stay a clean test.

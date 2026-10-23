@@ -1,10 +1,22 @@
 """
-Deployment Evaluator Bootstrap — wires the trained DeBERTa evaluator
-(produced by the experiment/research track, e.g. `run_experiment_2_train_tuned.py`)
-into the live application's evaluator registry, with `HeuristicEvaluator` as
-the mandatory fallback.
+Deployment Evaluator Bootstrap — wires the active production evaluator into
+the live application's evaluator registry, with `HeuristicEvaluator` as the
+mandatory fallback.
 
-HYBRID WIRING (Round 3 -- DeBERTa-primary, see hybrid_evaluator.py's module
+TIER ORDER (top tried first, each tier falls through to the next on any
+problem, never raises): Tier 0 `ResumeEvidenceEvaluator`
+(`_try_activate_resume_evidence`, resume_evidence_evaluator.py) -> Tier 1
+the v5_1088 `AveragedEvaluator` (`_try_activate_averaged_v5`) -> Tier 2 the
+trained-DeBERTa `HybridEvaluator` described below -> bare `HeuristicEvaluator`.
+Tier 0 was promoted to the top 2026-10-19 after benchmarking it against Tier
+1 on Claude-authored ground-truth labels (scratchpad/evaluator_benchmark.py):
+89% pairwise ranking agreement vs Tier 1's 75%, MAE 17.8 vs 21.6, and it is
+the only one of the two that does not reward a long, fluent, technically
+WRONG answer over a short, correct, grounded one. CAP_RESUME_EVIDENCE_EVALUATOR=0
+skips Tier 0 and falls through to Tier 1, exactly as this file worked before
+that date.
+
+HYBRID WIRING (Tier 2 (Round 3 -- DeBERTa-primary, see hybrid_evaluator.py's module
 docstring for the full rationale/evaluation numbers): when the trained
 checkpoint loads and is promotion-approved, it is NOT registered as the
 active evaluator directly. It's registered under its own name (inspectable,
@@ -69,6 +81,40 @@ DEPLOYED_PROMOTION_DECISION_PATH = os.path.join(DEPLOYED_MODEL_DIR, "final_promo
 # here rather than invented/guessed.
 _DEPLOYED_BACKBONE_HF_MODEL_ID = "microsoft/deberta-v3-base"
 _DEPLOYED_MAX_LENGTH = 128
+
+
+# ── Tier 0: the resume-evidence evaluator (resume_evidence_evaluator.py).
+# Benchmarked 2026-10-19 against the deployed v5_1088 AveragedEvaluator on 8
+# scripted résumé-interview answers with Claude-authored ground-truth labels
+# (scratchpad/evaluator_benchmark.py): 89% pairwise ranking agreement vs
+# v5_1088's 75%, MAE 17.8 vs 21.6, and it is the only one of the three that
+# does not reward a long, fluent, technically WRONG answer over a short,
+# correct, grounded one (the length-shortcut failure v5_1088 is already
+# known to have). No trained checkpoint, so no weights file / promotion
+# decision to load -- it is pure heuristics + the same cached sentence/NLI
+# models HeuristicEvaluator already uses, so it is always available.
+# CAP_RESUME_EVIDENCE_EVALUATOR=0 skips it and falls through to Tier 1 below
+# (rollback switch, mirroring CAP_TRAINED_EVALUATOR).
+def _try_activate_resume_evidence() -> bool:
+    """Registers ResumeEvidenceEvaluator as active and returns True, or
+    returns False with NO registry change if disabled. Never raises -- the
+    evaluator itself has no external file/model dependency beyond what
+    HeuristicEvaluator (used elsewhere already) also needs."""
+    if os.environ.get("CAP_RESUME_EVIDENCE_EVALUATOR", "1").strip().lower() in ("0", "false", "no", "off"):
+        logger.info("CAP_RESUME_EVIDENCE_EVALUATOR=0: skipping the resume-evidence evaluator.")
+        return False
+    try:
+        from resume_evidence_evaluator import ResumeEvidenceEvaluator
+
+        evaluator = ResumeEvidenceEvaluator()
+        register_evaluator(evaluator, make_active=True)
+        logger.info("Production evaluator ACTIVE: %r (evidence-based scoring for résumé-specific "
+                    "questions; does not claim unverified technical correctness).", evaluator.name)
+        return True
+    except Exception as exc:
+        logger.warning("Could not activate the resume-evidence evaluator (%s: %s); using the next tier.",
+                       type(exc).__name__, exc)
+        return False
 
 
 # ── Tier 1: the averaged evaluator (heuristic + a teammate's DeBERTa-v3 model,
@@ -146,9 +192,12 @@ def bootstrap_production_evaluator() -> None:
     isn't there -- the normal state of a fresh clone, since `*.pt` is
     git-ignored.
 
-    Tier 1 (tried first): the averaged evaluator, if the v5_1088 model is
-    installed (`_try_activate_averaged_v5`).
+    Tier 0 (tried first): the resume-evidence evaluator (`_try_activate_resume_evidence`).
+    Tier 1: the averaged evaluator, if the v5_1088 model is installed
+    (`_try_activate_averaged_v5`).
     """
+    if _try_activate_resume_evidence():
+        return
     if _try_activate_averaged_v5():
         return
     missing = [

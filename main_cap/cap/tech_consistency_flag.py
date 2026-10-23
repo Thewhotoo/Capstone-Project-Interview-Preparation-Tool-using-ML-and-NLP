@@ -24,24 +24,74 @@ stack that only weakly registered as a contradiction) is an accepted false
 negative: under-flagging is the acceptable failure mode here, over-accusing a
 truthful candidate is not. UI copy using this flag must stay soft ("worth
 double-checking"), never an accusation.
+
+SECOND CALIBRATION ROUND (5 real resumes, an adversarial battery including a
+genuinely off-topic answer -- candidate talks about a hobby, never engages
+with the project at all): the contradiction/support gate above fired on that
+off-topic answer too (1 of 5 resumes) -- a real false positive, since there
+was no tech CLAIM to contradict, just no answer. Root cause: an
+answer that says nothing about the project and one that makes a wrong claim
+about it can both show near-zero `support`/high `contradiction` against the
+resume's tech key points, because neither one's sentences entail them.
+Measured fix: cosine similarity between the raw answer and the project's own
+title+summary separates these cleanly on the same battery -- off-topic
+answers scored <=0.108 in every resume, while even a "natural" fabricated-tech
+answer that doesn't parrot the project's title/summary (unlike the synthetic
+`wrong_tech` fixture used in round one) scored >=0.140. PROJECT_RELEVANCE_FLOOR
+sits at 0.12, in that gap. Only gates the already-rare POSSIBLE_MISMATCH path
+(the NOT_INDEPENDENTLY_VERIFIED fallback below it is untouched), and fails
+CLOSED (treated as "not engaged", so it suppresses rather than forces the
+flag) if the embedding call itself errors -- consistent with this module's
+standing rule that a shaky signal must never escalate to an accusation.
 """
 from __future__ import annotations
 
-from typing import Optional
+from typing import Callable, Optional
 
 from answer_key import AnswerKey
 from correctness_nli_scorer import CoverageNLIScorer
 from evaluation_request import EvaluationRequest
-from question_specification import QuestionCategory
+from question_specification import ProjectGrounding, QuestionCategory
 
 CONTRADICTION_FLAG_THRESHOLD = 0.85
 SUPPORT_CEILING_FOR_FLAG = 0.20
 MIN_ANSWER_WORDS = 12  # below this there's too little claim to judge either way
+PROJECT_RELEVANCE_FLOOR = 0.12  # cosine(answer, project title+summary); see 2nd calibration note
 
 POSSIBLE_MISMATCH = "possible_mismatch"
 NOT_INDEPENDENTLY_VERIFIED = "not_independently_verified"
 
+_EMB_MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2"  # same default model correctness_nli_scorer uses
+
 _scorer = CoverageNLIScorer()
+_embed_model = None  # lazy-loaded; test-injectable via the module-level `_embed` function object
+
+
+def _lazy_embed(texts: list[str]):
+    global _embed_model
+    if _embed_model is None:
+        from sentence_transformers import SentenceTransformer
+        _embed_model = SentenceTransformer(_EMB_MODEL_ID)
+    import numpy as np
+    return np.asarray(_embed_model.encode(texts, normalize_embeddings=True), dtype=float)
+
+
+_embed: Callable = _lazy_embed
+
+
+def _engages_with_project(answer_text: str, project: ProjectGrounding) -> bool:
+    """Whether the answer semantically touches the project AT ALL (title +
+    summary), independent of whether its tech claim is right or wrong. Fails
+    CLOSED (returns False -- not engaged, suppressing the mismatch verdict)
+    on any embedding error, per this module's "never over-accuse" rule."""
+    try:
+        import numpy as np
+        vecs = _embed([answer_text, f"{project.title}. {project.summary}".strip()])
+        a, p = vecs[0], vecs[1]
+        sim = float(np.dot(a, p) / (np.linalg.norm(a) * np.linalg.norm(p) + 1e-9))
+    except Exception:
+        return False
+    return sim >= PROJECT_RELEVANCE_FLOOR
 
 
 def check_tech_consistency(request: EvaluationRequest) -> Optional[str]:
@@ -70,6 +120,7 @@ def check_tech_consistency(request: EvaluationRequest) -> Optional[str]:
     if result["degenerate"]:
         return None
 
-    if result["contradiction"] >= CONTRADICTION_FLAG_THRESHOLD and result["support"] <= SUPPORT_CEILING_FOR_FLAG:
+    if (result["contradiction"] >= CONTRADICTION_FLAG_THRESHOLD and result["support"] <= SUPPORT_CEILING_FOR_FLAG
+            and _engages_with_project(request.answer_text, project)):
         return POSSIBLE_MISMATCH
     return NOT_INDEPENDENTLY_VERIFIED

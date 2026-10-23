@@ -76,10 +76,15 @@ class _PatchedDeploymentPaths:
             "DEPLOYED_PROMOTION_DECISION_PATH": deployment_evaluator.DEPLOYED_PROMOTION_DECISION_PATH,
             "load_checkpoint_artifact": deployment_evaluator.load_checkpoint_artifact,
             # these tests cover the legacy tiers; the v5 averaged tier is covered in
-            # test_averaged_evaluator.py, so skip it here even if its model is installed
+            # test_averaged_evaluator.py, and the resume-evidence tier (Tier 0,
+            # which would otherwise intercept every one of these before the
+            # legacy tiers are even reached) is covered in
+            # test_resume_evidence_tier.py, so skip both here even if available.
             "_try_activate_averaged_v5": deployment_evaluator._try_activate_averaged_v5,
+            "_try_activate_resume_evidence": deployment_evaluator._try_activate_resume_evidence,
         }
         deployment_evaluator._try_activate_averaged_v5 = lambda: False
+        deployment_evaluator._try_activate_resume_evidence = lambda: False
         deployment_evaluator.DEPLOYED_MODEL_DIR = self.deploy_dir
         deployment_evaluator.DEPLOYED_WEIGHTS_PATH = os.path.join(self.deploy_dir, "best_checkpoint_weights.pt")
         deployment_evaluator.DEPLOYED_CHECKPOINT_PATH = os.path.join(self.deploy_dir, "best_checkpoint.json")

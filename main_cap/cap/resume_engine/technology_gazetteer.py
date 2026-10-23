@@ -28,7 +28,7 @@ TECHNOLOGIES: tuple[str, ...] = (
     "Laravel",
     # Data / ML
     "Pandas", "NumPy", "scikit-learn", "TensorFlow", "PyTorch", "Keras",
-    "Spark", "Hadoop", "Airflow", "Kafka", "dbt", "DeBERTa",
+    "Spark", "Hadoop", "Airflow", "Kafka", "Flink", "dbt", "DeBERTa",
     # Databases
     "PostgreSQL", "MySQL", "MongoDB", "Redis", "SQLite", "Cassandra",
     "DynamoDB", "Elasticsearch", "Snowflake", "BigQuery",
@@ -37,4 +37,23 @@ TECHNOLOGIES: tuple[str, ...] = (
     "Jenkins", "GitHub Actions", "CircleCI", "Nginx",
     # Tools
     "Git", "Linux", "Bash", "Jira", "Figma", "Postman",
+    # Messaging / realtime / APIs
+    "RabbitMQ", "Celery", "Socket.IO", "gRPC", "WebSocket", "MQTT", "JWT",
+    # AI / LLM / NLP tooling
+    "LangChain", "LangGraph", "LlamaIndex", "OpenAI", "GPT-4", "GPT-4o", "Gemini", "Mistral", "Ollama",
+    "Hugging Face", "HuggingFace", "BERT", "RoBERTa", "DistilBERT", "SBERT", "Sentence-Transformers",
+    "FAISS", "ChromaDB", "Pinecone", "OpenCV", "XGBoost", "LightGBM", "Matplotlib", "Seaborn", "Plotly",
+    "Streamlit", "Gradio", "Jupyter",
+    # Frontend / mobile / desktop
+    "Vite", "Svelte", "jQuery", "Bootstrap", "Chart.js", "D3.js", "Three.js", "Flutter", "Dart",
+    "SwiftUI", "Android", "Tkinter", "Electron",
+    # Backend libraries / ORMs / testing
+    "Prisma", "Sequelize", "Mongoose", "SQLAlchemy", "Pydantic", "Pytest", "Cypress", "Selenium", "Playwright",
+    # Cloud / platforms / observability
+    "Firebase", "Supabase", "Vercel", "Netlify", "Heroku", "AWS Lambda", "S3", "EC2", "ECS", "CloudFormation",
+    "Athena", "Kinesis", "Prometheus", "Grafana", "Datadog", "Sentry",
+    # Game / graphics / hardware
+    "Unity", "Unreal Engine", "Blender", "Arduino", "Raspberry Pi",
+    # Analytics / BI
+    "Power BI", "PowerBI", "Tableau", "DAX",
 )

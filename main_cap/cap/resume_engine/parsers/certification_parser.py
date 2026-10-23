@@ -37,6 +37,7 @@ _CREDENTIAL_ID_PATTERN = re.compile(
     re.IGNORECASE,
 )
 _ID_FRAGMENT_PATTERN = re.compile(r"^[\d\s.\-/]+$")  # only digits/dashes/dots/slashes
+_INLINE_BULLET_SPLIT = re.compile(r"\s*[•◦▪●■]\s*")
 
 
 def _is_credential_noise(text: str) -> bool:
@@ -96,7 +97,9 @@ def _lines_from_spans(spans) -> list[str]:
     exactly like it already would for a PDF whose extractor happens to
     produce one span per line."""
     lines_grouped = _group_into_lines(list(spans))
-    texts = [line.text.strip(" \t•·-") for line in lines_grouped]
+    # A visual line can hold several bullet items ("PowerBI – Udemy • AI for Business – HP •
+    # SQL – Udemy" when the bullets are laid out side by side); split on inline bullet glyphs.
+    texts = [part.strip(" \t•·-") for line in lines_grouped for part in _INLINE_BULLET_SPLIT.split(line.text)]
     seen: set[str] = set()
     lines: list[str] = []
     for i, text in enumerate(texts):

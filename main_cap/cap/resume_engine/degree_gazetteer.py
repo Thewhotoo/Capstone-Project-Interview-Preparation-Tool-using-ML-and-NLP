@@ -21,4 +21,8 @@ DEGREES: tuple[str, ...] = (
     "Doctor of Philosophy", "PhD", "Ph.D.", "Doctorate",
     "Associate of Science", "Associate of Arts", "Associate Degree",
     "Diploma", "Certificate Program",
+    # Commerce / management / computer-applications degrees (common on Indian resumes)
+    "Bachelor of Business Administration", "Bachelors in Business Administration", "BBA",
+    "Bachelor of Commerce", "B.Com", "BCom", "Bachelor of Computer Applications", "BCA",
+    "Master of Computer Applications", "MCA", "Bachelor of Computer Science", "Masters", "Bachelors",
 )

@@ -43,4 +43,13 @@ JOB_TITLES: tuple[str, ...] = (
     # resumes. Deliberately small and growable, same philosophy as every
     # other gazetteer in this engine (technology_gazetteer.py, etc.).
     "Operations Executive", "Marketing Executive", "Account Executive",
+    # Same gap, different track: the gazetteer had zero design/creative
+    # titles, so a design-track resume ("Creative Studio -- Senior
+    # Designer") also falls through to the positional fallback and guesses
+    # wrong whenever the company comes first. Specific, multi-word titles
+    # only, same convention as the entries above.
+    "Senior Designer", "Junior Designer", "Lead Designer", "Brand Designer",
+    "Graphic Designer", "UX Designer", "UI Designer", "UX/UI Designer",
+    "Product Designer", "Visual Designer", "Design Lead", "Creative Director",
+    "Art Director",
 )

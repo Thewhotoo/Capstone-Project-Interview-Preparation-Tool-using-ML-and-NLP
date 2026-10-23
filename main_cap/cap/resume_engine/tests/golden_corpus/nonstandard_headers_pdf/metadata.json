@@ -7,8 +7,8 @@
   "difficulty": "medium",
   "known_edge_cases": [
     "'Employment History' instead of 'Experience', 'Academic Background' instead of 'Education' -- both confident gazetteer matches (Tier 2)",
-    "'Core Competencies' instead of 'Skills' -- NOT in the gazetteer's skills aliases, resolves as a weak match (Tier 3) at low confidence rather than a confident one; a real finding worth expanding the gazetteer for later, not silently done here"
+    "'Core Competencies' instead of 'Skills' -- now a confident Tier 2 match (RESOLVED 2026-10-19: added as an explicit skills alias in section_gazetteer.py, same fix class as 'Core Skills' already had)"
   ],
-  "notes": "Milestone 2 fixture (2026-08). 'Core Competencies' scoring only 83 (alias_gazetteer_weak) shows the gazetteer's real-world coverage gap directly -- flagged rather than quietly patched, per this project's validation discipline. Candidate gazetteer addition for a future pass, not made unilaterally here.",
+  "notes": "Milestone 2 fixture (2026-08). 'Core Competencies' originally scored only 83 (alias_gazetteer_weak), the gazetteer's real-world coverage gap flagged rather than quietly patched, per this project's validation discipline -- the flagged future-pass candidate was later taken (2026-10-19): 'Core Competencies' added as its own explicit skills alias, now scoring a confident Tier 2 match like every other label in this fixture.",
   "added_in_milestone": 2
 }

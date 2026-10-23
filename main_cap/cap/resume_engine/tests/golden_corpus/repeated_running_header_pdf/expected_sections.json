@@ -1,7 +1,7 @@
 {
-  "expected_labels_in_order": ["contact", "experience", "unknown"],
+  "expected_labels_in_order": ["contact", "experience"],
   "min_confidence_by_label": {
     "experience": 0.85
   },
-  "notes": "Asserts CURRENT (known-flawed) behavior -- see metadata.json known_edge_cases. The 'unknown' entry is the spurious page-2 running-header section that incorrectly fragments Experience's continuation. This is a locked-in regression target, not a statement that this behavior is correct."
+  "notes": "Asserts the CORRECTED behavior (fixed 2026-10-19) -- see metadata.json known_edge_cases. The page-2 repeat of the name/title banner is now dropped by `_running_header_texts` instead of spawning a spurious 'unknown' section, so Experience's page-2 continuation (including the second job entry) stays correctly attached to 'experience'."
 }

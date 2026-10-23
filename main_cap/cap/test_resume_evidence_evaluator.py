@@ -70,3 +70,74 @@ def test_concreteness_rewards_numbers_and_resume_terms_not_length():
 def test_concreteness_no_terms_uses_numbers_only():
     score, _, _ = _concreteness("reduced latency to 40 ms and 3 nines", "reduced latency to 40 ms and 3 nines", ())
     assert score > 0.0
+
+
+# ── scoring v2 (explanation / specificity / keyword-list / textbook signals) ──
+
+from resume_evidence_evaluator import (  # noqa: E402
+    _compose_overall_v2, _explanation_signals, _is_generic, _is_keyword_list, _specificity, _unlisted_technology,
+)
+
+
+def _ev2(substance, specificity, concreteness=0.2, ownership=0.2, on_topic=1.0, flags=(),
+         first_person=False, asks_why=True):
+    return EvidenceBreakdown(0.8, 0.8, concreteness, ownership, NV, tuple(flags), on_topic=on_topic,
+                             substance=substance, specificity=specificity, first_person=first_person,
+                             asks_why=asks_why)
+
+
+def test_keyword_list_is_flagged_but_an_explanation_is_not():
+    terms = ("FastAPI", "PostgreSQL", "RabbitMQ", "Redis")
+    dump = "Chronos used FastAPI, PostgreSQL, RabbitMQ and Redis, with leases and heartbeats and retries and rate limiting."
+    real = "I write the outbox row in the same Postgres transaction, so a crash can't publish an event that rolled back."
+    assert _is_keyword_list(_explanation_signals(dump, terms))
+    assert not _is_keyword_list(_explanation_signals(real, terms))
+
+
+def test_repeated_buzzword_is_flagged():
+    stuffed = "Caching. Caching is what makes things fast, so I made sure there was caching, and the caching was efficient."
+    assert _is_keyword_list(_explanation_signals(stuffed, ()))
+
+
+def test_textbook_register_without_any_action_is_generic():
+    textbook = ("The outbox pattern is a well-known pattern that is widely used in event-driven systems "
+                "and is typically implemented with a relay.")
+    mine = "It is widely used, but I chose it because I kept losing events when the worker crashed."
+    assert _is_generic(_explanation_signals(textbook, ()))
+    assert not _is_generic(_explanation_signals(mine, ()))
+
+
+def test_specificity_counts_mechanisms_not_question_words_or_length():
+    q = "How did you make redirects fast?"
+    short, _ = _specificity("Cache-aside in Redis with a TTL, analytics written asynchronously.", q)
+    long_vague, _ = _specificity("We worked hard on making it fast and made many improvements to the whole thing "
+                                 "over several weeks until everyone was happy with the speed.", q)
+    assert short >= 0.66
+    assert long_vague == 0.0
+
+
+def test_short_name_of_listed_technology_is_not_flagged_as_unlisted():
+    assert _unlisted_technology("i committed kafka offsets manually", ("Apache Kafka", "SQLite"), "") is None
+    assert _unlisted_technology("i used postgres for it", ("PostgreSQL",), "") is None
+    assert _unlisted_technology("i used flink for it", ("Apache Kafka",), "") == "Flink"
+
+
+def test_v2_explained_specific_beats_vague_and_penalties_apply():
+    good = _ev2(1.0, 1.0)
+    vague = _ev2(0.0, 0.0)
+    assert _compose_overall_v2(good) > 0.75 > 0.25 > _compose_overall_v2(vague)
+    assert _compose_overall_v2(_ev2(1.0, 1.0, flags=("keyword_list",))) < _compose_overall_v2(good)
+    assert _compose_overall_v2(_ev2(1.0, 1.0, flags=("generic_textbook",))) < _compose_overall_v2(good)
+    assert _compose_overall_v2(_ev2(1.0, 1.0, flags=("non_answer",))) <= 0.10
+    assert _compose_overall_v2(_ev2(1.0, 1.0, on_topic=0.0)) == 0.0
+
+
+def test_v2_no_first_person_is_neutral_not_penalised():
+    impersonal = _ev2(0.5, 1.0, ownership=0.2, first_person=False)
+    bare_i = _ev2(0.5, 1.0, ownership=0.3, first_person=True)
+    assert _compose_overall_v2(impersonal) >= _compose_overall_v2(bare_i)
+
+
+def test_v2_descriptive_questions_do_not_require_reasoning_words():
+    described = _ev2(0.0, 1.0, asks_why=False)
+    assert _compose_overall_v2(described) > _compose_overall_v2(_ev2(0.0, 1.0, asks_why=True))

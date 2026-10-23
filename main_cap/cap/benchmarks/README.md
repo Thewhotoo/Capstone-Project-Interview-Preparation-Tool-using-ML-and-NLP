@@ -106,3 +106,37 @@ what turn "matches an LLM on our benchmark" into a defensible claim. About an ho
 If the evaluator's ranking on real answers is well below the stress-set numbers, the stress sets are
 missing a kind of answer that real candidates give. Add examples of that kind to a NEW held-out file
 rather than tuning on the human set, which must stay a clean test.
+
+## External human-graded benchmark: Mohler (2026-10-24)
+
+`external/mohler_benchmark.py` — real student answers to data-structures questions, each graded 0–5 by two
+computer-science graders (Mohler et al., ACL 2011; CC-BY-4.0). Independent of this project, so it tests
+reference-based **correctness** grading (the knowledge gap) against humans. 496-answer stratified sample of
+the ten consistently graded assignments:
+
+| scorer vs the two graders' average | Pearson | Spearman | QWK |
+|---|---|---|---|
+| human grader 1 vs grader 2 (ceiling) | 0.62 | 0.60 | 0.54 |
+| qwen2.5:3b given the reference answer | **0.65** | **0.65** | **0.56** |
+| 0.25 × Technical Interview grader + 0.75 × qwen (weight picked on this data) | 0.68 | 0.70 | 0.60 |
+| Technical Interview grader (NLI key points) | 0.44 | 0.50 | 0.23 |
+| coverage-NLI correctness scorer | 0.28 | 0.30 | 0.17 |
+
+The local 3B model agrees with the expert average about as well as one expert agrees with the other;
+NLI-only grading does not.
+
+## Realistic résumé answers, two annotators (2026-10-24)
+
+`evaluator/private/resume_set_v1.json` (private) — 72 answers in natural candidate voices on the real
+benchmark résumés' projects, labelled by two independent Claude annotators (the second, a separate agent,
+saw only the rubric and the answers). Their agreement (QWK 0.97) is far above the human experts' 0.54 on
+Mohler: same-model annotators share judgment, so treat these labels as consistent, not as human.
+
+| evaluator | pairwise (within question) | Spearman | QWK |
+|---|---|---|---|
+| evidence v2 (no LLM) | 67% | 0.44 | 0.42 |
+| evidence v2 + qwen fact check + grade blend | **83%** | 0.77 | 0.70 |
+| qwen2.5:3b alone | 76% | **0.85** | **0.77** |
+
+Our blend ranks answers to the same question better than the LLM alone; the LLM alone is better calibrated
+across questions. The blend weight was not re-tuned on this set (it is a test set).

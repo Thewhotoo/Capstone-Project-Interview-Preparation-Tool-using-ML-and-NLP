@@ -120,3 +120,13 @@ def test_non_answers_never_reach_the_llm():
     fake = _FakeChecker(FactCheckResult(status="checked"), 1.0)
     result = ResumeEvidenceEvaluator(scoring="v2", fact_checker=fake).evaluate(_request("I don't know"))
     assert fake.calls == 0 and result.overall_score <= 0.10
+
+
+def test_unconfirmed_flags_are_not_shown_to_the_candidate():
+    from resume_evidence_evaluator import _fact_check_note
+    only_suspected = FactCheckResult(status="checked", suspected_claims=({"claim": "Redis is a cache", "correction": "x"},),
+                                     model="m")
+    assert "Redis is a cache" not in _fact_check_note(only_suspected)
+    confirmed = FactCheckResult(status="checked", false_claims=({"claim": "bcrypt is reversible", "correction": "one-way"},),
+                                suspected_claims=({"claim": "bcrypt is reversible", "correction": "one-way"},), model="m")
+    assert "bcrypt is reversible" in _fact_check_note(confirmed)

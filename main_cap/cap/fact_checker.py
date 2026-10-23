@@ -139,6 +139,17 @@ class OllamaFactChecker:
         self._warm = True
         return json.loads(body["message"]["content"])
 
+    def available(self, timeout: float = 2.0) -> bool:
+        """True when the Ollama server answers and the model is pulled. Cheap (one
+        local HTTP call); used to decide whether LLM re-grading is worth queueing."""
+        try:
+            with urllib.request.urlopen(f"{self.base_url}/api/tags", timeout=timeout) as resp:
+                models = json.loads(resp.read().decode()).get("models") or []
+        except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+            return False
+        names = {m.get("name", "") for m in models} | {m.get("model", "") for m in models}
+        return self.model in names or f"{self.model}:latest" in names
+
     def grade(self, question: str, answer: str, context: str = "") -> float | None:
         """Direct 0..1 rubric grade, or None when the model is unavailable."""
         user = f"RESUME PROJECT: {context}\nQUESTION: {question}\nANSWER: {answer}"

@@ -456,12 +456,12 @@ def _fact_check_note(fact_check) -> str:
         return ""
     if fact_check.status != "checked":
         return f"\nAutomated fact check unavailable ({fact_check.model})."
-    if not fact_check.suspected_claims:
+    # Only CONFIRMED claims are shown: unconfirmed LLM flags are as likely to hit a correct
+    # answer as a wrong one, so they're neither penalised nor shown to the candidate.
+    if not fact_check.false_claims:
         return f"\nAutomated fact check ({fact_check.model}): no clearly false technical claims found."
-    level = "likely false" if fact_check.false_claims else "possibly false"
-    claims = fact_check.false_claims or fact_check.suspected_claims
-    return (f"\nAutomated fact check ({fact_check.model}) found {level} technical claims: "
-            + "; ".join(f"\"{c['claim']}\" — {c['correction']}" for c in claims[:2]))
+    return (f"\nAutomated fact check ({fact_check.model}) found likely false technical claims: "
+            + "; ".join(f"\"{c['claim']}\" — {c['correction']}" for c in fact_check.false_claims[:2]))
 
 _COMPOSERS = {"v1": _compose_overall, "v2": _compose_overall_v2}
 

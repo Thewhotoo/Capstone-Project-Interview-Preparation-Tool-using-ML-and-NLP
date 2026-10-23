@@ -218,6 +218,15 @@ class OllamaFactChecker:
         self._resolve_model(installed)
         return self.model in installed
 
+    def _contradicts(self, claim: str, correction: str) -> bool:
+        """NLI must find a contradiction in BOTH directions. qwen3's "corrections" often only
+        qualify or restate the claim ("...but the transaction itself...", "provides X as part
+        of..."), which the small NLI model reads as a one-way contradiction. On the dev set this
+        cut good answers wrongly penalised from 5/23 to 3/23 (qwen3:4b) and 2/23 to 1/23
+        (qwen2.5:3b) while still catching 6 of 7 wrong answers with either model."""
+        return (self.contradiction_fn(claim, correction) >= CONFIRM_CONTRADICTION
+                and self.contradiction_fn(correction, claim) >= CONFIRM_CONTRADICTION)
+
     def grade(self, question: str, answer: str, context: str = "") -> float | None:
         """Direct 0..1 rubric grade, or None when the model is unavailable."""
         user = f"RESUME PROJECT: {context}\nQUESTION: {question}\nANSWER: {answer}"
@@ -245,7 +254,7 @@ class OllamaFactChecker:
             confirmed = [c for c in candidates[:3]
                          if not _is_personal_flip(c["claim"], c["correction"])
                          and not _is_choice_swap(c["claim"], c["correction"], context)
-                         and self.contradiction_fn(c["claim"], c["correction"]) >= CONFIRM_CONTRADICTION]
+                         and self._contradicts(c["claim"], c["correction"])]
         except (urllib.error.URLError, TimeoutError, OSError, KeyError, ValueError) as exc:
             logger.info("fact check unavailable: %s", exc)
             return FactCheckResult(status="unavailable", model=self.model, detail=f"{type(exc).__name__}: {exc}")

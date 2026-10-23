@@ -33,7 +33,8 @@ def test_severity_levels():
 class _ScriptedChecker(OllamaFactChecker):
     """Real confirmation logic; the LLM's flagged claims are scripted."""
     def __init__(self, claims, contradiction):
-        super().__init__(contradiction_fn=lambda claim, correction: contradiction[claim])
+        # symmetric scripted contradiction: either argument order finds the claim's value
+        super().__init__(contradiction_fn=lambda a, b: contradiction.get(a, contradiction.get(b, 0.0)))
         self._claims = claims
 
     def _chat(self, system, user, max_tokens, schema=None):
@@ -141,3 +142,12 @@ def test_swapping_the_candidates_own_technology_choice_is_not_a_false_claim():
     result = checker.check("Tell me about Chronos", "a worker claims a task with a lease in Postgres and Kafka deletes each message",
                            context="Chronos: FastAPI, PostgreSQL, RabbitMQ and Redis")
     assert [c["claim"] for c in result.false_claims] == [claims[1]["claim"]]
+
+
+def test_one_way_contradiction_is_not_confirmed():
+    claims = [{"claim": "InfluxDB gives compression and retention built in",
+               "correction": "InfluxDB provides compression and retention as part of its design, but needs configuration"}]
+    checker = _ScriptedChecker(claims, {})
+    checker.contradiction_fn = lambda a, b: 0.9 if a == claims[0]["claim"] else 0.1   # only claim -> correction
+    result = checker.check("Why InfluxDB?", "InfluxDB gives compression and retention built in, so I used it.")
+    assert result.false_claims == ()

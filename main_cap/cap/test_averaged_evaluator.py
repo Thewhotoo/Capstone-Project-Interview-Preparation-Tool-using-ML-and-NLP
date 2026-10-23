@@ -92,7 +92,11 @@ class TestDeploymentTier(unittest.TestCase):
             self.assertFalse(deployment_evaluator._try_activate_averaged_v5())
 
     def test_bootstrap_falls_back_to_heuristic_when_model_absent(self):
-        with mock.patch.object(deployment_evaluator, "DEPLOYED_WEIGHTS_PATH", os.path.join(self.dir, "none.pt")):
+        # Tier 0 (resume-evidence) is covered separately in
+        # test_resume_evidence_tier.py; disable it here so this test isolates
+        # the v5-averaged tier's own fallback-to-heuristic behavior.
+        with mock.patch.object(deployment_evaluator, "DEPLOYED_WEIGHTS_PATH", os.path.join(self.dir, "none.pt")), \
+                mock.patch.dict(os.environ, {"CAP_RESUME_EVIDENCE_EVALUATOR": "0"}):
             deployment_evaluator.bootstrap_production_evaluator()
         self.assertEqual(evaluator_registry.get_active_evaluator().name, "heuristic-v1")
 

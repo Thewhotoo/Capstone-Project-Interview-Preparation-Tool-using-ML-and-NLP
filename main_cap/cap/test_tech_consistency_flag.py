@@ -5,6 +5,7 @@ as deterministic fakes (same discipline as test_correctness_nli_scorer.py)."""
 
 from __future__ import annotations
 
+import hashlib
 import re
 
 import numpy as np
@@ -25,7 +26,12 @@ from question_specification import (
 def fake_nli(pairs):
     out = []
     for premise, hyp in pairs:
-        if "fabricated-tech" in premise.lower():
+        # "irrelevant-topic" simulates the real model's observed quirk: an
+        # answer that says nothing about the project ALSO reads as a high-
+        # contradiction/low-support pair against the tech key points, same
+        # shape as a genuinely fabricated claim (see the module's 2nd
+        # calibration note) -- this is what _engages_with_project must catch.
+        if "fabricated-tech" in premise.lower() or "irrelevant-topic" in premise.lower():
             out.append([5.0, 0.0, 0.0])  # [contradiction, entailment, neutral]
         elif hyp.lower() in premise.lower():
             out.append([0.0, 5.0, 0.0])
@@ -34,11 +40,19 @@ def fake_nli(pairs):
     return out
 
 
-def fake_embed(texts, dim=32):
+def _stable_hash(word: str, dim: int) -> int:
+    # deterministic across processes (unlike builtin hash(), which is salted
+    # per-run) and spread over a large enough space to avoid spurious
+    # bag-of-words collisions between unrelated vocabularies in these tests.
+    return int(hashlib.md5(word.encode()).hexdigest(), 16) % dim
+
+
+def fake_embed(texts, dim=4096):
     arr = np.zeros((len(texts), dim))
     for i, t in enumerate(texts):
         for w in re.findall(r"[a-z]+", t.lower()):
-            arr[i, hash(w) % dim] += 1.0
+            if len(w) > 2:  # skip tiny stopword-ish tokens that inflate collisions
+                arr[i, _stable_hash(w, dim)] += 1.0
     norms = np.linalg.norm(arr, axis=1, keepdims=True)
     norms[norms == 0] = 1.0
     return arr / norms
@@ -64,6 +78,7 @@ def _request(answer_text: str, spec=None) -> EvaluationRequest:
 
 def setup_module(_module):
     tcf._scorer = CoverageNLIScorer(nli_predict=fake_nli, embed=fake_embed)
+    tcf._embed = fake_embed  # same hash-based bag-of-words fake drives the project-engagement check too
 
 
 class TestNotApplicable:
@@ -92,9 +107,12 @@ class TestNotApplicable:
 
 class TestFlagging:
     def test_fabricated_stack_flags_possible_mismatch(self):
+        # Must engage with the project (mentions Chronos / task orchestrator)
+        # so it clears the new project-engagement gate, same as a real
+        # candidate answering "tell me about Chronos" would.
         req = _request(
-            "For this project I personally built everything using fabricated-tech and "
-            "another made-up-tool, deciding on that stack because it fit requirements."
+            "For Chronos, this task orchestrator project, I personally built everything using "
+            "fabricated-tech and another made-up-tool, deciding on that stack because it fit requirements."
         )
         assert tcf.check_tech_consistency(req) == tcf.POSSIBLE_MISMATCH
 
@@ -116,19 +134,61 @@ class TestFlagging:
         )
         assert tcf.check_tech_consistency(req) == tcf.NOT_INDEPENDENTLY_VERIFIED
 
+    def test_off_topic_answer_is_not_flagged_despite_high_contradiction(self):
+        # Regression test for the real false positive found in manual testing:
+        # an answer that never engages with the project at all (no shared
+        # vocabulary with its title/summary) must NOT be flagged as a resume
+        # mismatch, even though the underlying NLI signal looks identical to a
+        # fabricated-tech claim (see "irrelevant-topic" in fake_nli above).
+        req = _request(
+            "Honestly my favorite irrelevant-topic hobby is rock climbing and hiking on "
+            "weekends, it has nothing to do with any of this at all really."
+        )
+        assert tcf.check_tech_consistency(req) == tcf.NOT_INDEPENDENTLY_VERIFIED
+
+
+class TestProjectEngagementGate:
+    def test_engages_true_when_answer_shares_project_vocabulary(self):
+        project = ProjectGrounding(title="Chronos", summary="task orchestrator", technologies=())
+        assert tcf._engages_with_project("I built Chronos as a task orchestrator for my team.", project)
+
+    def test_engages_false_when_answer_is_unrelated(self):
+        project = ProjectGrounding(title="Chronos", summary="task orchestrator", technologies=())
+        assert not tcf._engages_with_project("I enjoy hiking and rock climbing on weekends.", project)
+
+    def test_engagement_check_fails_closed_on_embedding_error(self):
+        project = ProjectGrounding(title="Chronos", summary="task orchestrator", technologies=())
+
+        def broken_embed(_texts):
+            raise RuntimeError("model unavailable")
+
+        original = tcf._embed
+        tcf._embed = broken_embed
+        try:
+            assert not tcf._engages_with_project("I built Chronos.", project)
+        finally:
+            tcf._embed = original
+
 
 class TestEndToEndInConversationEngine:
     """Through the real Round 1 path (conversation_engine -> end_conversation ->
     interview_feedback.build_feedback), with the REAL (small, cached) NLI/
     embedding models -- same convention as TestEngagementInRound1 in
-    test_answer_engagement.py. Restores the injected fakes afterward so this
-    doesn't leak into other tests in the same process."""
+    test_answer_engagement.py. setup_module (above) already swapped the
+    module to fakes for the rest of this file, so this class must explicitly
+    swap in real instances rather than just "restoring" whatever is current,
+    and restores the fakes again afterward so this doesn't leak into other
+    tests in the same process."""
 
     def setup_method(self, _method):
-        self._real_scorer = tcf._scorer
+        self._saved_scorer = tcf._scorer
+        self._saved_embed = tcf._embed
+        tcf._scorer = CoverageNLIScorer()
+        tcf._embed = tcf._lazy_embed
 
     def teardown_method(self, _method):
-        tcf._scorer = self._real_scorer
+        tcf._scorer = self._saved_scorer
+        tcf._embed = self._saved_embed
 
     def test_fabricated_stack_surfaces_in_end_of_session_feedback(self):
         import evaluator_registry

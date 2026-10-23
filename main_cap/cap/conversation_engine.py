@@ -359,6 +359,11 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
     }, 200
 
 
+# Only attributes shown to the candidate; the rest are keyword-presence heuristics
+# (easy to game, QWK ~0.10 alone). overall_score is unaffected by this filter.
+DISPLAYED_DIMENSIONS = frozenset({"technical_depth", "completeness", "ownership", "resume_grounding"})
+
+
 def _result_payload(result) -> dict:
     """Renders `EvaluationResult` fields directly — no evaluation logic
     lives here, only field selection (Goal 2: the UI/API layer must never
@@ -372,10 +377,10 @@ def _result_payload(result) -> dict:
         "dimensions": [
             {"name": d.name, "raw_score": d.raw_score, "confidence": d.confidence,
              "contributes_to_overall": d.contributes_to_overall}
-            for d in result.dimensions
+            for d in result.dimensions if d.name in DISPLAYED_DIMENSIONS
         ],
-        "strengths": [c.claim for c in result.strengths],
-        "weaknesses": [c.claim for c in result.weaknesses],
+        "strengths": [c.claim for c in result.strengths if c.dimension in DISPLAYED_DIMENSIONS or c.dimension is None],
+        "weaknesses": [c.claim for c in result.weaknesses if c.dimension in DISPLAYED_DIMENSIONS or c.dimension is None],
         "missing_reasoning": [
             {"category": m.category, "explanation": m.explanation, "severity": m.severity}
             for m in result.missing_reasoning

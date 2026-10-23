@@ -1,0 +1,133 @@
+{
+  "_about": "Hand-labelled gold for public Canva-style template resumes (fictional people). Root: $PARSER_BENCH_ROOT (default ~/Downloads). Dates are YYYY or YYYY-MM; 'present' for ongoing. Skills = items under technical/skills headings (soft skills, spoken languages and interests excluded).",
+  "items": [
+    {
+      "file": "sample_resumes/resume1.pdf",
+      "layout": "multi_column",
+      "name": "Matthew Collins",
+      "email": "hello@reallygreatsite.com",
+      "phone": "+123-456-7890",
+      "education": [{"institution": "Northgate University", "degree": "Bachelor of Computer Science", "end": "2020-03"}],
+      "experience": [
+        {"company": "Gravity Tech", "role": "Software Developer", "start": "2022-03", "end": "2025-03"},
+        {"company": "Meshwork", "role": "Junior Software Developer", "start": "2020-03", "end": "2022-03"}
+      ],
+      "projects": [],
+      "skills": ["Software Development", "System Design & Architecture", "Problem Solving & Debugging", "Database Management", "API Development & Integration", "Performance Optimization"],
+      "certifications": []
+    },
+    {
+      "file": "sample_resumes/resume2.pdf",
+      "layout": "multi_column",
+      "name": "Juliana Silva",
+      "email": "hello@reallygreatsite.com",
+      "phone": "123-456-7890",
+      "education": [{"institution": "Borcelle University", "degree": "Bachelor of Computer Science", "end": "2015"}],
+      "experience": [
+        {"company": "Borcelle Company", "role": "Senior System Engineer", "start": "2020-03", "end": "present"},
+        {"company": "Rimberio Company", "role": "System Engineer", "start": "2016-01", "end": "2020-02"}
+      ],
+      "projects": [],
+      "skills": ["Infrastructure Design & Optimisation", "Cloud Architecture", "Automation & Scripting", "Containerization & Orchestration", "IT Security & Compliance"],
+      "certifications": []
+    },
+    {
+      "file": "sample_resumes/resume3.pdf",
+      "layout": "single_column_offset_headers",
+      "name": "Angel Matapang",
+      "email": "hello@reallygreatsite.com",
+      "phone": "0123 456 7890",
+      "education": [
+        {"institution": "Las Felipinas University", "degree": "Masters in Computer Science", "end": "2021"},
+        {"institution": "Las Felipinas University", "degree": "Bachelor of Computer Science", "end": "2012"}
+      ],
+      "experience": [
+        {"company": "Tropang True Po", "role": "Software Engineer", "start": "2020-01", "end": "present"},
+        {"company": "Truesdays", "role": "Back-End Developer", "start": "2014-03", "end": "2020-12"},
+        {"company": "Kalayaan National Bank", "role": "DevOps Engineer", "start": "2012-06", "end": "2014-03"}
+      ],
+      "projects": [],
+      "skills": ["Java", "Python", "C++", "Data Structures and Algorithms", "Development Methodology", "Testing and debugging techniques", "SQL"],
+      "certifications": []
+    },
+    {
+      "file": "sample_resumes/resume4.pdf",
+      "layout": "multi_column",
+      "name": "Muhammad Patel",
+      "email": "hello@reallygreatsite.com",
+      "phone": "123-456-7890",
+      "education": [{"institution": "University of Borcelle", "degree": "Bachelor of Science in Computer Science", "end": "2021-05"}],
+      "experience": [
+        {"company": "Thynk Unlimited", "role": "AI Prompt Engineer", "start": "2023-06", "end": "present"},
+        {"company": "Keithston and Partners", "role": "Junior AI Developer", "start": "2021-08", "end": "2023-05"}
+      ],
+      "projects": [],
+      "skills": ["Prompt design techniques", "AI model testing", "Natural language understanding", "Prompt optimization", "Algorithm basics", "AI ethics fundamentals"],
+      "certifications": ["AI Fundamentals Certificate", "Natural Language Processing Certificate"]
+    },
+    {
+      "file": "sample_resumes/resume5.pdf",
+      "layout": "multi_column",
+      "name": "Karen Le",
+      "email": "hello@reallygreatsite.com",
+      "phone": "+123-456-7890",
+      "education": [{"institution": "Technology University", "degree": "Information Technology", "end": "2025"}],
+      "experience": [
+        {"company": "ABC Technology Co.", "role": "Software Engineer", "start": "2022", "end": "2026"},
+        {"company": "XYZ Software Solutions", "role": "Software Engineer Intern", "start": "2022-02", "end": "2022-05"}
+      ],
+      "projects": [
+        {"title": "Hotel Booking Website", "technologies": ["Next.js", "PostgreSQL", "Node.js"]},
+        {"title": "E-Commerce Platform", "technologies": ["React", "Node.js", "Express", "MongoDB"]}
+      ],
+      "skills": ["HTML/CSS", "Python", "JavaScript", "React.js", "Node.js", "Github"],
+      "certifications": ["AWS Certified Developer - Associate", "Microsoft Azure Developer Associate (AZ-204)", "CompTIA Security+", "Google Cloud Professional Cloud Developer"]
+    },
+    {
+      "file": "sample_resumes/resume6.pdf",
+      "layout": "single_column_scrambled_text_order",
+      "name": "Daniel Woodley",
+      "email": "hello@reallygreatsite.com",
+      "phone": "",
+      "education": [{"institution": "University of Eastborough", "degree": "UX Industrial Basics and General Application", "end": "2016"}],
+      "experience": [
+        {"company": "Creative Lab Company", "role": "Instant Chartz App, Morcelle Program", "start": "2021-01", "end": "present"},
+        {"company": "Bold Design Studio", "role": "System UX Engineer, XarrowAI Industries", "start": "2018-06", "end": "2020-12"}
+      ],
+      "projects": [],
+      "skills": ["User Research", "Visual Design", "Interaction Design", "Information Architecture", "Usability Testing", "Wireframe Prototyping", "Journey Mapping", "Responsive Design", "Design Thinking"],
+      "certifications": ["Professional Design Engineer (PDE) License", "Project Management Tech (PMT)", "Information Architecture Certification (IAC)"]
+    },
+    {
+      "file": "sample_resumes/resume7.pdf",
+      "layout": "multi_column",
+      "name": "Gabriel Shelby",
+      "email": "hello@reallygreatsite.com",
+      "phone": "123-456-7890",
+      "education": [{"institution": "University of Rimberio", "degree": "Bachelor of Science, Computer Science", "end": "2013-04"}],
+      "experience": [
+        {"company": "Fauget Company", "role": "Software Engineer", "start": "2016-01", "end": "present"},
+        {"company": "Paucek Company", "role": "Software Engineer", "start": "2013-04", "end": "2016-01"},
+        {"company": "Borcelle Company", "role": "Software Engineer Intern", "start": "2012-04", "end": "2013-03"}
+      ],
+      "projects": [],
+      "skills": ["Programming Software", "Data warehousing and analytics", "Software debugging", "Website Development", "Performance and scalability optimisation"],
+      "certifications": []
+    },
+    {
+      "file": "sample_resumes/resume8.pdf",
+      "layout": "multi_column",
+      "name": "Dani Martinez",
+      "email": "hello@reallygreatsite.com",
+      "phone": "+123-456-7890",
+      "education": [{"institution": "Fauget University", "degree": "Bachelor of Science in Information Technology", "end": "2050-06"}],
+      "experience": [
+        {"company": "Giggling Platypus Co.", "role": "Software Engineer | Cloud", "start": "2052-06", "end": "present"},
+        {"company": "Thynk Unlimited", "role": "Software Engineer | Data", "start": "2050-08", "end": "2052-04"}
+      ],
+      "projects": [],
+      "skills": ["Programming Languages and Algorithms", "Software Development Practices"],
+      "certifications": ["Cloud Certified", "Software Lifecycle Professional", "Scrum Developer"]
+    }
+  ]
+}

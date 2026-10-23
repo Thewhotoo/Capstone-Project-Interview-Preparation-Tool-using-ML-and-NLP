@@ -143,7 +143,8 @@ def scorer_qwen():
     def score(r):
         user = f"QUESTION: {r['question']}\nREFERENCE ANSWER: {r['instructor_answer']}\nSTUDENT ANSWER: {r['student_answer']}"
         try:
-            s = float(llm._chat(_QWEN_PROMPT, user, 20).get("score"))
+            from fact_checker import SCORE_SCHEMA
+            s = float(llm._chat(_QWEN_PROMPT, user, 20, schema=SCORE_SCHEMA).get("score"))
         except Exception:
             return None
         return max(0.0, min(5.0, s)) / 5.0
@@ -153,15 +154,24 @@ def scorer_qwen():
 SCORERS = {"tech_grader": scorer_tech_grader, "coverage_nli": scorer_coverage_nli, "qwen": scorer_qwen}
 
 
-def run_scorer(name: str):
+def run_scorer(name: str, model: str | None = None, per_question: int | None = None):
+    """`score llm <model> [per_question]` grades with any Ollama model (cache per model)."""
     rows = sample(load_rows())
+    if per_question:
+        seen = defaultdict(int)
+        rows = [r for r in rows if (seen.__setitem__(r["question"], seen[r["question"]] + 1) or seen[r["question"]]) <= per_question]
     CACHE.mkdir(parents=True, exist_ok=True)
-    path = CACHE / f"{name}.json"
+    if name == "llm":
+        import os
+        os.environ["CAP_FACT_CHECK_MODEL"] = model
+        name_for_cache, score = f"llm_{model.replace(':', '_')}", scorer_qwen()
+    else:
+        name_for_cache, score = name, SCORERS[name]()
+    path = CACHE / f"{name_for_cache}.json"
     done = json.loads(path.read_text()) if path.exists() else {}
-    score = SCORERS[name]()
     start = time.time()
     for i, r in enumerate(rows, 1):
-        if r["id"] in done:
+        if done.get(r["id"]) is not None:     # failed calls (None) are retried on the next run
             continue
         done[r["id"]] = score(r)
         if i % 25 == 0:
@@ -236,7 +246,8 @@ def report():
     h1 = [r["score_grader_1"] for r in picked]; h2 = [r["score_grader_2"] for r in picked]
     print(f"| human grader 1 vs grader 2 (sample) | {len(picked)} | {pearson(h1, h2):.3f} | {spearman(h1, h2):.3f} | "
           f"{rmse(h1, h2):.3f} | - | {qwk(h1, h2):.3f} |")
-    for name in SCORERS:
+    names = list(SCORERS) + sorted(p.stem for p in CACHE.glob("llm_*.json"))
+    for name in names:
         path = CACHE / f"{name}.json"
         if not path.exists():
             continue
@@ -255,6 +266,8 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "report"
     if cmd == "fetch":
         fetch()
+    elif cmd == "score" and sys.argv[2] == "llm":
+        run_scorer("llm", model=sys.argv[3], per_question=int(sys.argv[4]) if len(sys.argv) > 4 else None)
     elif cmd == "score":
         run_scorer(sys.argv[2])
     else:

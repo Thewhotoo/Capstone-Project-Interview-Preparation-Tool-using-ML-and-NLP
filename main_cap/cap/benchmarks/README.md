@@ -140,3 +140,22 @@ Mohler: same-model annotators share judgment, so treat these labels as consisten
 
 Our blend ranks answers to the same question better than the LLM alone; the LLM alone is better calibrated
 across questions. The blend weight was not re-tuned on this set (it is a test set).
+
+## Model choice and final configuration (2026-10-24)
+
+Small models that fit a 4 GB laptop GPU, on the same 248 Mohler answers (Pearson vs the experts' average;
+two experts agree at 0.59): **qwen3:4b 0.73**, phi3.5 0.64, qwen2.5:3b 0.54–0.58, gemma2:2b 0.44.
+Grading prompts use a JSON schema (qwen3 otherwise echoes the question and runs out of tokens).
+
+Tuned on `evaluator/dev_set.json` only (48 answers): qwen3:4b beats qwen2.5:3b in every blend design;
+"reason first" / checklist prompts and an asymmetric guard gave no reliable gain; LLM blend weight 0.6
+(same ranking as 0.5, better calibration). Then each test set was run once:
+
+| test set | old: v2 + qwen2.5:3b, w 0.5 | **new: v2 + qwen3:4b, w 0.6** | qwen3:4b alone |
+|---|---|---|---|
+| stress (54) pairwise / QWK | 85% / 0.66 | **88% / 0.73** | – |
+| holdout (40) pairwise / QWK | 79% / 0.66 | **84% / 0.69** | – |
+| résumé, 2 annotators (72) pairwise / Spearman / QWK | 83% / 0.77 / 0.70 | **89% / 0.83 / 0.77** | 85% / 0.84 / 0.83 |
+
+qwen3:4b only partly fits a 4 GB GPU (~28% runs on CPU, ~0.9 GB system RAM, ~3.5 s per call); it runs in
+the background re-grade, and `fact_checker` falls back to qwen2.5:3b when qwen3 isn't installed.

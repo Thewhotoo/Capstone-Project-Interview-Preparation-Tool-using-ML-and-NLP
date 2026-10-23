@@ -36,7 +36,7 @@ class _ScriptedChecker(OllamaFactChecker):
         super().__init__(contradiction_fn=lambda claim, correction: contradiction[claim])
         self._claims = claims
 
-    def _chat(self, system, user, max_tokens):
+    def _chat(self, system, user, max_tokens, schema=None):
         return {"false_claims": self._claims}
 
 

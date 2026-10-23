@@ -24,9 +24,32 @@ def _ev(flags=()):
 def test_severity_levels():
     assert FactCheckResult(status="unavailable").severity == "none"
     assert FactCheckResult(status="checked").severity == "none"
-    assert FactCheckResult(status="checked", suspected_claims=({"claim": "x"},)).severity == "suspected"
+    # unconfirmed flags are not penalised (they hit correct answers as often as wrong ones)
+    assert FactCheckResult(status="checked", suspected_claims=({"claim": "x"},)).severity == "none"
     both = FactCheckResult(status="checked", false_claims=({"claim": "x"},), suspected_claims=({"claim": "x"},))
     assert both.severity == "confirmed"
+
+
+class _ScriptedChecker(OllamaFactChecker):
+    """Real confirmation logic; the LLM's flagged claims are scripted."""
+    def __init__(self, claims, contradiction):
+        super().__init__(contradiction_fn=lambda claim, correction: contradiction[claim])
+        self._claims = claims
+
+    def _chat(self, system, user, max_tokens):
+        return {"false_claims": self._claims}
+
+
+def test_only_contradicted_general_claims_are_confirmed():
+    claims = [
+        {"claim": "bcrypt is reversible with the server key", "correction": "bcrypt is a one-way hash"},
+        {"claim": "Normalise logs into one schema", "correction": "Normalise logs into a common schema"},
+        {"claim": "I didn't trust Gemini to decide", "correction": "I trusted Gemini to decide"},
+    ]
+    checker = _ScriptedChecker(claims, {claims[0]["claim"]: 0.97, claims[1]["claim"]: 0.01, claims[2]["claim"]: 0.99})
+    result = checker.check("Why bcrypt?", "Because bcrypt is reversible with the server key so we could email passwords.")
+    assert [c["claim"] for c in result.false_claims] == [claims[0]["claim"]]   # paraphrase + personal flip dropped
+    assert len(result.suspected_claims) == 3 and result.severity == "confirmed"
 
 
 def test_confirmed_error_penalised_more_than_suspected():

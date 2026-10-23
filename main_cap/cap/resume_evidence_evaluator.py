@@ -414,7 +414,7 @@ def _compose_overall_v2(ev: EvidenceBreakdown) -> float:
         overall *= 0.6
     if "contradicts_prior_answer" in ev.flags:
         overall *= 0.85
-    # optional LLM fact check: confirmed = flagged by both passes, suspected = first pass only
+    # optional LLM fact check: confirmed = LLM-flagged claim that its correction contradicts (NLI)
     if "factual_error_confirmed" in ev.flags:
         overall *= FACT_CONFIRMED_FACTOR
     elif "factual_error_suspected" in ev.flags:
@@ -425,7 +425,7 @@ def _compose_overall_v2(ev: EvidenceBreakdown) -> float:
 
 
 FACT_CONFIRMED_FACTOR = 0.45
-FACT_SUSPECTED_FACTOR = 0.80
+FACT_SUSPECTED_FACTOR = 0.80   # fact_checker no longer reports 'suspected' (unconfirmed flags aren't penalised)
 LLM_BLEND_WEIGHT = 0.5   # share of the optional local-LLM rubric grade in the final score
 
 

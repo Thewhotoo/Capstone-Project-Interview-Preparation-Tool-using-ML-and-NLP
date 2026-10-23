@@ -96,3 +96,4 @@ docs/internal/Team187_LLD_Implementation.pdf
 
 # --- benchmark gold built from real people's resumes (PII) ---
 main_cap/cap/benchmarks/**/private/
+main_cap/cap/benchmarks/external/data/

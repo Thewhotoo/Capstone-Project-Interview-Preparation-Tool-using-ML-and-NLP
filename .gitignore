@@ -92,3 +92,4 @@ integration_checks/data/overall_v5_1088/
 
 # --- benchmark gold built from real people's resumes (PII) ---
 main_cap/cap/benchmarks/**/private/
+main_cap/cap/benchmarks/external/data/

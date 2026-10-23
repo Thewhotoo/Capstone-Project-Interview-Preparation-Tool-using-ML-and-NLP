@@ -44,13 +44,25 @@ from question_specification import (  # noqa: E402
 
 STRESS_SET = HERE / "stress_set.json"
 HOLDOUT_SET = HERE / "stress_set_holdout.json"
+# Realistic answers on the real benchmark resumes' projects (private: real people's projects),
+# labelled by two independent annotators: claude_a in the file, claude_b in LABELS_B.
+RESUME_SET = HERE / "private" / "resume_set_v1.json"
+RESUME_SET_LABELS_B = HERE / "private" / "resume_set_v1_labels_b.json"
 HUMAN_ITEMS = HERE / "private" / "human_items.jsonl"
 
 
 # ------------------------------------------------------------------ items
 
 def load_stress_items() -> list[dict]:
-    return _load_contrastive(STRESS_SET, "stress(claude)") + _load_contrastive(HOLDOUT_SET, "holdout(claude)")
+    items = _load_contrastive(STRESS_SET, "stress(claude)") + _load_contrastive(HOLDOUT_SET, "holdout(claude)")
+    resume_items = _load_contrastive(RESUME_SET, "resume-real(2 annotators)")
+    if resume_items and RESUME_SET_LABELS_B.exists():
+        labels_b = json.loads(RESUME_SET_LABELS_B.read_text(encoding="utf-8"))
+        for it in resume_items:
+            if it["item_id"] in labels_b:
+                it["label_a"], it["label_b"] = it["label"], labels_b[it["item_id"]]
+                it["label"] = (it["label_a"] + it["label_b"]) / 2
+    return items + resume_items
 
 
 def _load_contrastive(path: Path, source: str) -> list[dict]:
@@ -205,8 +217,17 @@ def report(items, scores_by_ev: dict, by_kind: bool) -> str:
     if len(items) < 5:
         return f"only {len(items)} labelled items - label more before reading any metric"
     labels = [it["label"] for it in items]
+    both = [it for it in items if "label_b" in it]
+    if both:
+        a, b = [it["label_a"] for it in both], [it["label_b"] for it in both]
+        exact = sum(x == y for x, y in zip(a, b)) / len(both)
+        within1 = sum(abs(x - y) <= 1 for x, y in zip(a, b)) / len(both)
+        agree = (f"annotator A vs B: n={len(both)} spearman {spearman(a, b):+.2f} qwk {qwk(a, b):.2f} "
+                 f"exact {exact:.0%} within-1 {within1:.0%}   (label = mean of A and B)\n")
+    else:
+        agree = ""
     lengths = [len(it["answer"].split()) for it in items]
-    out = [f"n={len(items)}  questions={len({it['question_id'] for it in items})}  "
+    out = [agree + f"n={len(items)}  questions={len({it['question_id'] for it in items})}  "
            f"label-vs-length rho={spearman(lengths, labels):+.2f}", "",
            "| evaluator | pairwise | spearman | qwk | mae (tiers) | len_rho |", "|---|---|---|---|---|---|"]
     for name, scores in scores_by_ev.items():

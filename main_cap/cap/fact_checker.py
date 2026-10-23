@@ -26,6 +26,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
@@ -50,19 +51,34 @@ or how long something took) - those cannot be checked.
 Reply with JSON only: {"false_claims": [{"claim": "...", "correction": "..."}]}
 Use {"false_claims": []} when nothing is clearly false."""
 
-# Second pass, one flagged claim at a time: small models are noticeably more reliable on a
-# single focused yes/no judgment than on open-ended extraction, and the first pass also
-# flags paraphrases ("one schema" vs "a common schema") and personal statements.
-_VERIFY_PROMPT = """You check ONE statement from a job candidate's interview answer.
+# Confirmation (second pass): a flagged claim counts only if an NLI model says the LLM's
+# "correction" CONTRADICTS the claim, and the claim isn't a personal statement "corrected" with
+# another personal statement ("I didn't trust Gemini" -> "I trusted Gemini"). Measured on the
+# benchmark (recorded qwen2.5:3b outputs): same ranking accuracy as asking the LLM itself to
+# verify, but false alarms on correct answers fell from 10/22 to 0/22 (original set) and 4/15 to
+# 3/15 (held-out). The LLM's own yes/no verdict was unreliable - it called several wrong claims
+# "true" - and verifying its restatement of a claim was worse still (it inverted facts).
+CONFIRM_CONTRADICTION = 0.5
+_NLI_MODEL = "cross-encoder/nli-deberta-v3-small"   # labels: contradiction, entailment, neutral
+_PERSONAL = re.compile(r"^\s*(i|we|my|our|the candidate)\b", re.IGNORECASE)
+_nli = None
 
-Classify it:
-- "false": it states something about how a technology, protocol, algorithm or tool works in general, \
-and that is clearly and objectively wrong.
-- "true": it is correct, or it is basically the same as the suggested correction (a paraphrase).
-- "personal": it only describes the candidate's own project, choices, opinions or results.
-- "unsure": anything else.
 
-Reply with JSON only: {"verdict": "false" | "true" | "personal" | "unsure"}"""
+def _default_contradiction(claim: str, correction: str) -> float:
+    global _nli
+    if _nli is None:
+        from sentence_transformers import CrossEncoder
+        _nli = CrossEncoder(_NLI_MODEL)
+    import numpy as np
+    logits = _nli.predict([(claim, correction)])[0]
+    probs = np.exp(logits - logits.max())
+    return float(probs[0] / probs.sum())
+
+
+def _is_personal_flip(claim: str, correction: str) -> bool:
+    return bool(_PERSONAL.match(claim)) and bool(_PERSONAL.match(correction))
+
+
 # Direct rubric grade (same 0-4 rubric as benchmarks/evaluator/label_answers.py). Blended 50/50 with
 # the evidence score: on the held-out benchmark the blend ranked answers better (82%) than either the
 # evidence scorer + fact check (80%) or this grade alone (78%) — their errors are complementary.
@@ -81,8 +97,8 @@ _COLD_START_TIMEOUT = 90.0   # first call loads the model into VRAM (~20-40 s on
 @dataclass(frozen=True)
 class FactCheckResult:
     status: str                                   # "checked" | "unavailable"
-    false_claims: tuple[dict, ...] = field(default_factory=tuple)      # confirmed by the second pass
-    suspected_claims: tuple[dict, ...] = field(default_factory=tuple)  # flagged by the first pass only
+    false_claims: tuple[dict, ...] = field(default_factory=tuple)      # confirmed (correction contradicts the claim)
+    suspected_claims: tuple[dict, ...] = field(default_factory=tuple)  # everything the LLM flagged (logging only)
     model: str = ""
     detail: str = ""                              # why unavailable, for logs
 
@@ -92,16 +108,15 @@ class FactCheckResult:
 
     @property
     def severity(self) -> str:
-        """'confirmed' | 'suspected' | 'none' (also 'none' when unavailable)."""
-        if self.status != "checked":
-            return "none"
-        if self.false_claims:
-            return "confirmed"
-        return "suspected" if self.suspected_claims else "none"
+        """'confirmed' | 'none' (also 'none' when unavailable). Unconfirmed flags are
+        not penalised: on the benchmark they hit correct answers as often as wrong ones."""
+        return "confirmed" if self.status == "checked" and self.false_claims else "none"
 
 
 class OllamaFactChecker:
-    def __init__(self, model: str | None = None, base_url: str | None = None, timeout: float | None = None):
+    def __init__(self, model: str | None = None, base_url: str | None = None, timeout: float | None = None,
+                 contradiction_fn=None):
+        self.contradiction_fn = contradiction_fn or _default_contradiction
         self.model = model or os.environ.get("CAP_FACT_CHECK_MODEL", DEFAULT_MODEL)
         self.base_url = (base_url or os.environ.get("CAP_OLLAMA_URL", DEFAULT_URL)).rstrip("/")
         self.timeout = timeout if timeout is not None else float(os.environ.get("CAP_FACT_CHECK_TIMEOUT", "20"))
@@ -148,14 +163,9 @@ class OllamaFactChecker:
                 if isinstance(item, dict) and str(item.get("claim", "")).strip():
                     candidates.append({"claim": str(item["claim"]).strip()[:300],
                                        "correction": str(item.get("correction", "")).strip()[:300]})
-            confirmed = []
-            for c in candidates[:3]:
-                # Verify the QUOTED claim. (Verifying the model's own restatement was tried and
-                # failed badly with a 3B model: it often restated a correct claim as its negation.)
-                verdict = self._chat(_VERIFY_PROMPT,
-                                     f"STATEMENT: {c['claim']}\nSUGGESTED CORRECTION: {c['correction']}", 20)
-                if str(verdict.get("verdict", "")).strip().lower() == "false":
-                    confirmed.append(c)
+            confirmed = [c for c in candidates[:3]
+                         if not _is_personal_flip(c["claim"], c["correction"])
+                         and self.contradiction_fn(c["claim"], c["correction"]) >= CONFIRM_CONTRADICTION]
         except (urllib.error.URLError, TimeoutError, OSError, KeyError, ValueError) as exc:
             logger.info("fact check unavailable: %s", exc)
             return FactCheckResult(status="unavailable", model=self.model, detail=f"{type(exc).__name__}: {exc}")

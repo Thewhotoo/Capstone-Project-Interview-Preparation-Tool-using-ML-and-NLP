@@ -5610,6 +5610,24 @@
             return rows;
         }
 
+        // Overlays end-of-session scores onto the live turn history. Evaluated turns
+        // and /end's evaluations line up one-to-one, in order; on any mismatch the
+        // live scores are kept. Only score fields change -- the coaching note,
+        // improved answer etc. saved with each turn stay as they were.
+        function rdMergeRegrades(turnHistory, evaluations) {
+            const evaluated = turnHistory.filter(t => t.evaluation).length;
+            if (evaluated !== evaluations.length) return turnHistory;
+            let i = 0;
+            return turnHistory.map((t) => {
+                if (!t.evaluation) return t;
+                const e = evaluations[i++];
+                if (!e || e.overall_score === t.evaluation.overall_score) return t;
+                return { ...t, evaluation: { ...t.evaluation,
+                    overall_score: e.overall_score, grade: e.grade, confidence: e.confidence,
+                    confidence_rationale: e.confidence_rationale, reasoning: e.reasoning, llm_regraded: true } };
+            });
+        }
+
         function rdBuildReportFromV2(endData, turnHistory) {
             // The backend's echo of the integrity record is authoritative;
             // fall back to the local one if /end didn't return it.
@@ -5617,6 +5635,11 @@
             // A terminated session leaves the question on screen unanswered --
             // it was never scored, so it must not appear as a 0% turn.
             if (integrity.terminated) turnHistory = turnHistory.filter(t => t.answer != null);
+            // Background LLM re-grades (server flag CAP_FACT_CHECK): /end returns the
+            // final per-turn evaluations, which may differ from the live ones.
+            if (endData && endData.regraded_turns && Array.isArray(endData.evaluations)) {
+                turnHistory = rdMergeRegrades(turnHistory, endData.evaluations);
+            }
 
             const evaluations = turnHistory.map(t => t.evaluation).filter(Boolean);
             const uniq = (arr) => Array.from(new Set(arr));

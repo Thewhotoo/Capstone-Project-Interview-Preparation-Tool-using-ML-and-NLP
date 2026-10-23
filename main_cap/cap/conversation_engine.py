@@ -41,7 +41,11 @@ change what happens next.
 
 from __future__ import annotations
 
+import concurrent.futures
 import logging
+import os
+import threading
+import time
 import uuid as _uuid
 
 import question_realizer
@@ -85,6 +89,98 @@ _cache = LocalCache()
 RESUME_DISCUSSION_QUESTION_BUDGET = 10
 
 logger = logging.getLogger(__name__)
+
+# ── Background LLM re-grade (CAP_FACT_CHECK=1). The live flow keeps the fast,
+# deterministic evidence score (the interview needs it at once); each real
+# answer is also queued for a slower re-grade with the local-LLM fact check +
+# rubric grade (resume_evidence_evaluator + fact_checker, ~5 s on a laptop GPU)
+# while the candidate reads and answers the next question. ONE worker, so the
+# GPU/RAM only ever runs one LLM call at a time; when Ollama is down the
+# re-grade just equals the fast score. Off by default: nothing is queued.
+#
+# A finished re-grade is written to the live store (`regrade:<id>:<turn index>`),
+# not kept on the session, so end_conversation finds it whichever server ends
+# the interview and after a restart. Futures are kept only so the process that
+# queued them can wait for them at the end.
+REGRADE_WAIT_SECONDS = float(os.environ.get("CAP_REGRADE_WAIT_SECONDS", "30"))
+_regrade_pool: concurrent.futures.ThreadPoolExecutor | None = None
+_regrader = None
+_regrade_futures: dict[tuple[str, int], concurrent.futures.Future] = {}
+_regrade_futures_lock = threading.Lock()
+
+
+def _llm_regrade_enabled() -> bool:
+    return os.environ.get("CAP_FACT_CHECK", "0").strip().lower() in ("1", "true", "on")
+
+
+def _get_regrader():
+    """(pool, evaluator) for background re-grades, created on first use."""
+    global _regrade_pool, _regrader
+    if _regrader is None:
+        from fact_checker import OllamaFactChecker
+        from resume_evidence_evaluator import ResumeEvidenceEvaluator
+        _regrader = ResumeEvidenceEvaluator(scoring="v2", fact_checker=OllamaFactChecker(),
+                                            name="resume-evidence-evaluator-v2+llm")
+        _regrade_pool = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="llm-regrade")
+    return _regrade_pool, _regrader
+
+
+def _regrade_key(conversation_id: str, index: int) -> str:
+    return f"regrade:{conversation_id}:{index}"
+
+
+def _run_regrade(regrader, request, conversation_id: str, index: int) -> None:
+    # through evaluation_engine.evaluate, like the live grade: same non-answer gate,
+    # so a re-grade can never escape that cap
+    result = evaluate(regrader, request)
+    get_store().put(_regrade_key(conversation_id, index), result.model_dump(mode="json"))
+
+
+def _queue_regrade(conversation_id: str, session: dict, index: int, request, result) -> None:
+    from resume_evidence_evaluator import ResumeEvidenceEvaluator
+    evaluator = session["evaluator"]
+    # Only re-grade what the same scoring family produced (scores must stay comparable),
+    # and never non-answers (capped at 0.10; the LLM would only be skipped anyway).
+    if (not _llm_regrade_enabled() or not isinstance(evaluator, ResumeEvidenceEvaluator)
+            or evaluator.scoring != "v2" or result.overall_score <= 0.10):
+        return
+    try:
+        pool, regrader = _get_regrader()
+        future = pool.submit(_run_regrade, regrader, request, conversation_id, index)
+        with _regrade_futures_lock:
+            _regrade_futures[(conversation_id, index)] = future
+    except Exception:  # optional enhancement: never break the interview
+        logger.warning("could not queue LLM re-grade", exc_info=True)
+
+
+def _final_results(conversation_id: str, results: list, wait: bool) -> tuple[list, int]:
+    """Ledger results with finished re-grades swapped in. With `wait`, gives this
+    process's pending re-grades up to REGRADE_WAIT_SECONDS in total; anything
+    unfinished keeps its fast score. Returns (results, number_regraded)."""
+    results = list(results)
+    with _regrade_futures_lock:
+        mine = {i: _regrade_futures.pop((conversation_id, i)) for i in range(len(results))
+                if (conversation_id, i) in _regrade_futures}
+    deadline = time.monotonic() + (REGRADE_WAIT_SECONDS if wait else 0.0)
+    for future in mine.values():
+        try:
+            future.result(timeout=max(0.0, deadline - time.monotonic()))
+        except Exception:  # timeout or a failed re-grade: keep the fast result
+            future.cancel()
+    store = get_store()
+    regraded = 0
+    for index in range(len(results)):
+        stored = store.get(_regrade_key(conversation_id, index))
+        if stored is None:
+            continue
+        store.delete(_regrade_key(conversation_id, index))
+        try:
+            results[index] = EvaluationResult.model_validate(stored)
+            regraded += 1
+        except Exception:
+            logger.warning("ignoring an unreadable LLM re-grade", exc_info=True)
+    return results, regraded
+
 
 # Session-integrity rules (full screen, no tab/window switching, no
 # copy/cut/paste) are enforced in the browser -- a web page can detect a
@@ -359,6 +455,7 @@ def _advance(conversation_id: str, session: dict, answer: str) -> tuple[dict, in
     request = build_request(current_question, answer, memory, planner, answer_history)
     result = evaluate(session_evaluator, request)
     ledger.append(result)
+    _queue_regrade(conversation_id, session, len(ledger) - 1, request, result)
     answer_history[spec_id] = answer_history.get(spec_id, ()) + (answer,)
 
     # Tech-consistency flag (informational only -- see tech_consistency_flag.py):
@@ -471,7 +568,8 @@ def _result_payload(result) -> dict:
     }
 
 
-def end_conversation(conversation_id: str, integrity: dict | None = None) -> tuple[dict, int]:
+def end_conversation(conversation_id: str, integrity: dict | None = None,
+                     wait_for_regrades: bool = False) -> tuple[dict, int]:
     """End a conversation and return a structured summary: Chapter 13's
     evaluation-free memory contents, PLUS (Phase 3) the full Evaluation
     Ledger — kept as two clearly separate sections of the payload, never
@@ -491,6 +589,9 @@ def end_conversation(conversation_id: str, integrity: dict | None = None) -> tup
 
     memory: ConversationMemory = session["memory"]
     ledger: EvaluationLedger = session["evaluation_ledger"]
+    # `wait_for_regrades`: the /end route waits briefly for background LLM re-grades;
+    # abandonment clean-up does not (nobody is waiting for that report).
+    results, regraded = _final_results(conversation_id, ledger.all(), wait_for_regrades)
 
     summary = {
         "status": "success",
@@ -510,7 +611,8 @@ def end_conversation(conversation_id: str, integrity: dict | None = None) -> tup
             }
             for t in memory.timeline
         ],
-        "evaluations": [_result_payload(r) for r in ledger.all()],
+        "evaluations": [_result_payload(r) for r in results],
+        "regraded_turns": regraded,
         "integrity": sanitize_integrity(integrity),
     }
     # Data-driven end-of-session feedback (interview_feedback.py): pure

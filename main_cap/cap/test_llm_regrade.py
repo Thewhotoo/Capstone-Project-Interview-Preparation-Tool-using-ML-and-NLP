@@ -127,3 +127,41 @@ def test_saved_turns_untouched_on_count_mismatch():
     turn = SimpleNamespace(turn_number=1, overall_score=0.5, grade="adequate", evaluation={})
     _apply_regrades(SimpleNamespace(turns=[turn]), [{"overall_score": 0.9}, {"overall_score": 0.9}])
     assert turn.overall_score == 0.5
+
+
+# ── CAP_FACT_CHECK=auto (the default): re-grade only when Ollama is actually there ──
+
+def _auto(monkeypatch, available: bool):
+    import fact_checker
+    calls = {"n": 0}
+
+    def fake_available(self, timeout=2.0):
+        calls["n"] += 1
+        return available
+    monkeypatch.setattr(fact_checker.OllamaFactChecker, "available", fake_available)
+    monkeypatch.setitem(ce._availability, "checked_at", None)
+    monkeypatch.setenv("CAP_FACT_CHECK", "auto")
+    return calls
+
+
+def test_auto_mode_off_when_ollama_missing(monkeypatch):
+    calls = _auto(monkeypatch, available=False)
+    assert ce._llm_regrade_enabled() is False
+    assert ce._llm_regrade_enabled() is False
+    assert calls["n"] == 1                      # cached: no HTTP check per answer
+
+
+def test_auto_mode_on_when_ollama_ready(monkeypatch):
+    _auto(monkeypatch, available=True)
+    assert ce._llm_regrade_enabled() is True
+
+
+def test_explicit_flag_wins_over_auto(monkeypatch):
+    calls = _auto(monkeypatch, available=True)
+    monkeypatch.setenv("CAP_FACT_CHECK", "0")
+    assert ce._llm_regrade_enabled() is False and calls["n"] == 0
+
+
+def test_availability_check_handles_unreachable_server():
+    from fact_checker import OllamaFactChecker
+    assert OllamaFactChecker(base_url="http://127.0.0.1:9").available(timeout=0.5) is False

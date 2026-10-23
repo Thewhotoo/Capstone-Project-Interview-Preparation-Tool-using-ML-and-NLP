@@ -96,7 +96,7 @@ logger = logging.getLogger(__name__)
 # rubric grade (resume_evidence_evaluator + fact_checker, ~5 s on a laptop GPU)
 # while the candidate reads and answers the next question. ONE worker, so the
 # GPU/RAM only ever runs one LLM call at a time; when Ollama is down the
-# re-grade just equals the fast score. Off by default: nothing is queued.
+# re-grade just equals the fast score. CAP_FACT_CHECK (below) decides whether it runs.
 #
 # A finished re-grade is written to the live store (`regrade:<id>:<turn index>`),
 # not kept on the session, so end_conversation finds it whichever server ends
@@ -109,8 +109,29 @@ _regrade_futures: dict[tuple[str, int], concurrent.futures.Future] = {}
 _regrade_futures_lock = threading.Lock()
 
 
+# CAP_FACT_CHECK: "auto" (default) re-grades only when the local Ollama server is up and has
+# the model -- checked at most every AVAILABILITY_RECHECK_SECONDS, so a machine without Ollama
+# does no extra work at all; "1" always queues (useful for testing the fallback); "0" never.
+AVAILABILITY_RECHECK_SECONDS = 300.0
+_availability = {"checked_at": None, "available": False}
+
+
 def _llm_regrade_enabled() -> bool:
-    return os.environ.get("CAP_FACT_CHECK", "0").strip().lower() in ("1", "true", "on")
+    mode = os.environ.get("CAP_FACT_CHECK", "auto").strip().lower()
+    if mode in ("1", "true", "on"):
+        return True
+    if mode != "auto":
+        return False
+    now = time.monotonic()
+    if _availability["checked_at"] is None or now - _availability["checked_at"] > AVAILABILITY_RECHECK_SECONDS:
+        try:
+            from fact_checker import OllamaFactChecker
+            _availability["available"] = OllamaFactChecker().available()
+        except Exception:
+            _availability["available"] = False
+        _availability["checked_at"] = now
+        logger.info("LLM re-grade %s (Ollama check)", "on" if _availability["available"] else "off")
+    return _availability["available"]
 
 
 def _get_regrader():

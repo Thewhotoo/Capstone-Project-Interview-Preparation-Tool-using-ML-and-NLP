@@ -1082,7 +1082,7 @@ def resume_discussion_v2_end():
             return jsonify({"error": "Invalid or expired conversation"}), 404
 
         result, status = conversation_engine.end_conversation(
-            conversation_id, integrity=data.get("integrity"),
+            conversation_id, integrity=data.get("integrity"), wait_for_regrades=True,
         )
         if status == 200:
             session_history.finish_resume_discussion(conversation_id, result, data.get("attention_metrics"))

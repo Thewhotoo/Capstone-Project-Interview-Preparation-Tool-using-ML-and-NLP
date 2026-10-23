@@ -41,8 +41,11 @@ change what happens next.
 
 from __future__ import annotations
 
+import concurrent.futures
 import logging
+import os
 import re
+import time
 import uuid as _uuid
 
 import question_realizer
@@ -93,6 +96,68 @@ def _answer_warrants_followup(result) -> bool:
 
 
 logger = logging.getLogger(__name__)
+
+# ── Background LLM re-grade (CAP_FACT_CHECK=1). The live flow keeps the fast,
+# deterministic evidence score (the follow-up decision above needs it at once);
+# each real answer is also queued for a slower re-grade with the local-LLM fact
+# check + rubric grade (resume_evidence_evaluator + fact_checker, ~5 s on a laptop
+# GPU) while the candidate reads and answers the next question. end_conversation
+# swaps finished re-grades into the report. ONE worker, so the GPU/RAM only ever
+# runs one LLM call at a time; when Ollama is down the re-grade just equals the
+# fast score. Off by default: nothing is queued and the flow is unchanged.
+REGRADE_WAIT_SECONDS = float(os.environ.get("CAP_REGRADE_WAIT_SECONDS", "30"))
+_regrade_pool: concurrent.futures.ThreadPoolExecutor | None = None
+_regrader = None
+
+
+def _llm_regrade_enabled() -> bool:
+    return os.environ.get("CAP_FACT_CHECK", "0").strip().lower() in ("1", "true", "on")
+
+
+def _get_regrader():
+    """(pool, evaluator) for background re-grades, created on first use."""
+    global _regrade_pool, _regrader
+    if _regrader is None:
+        from fact_checker import OllamaFactChecker
+        from resume_evidence_evaluator import ResumeEvidenceEvaluator
+        _regrader = ResumeEvidenceEvaluator(scoring="v2", fact_checker=OllamaFactChecker(),
+                                            name="resume-evidence-evaluator-v2+llm")
+        _regrade_pool = concurrent.futures.ThreadPoolExecutor(max_workers=1, thread_name_prefix="llm-regrade")
+    return _regrade_pool, _regrader
+
+
+def _queue_regrade(session: dict, ledger_index: int, request, result) -> None:
+    from resume_evidence_evaluator import ResumeEvidenceEvaluator
+    evaluator = session["evaluator"]
+    # Only re-grade what the same scoring family produced (scores must stay comparable),
+    # and never non-answers (capped at 0.10; the LLM would only be skipped anyway).
+    if (not _llm_regrade_enabled() or not isinstance(evaluator, ResumeEvidenceEvaluator)
+            or evaluator.scoring != "v2" or result.overall_score <= 0.10):
+        return
+    try:
+        pool, regrader = _get_regrader()
+        # through evaluation_engine.evaluate, like the live grade: same non-answer gate and
+        # engagement attenuator, so a re-grade can never escape those caps
+        session["regrade_futures"][ledger_index] = pool.submit(evaluate, regrader, request)
+    except Exception:  # optional enhancement: never break the interview
+        logger.warning("could not queue LLM re-grade", exc_info=True)
+
+
+def _final_results(session: dict, wait: bool) -> tuple[list, int]:
+    """Ledger results with finished re-grades swapped in. With `wait`, gives pending
+    re-grades up to REGRADE_WAIT_SECONDS in total; anything unfinished keeps its fast
+    score. Returns (results, number_regraded)."""
+    results = list(session["evaluation_ledger"].all())
+    futures: dict = session.get("regrade_futures") or {}
+    deadline = time.monotonic() + (REGRADE_WAIT_SECONDS if wait else 0.0)
+    regraded = 0
+    for index, future in sorted(futures.items()):
+        try:
+            results[index] = future.result(timeout=max(0.0, deadline - time.monotonic()))
+            regraded += 1
+        except Exception:  # timeout or a failed re-grade: keep the fast result
+            future.cancel()
+    return results, regraded
 
 # Session-integrity rules (full screen, no tab/window switching, no
 # copy/cut/paste) are enforced in the browser -- a web page can detect a
@@ -196,6 +261,7 @@ def start_conversation(profile: ProfileLike, enable_adaptive_followups: bool = F
         "enable_adaptive_followups": enable_adaptive_followups,
         "followups_by_source": {},  # source_id (project) -> count of adaptive follow-ups asked (session-local)
         "tech_consistency_flags": [],  # one entry per turn, parallel to memory.timeline/ledger (see check_tech_consistency)
+        "regrade_futures": {},  # ledger index -> Future of a background LLM re-grade (CAP_FACT_CHECK=1 only)
     }
     return {
         "status": "success",
@@ -251,6 +317,7 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
     request = build_request(current_question, answer, memory, planner, answer_history)
     result = evaluate(session_evaluator, request)
     ledger.append(result)
+    _queue_regrade(session, len(ledger) - 1, request, result)
     answer_history[spec_id] = answer_history.get(spec_id, ()) + (answer,)
 
     memory.record_turn(current_question, variant_idx, answer_text=answer)
@@ -402,7 +469,8 @@ def _result_payload(result) -> dict:
     }
 
 
-def end_conversation(conversation_id: str, integrity: dict | None = None) -> tuple[dict, int]:
+def end_conversation(conversation_id: str, integrity: dict | None = None,
+                     wait_for_regrades: bool = False) -> tuple[dict, int]:
     """End a conversation and return a structured summary: Chapter 13's
     evaluation-free memory contents, PLUS (Phase 3) the full Evaluation
     Ledger — kept as two clearly separate sections of the payload, never
@@ -418,7 +486,9 @@ def end_conversation(conversation_id: str, integrity: dict | None = None) -> tup
         return {"error": "Invalid or expired conversation"}, 404
 
     memory: ConversationMemory = session["memory"]
-    ledger: EvaluationLedger = session["evaluation_ledger"]
+    # `wait_for_regrades`: the /end route waits briefly for background LLM re-grades;
+    # abandonment clean-up does not (nobody is waiting for that report).
+    results, regraded = _final_results(session, wait_for_regrades)
 
     summary = {
         "status": "success",
@@ -438,7 +508,8 @@ def end_conversation(conversation_id: str, integrity: dict | None = None) -> tup
             }
             for t in memory.timeline
         ],
-        "evaluations": [_result_payload(r) for r in ledger.all()],
+        "evaluations": [_result_payload(r) for r in results],
+        "regraded_turns": regraded,
         "integrity": sanitize_integrity(integrity),
     }
     # Honest, data-driven end-of-session feedback derived from the actual per-turn

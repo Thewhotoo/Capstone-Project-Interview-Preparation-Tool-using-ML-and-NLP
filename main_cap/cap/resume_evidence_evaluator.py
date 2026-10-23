@@ -31,9 +31,11 @@ the four canonical diagnostic dimensions are preserved.
 
 from __future__ import annotations
 
+import collections
 import dataclasses
 import os
 import re
+import threading
 import uuid as _uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -427,6 +429,28 @@ FACT_SUSPECTED_FACTOR = 0.80
 LLM_BLEND_WEIGHT = 0.5   # share of the optional local-LLM rubric grade in the final score
 
 
+# The live grade and the background LLM re-grade (conversation_engine) evaluate the
+# SAME request; caching its evidence (similarity + NLI on the CPU) means the re-grade
+# only adds the LLM calls instead of recomputing everything alongside the live flow.
+_EVIDENCE_CACHE: "collections.OrderedDict[tuple, EvidenceBreakdown]" = collections.OrderedDict()
+_EVIDENCE_CACHE_SIZE = 64
+_EVIDENCE_CACHE_LOCK = threading.Lock()
+
+
+def _cached_evidence(request: EvaluationRequest) -> EvidenceBreakdown:
+    key = (request.request_id, request.question_text, request.answer_text)
+    with _EVIDENCE_CACHE_LOCK:
+        if key in _EVIDENCE_CACHE:
+            _EVIDENCE_CACHE.move_to_end(key)
+            return _EVIDENCE_CACHE[key]
+    ev = compute_evidence(request)
+    with _EVIDENCE_CACHE_LOCK:
+        _EVIDENCE_CACHE[key] = ev
+        while len(_EVIDENCE_CACHE) > _EVIDENCE_CACHE_SIZE:
+            _EVIDENCE_CACHE.popitem(last=False)
+    return ev
+
+
 def _fact_check_note(fact_check) -> str:
     if fact_check is None:
         return ""
@@ -460,11 +484,9 @@ class ResumeEvidenceEvaluator:
         self.version = self.scoring
         self.diagnostics_engine = diagnostics_engine or HeuristicDiagnosticsEngine()
         self.name = name or f"resume-evidence-evaluator-{self.scoring}"
-        # Optional LLM fact check (fact_checker.py), OFF unless injected or CAP_FACT_CHECK=1.
-        # Downgrade-only; when the checker is unavailable grading is unchanged.
-        if fact_checker is None and os.environ.get("CAP_FACT_CHECK", "0").strip().lower() in ("1", "true", "on"):
-            from fact_checker import OllamaFactChecker
-            fact_checker = OllamaFactChecker()
+        # Optional local-LLM fact check + rubric grade (fact_checker.py), only when injected.
+        # The live interview never injects one (it must stay fast); conversation_engine's
+        # background re-grade does (CAP_FACT_CHECK=1). Unavailable checker = unchanged grading.
         self.fact_checker = fact_checker
 
     def _fact_check(self, request: EvaluationRequest, ev: EvidenceBreakdown):
@@ -492,7 +514,7 @@ class ResumeEvidenceEvaluator:
             return None
 
     def evaluate(self, request: EvaluationRequest) -> EvaluationResult:
-        ev = compute_evidence(request)
+        ev = _cached_evidence(request)
         ev, fact_check = self._fact_check(request, ev)
         overall_score = _COMPOSERS[self.scoring](ev)
         llm_grade = self._llm_grade(request, ev) if self.scoring == "v2" else None

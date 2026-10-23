@@ -7,9 +7,12 @@ people's answers). Rows already present (same item_id) are left untouched, so it
 safe to re-run after every batch of mock interviews. Labels are added afterwards with
 label_answers.py.
 
-Only users who gave training/data consent are exported unless --ignore-consent.
+Only users who ticked "Allow my anonymised answers to be used to improve the
+evaluation model" (consent_training) are exported, unless --ignore-consent.
 
     py -3.13 benchmarks/evaluator/collect_answers.py [--db instance/app.db]
+    py -3.13 benchmarks/evaluator/collect_answers.py --db friend_app.db --tag riya
+        (a database from someone else's laptop: --tag keeps its ids from colliding)
 """
 
 from __future__ import annotations
@@ -42,6 +45,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default=str(HERE.parents[1] / "instance" / "app.db"))
     ap.add_argument("--ignore-consent", action="store_true")
+    ap.add_argument("--tag", default="", help="prefix for item ids when importing another machine's database")
     args = ap.parse_args()
 
     existing = set()
@@ -65,10 +69,11 @@ def main():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     with OUT.open("a", encoding="utf-8") as fh:
         for r in rows:
-            item_id = f"hb_s{r['session_id']}_t{r['turn_number']}"
+            prefix = f"{args.tag}_" if args.tag else ""
+            item_id = f"hb_{prefix}s{r['session_id']}_t{r['turn_number']}"
             if item_id in existing:
                 continue
-            if not args.ignore_consent and not (r["consent_data"] or r["consent_training"]):
+            if not args.ignore_consent and not r["consent_training"]:
                 skipped_consent += 1
                 continue
             profile = json.loads(r["parsed_profile"]) if r["parsed_profile"] else {}
@@ -78,7 +83,7 @@ def main():
                 continue
             fh.write(json.dumps({
                 "item_id": item_id, "source": "human", "kind": "real",
-                "question_id": f"s{r['session_id']}::{grounding['title']}",
+                "question_id": f"{prefix}s{r['session_id']}::{grounding['title']}",
                 "grounding": grounding, "question": r["question_text"],
                 "reasoning_type": r["reasoning_type"] if r["reasoning_type"] in VALID_REASONING else "explanation",
                 "answer": r["answer_text"], "is_followup": bool(r["is_followup"]),

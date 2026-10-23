@@ -159,3 +159,9 @@ Tuned on `evaluator/dev_set.json` only (48 answers): qwen3:4b beats qwen2.5:3b i
 
 qwen3:4b only partly fits a 4 GB GPU (~28% runs on CPU, ~0.9 GB system RAM, ~3.5 s per call); it runs in
 the background re-grade, and `fact_checker` falls back to qwen2.5:3b when qwen3 isn't installed.
+
+Follow-up (dev-tuned): qwen3:4b's fact check flagged 22/23 good dev answers and NLI confirmed 6 — its
+"corrections" often just qualify or restate the claim. Confirmation now needs NLI contradiction in BOTH
+directions: good answers wrongly penalised 5/23 -> 3/23 (qwen3) and 2/23 -> 1/23 (qwen2.5), 6/7 wrong
+answers still caught. Test-set confirmation: résumé set 90% / Spearman 0.85 / QWK 0.79; holdout 83% / 0.67.
+(A larger NLI model, nli-deberta-v3-base, was worse for qwen3 and was not used.)

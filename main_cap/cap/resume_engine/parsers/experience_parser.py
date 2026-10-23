@@ -357,4 +357,29 @@ class ExperienceParser:
             )
             result_confidences.append(Confidence(score=round(score, 4), reasons=reasons))
 
+        result_entities, result_confidences = _merge_continuation_entries(result_entities, result_confidences)
         return ParserResult(entities=result_entities, confidences=result_confidences, observations=observations)
+
+
+def _merge_continuation_entries(entities: list[dict], confidences: list) -> tuple[list[dict], list]:
+    """A bold phrase inside a wrapped bullet ("... ; Medical Transcription
+    Service on AWS SAM with Lambda, Kinesis Firehose audio pipeline") can be
+    clustered as a new entry header. Such an "entry" has no dates, no job
+    title and no company marker; when it follows a dated entry it is folded
+    back into that entry's summary instead of becoming a bogus job."""
+    merged_entities: list[dict] = []
+    merged_confidences: list = []
+    for entity, confidence in zip(entities, confidences):
+        header = " ".join(p for p in (entity["role"], entity["company"]) if p)
+        is_continuation = (
+            merged_entities and merged_entities[-1]["duration"] and not entity["duration"]
+            and not _looks_like_title(entity["role"]) and not _looks_like_title(entity["company"])
+            and not _looks_like_company(header) and not _looks_like_institution(header)
+        )
+        if is_continuation:
+            previous = merged_entities[-1]
+            previous["summary"] = " ".join(p for p in (previous["summary"], header, entity["summary"]) if p)
+            continue
+        merged_entities.append(entity)
+        merged_confidences.append(confidence)
+    return merged_entities, merged_confidences

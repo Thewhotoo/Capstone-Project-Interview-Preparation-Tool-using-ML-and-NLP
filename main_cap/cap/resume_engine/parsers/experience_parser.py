@@ -18,6 +18,7 @@ from resume_engine.confidence import Confidence
 from resume_engine.dates import parse_date_range
 from resume_engine.interfaces import ParserResult
 from resume_engine.job_title_gazetteer import JOB_TITLES
+from resume_engine.location_gazetteer import LOCATIONS
 from resume_engine.parsers._entry_clustering import cluster_entries, strip_section_header_line
 from resume_engine.text_normalization import strip_date_ranges, strip_leading_bullet
 from resume_engine.validation import Observation
@@ -48,6 +49,15 @@ def _looks_like_company(text: str) -> bool:
 _SPLIT_PATTERNS = (
     re.compile(r"\s+at\s+", re.IGNORECASE),
     re.compile(r"\s*[—–]\s*"),
+    # "--" (a plain-text em-dash stand-in, e.g. "Creative Studio -- Senior
+    # Designer -- 2020-Present") MUST be tried before the single-hyphen
+    # pattern below: `\s*-\s*` only consumes ONE of the two hyphens (its
+    # trailing \s* matches zero chars since the next char is the second
+    # hyphen, not whitespace), leaving a stray leading "-" stuck to the
+    # second half ("- Senior Designer") -- which then fails the job-title
+    # gazetteer match on that half and silently flips role/company via the
+    # positional fallback in `_disambiguate_role_company`.
+    re.compile(r"\s*--\s*"),
     re.compile(r"\s*-\s*"),
     re.compile(r"\s*,\s*"),
 )
@@ -95,6 +105,91 @@ def _disambiguate_role_company(part_a: str, part_b: str) -> tuple[str, str, bool
     # Neither matched confidently -- documented fallback (architecture doc
     # Section 4.4): first segment = role, the more common convention.
     return part_a, part_b, False
+
+
+# Head nouns of job titles ("Engineering Intern", "Operations Executive") -- a
+# generic lexical class used with the gazetteer to recognise a title printed on
+# the line under a company-only header (or vice versa).
+_TITLE_HEAD_PATTERN = re.compile(
+    r"\b(?:intern|engineer|developer|analyst|manager|designer|executive|researcher|scientist|"
+    r"consultant|lead|associate|architect|specialist|administrator|officer|director|assistant|"
+    r"trainee|fellow|technician|programmer|coordinator|head|founder|co-founder|volunteer)s?\b",
+    re.IGNORECASE,
+)
+_BULLET_START = re.compile(r"^\s*[•◦▪▸►●○■□\-–—*·]")
+# "Developed ...", "Built ...", "Led ..." -- a description line, not a label
+_ACTION_VERB_START = re.compile(
+    r"^(?:[A-Z][a-z]+ed|Built|Led|Ran|Made|Wrote|Drove|Took|Won|Set|Grew|Cut|Owned|Supported|Helped)\b")
+_ADDRESS_TAIL = re.compile(r"\s+[-–—|]\s+.*\d.*$")              # "Gravity Tech - 123 Anywhere St., Any City"
+_PIPE_TAIL = re.compile(r"\s+\|\s+.*$")                         # "Borcelle Company | Sydney, Australia"
+_CITY_COUNTRY_TAIL = re.compile(r"\s+[A-Z][\w.]+,\s*[A-Z][\w ]+$")  # "... Bengaluru, India" (one-word city:
+# a two-word pattern also swallowed the title's last word, "... Intern Bengaluru, India")
+_BASED_TAIL = re.compile(r"\s+\S+-based$", re.IGNORECASE)        # "... Cyprus-based"
+_JUNK_BRACKETS = re.compile(r"\[[^A-Za-z0-9\]]*\]|\(\s*\)")       # icon remnants "[ \x80 ]", empty "()"
+_KNOWN_LOCATIONS = {loc.lower() for loc in LOCATIONS} | {"bangalore", "bengaluru", "remote"}
+
+
+def _clean_label(text: str) -> str:
+    text = _JUNK_BRACKETS.sub("", text)
+    text = re.sub(r"^\s*[•◦▪▸►●○■□*·]\s*", "", text)
+    return re.sub(r"\s{2,}", " ", text).strip(" ,|-–—")
+
+
+def _strip_trailing_location(text: str) -> str:
+    for pattern in (_ADDRESS_TAIL, _PIPE_TAIL, _CITY_COUNTRY_TAIL, _BASED_TAIL):
+        stripped = pattern.sub("", text).strip()
+        if stripped and stripped != text:
+            text = stripped
+    words = text.split()
+    if len(words) > 1 and words[-1].lower().strip(",") in _KNOWN_LOCATIONS:   # "Engineering Intern Bangalore"
+        text = " ".join(words[:-1])
+    return text.strip(" ,|-–—")
+
+
+def _title_score(text: str) -> float:
+    if not text:
+        return 0.0
+    _, score, _ = process.extractOne(text, JOB_TITLES, scorer=fuzz.token_sort_ratio, processor=str.lower)
+    return score
+
+
+def _looks_like_title(text: str) -> bool:
+    if not text:
+        return False
+    if _title_score(text) >= ROLE_MATCH_THRESHOLD:
+        return True
+    head = _TITLE_HEAD_PATTERN.search(text)
+    return head is not None and len(text[: head.end()].split()) <= 6
+
+
+def _title_prefix(text: str) -> str:
+    """Cuts a title line at its head noun (keeping a parenthetical or a short
+    dash qualifier right after it), dropping a second right-aligned label:
+    'AI Infrastructure Security Engineer (Freelance) Cyprus-based AI Company'
+    -> 'AI Infrastructure Security Engineer (Freelance)'."""
+    if _title_score(text) >= ROLE_MATCH_THRESHOLD:
+        return text
+    head = _TITLE_HEAD_PATTERN.search(text)
+    if head is None:
+        return text
+    tail = re.match(r"\s*(\([^)]*\)|[—–-]{1,2}\s*[A-Z][\w/&+ ]{0,25}?(?=\s{2,}|$))?", text[head.end():])
+    return (text[: head.end()] + (tail.group(0) if tail else "")).strip()
+
+
+def _label_line(body_lines: list[str], skip_index) -> tuple[int, str] | None:
+    """The first body line directly under the header, when it reads as a short
+    label (company or title, possibly followed by a location) rather than a
+    description bullet or a date."""
+    for i, line in enumerate(body_lines):
+        if i == skip_index:
+            continue
+        raw = line.strip()
+        if (not raw or _BULLET_START.match(raw) or _ACTION_VERB_START.match(raw)
+                or raw.endswith(".") or len(raw.split()) > 10 or parse_date_range(raw) is not None):
+            return None
+        cleaned = _strip_trailing_location(_clean_label(raw))
+        return (i, cleaned) if cleaned else None
+    return None
 
 
 def _find_date_range(header_text: str, body_lines: list[str]):
@@ -187,8 +282,32 @@ class ExperienceParser:
                 role, company = "", header_for_split
                 institution_fallback = True
 
+            role, company = _clean_label(role), _clean_label(company)
+
+            # Two-line header (Phase 2): many templates print the title and the
+            # company on separate lines ("Software Developer" / "Gravity Tech -
+            # 123 Anywhere St."; "ForGood.ai" / "Software Developer -- AI
+            # Systems  Bengaluru, India"). When one half is missing, complete it
+            # from the short label line directly under the header.
+            consumed_index = None
+            label = _label_line(entry.body_lines, date_line_index) if (not role or not company) else None
+            if label is not None:
+                label_index, label_text = label
+                if not role and _looks_like_title(label_text):
+                    role, consumed_index = _title_prefix(label_text), label_index
+                elif role and not company and not gazetteer_matched and _looks_like_title(label_text) \
+                        and not _looks_like_title(role):
+                    # the header was the company, the title is on the next line
+                    company, role, consumed_index = role, _title_prefix(label_text), label_index
+                elif role and not company and not _looks_like_title(label_text):
+                    company, consumed_index = label_text, label_index
+            if consumed_index is not None:
+                reasons_extra = "+two_line_header_completed"
+            else:
+                reasons_extra = None
+
             body_lines = [
-                line for i, line in enumerate(entry.body_lines) if i != date_line_index
+                line for i, line in enumerate(entry.body_lines) if i not in (date_line_index, consumed_index)
             ]
             summary = " ".join(body_lines).strip()
 
@@ -205,6 +324,8 @@ class ExperienceParser:
                 reasons.append("+company_marker_recognized_role_left_empty")
             else:
                 reasons.append("-role_not_gazetteer_matched")
+            if reasons_extra:
+                reasons.append(reasons_extra)
             if date_range is not None and date_range.start is not None:
                 reasons.append(f"+parseable_date_range:{date_range.display}")
                 score += 0.3

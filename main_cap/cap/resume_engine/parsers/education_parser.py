@@ -83,9 +83,10 @@ def _degree_duration_years(degree: str) -> int | None:
 # trailing group consume unrelated text past the institution name, e.g. a
 # degree line concatenated onto the same match) title-case word sequence
 # around the keyword: up to 4 leading words, an optional "of/for <Words>"
-# trailing phrase (covers "Institute of Technology" style names).
+# trailing phrase (covers "Institute of Technology" style names). The keyword
+# itself is case-insensitive so ALL-CAPS headers ("NEW HORIZON COLLEGE") match.
 _INSTITUTION_KEYWORD_PATTERN = re.compile(
-    r"(?:[A-Z][A-Za-z&.'\-]*\s+){0,4}(?:University|Institute|College|Polytechnic|School)"
+    r"(?:[A-Z][A-Za-z&.'\-]*\s+){0,4}(?i:University|Institute|College|Polytechnic|School)"
     r"(?:\s+(?:of|for)\s+[A-Z][A-Za-z&.'\-]*(?:\s+[A-Z][A-Za-z&.'\-]*){0,3})?"
 )
 # Longest gazetteer entries first so "Bachelor of Science" matches before

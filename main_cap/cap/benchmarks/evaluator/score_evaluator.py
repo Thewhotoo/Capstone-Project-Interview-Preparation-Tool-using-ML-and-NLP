@@ -45,6 +45,7 @@ from question_specification import (  # noqa: E402
 STRESS_SET = HERE / "stress_set.json"
 HOLDOUT_SET = HERE / "stress_set_holdout.json"
 DEV_SET = HERE / "dev_set.json"   # the only set to tune on; the others are test sets
+FINAL_TEST_SET = HERE / "final_test_set.json"   # run once for reported numbers
 # Realistic answers on the real benchmark resumes' projects (private: real people's projects),
 # labelled by two independent annotators: claude_a in the file, claude_b in LABELS_B.
 RESUME_SET = HERE / "private" / "resume_set_v1.json"
@@ -56,7 +57,7 @@ HUMAN_ITEMS = HERE / "private" / "human_items.jsonl"
 
 def load_stress_items() -> list[dict]:
     items = (_load_contrastive(DEV_SET, "dev(claude)") + _load_contrastive(STRESS_SET, "stress(claude)")
-             + _load_contrastive(HOLDOUT_SET, "holdout(claude)"))
+             + _load_contrastive(HOLDOUT_SET, "holdout(claude)") + _load_contrastive(FINAL_TEST_SET, "final(claude)"))
     resume_items = _load_contrastive(RESUME_SET, "resume-real(2 annotators)")
     if resume_items and RESUME_SET_LABELS_B.exists():
         labels_b = json.loads(RESUME_SET_LABELS_B.read_text(encoding="utf-8"))

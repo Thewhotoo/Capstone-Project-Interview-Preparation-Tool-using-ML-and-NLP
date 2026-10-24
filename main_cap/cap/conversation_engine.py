@@ -57,13 +57,14 @@ from planner import ConversationState, Planner
 from question_specification import UnitStatus
 from concept_analysis import concept_coverage_percent
 from strong_answer import build_improved_answer, coaching_note
+from tech_consistency_flag import check_tech_consistency
 from topic_pool import ProfileLike
 
 # Live conversations are kept in the live store (live_store.py: this
 # process's memory, or Redis shared by every worker) as a small JSON record:
 #
 #     {"version", "profile", "evaluator": [name, version],
-#      "turns": [{"answer", "evaluation"}], "current_question", "ended"}
+#      "turns": [{"answer", "evaluation", "tech_consistency"}], "current_question", "ended"}
 #
 # The planner, memory and ledger are not stored: they are rebuilt by
 # replaying the record (`_rebuild`). That is exact because planning is
@@ -360,10 +361,17 @@ def _advance(conversation_id: str, session: dict, answer: str) -> tuple[dict, in
     ledger.append(result)
     answer_history[spec_id] = answer_history.get(spec_id, ()) + (answer,)
 
+    # Tech-consistency flag (informational only -- see tech_consistency_flag.py):
+    # never touches overall_score/grade; a resume-grounded side check of whether
+    # the described tech stack matches what the resume lists for this project.
+    # None when not applicable. Kept in the record, one per turn, for the end feedback.
+    tech_consistency = check_tech_consistency(request)
+
     memory.record_turn(current_question, variant_idx, answer_text=answer)
     planner.advance(spec_id, UnitStatus.COVERED)
     record = session["record"]
-    record["turns"].append({"answer": answer, "evaluation": result.model_dump(mode="json")})
+    record["turns"].append({"answer": answer, "evaluation": result.model_dump(mode="json"),
+                            "tech_consistency": tech_consistency})
 
     next_spec = _plan_after_answer(planner, memory, session["last_category"])
     # Improved Answer / Coaching Note are derived here, at the one site
@@ -392,6 +400,7 @@ def _advance(conversation_id: str, session: dict, answer: str) -> tuple[dict, in
     # pool (e.g. experience/certification) — the dashboard averages only
     # non-null turns.
     turn_evaluation["concept_coverage_pct"] = concept_coverage_percent(result)
+    turn_evaluation["tech_consistency"] = tech_consistency
 
     if next_spec is None:
         session["ended"] = record["ended"] = True
@@ -503,7 +512,10 @@ def end_conversation(conversation_id: str, integrity: dict | None = None) -> tup
     # summarization of the results above, no evaluation logic. Saved with the
     # session (session_history keeps everything but "evaluations").
     from interview_feedback import build_feedback
-    summary["feedback"] = build_feedback(summary["evaluations"], summary["timeline"])
+    summary["feedback"] = build_feedback(
+        summary["evaluations"], summary["timeline"],
+        [turn.get("tech_consistency") for turn in session["record"]["turns"]],
+    )
     if summary["integrity"]["terminated"]:
         logger.warning(
             "Conversation %s terminated for an integrity violation: %s at turn %s",

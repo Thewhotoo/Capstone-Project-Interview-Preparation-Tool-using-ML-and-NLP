@@ -26,6 +26,8 @@ from __future__ import annotations
 
 import math
 
+from tech_consistency_flag import POSSIBLE_MISMATCH
+
 DEPTH = "depth_specificity"
 RELEVANCE = "relevance_completeness"
 GROUNDING = "grounding_ownership"
@@ -57,6 +59,31 @@ SCOPE_NOTE = (
     "independently verify the factual correctness of individual technical claims."
 )
 
+TECH_MISMATCH = "tech_consistency"
+
+
+def _tech_mismatch_tip(timeline: list[dict] | None, tech_consistency_flags: list | None) -> str | None:
+    """A soft, named-project nudge when one or more answers described a tech
+    stack that doesn't clearly match what the resume lists for that project
+    (tech_consistency_flag.py — a side signal, never an accusation; see its
+    module docstring for why it's deliberately conservative). None when there
+    is nothing to flag."""
+    if not tech_consistency_flags or not timeline:
+        return None
+    projects: list[str] = []
+    for turn, flag in zip(timeline, tech_consistency_flags):
+        if flag == POSSIBLE_MISMATCH:
+            name = (turn.get("project_reference") or "").strip()
+            if name and name not in projects:
+                projects.append(name)
+    if not projects:
+        return None
+    where = projects[0] if len(projects) == 1 else ", ".join(projects[:-1]) + f" and {projects[-1]}"
+    return (
+        f"Double-check the technologies you described for {where} — what you said didn't clearly "
+        f"match what's listed on your résumé there. Naming the exact tools you actually used will hold up better."
+    )
+
 
 def _evidence_scores(evaluation: dict) -> dict[str, float]:
     """This answer's score per evidence dimension (only those it reported)."""
@@ -69,9 +96,16 @@ def _evidence_scores(evaluation: dict) -> dict[str, float]:
     return out
 
 
-def build_feedback(evaluations: list[dict], timeline: list[dict] | None = None) -> dict:
+def build_feedback(
+    evaluations: list[dict],
+    timeline: list[dict] | None = None,
+    tech_consistency_flags: list | None = None,
+) -> dict:
     """Headline, summary, strengths, focus areas, scope note and stats from the
-    per-turn evaluation payloads (`conversation_engine._result_payload`)."""
+    per-turn evaluation payloads (`conversation_engine._result_payload`).
+    `tech_consistency_flags` is session-tracked separately (one entry per
+    turn, parallel to `timeline`) because it's a side-channel signal, not part
+    of the scored evaluation payload — see tech_consistency_flag.py."""
     n = len(evaluations)
     if n == 0:
         return {"headline": "No answers were evaluated.",
@@ -99,6 +133,13 @@ def build_feedback(evaluations: list[dict], timeline: list[dict] | None = None) 
 
     focus_areas = [{"dimension": d, "tip": _ADVICE[d]} for d in sorted(weak_dims, key=weak_dims.get)]
     strengths = [_STRENGTH_LABEL[d] for d in sorted(strong_dims, key=strong_dims.get, reverse=True)]
+
+    # Tech-consistency goes first: a possible résumé mismatch is a bigger
+    # flag than "go a level deeper," and it's never folded into dim_means/
+    # overall_score above, so it needs its own, separate slot here.
+    tech_mismatch_tip = _tech_mismatch_tip(timeline, tech_consistency_flags)
+    if tech_mismatch_tip:
+        focus_areas.insert(0, {"dimension": TECH_MISMATCH, "tip": tech_mismatch_tip})
 
     if non_substantive >= math.ceil(0.6 * n):
         headline = "Most questions weren't really answered."
@@ -135,6 +176,7 @@ def build_feedback(evaluations: list[dict], timeline: list[dict] | None = None) 
             "substantively_answered": n - non_substantive,
             "non_substantive": non_substantive,
             "strong_answers": strong,
+            "tech_mismatch_flagged": bool(tech_mismatch_tip),
             "dimension_means": {d: round(m, 3) for d, m in dim_means.items()},
         },
     }

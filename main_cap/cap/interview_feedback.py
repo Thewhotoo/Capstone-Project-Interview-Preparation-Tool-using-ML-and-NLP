@@ -58,6 +58,18 @@ SCOPE_NOTE = (
     "This report reflects how relevant, specific, and grounded your answers were. It does not "
     "independently verify the factual correctness of individual technical claims."
 )
+# Used when the background AI re-grade ran on at least one answer (conversation_engine).
+SCOPE_NOTE_FACT_CHECKED = (
+    "This report reflects how relevant, specific, and grounded your answers were. Technical claims "
+    "were also checked by an automated AI fact-checker running on this computer; it can make "
+    "mistakes, so treat its judgments as a second opinion."
+)
+_FACT_CHECKED_MARKER = "checked by an automated AI fact-checker"
+
+
+def _scope_note(evaluations: list[dict]) -> str:
+    fact_checked = any(_FACT_CHECKED_MARKER in (e.get("reasoning") or "") for e in evaluations)
+    return SCOPE_NOTE_FACT_CHECKED if fact_checked else SCOPE_NOTE
 
 TECH_MISMATCH = "tech_consistency"
 
@@ -169,7 +181,7 @@ def build_feedback(
         "summary": summary,
         "strengths": strengths,
         "focus_areas": focus_areas,
-        "scope_note": SCOPE_NOTE,
+        "scope_note": _scope_note(evaluations),
         "stats": {
             "questions": n,
             "mean_overall": round(sum(overalls) / n, 3),

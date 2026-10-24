@@ -123,6 +123,15 @@ Score 0-4:
 0 worthless: non-answer, off-topic, or technically wrong
 Judge correctness and specificity. Do NOT reward length, confidence or jargon.
 Reply with JSON only: {"score": <0-4>}"""
+_VERIFY_PROMPT = """You check ONE statement made by a job candidate in a technical interview about their own project.
+Decide:
+- "incorrect": it states something about how a technology, algorithm, protocol or tool works IN GENERAL, and that is clearly wrong.
+- "correct": it is technically correct, or correct enough for an interview answer (simplified wording is fine).
+- "own_project": it describes a design choice, behaviour or result of the candidate's own project (these cannot be checked).
+- "unsure": anything else.
+Reply with JSON only."""
+_VERIFY_SCHEMA = {"type": "object", "required": ["verdict"], "properties": {
+    "verdict": {"type": "string", "enum": ["incorrect", "correct", "own_project", "unsure"]}}}
 FALSE_CLAIMS_SCHEMA = {"type": "object", "required": ["false_claims"], "properties": {"false_claims": {
     "type": "array", "items": {"type": "object", "required": ["claim", "correction"],
                                "properties": {"claim": {"type": "string"}, "correction": {"type": "string"}}}}}}
@@ -237,6 +246,20 @@ class OllamaFactChecker:
             return None
         return max(0.0, min(4.0, score)) / 4.0
 
+    def _verified_incorrect(self, question: str, claim: str, context: str) -> bool:
+        """Second, focused question to the LLM about ONE flagged claim: is it a wrong general
+        fact, or correct / about the candidate's own project? Only asked for claims that already
+        passed the NLI checks. On the fact-check dev data (88 answers) adding it cut good answers
+        wrongly penalised from 9/48 to 1/48 while still catching 18 of 23 false claims. (With
+        qwen2.5:3b a similar step was unreliable; qwen3:4b handles it.) A failed call counts as
+        not confirmed: when unsure, don't accuse."""
+        try:
+            verdict = self._chat(_VERIFY_PROMPT, f"PROJECT: {context}\nQUESTION: {question}\nSTATEMENT: {claim}",
+                                 20, schema=_VERIFY_SCHEMA).get("verdict")
+        except (urllib.error.URLError, TimeoutError, OSError, KeyError, ValueError):
+            return False
+        return verdict == "incorrect"
+
     def check(self, question: str, answer: str, context: str = "") -> FactCheckResult:
         if not answer or len(answer.split()) < 6:      # nothing to fact-check in a one-liner
             return FactCheckResult(status="checked", model=self.model)
@@ -245,7 +268,7 @@ class OllamaFactChecker:
             user += f"CANDIDATE'S PROJECT (from their resume, assume true): {context}\n"
         user += f"ANSWER: {answer}"
         try:
-            content = self._chat(_SYSTEM_PROMPT, user, 300, schema=FALSE_CLAIMS_SCHEMA)
+            content = self._chat(_SYSTEM_PROMPT, user, 450, schema=FALSE_CLAIMS_SCHEMA)
             candidates = []
             for item in content.get("false_claims") or []:
                 if isinstance(item, dict) and str(item.get("claim", "")).strip():
@@ -254,7 +277,8 @@ class OllamaFactChecker:
             confirmed = [c for c in candidates[:3]
                          if not _is_personal_flip(c["claim"], c["correction"])
                          and not _is_choice_swap(c["claim"], c["correction"], context)
-                         and self._contradicts(c["claim"], c["correction"])]
+                         and self._contradicts(c["claim"], c["correction"])
+                         and self._verified_incorrect(question, c["claim"], context)]
         except (urllib.error.URLError, TimeoutError, OSError, KeyError, ValueError) as exc:
             logger.info("fact check unavailable: %s", exc)
             return FactCheckResult(status="unavailable", model=self.model, detail=f"{type(exc).__name__}: {exc}")

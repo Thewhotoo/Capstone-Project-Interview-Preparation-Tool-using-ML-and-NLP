@@ -32,12 +32,16 @@ def test_severity_levels():
 
 class _ScriptedChecker(OllamaFactChecker):
     """Real confirmation logic; the LLM's flagged claims are scripted."""
-    def __init__(self, claims, contradiction):
+    def __init__(self, claims, contradiction, verdicts=None):
         # symmetric scripted contradiction: either argument order finds the claim's value
         super().__init__(contradiction_fn=lambda a, b: contradiction.get(a, contradiction.get(b, 0.0)))
         self._claims = claims
+        self._verdicts = verdicts or {}      # claim -> verification verdict (default "incorrect")
 
     def _chat(self, system, user, max_tokens, schema=None):
+        if "STATEMENT:" in user:              # the per-claim verification question
+            claim = user.split("STATEMENT:", 1)[1].strip()
+            return {"verdict": self._verdicts.get(claim, "incorrect")}
         return {"false_claims": self._claims}
 
 
@@ -151,3 +155,11 @@ def test_one_way_contradiction_is_not_confirmed():
     checker.contradiction_fn = lambda a, b: 0.9 if a == claims[0]["claim"] else 0.1   # only claim -> correction
     result = checker.check("Why InfluxDB?", "InfluxDB gives compression and retention built in, so I used it.")
     assert result.false_claims == ()
+
+
+def test_claim_the_llm_verifies_as_own_project_is_not_confirmed():
+    claims = [{"claim": "Gemini only writes the report from the matched events, so it can't invent an attack",
+               "correction": "Language models can generate content not present in their input"}]
+    checker = _ScriptedChecker(claims, {claims[0]["claim"]: 0.95}, verdicts={claims[0]["claim"]: "own_project"})
+    result = checker.check("How did you stop Gemini inventing details?", claims[0]["claim"] + " and I check every IP.")
+    assert result.false_claims == () and result.severity == "none"

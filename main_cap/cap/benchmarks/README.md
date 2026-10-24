@@ -165,3 +165,18 @@ Follow-up (dev-tuned): qwen3:4b's fact check flagged 22/23 good dev answers and 
 directions: good answers wrongly penalised 5/23 -> 3/23 (qwen3) and 2/23 -> 1/23 (qwen2.5), 6/7 wrong
 answers still caught. Test-set confirmation: résumé set 90% / Spearman 0.85 / QWK 0.79; holdout 83% / 0.67.
 (A larger NLI model, nli-deberta-v3-base, was worse for qwen3 and was not used.)
+
+## Fact-check false alarms (2026-10-25)
+
+`evaluator/factcheck_dev_set.json` (40 answers, tuning) and `evaluator/factcheck_test_set.json` (30, run once)
+mark whether each answer contains a clearly false general technical claim; correct answers include true but
+nuanced statements and claims about the candidate's own design. A flagged claim is now confirmed only if NLI
+finds a contradiction both ways **and** qwen3:4b, asked about that one claim, calls it an incorrect general
+fact (not "correct" / "own project" / "unsure").
+
+| rule | dev: caught / wrongly penalised | **test: caught / wrongly penalised** |
+|---|---|---|
+| NLI both ways (previous) | 21/23 / 9 of 48 | 8/12 / 5 of 18 |
+| + qwen3 verification (now) | 18/23 / 1 of 48 | **8/12 / 1 of 18** |
+
+Remaining gap: recall — the first pass never flags about a third of false claims.

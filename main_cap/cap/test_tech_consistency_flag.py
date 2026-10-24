@@ -112,9 +112,18 @@ class TestFlagging:
         # candidate answering "tell me about Chronos" would.
         req = _request(
             "For Chronos, this task orchestrator project, I personally built everything using "
-            "fabricated-tech and another made-up-tool, deciding on that stack because it fit requirements."
+            "fabricated-tech Django and MongoDB, deciding on that stack because it fit requirements."
         )
         assert tcf.check_tech_consistency(req) == tcf.POSSIBLE_MISMATCH
+
+    def test_no_unlisted_technology_named_means_no_mismatch_warning(self):
+        # Same high-contradiction NLI signal (the "fabricated-tech" marker), but the only
+        # technology named is Postgres, which the resume lists: nothing to warn about.
+        req = _request(
+            "For Chronos, this task orchestrator, fabricated-tech leases live in Postgres with heartbeats "
+            "every ten seconds, and the reaper re-queues a task when its lease expires."
+        )
+        assert tcf.check_tech_consistency(req) == tcf.NOT_INDEPENDENTLY_VERIFIED
 
     def test_grounded_answer_is_not_flagged_as_mismatch(self):
         req = _request(

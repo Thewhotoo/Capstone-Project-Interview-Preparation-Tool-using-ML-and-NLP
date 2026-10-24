@@ -44,6 +44,7 @@ REQUIRED_MODELS = (
     "sentence-transformers/all-MiniLM-L6-v2",   # Round 1 evaluator, resume parsing, tech grader
     "cross-encoder/nli-MiniLM2-L6-H768",        # Round 1 evaluator
     "cross-encoder/nli-deberta-v3-base",        # tech grader
+    "cross-encoder/nli-deberta-v3-small",       # tech-consistency flag, LLM fact check confirmation
     _speech_model_repo(),                       # voice answers (speech_to_text.py)
 )
 # The trained Round 1 evaluator's backbone (tokenizer + architecture), needed only

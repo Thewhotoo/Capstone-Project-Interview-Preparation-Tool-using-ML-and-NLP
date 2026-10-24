@@ -43,6 +43,17 @@ Windows: `certutil -hashfile best_checkpoint_weights.pt SHA256`. Linux/macOS: `s
 
 **Without the file the app still works**: Round 1 uses the heuristic evaluator instead, and the startup log says which one is active (`Production evaluator ACTIVE: ...`).
 
+### Optional: sharper Round 1 grading with a local LLM (Ollama)
+
+If [Ollama](https://ollama.com) is running on the machine with a model pulled, Round 1 answers are also re-graded in the background (a technical fact check plus a rubric grade), and the end-of-session report uses those grades. Nothing else to set up, with or without Docker:
+
+```bash
+# Windows: winget install Ollama.Ollama   (macOS/Linux: see ollama.com)
+ollama pull qwen3:4b      # ~2.5 GB; or qwen2.5:3b (~1.9 GB) for a smaller GPU
+```
+
+A GPU with about 2.5 GB free makes it about 3–5 s per answer, while the candidate answers the next question; on CPU it is slower and may not finish before the interview ends (unfinished answers keep the normal score). Without Ollama nothing changes. `CAP_FACT_CHECK=0` turns it off, `1` forces it.
+
 ### Browser and hardware for the interview itself
 
 - **A recent browser.** The app is mostly tested in Google Chrome and Microsoft Edge. Voice answers work in any current browser (Chrome, Edge, Brave, Firefox, Safari): the browser only records, and the server turns the recording into text (Whisper), so no Google or Microsoft speech service is involved.
@@ -63,7 +74,7 @@ Only needed to work on the code or run the test suite.
 | **OS** | Tested on Windows 11. Nothing is Windows-specific, so Linux and macOS should work but haven't been tested. |
 | **Python 3.12** (64-bit) | Tested on 3.12.10. Tick "Add python.exe to PATH" when installing on Windows. |
 | **RAM** | The server uses about **2.8 GB** once all models are loaded (measured). 8 GB minimum; 16 GB is comfortable with a browser open. |
-| **Disk** | About **5 GB** free: Python packages (0.5 GB with CPU-only PyTorch, about 2.5 GB with the CUDA build), models downloaded on first run (about 1.8 GB, see below) and the evaluator weights (735 MB). |
+| **Disk** | About **5 GB** free: Python packages (0.5 GB with CPU-only PyTorch, about 2.5 GB with the CUDA build), models downloaded on first run (about 2.3 GB, see below) and the evaluator weights (735 MB). |
 | **GPU** | **Not needed.** Everything the app does at interview time runs on the CPU. |
 | **Internet** | Needed on the **first run** (model downloads) and **whenever the page loads**: the browser fetches MediaPipe (face tracking) from `cdn.jsdelivr.net` and fonts from Google Fonts. |
 
@@ -76,7 +87,7 @@ pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r Requirements_Global.txt
 ```
 
-### Models downloaded automatically on the first run (about 2 GB)
+### Models downloaded automatically on the first run (about 2.5 GB)
 
 With Docker these are downloaded once, while the image is built. Without Docker:
 
@@ -87,6 +98,7 @@ From Hugging Face, into `~/.cache/huggingface/hub/`:
 | `sentence-transformers/all-MiniLM-L6-v2` | ~90 MB | Resume parsing, Round 1 evaluator, technical grader |
 | `cross-encoder/nli-MiniLM2-L6-H768` | ~320 MB | Round 1 evaluator |
 | `cross-encoder/nli-deberta-v3-base` | ~720 MB | Technical grader |
+| `cross-encoder/nli-deberta-v3-small` | ~550 MB | Round 1 tech-consistency flag; confirming the LLM fact check |
 | `Systran/faster-whisper-base.en` | ~145 MB | Voice answers: speech-to-text on the server (`speech_to_text.py`) |
 | `microsoft/deberta-v3-base` | ~710 MB | Round 1 trained evaluator (only if the weights file above is installed) |
 

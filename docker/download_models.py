@@ -14,6 +14,7 @@ from transformers import AutoModel, AutoTokenizer
 SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")   # Round 1 evaluator, resume parsing, tech grader
 CrossEncoder("cross-encoder/nli-MiniLM2-L6-H768")               # Round 1 evaluator
 CrossEncoder("cross-encoder/nli-deberta-v3-base")               # technical grader
+CrossEncoder("cross-encoder/nli-deberta-v3-small")              # tech-consistency flag, LLM fact check
 
 # The trained Round 1 evaluator's backbone. Downloaded even though the weights
 # are mounted at run time, so adding them later needs no rebuild.

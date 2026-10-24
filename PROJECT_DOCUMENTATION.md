@@ -71,7 +71,7 @@ The **target users** are students and early-career engineers preparing for place
 
 The **core value proposition** has three parts:
 1. **Resume-specific questioning**: a deterministic planner guarantees that every question comes from the resume and can be explained after the fact.
-2. **Explainable scoring**: every score carries a reasoning trail, evidence-linked claims and version metadata. It is produced by `AveragedEvaluator`: 0.8 × a fine-tuned **DeBERTa-v3** overall-score model + 0.2 × a deterministic heuristic evaluator, behind a non-answer gate, with automatic fallback to the heuristic.
+2. **Explainable scoring**: every score carries a reasoning trail, evidence-linked claims and version metadata. It is produced by `ResumeEvidenceEvaluator` (scoring v2: explanation, implementation-level specificity, concrete detail and ownership, with keyword-list and textbook penalties), behind a non-answer gate. When Ollama is running, a local LLM (qwen3:4b) re-grades each answer in the background with a fact check and a rubric grade, and the report uses those grades. Fallbacks: `AveragedEvaluator` (0.8 × a fine-tuned **DeBERTa-v3** overall-score model + 0.2 × a deterministic heuristic evaluator), then the heuristic alone.
 3. **No paid API on the runtime path**: resume parsing moved from a single Gemini call to a fully deterministic, local 8-stage **Resume Intelligence Engine**, and the entire discussion runs locally.
 
 The repository also contains a substantial **ML research track**: synthetic dataset generation, labeling, training infrastructure and five experiment rounds. This track produced the deployed DeBERTa checkpoint. The repository also includes supporting and exploratory subsystems (a RAG question generator, a RoBERTa question classifier, a legacy resume domain classifier, and a parser benchmark harness), most of which are not wired into the shipped UI flow.
@@ -789,7 +789,8 @@ The 12 dimensions are: technical_accuracy, technical_depth, communication, compl
 #### Fallback chain
 | Situation | What handles scoring |
 |---|---|
-| Normal operation (v5_1088 weights present) | `AveragedEvaluator` = 0.8 × `OverallSingleEvaluator` + 0.2 × `HeuristicEvaluator` |
+| Normal operation | `ResumeEvidenceEvaluator` (scoring v2), plus the background LLM re-grade when Ollama is available |
+| `CAP_RESUME_EVIDENCE_EVALUATOR=0`, v5_1088 weights present | `AveragedEvaluator` = 0.8 × `OverallSingleEvaluator` + 0.2 × `HeuristicEvaluator` |
 | The model fails on one turn | `AveragedEvaluator` returns the heuristic result for that turn |
 | v5 weights absent, old Experiment 4 weights present | `HybridEvaluator` (DeBERTa multi-task authoritative) |
 | Trained model can't load at startup | Bare `HeuristicEvaluator` |
@@ -798,6 +799,13 @@ The 12 dimensions are: technical_accuracy, technical_depth, communication, compl
 ---
 
 **Round 1 scoring with a trained model (`averaged_evaluator.py`, 2026-09-30, `docs/internal/resumeParser_integration.md` step 5).** When `main_cap/cap/deployed_model_overall_single_v5_1088/best_checkpoint_weights.pt` (735 MB, git-ignored, a teammate's DeBERTa-v3 `overall_single_v5_1088` model) is present, `deployment_evaluator.bootstrap_production_evaluator` activates `AveragedEvaluator`: score = 0.8 × the model (`OverallSingleEvaluator`) + 0.2 × `HeuristicEvaluator`, with the heuristic's dimensions and feedback kept for the report. QWK vs gold: 0.86 on the model's 151-answer held-out test set (heuristic alone 0.10) and 0.70 on a 58-answer stress set (heuristic 0.23); no strong answer crushed, no weak one inflated. Without the file (or with `CAP_TRAINED_EVALUATOR=0`) the previous tiers apply unchanged. Adds ~4 s to server start and ~0.1 s per answer on a GPU (~1 s on CPU). Known bias: the model's score tracks answer length (r = 0.70).
+
+**Resume-evidence evaluator, LLM re-grade and parser fixes (a teammate's `maburan-new` work of 2026-10-23/24, brought onto `main` 2026-10-24).**
+- **Tier 0 evaluator** (`resume_evidence_evaluator.py`, `deployment_evaluator._try_activate_resume_evidence`): tried before `AveragedEvaluator`; `CAP_RESUME_EVIDENCE_EVALUATOR=0` skips it. Scoring v2 (`CAP_EVIDENCE_SCORING=v1` rolls back): similarity only decides whether the answer is on topic; the score comes from explanation (reasoning connectives, weighted by question type), specificity (`implementation_vocabulary.py`, acronyms, technical compounds), concrete detail and grounded ownership, minus keyword-list and textbook penalties. Only `technical_depth`, `completeness`, `ownership` and `resume_grounding` are shown to the candidate (`conversation_engine.DISPLAYED_DIMENSIONS`); the others are keyword heuristics. The overall score is unaffected by that filter.
+- **Background LLM re-grade** (`fact_checker.py`, `conversation_engine._queue_regrade`): with `CAP_FACT_CHECK=auto` (default) and Ollama running with `qwen3:4b` or `qwen2.5:3b`, each real answer (score > 0.10) is re-graded on one worker thread: an LLM fact check, where a claim counts as false only when NLI (`nli-deberta-v3-small`) also finds a contradiction in both directions, and an LLM rubric grade blended in at weight 0.6. The interview keeps the fast score; `/end` waits up to `CAP_REGRADE_WAIT_SECONDS` (30) for unfinished re-grades, the report overlays the re-graded scores (`rdMergeRegrades`) and `session_history._apply_regrades` saves them. Finished re-grades are written to the live store (`regrade:<conversation>:<turn>`), so they are found whichever server ends the interview. Without Ollama nothing changes. In Docker, `CAP_OLLAMA_URL` points at Ollama on the host machine.
+- **Tech-consistency flag** (`tech_consistency_flag.py`): on project questions, flags an answer whose technology stack contradicts what the resume lists for that project (contradiction ≥ 0.85 and support ≤ 0.20). Stored per turn in the conversation record and named as the first focus tip in the end-of-session feedback; it never changes the score.
+- **Resume parser:** running headers, all-caps acronyms, fuzzy section headers, a name fallback, two-line experience headers (title and company on separate lines), wrapped bullets, colon-bullet projects, inline certification lists and parenthesised skill lists (`Python (FastAPI, Celery)` → three skills), plus more degree, job-title and technology vocabulary. On our 10 benchmark resumes: company names now found on 5, degrees on 2, one project no longer misread as a job; skills lost two real entries on one resume.
+- **Benchmarks** (`main_cap/cap/benchmarks/`, see its README): a field-level parser benchmark, evaluator stress, held-out and dev sets, tools to collect and label real answers, and the Mohler human-graded data-structures answers (qwen3:4b reaches Pearson 0.73 with the two graders' average, who agree at 0.59 with each other; the technical NLI grader reaches 0.44).
 
 **End-of-session feedback (`interview_feedback.py`, 2026-09-30).** `conversation_engine.end_conversation` adds `summary["feedback"]` (headline, summary, strengths, focus areas, a scope note that factual correctness isn't verified, stats), built from the per-turn results: depth (`technical_depth`), relevance (`completeness`) and grounding (`ownership`, `resume_grounding`), averaged over answered questions only (non-answers are ignored). The Round 1 report uses its headline/summary instead of the fixed per-grade text, lists its focus tips first under "Before Your Next Interview" and shows the scope note; it is saved with the session, so History shows the same text. In the Full Interview report the top headline comes from both round scores instead (`rdCombinedVerdict`: ≥60% good, <40% weak, e.g. "Strong on your projects, but the technical round needs real work."), and the Round 1 headline moves to the top of the Round 1 section.
 
@@ -1198,7 +1206,12 @@ Resume engine internals: TextSpan → DocumentModel → Section → ParserResult
 | `CAP_RUN_GRADER_BENCHMARK` | unset | `1` runs the slow grader benchmark test (`test_grader_benchmark.py`) |
 | `CAP_GRADER_ENRICHMENT` | `replies` | Technical grader's use of the offline enrichment: `off`, `replies` (short correct follow-up replies), `all` (also key-point variants + main idea; measured to pass wrong answers). See §4.25 |
 | `CAP_QUESTION_BANK_DIR` | `rag_system/rag_tester/question_bank` | Where the app reads the question bank |
+| `CAP_RESUME_EVIDENCE_EVALUATOR` | on | Round 1 uses the resume-evidence evaluator first; `0` falls back to the averaged evaluator |
+| `CAP_EVIDENCE_SCORING` | `v2` | Resume-evidence scoring version (`v1` rolls back) |
 | `CAP_TRAINED_EVALUATOR` | on | Round 1 uses the averaged evaluator when the v5_1088 model file is installed; `0` forces the heuristic evaluator |
+| `CAP_FACT_CHECK` | `auto` | Background LLM re-grade of Round 1 answers: `auto` only when Ollama is up with a model, `1` always, `0` never |
+| `CAP_OLLAMA_URL` / `CAP_FACT_CHECK_MODEL` | `http://localhost:11434` / first of `qwen3:4b`, `qwen2.5:3b` installed | Ollama server and model for the re-grade |
+| `CAP_REGRADE_WAIT_SECONDS` | `30` | How long `/end` waits for unfinished re-grades |
 | `CAP_MODEL_WARMUP` | on | `python app.py` loads every model in a background thread at startup; `0` disables |
 | `CAP_LIVE_STORE` | `memory` | Where live interviews are kept: `memory` (one process) or `redis` (shared by workers, survives restarts) (§4.26) |
 | `CAP_REDIS_URL` | `redis://localhost:6379/0` | Redis for `CAP_LIVE_STORE=redis` |
@@ -1583,7 +1596,7 @@ pip install -r Requirements_Global.txt          # the project's requirements fil
 cd main_cap/cap
 python app.py                                   # http://localhost:5000
 ```
-Startup logs show which evaluator is active: `averaged-heuristic-v1+overall-single-…` when the v5_1088 weights are present (Git LFS), otherwise an older tier or `heuristic-v1` (a missing weights file is detected up front, and no model is downloaded). The database and its migrations are created and applied automatically; there are no manual DB steps.
+Startup logs show which evaluator is active: `resume-evidence-evaluator-v2` normally; with `CAP_RESUME_EVIDENCE_EVALUATOR=0`, `averaged-heuristic-v1+overall-single-…` when the v5_1088 weights are present (Git LFS), otherwise an older tier or `heuristic-v1` (a missing weights file is detected up front, and no model is downloaded). The database and its migrations are created and applied automatically; there are no manual DB steps.
 
 **Startup speed (`model_warmup.py`).** When every model is already downloaded, the app loads them without asking huggingface.co for updates (`HF_HUB_OFFLINE=1`; on a fresh machine they download on first use as before). `python app.py` then loads all models in a background thread (~7 s), so no user action waits for one. Measured: server start ~6.8 s → 2.1 s; the first technical answer 16.2 s → 0.2 s. The legacy `rag_integration` module is imported only if the old `/api/next_question` route is used (it cost ~4.6 s of every start). `CAP_MODEL_WARMUP=0` turns the warm-up off. The frontend's typing effect and pauses are deliberate pacing and were left unchanged.
 
@@ -1594,7 +1607,7 @@ Startup logs show which evaluator is active: `averaged-heuristic-v1+overall-sing
    2. **Continue with this resume** → `POST /api/resumes/<id>/use`, or upload a different one → `POST /api/classify-resume` (saved as current).
    3. → Briefing.
 3. **Rules + start:** CTA → `showInterviewRules("full")` → full screen → `POST /api/resume-discussion-v2/start` → `start_conversation` → `begin_resume_discussion` (DB) → first question. The rules are armed.
-4. **Round 1 turns (≤ 10):** `POST .../reply` → `build_request` → `AveragedEvaluator` (or a fallback tier) → `answer_gate` → ledger → `planner.advance` → turn saved → next question.
+4. **Round 1 turns (≤ 10):** `POST .../reply` → `build_request` → `ResumeEvidenceEvaluator` (or a fallback tier) → `answer_gate` → LLM re-grade queued (if Ollama is up) → ledger → `planner.advance` → turn saved → next question.
 5. **Round 1 end:** `POST .../end {integrity, attention_metrics}` → session saved → Round 1 summary, still in full screen.
 6. **Round 2:** `POST /api/tech-interview/start {mode: "round2"}` → 8 main questions, each answered with `POST /api/tech-interview/<id>/answer` (which may return a follow-up or a clarification request, ≤ 2 per question, and saves the turn) → `POST /api/tech-interview/<id>/end` → final combined results. Full screen is released only now.
 7. **Afterwards:** Home shows the updated stats and "Focus next"; Sessions lists both rounds.
@@ -1898,7 +1911,8 @@ The remaining suites weren't re-run for this update.
 | **PipelineTrace** | Optional per-stage timing and diagnostics object for the resume engine |
 | **Shadow Mode** | Dev-only tooling comparing Gemini vs engine profiles without treating either as ground truth |
 | **Evaluator / Evaluator Registry** | The stable scoring interface and the name → implementation lookup with an active pointer |
-| **AveragedEvaluator** | Production Round 1 evaluator: 0.8 × the fine-tuned DeBERTa-v3 overall model + 0.2 × the heuristic |
+| **AveragedEvaluator** | Round 1 fallback evaluator: 0.8 × the fine-tuned DeBERTa-v3 overall model + 0.2 × the heuristic |
+| **ResumeEvidenceEvaluator** | Production Round 1 evaluator: evidence-based scoring v2, with an optional background LLM re-grade |
 | **HeuristicEvaluator / HybridEvaluator / TrainedEvaluator** | Rule/SBERT-based / older DeBERTa-primary combined (fallback tier) / DeBERTa multi-task |
 | **Contradiction cap / similarity floor** | Technical grader safeguards: score ≤ 0.2 when the reference answer contradicts the answer; no key-point credit for unrelated text |
 | **Fresh set** | Labelled answers added after a round of changes and never used for tuning: the honest measure (`benchmark.py`) |

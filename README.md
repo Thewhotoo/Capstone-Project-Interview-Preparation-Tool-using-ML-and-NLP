@@ -72,7 +72,7 @@ Open **http://localhost:5000**, sign up with a resume, and start an interview fr
 
 ### Without Docker (for development and running the tests)
 
-Needed only to work on the code or run the test suite. **Requirements:** Python 3.12, about 8 GB RAM and internet on the first run (about 2 GB of models download then). Node.js only for the frontend tests. Details: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
+Needed only to work on the code or run the test suite. **Requirements:** Python 3.12, about 8 GB RAM and internet on the first run (about 2.5 GB of models download then). Node.js only for the frontend tests. Details: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
 
 ```bash
 pip install torch --index-url https://download.pytorch.org/whl/cpu   # no NVIDIA GPU: small CPU-only PyTorch
@@ -109,7 +109,12 @@ All optional; set as environment variables.
 | `CAP_DATABASE_URL` | `sqlite:///main_cap/cap/instance/app.db` | Database: SQLite by default, or PostgreSQL (`postgresql+psycopg://user:password@host:5432/dbname`) |
 | `CAP_UPLOAD_DIR` | `main_cap/cap/instance/uploads` | Where uploaded resumes are stored |
 | `CAP_SECRET_KEY` | generated once into `instance/secret_key` | Flask session secret; set explicitly in production |
+| `CAP_RESUME_EVIDENCE_EVALUATOR` | on | Round 1 is graded by the resume-evidence evaluator first; `0` falls back to the trained evaluator below |
+| `CAP_EVIDENCE_SCORING` | `v2` | Scoring version of the resume-evidence evaluator (`v1` rolls back) |
 | `CAP_TRAINED_EVALUATOR` | on | `0` forces the heuristic Round 1 evaluator |
+| `CAP_FACT_CHECK` | `auto` | Background re-grade of Round 1 answers with a local LLM (fact check + rubric grade): `auto` runs it only when Ollama is up with a model pulled, `1` always, `0` never |
+| `CAP_OLLAMA_URL` / `CAP_FACT_CHECK_MODEL` | `http://localhost:11434` (Docker: the host machine) / first of `qwen3:4b`, `qwen2.5:3b` that Ollama has | Ollama server and model for the re-grade |
+| `CAP_REGRADE_WAIT_SECONDS` | `30` | How long ending a Round 1 interview waits for unfinished re-grades; unfinished ones keep the live score |
 | `CAP_CURATED_ONLY` | `1` | Technical interviews use the hand-reviewed top tier of the bank; `0` widens to every active question |
 | `CAP_GRADER_ENRICHMENT` | `replies` | How much of the offline bank enrichment the technical grader uses (`off` / `replies` / `all`) |
 | `CAP_QUESTION_BANK_DIR` | `rag_system/rag_tester/question_bank` | Where the question bank is read from |

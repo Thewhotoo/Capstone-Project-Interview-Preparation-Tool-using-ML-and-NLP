@@ -175,14 +175,6 @@ class TestV4NotWiredIntoTrainingPipeline(unittest.TestCase):
         self.assertNotIn("v4_diagnostic", content)
         self.assertNotIn("v4h_", content)
 
-    def test_run_four_dim_training_does_not_reference_v4(self):
-        import run_four_dim_training
-        source_path = run_four_dim_training.__file__
-        with open(source_path, encoding="utf-8") as f:
-            content = f.read()
-        self.assertNotIn("v4_diagnostic", content)
-        self.assertNotIn("v4h_", content)
-
 
 if __name__ == "__main__":
     unittest.main()

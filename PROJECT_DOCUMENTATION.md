@@ -76,7 +76,7 @@ The **core value proposition** has three parts:
 
 The repository also contains a substantial **ML research track**: synthetic dataset generation, labeling, training infrastructure and five experiment rounds. This track produced the deployed DeBERTa checkpoint. The repository also includes supporting and exploratory subsystems (a RAG question generator, a RoBERTa question classifier, a legacy resume domain classifier, and a parser benchmark harness), most of which are not wired into the shipped UI flow.
 
-**Teammate's branch merged in full (2026-10-26).** Every file and change on the teammate's `maburan-new` branch (through `1869388`, 2026-10-24) is merged into `main` with its history: a 3-way merge against the `main` commit his branch was built on (`84cfa89`). Round 1 gains adaptive follow-ups (one deeper probe on a weak-but-real answer, at most one per project and two per interview; the decision is stored with each turn so a conversation rebuilt from the live store asks the same questions), the echo check (`answer_engagement.py`), the deflection gate, the fact check's second qwen3 confirmation, the technology-mismatch fix, honest report wording, his final benchmark sets, a faster Round 1 typewriter driven by `requestAnimationFrame`, and his research material (Colab training, datasets, experiment artifacts, design docs). Files removed from `main` on 2026-10-25 that his branch still had (legacy RAG, `parser_tests/`, `integration_checks/`, `resume_classifier/`, the v1 discussion engine, `Roberta/`, team notes) are back for now, to be cleaned up again once the merge has settled (§4.14).
+**Teammate's branch merged in full (2026-10-26).** Every file and change on the teammate's `maburan-new` branch (through `1869388`, 2026-10-24) is merged into `main` with its history: a 3-way merge against the `main` commit his branch was built on (`84cfa89`). Round 1 gains adaptive follow-ups (one deeper probe on a weak-but-real answer, at most one per project and two per interview; the decision is stored with each turn so a conversation rebuilt from the live store asks the same questions), the echo check (`answer_engagement.py`), the deflection gate, the fact check's second qwen3 confirmation, the technology-mismatch fix, honest report wording, his final benchmark sets, a faster Round 1 typewriter driven by `requestAnimationFrame`, and his research material (Colab training, datasets, experiment artifacts, design docs). Legacy files his branch still had were removed again the same day, together with his unshipped four-dimension (A2) model research (§4.14).
 
 **Teammate's branch integrated (2026-09-30).** A teammate's improved resume engine, Round 1 question-variety changes, a trained Round 1 answer evaluator (blended 80/20 with the heuristic) and data-driven report feedback were merged in, each measured before/after and with a rollback in `archive/` (`resume_engine_backup_2026-09-30/`, `round1_planner_backup_2026-09-30/`, `evaluator_backup_2026-09-30/`).
 
@@ -400,7 +400,7 @@ capstone_latest/
 │   └── .slide_cache/, .vision_cache/, .qbank_cache/, .enrich_cache/   Stage 1 / vision / question-generation / enrichment caches (git-ignored)
 ├── archive/superseded_caches/        Archived old-version caches (safe to delete; see its README)
 ├── archive/Roberta/                  Archived: question intent/difficulty/topic classifiers + adaptive quiz (never used by the app; see §4.15)
-└── parser_tests/resumes/             10 real resumes for one parser test (git-ignored, personal data)
+└── parser_tests/resumes/             10 real resumes for one parser test (personal data; in the repo since the 2026-10-26 merge)
 ```
 
 **`docs/architecture/`**
@@ -1010,10 +1010,11 @@ Limitation: enforcement is client-side and can be bypassed with DevTools.
 
 ### 4.14 Removed legacy code
 
-Removed on 2026-10-25 because nothing in the app reached it any more. **Restored on 2026-10-26** by the full merge of the teammate's branch, which still had these files; they are not wired into the app (the legacy routes stay removed) and are due to be removed again:
+Removed on 2026-10-25 because nothing in the app reached it any more; brought back by the 2026-10-26 merge and removed again the same day (all still in the git history):
 - **Legacy routes:** `/api/next_question`, `/api/evaluate` and `/api/technical-sessions` (the old fill-in-the-blank quiz, replaced by the question-bank interview, §4.25), `/api/get-resume-discussion` and `/api/resume-discussion/*` (the v1 resume discussion, replaced by `conversation_engine`), with `discussion_engine.py`, `legacy_topic_pool_adapter.py` and `rag_integration.py`.
 - **Legacy RAG** (`rag_system/rag_tester/*.py` outside `slide_rag/`): the page-per-chunk index, Qwen2.5 generation, the rubric grader, the diagram pipeline and its CLI, replaced by the slide pipeline (§4.24) and the question bank (§4.25). The old index scored 68–82% section hit@5 on the gold sets, against 96–100% for the slide pipeline.
 - **`resume_classifier/`** (a legacy parser and an untrained BERT domain classifier) and **`parser_tests/`** (its benchmark), replaced by the resume engine.
+- **Unshipped four-dimension (A2) model research** (removed 2026-10-26): the four-dimension dataset builders and training entry point (`four_dim_dataset.py`, `run_four_dim_training.py`, `build_four_dim_*`), the V4-5000 dataset scripts, the volunteer pilot and rubric judge, the v3/A2 model folders, the v4 Colab evaluators, `COLAB_RUN.md` and the V3–V6 design docs. Kept: what the shipped `overall_single_v5_1088` model was built from (`colab_training/*_v5.py`, `overall_dataset.py`, `run_overall_single_training.py`, `build_v5_1088_pool.py`, the v5 calibration scripts, the split modules they import and `artifacts/`).
 - **One-off scripts:** `integration_checks/` (2026-09-30 merge comparisons; their results are recorded in §4.3 and §4.6), `resume_engine/devtools/` (Shadow Mode), `_verify_traceability.py`, and `grader_eval/run_grader_eval.py` / `run_my_answers.py` (replaced by `benchmark.py`).
 
 ---

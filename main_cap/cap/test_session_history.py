@@ -186,73 +186,10 @@ class TestResumeDiscussionHistory(HistoryTestCase):
 
 
 class TestTechnicalHistory(HistoryTestCase):
-    QUESTION = {
-        "question": "Explain the TCP three-way handshake.",
-        "reference_answer": "The client sends SYN, the server replies SYN-ACK, and the client sends ACK.",
-        "user_answer": "The client sends a SYN, the server answers with SYN-ACK and the client sends ACK.",
-        "user_fill_mask": "SYN",
-        "reference_fill_mask": "SYN",
-        "fill_question": "The first packet is ___.",
-        "topic": "TCP",
-        "difficulty": "medium",
-    }
-
-    def start(self, client=None):
-        response = (client or self.client).post("/api/technical-sessions")
-        self.assertEqual(response.status_code, 201)
-        return response.get_json()["session"]["id"]
-
-    def evaluate(self, session_id, client=None):
-        return (client or self.client).post("/api/evaluate", json={**self.QUESTION, "session_id": session_id})
-
-    def test_quiz_turns_are_saved_and_the_session_finished(self):
-        session_id = self.start()
-        for _ in range(2):
-            self.assertEqual(self.evaluate(session_id).status_code, 200)
-        response = self.client.post(f"/api/technical-sessions/{session_id}/end",
-                                    json={"attention_metrics": ATTENTION})
-        self.assertEqual(response.status_code, 200)
-
-        [session] = self.sessions(type="technical")
-        self.assertEqual(session["status"], "completed")
-        self.assertEqual(session["questions_answered"], 2)
-        self.assertIsNone(session["resume"])
-        detail = self.client.get(f"/api/sessions/{session_id}").get_json()["session"]
-        turn = detail["turns"][0]
-        self.assertEqual(turn["question_text"], self.QUESTION["question"])
-        self.assertEqual(turn["category"], "TCP")
-        self.assertEqual(turn["answer_text"], self.QUESTION["user_answer"])
-        self.assertEqual(turn["evaluation"]["user_fill_mask"], "SYN")
-        self.assertIn("marks", turn["evaluation"])
-        self.assertAlmostEqual(session["overall_score"], turn["overall_score"])
-
-        # Finished sessions can't be ended again or written to.
-        self.assertEqual(self.client.post(f"/api/technical-sessions/{session_id}/end").status_code, 404)
-        self.evaluate(session_id)
-        self.assertEqual(self.sessions()[0]["questions_answered"], 2)
-
-    def test_integrity_violation_marks_the_technical_session_terminated(self):
-        session_id = self.start()
-        self.evaluate(session_id)
-        response = self.client.post(f"/api/technical-sessions/{session_id}/end", json={
-            "attention_metrics": ATTENTION,
-            "integrity": {"terminated": True, "type": "fullscreen_exit", "label": "Left full screen", "at_turn": 2},
-        })
-        self.assertEqual(response.status_code, 200)
-        [session] = self.sessions(type="technical")
-        self.assertEqual(session["status"], "terminated")
-        self.assertEqual(session["integrity"]["type"], "fullscreen_exit")
-        self.assertEqual(session["questions_answered"], 1)
-
-    def test_evaluate_without_or_with_a_foreign_session_still_works_but_saves_nothing(self):
-        session_id = self.start()
-        other, _ = signed_up_client(PROFILE)
-        self.assertEqual(other.post("/api/evaluate", json=self.QUESTION).status_code, 200)
-        self.assertEqual(self.evaluate(session_id, client=other).status_code, 200)
-        self.assertEqual(self.sessions()[0]["questions_answered"], 0)
+    """Technical interviews themselves are covered in test_tech_interview.py."""
 
     def test_list_can_be_filtered_by_type(self):
-        self.start()
+        self.assertEqual(self.client.post("/api/tech-interview/start", json={"mode": "standalone"}).status_code, 201)
         self.start_discussion()   # abandons the technical one — one interview at a time
         self.assertEqual({s["session_type"] for s in self.sessions()}, {"technical", "resume_discussion"})
         self.assertEqual([s["session_type"] for s in self.sessions(type="resume_discussion")], ["resume_discussion"])

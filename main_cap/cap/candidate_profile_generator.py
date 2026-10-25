@@ -34,7 +34,7 @@ _DEBUG_SAVE_RESPONSES = os.environ.get(
 _RETRY_MAX_ATTEMPTS = 3
 _RETRY_BASE_DELAY_S = 1.0
 
-# ── Domain labels (matches resume_classifier/utils/config.py) ────────────────
+# ── Domain labels ──────────────────────────────────────────────────────────
 
 DOMAIN_LABELS = [
     "Software Engineering",
@@ -419,8 +419,7 @@ _MAX_CHARS = 30_000
 # Feature flag: which parser backend produces the CandidateProfile.
 # "engine" (default, as of the production cutover -- the deterministic
 # Resume Intelligence Engine, Milestones 1-7) or "gemini" (legacy path,
-# kept only for Shadow Mode's own use -- see shadow_mode.py -- and as a
-# manual escape hatch; not used by any normal request). Read at call
+# kept only as a manual escape hatch; not used by any normal request). Read at call
 # time, not import time, so it can be overridden per-process (env var) or
 # per-test without reloading this module.
 _ENGINE_SUPPORTED_FORMATS = {".pdf": "pdf", ".docx": "docx", ".txt": "txt"}
@@ -428,8 +427,8 @@ _ENGINE_SUPPORTED_FORMATS = {".pdf": "pdf", ".docx": "docx", ".txt": "txt"}
 
 def get_active_parser_backend() -> str:
     """Returns "engine" or "gemini". Defaults to "engine" post-cutover.
-    Falls back to "gemini" only when explicitly requested (e.g. by
-    Shadow Mode, or a manual override) -- any other/unrecognized value
+    Falls back to "gemini" only when explicitly requested (a manual
+    override) -- any other/unrecognized value
     also defaults to "engine", never silently falling through to the
     Gemini/API-dependent path on a typo."""
     raw = os.environ.get("CAP_RESUME_PARSER", "engine").strip().lower()
@@ -441,7 +440,7 @@ def engine_supports_format(file_extension: str) -> bool:
     (`resume_engine.extractor.PdfDocxExtractor`) handles PDF/DOCX/TXT.
     .doc (legacy binary Word format) has no engine-side extractor and no
     observed demand in this project -- callers must reject it (or fall
-    back to Gemini, for Shadow Mode's own dev use only) rather than
+    back to Gemini by manual override) rather than
     silently mishandling it."""
     return file_extension.lower() in _ENGINE_SUPPORTED_FORMATS
 
@@ -471,8 +470,8 @@ def generate_candidate_profile_via_engine(file_path: str) -> dict:
     if source_format is None:
         raise RuntimeError(
             f"Resume Intelligence Engine does not support {extension!r} files "
-            "(only .pdf/.docx/.txt) -- caller must reject the upload (or, for "
-            "Shadow Mode's own dev use only, fall back to the Gemini path)."
+            "(only .pdf/.docx/.txt) -- caller must reject the upload (or, by manual "
+            "override, fall back to the Gemini path)."
         )
 
     annotated_profile = default_pipeline().run(file_path, source_format)

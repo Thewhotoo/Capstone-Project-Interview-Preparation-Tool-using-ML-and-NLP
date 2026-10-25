@@ -9,9 +9,6 @@ is lost if the server restarts or the browser closes:
                         discussion-v2/* routes in app.py call the
                         `*_resume_discussion` functions below around it.
                         conversation_engine itself stays unaware of the DB.
-    Technical Interview /api/technical-sessions starts a session, each
-                        /api/evaluate call with a `session_id` records a
-                        turn, and .../end finishes it. (Legacy quiz flow.)
     Tech Interview      /api/tech-interview/* (session_routes.py): the
                         question-bank interview (tech_interview/). The live
                         TechInterview is kept in live_store here; each main
@@ -315,10 +312,6 @@ def finish_resume_discussion(conversation_id: str, end_payload: dict, attention_
 
 # ── Technical Interview ─────────────────────────────────────────────────────
 
-def begin_technical_session(user_id: int) -> InterviewSession:
-    return _new_session(user_id, SESSION_TYPE_TECHNICAL)
-
-
 def own_in_progress_technical_session(session_id: Any, user_id: int) -> Optional[InterviewSession]:
     try:
         session_id = int(session_id)
@@ -330,35 +323,6 @@ def own_in_progress_technical_session(session_id: Any, user_id: int) -> Optional
         InterviewSession.session_type == SESSION_TYPE_TECHNICAL,
         InterviewSession.status == SESSION_IN_PROGRESS,
     ))
-
-
-def record_technical_turn(session: InterviewSession, request_data: dict, result: dict) -> None:
-    """One quiz question: main answer + fill-in-the-blank, and /api/evaluate's result."""
-    _add_turn(session, SessionTurn(
-        turn_number=len(session.turns) + 1,
-        question_text=str(request_data.get("question", "")),
-        category=request_data.get("topic"),
-        answer_text=str(request_data.get("user_answer", "")),
-        answered_at=utcnow(),
-        overall_score=result.get("score"),
-        grade=session_grade(result.get("score")),
-        evaluation={
-            **result,
-            "difficulty": request_data.get("difficulty"),
-            "fill_question": request_data.get("fill_question"),
-            "user_fill_mask": request_data.get("user_fill_mask"),
-            "reference_fill_mask": request_data.get("reference_fill_mask"),
-            "reference_answer": request_data.get("reference_answer"),
-        },
-    ))
-
-
-def finish_technical_session(session: InterviewSession, attention_metrics: Any, integrity: Any = None) -> None:
-    """`integrity` is the browser's session-integrity record, sanitized the
-    same way as the Resume Discussion's; a violation marks it terminated."""
-    clean = conversation_engine.sanitize_integrity(integrity)
-    _finish(session, SESSION_TERMINATED if clean["terminated"] else SESSION_COMPLETED,
-            integrity=clean, attention_metrics=attention_metrics)
 
 
 # ── Tech Interview (question bank) ──────────────────────────────────────────

@@ -5,8 +5,6 @@ Session history API — the logged-in user's past and current interviews.
     GET    /api/sessions                         list, newest first (?type=resume_discussion|technical)
     GET    /api/sessions/<id>                     one session with every turn (question, answer, evaluation)
     DELETE /api/sessions/<id>
-    POST   /api/technical-sessions                start a Technical Interview session
-    POST   /api/technical-sessions/<id>/end       {attention_metrics, integrity}
 
 Question-bank Technical Interview (tech_interview/):
     POST   /api/tech-interview/start              {mode: standalone (10 questions) | round2 (8)}
@@ -85,24 +83,6 @@ def delete_session(session_id: int):
         return jsonify({"error": "Session not found."}), 404
     session_history.delete_session(session)
     return jsonify({"status": "deleted"}), 200
-
-
-@sessions_bp.post("/api/technical-sessions")
-@login_required
-def start_technical_session():
-    session = session_history.begin_technical_session(current_user.id)
-    return jsonify({"session": session.to_dict()}), 201
-
-
-@sessions_bp.post("/api/technical-sessions/<int:session_id>/end")
-@login_required
-def end_technical_session(session_id: int):
-    session = session_history.own_in_progress_technical_session(session_id, current_user.id)
-    if session is None:
-        return jsonify({"error": "Session not found or already finished."}), 404
-    data = request.get_json(silent=True) or {}
-    session_history.finish_technical_session(session, data.get("attention_metrics"), data.get("integrity"))
-    return jsonify({"session": session.to_dict()}), 200
 
 
 # ── Question-bank Technical Interview ───────────────────────────────────────

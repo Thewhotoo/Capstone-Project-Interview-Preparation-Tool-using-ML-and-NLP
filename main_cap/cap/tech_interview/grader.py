@@ -43,7 +43,7 @@ Clarity signals, used by the follow-up policy (followup.py), not the score:
   too_short     fewer than MIN_WORDS words
   vague         hedges and placeholders ("something like", "stuff", "etc.")
   repetitive    the same few words over and over
-Adapted from the legacy RAG grader (rag_tester/evaluate.py: junk-input gate,
+Adapted from the legacy RAG grader (since removed: junk-input gate,
 semantic + concept matching), scoring against the bank's verified key points
 instead of guessing concepts from raw slide text.
 """

@@ -145,8 +145,7 @@ python -m pytest slide_rag/tests -q                  # slide pipeline: 19 passed
 Some grader tests load the real models; set `CAP_SKIP_MODEL_TESTS=1` to skip them.
 
 Evaluation scripts:
-- `grader_eval/`: technical grader vs hand-labelled answers.
-- `integration_checks/`: resume engine, non-answer filter and Round 1 evaluator comparisons.
+- `grader_eval/`: technical grader vs hand-labelled answers (`benchmark.py`, `sanity_check.py`).
 
 ---
 
@@ -172,9 +171,6 @@ Evaluation scripts:
 │   ├── slide_rag/                 Offline slide pipeline + question-bank generation, ranking, enrichment
 │   └── question_bank/             The technical question bank (one JSON per subject) + quality review
 ├── grader_eval/                   Technical grader evaluation sets and scripts
-├── integration_checks/            Before/after comparison scripts and data
-├── resume_classifier/             Resume text extraction for DOCX/DOC/TXT
-├── parser_tests/                  Parser benchmark scripts (the test resumes themselves are not in git)
 ├── docs/architecture/             Earlier design documents
 ├── Dockerfile, docker-compose.yml, .dockerignore, .env.example   Production mode in Docker
 └── docker/                        Model download script and pinned versions for the image

@@ -35,10 +35,8 @@ RUN sed '/Slide pipeline and question-bank rebuild/,$d' /tmp/Requirements_Global
 COPY docker/download_models.py /tmp/
 RUN python /tmp/download_models.py && chown -R cap:cap /opt/hf
 
-# 3. The code: the app, the resume classifier it imports, and the technical
-#    interview's question bank (see .dockerignore for what is left out).
+# 3. The code: the app and the technical interview's question bank (see .dockerignore for what is left out).
 WORKDIR /app
-COPY --chown=cap:cap resume_classifier/ resume_classifier/
 COPY --chown=cap:cap rag_system/rag_tester/question_bank/ rag_system/rag_tester/question_bank/
 COPY --chown=cap:cap main_cap/cap/ main_cap/cap/
 # instance/ holds uploads and the generated secret key; docker-compose.yml puts

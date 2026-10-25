@@ -3,7 +3,6 @@
 **Round 2 (100 questions):** attach `questions.json` and save the reply as
 `output_questions.json`. If the LLM stops partway (400 answers is long), ask it to continue
 from the last question_id and paste the parts into the same JSON array.
-(The first 25-question test, used to tune the grader, is in `tuning_set/`; leave it alone.)
 
 ---
 

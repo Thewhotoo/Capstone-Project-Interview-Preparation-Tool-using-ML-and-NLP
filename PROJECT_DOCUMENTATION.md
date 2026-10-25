@@ -25,8 +25,8 @@
    - 4.11 [Frontend (`templates/index.html`)](#411-frontend-templatesindexhtml)
    - 4.12 [Webcam, gaze & liveness monitoring](#412-webcam-gaze--liveness-monitoring)
    - 4.13 [Session integrity (full-screen / tab-switch / copy-paste rules)](#413-session-integrity)
-   - 4.14 [Legacy v1 discussion engine (`discussion_engine.py`)](#414-legacy-v1-discussion-engine)
-   - 4.15 [Supporting subsystems: RAG, RoBERTa, resume classifier, parser benchmark](#415-supporting-subsystems)
+   - 4.14 [Removed legacy code (2026-10-25)](#414-removed-legacy-code)
+   - 4.15 [Supporting subsystems: archived RoBERTa classifiers](#415-supporting-subsystems)
    - 4.16 [Data models / schemas (consolidated)](#416-data-models--schemas-consolidated)
    - 4.17 [Design patterns used](#417-design-patterns-used)
    - 4.18 [Internal interfaces between modules](#418-internal-interfaces-between-modules)
@@ -76,7 +76,7 @@ The **core value proposition** has three parts:
 
 The repository also contains a substantial **ML research track**: synthetic dataset generation, labeling, training infrastructure and five experiment rounds. This track produced the deployed DeBERTa checkpoint. The repository also includes supporting and exploratory subsystems (a RAG question generator, a RoBERTa question classifier, a legacy resume domain classifier, and a parser benchmark harness), most of which are not wired into the shipped UI flow.
 
-**Teammate's branch integrated (2026-09-30).** A teammate's improved resume engine, Round 1 question-variety changes, a trained Round 1 answer evaluator (blended 80/20 with the heuristic) and data-driven report feedback were merged in, each measured before/after and with a rollback in `archive/` (`resume_engine_backup_2026-09-30/`, `round1_planner_backup_2026-09-30/`, `evaluator_backup_2026-09-30/`). Comparison scripts: `integration_checks/`.
+**Teammate's branch integrated (2026-09-30).** A teammate's improved resume engine, Round 1 question-variety changes, a trained Round 1 answer evaluator (blended 80/20 with the heuristic) and data-driven report feedback were merged in, each measured before/after and with a rollback in `archive/` (`resume_engine_backup_2026-09-30/`, `round1_planner_backup_2026-09-30/`, `evaluator_backup_2026-09-30/`).
 
 **Slide RAG pipeline and question bank.** `rag_system/rag_tester/slide_rag/` rebuilds the technical knowledge base from the faculty lecture slides of five subjects (CN, DBMS, DSA, OOAD, OS; ~5,800 slides). It reads slides by layout, cleans and classifies them, regroups them into sections, and indexes them for hybrid retrieval with exact slide-page citations. On hand-labelled interview questions it finds the right slides in its top 5 for 96–100% of questions, against 68–82% for the old page-per-chunk index (§4.24). From it and 279 curated topics, a local LLM (Qwen3-8B via Ollama) generated a **422-question technical-interview bank** offline, spanning all five subjects and three difficulty levels. Every key point is backed by a verified slide quote and every question passed an LLM judge; each question then carries a confidence rank, a hand-assigned quality score and an interview-frequency tier, so interviews draw the strongest questions on the most-asked topics first (§4.25). It feeds the standalone Technical Interview (10 questions) and the full interview's Round 2 (8), graded by an NLI grader that needs no LLM or GPU at interview time (`tech_interview/`, §4.25); a 30-question MCQ test is planned for later.
 
@@ -124,22 +124,22 @@ Source: `Requirements_Global.txt` is the only requirements file that exists. The
 | `python-dotenv` | Loads `main_cap/cap/.env` | `app.py`, `generation_client.py`, `candidate_profile_generator.py` |
 | `pydantic>=2` | Frozen, validated contracts (profile, spec, request/result, training records) | Everywhere |
 | `PyMuPDF` (`pymupdf`/`fitz`) | PDF span / font / bbox / hyperlink extraction | `resume_engine/extractor.py`, RAG ingestion |
-| `python-docx>=1.1` | DOCX extraction (runs, styles, tables, hyperlinks) | `resume_engine/extractor.py`, `resume_classifier` |
+| `python-docx>=1.1` | DOCX extraction (runs, styles, tables, hyperlinks) | `resume_engine/extractor.py` |
 | `rapidfuzz` | Fuzzy gazetteer matching (`token_sort_ratio` / `token_set_ratio`) | `resume_engine/sections.py`, parsers |
 | `python-dateutil` | Date-range parsing | `resume_engine/dates.py` |
-| `sentence-transformers` | SBERT `all-MiniLM-L6-v2` (similarity, section fallback, KeyBERT backbone), NLI cross-encoder | `resume_engine`, `heuristic_evaluator.py`, RAG |
-| `keybert` | Keyphrase extraction for project concepts | `resume_engine/parsers/project_parser.py`, legacy v1 |
-| `torch>=2.2`, `transformers>=4.49` | DeBERTa-v3 cross-encoder + CORAL heads; Qwen2.5 (legacy RAG) | `model_*.py`, RAG |
-| `google-genai>=2` | Gemini 2.5 Flash, now used **only** by dev tooling (Shadow Mode, synthetic generation, rewrite pilot) | `candidate_profile_generator.py`, `generation_client.py`, `rewrite_verifier_client.py` |
-| `faiss-cpu`, `rank-bm25` | Vector + BM25 hybrid retrieval | `rag_system/rag_tester`, `slide_rag` |
+| `sentence-transformers` | SBERT `all-MiniLM-L6-v2` (similarity, section fallback, KeyBERT backbone), NLI cross-encoder | `resume_engine`, `heuristic_evaluator.py`, `tech_interview/`, `slide_rag` |
+| `keybert` | Keyphrase extraction for project concepts | `resume_engine/parsers/project_parser.py` |
+| `torch>=2.2`, `transformers>=4.49` | DeBERTa-v3 cross-encoder + CORAL heads; Qwen3-VL (slide pipeline) | `model_*.py`, `slide_rag` |
+| `google-genai>=2` | Gemini 2.5 Flash, now used **only** by research tooling (synthetic generation, rewrite pilot) and the manual Gemini parser fallback | `candidate_profile_generator.py`, `generation_client.py`, `rewrite_verifier_client.py` |
+| `faiss-cpu`, `rank-bm25` | Vector + BM25 hybrid retrieval | `slide_rag` |
 | `rapidocr-onnxruntime` | OCR of picture-only slides (optional; skipped if not installed) | `slide_rag/extract.py` |
 | `torchvision` (must match the installed torch build, e.g. `0.28.0+cu130` for torch 2.13 cu130) | Required by the Qwen3-VL processor | `slide_rag/vision.py` |
-| `pdfplumber` | Legacy resume text extraction | `resume_classifier`, `parser_tests` |
+| `pdfplumber` | PDF text for research scripts | `generation_validation.py`, `run_third_experiment.py` |
 | `datasets`, `scikit-learn`, `accelerate` | RoBERTa training (archived) | `archive/Roberta/` |
 | `sentencepiece`, `protobuf`, `tiktoken` | DeBERTa-v3 tokenizer requirements | model layer |
 | `pytest` | Python tests (many files are `unittest`-style and pytest-collectable) | tests |
 
-Packages the code imports that are **missing from `Requirements_Global.txt`**: `graphviz`, `matplotlib`, `pytesseract`, `Pillow` (all legacy RAG diagram/OCR code), and `rapidocr-onnxruntime` and `torchvision` (slide pipeline). The Tesseract and Graphviz system binaries are needed only by the legacy RAG code.
+Packages the code imports that are **missing from `Requirements_Global.txt`**: `rapidocr-onnxruntime` and `torchvision` (slide pipeline).
 
 **Hardware used for the slide pipeline:** an NVIDIA RTX 5050 laptop GPU (8 GB VRAM) with CUDA 13.0. Embeddings and the reranker use CUDA automatically when it is available; the vision model (Stage 3) needs the GPU.
 
@@ -148,23 +148,21 @@ Packages the code imports that are **missing from `Requirements_Global.txt`**: `
 |---|---|
 | `microsoft/deberta-v3-base` + `overall_single_v5_1088` weights | **Production Round 1 evaluator**: DeBERTa-v3-base with one CORAL ordinal head (5 tiers), 735 MB, in `deployed_model_overall_single_v5_1088/` (Git LFS); 80% of the Round 1 score (§4.6) |
 | `microsoft/deberta-v3-base` (Experiment 4 multi-task) | Earlier trained evaluator (CORAL heads per dimension, `max_length=128`); weights absent, used only by the fallback `HybridEvaluator` tier |
-| `all-MiniLM-L6-v2` (SBERT) | Semantic similarity, section-header embedding fallback, KeyBERT backbone, RAG embeddings, rewrite drift check |
+| `all-MiniLM-L6-v2` (SBERT) | Semantic similarity, section-header embedding fallback, KeyBERT backbone, slide embeddings, rewrite drift check |
 | `cross-encoder/nli-MiniLM2-L6-H768` | Contradiction flag (never blended into a score) |
 | `cross-encoder/nli-deberta-v3-base` | Technical-interview grader: key-point entailment (`tech_interview/grader.py`) |
-| `cross-encoder/ms-marco-MiniLM-L-6-v2` | RAG reranker |
-| `Qwen/Qwen2.5-1.5B-Instruct` | Legacy RAG question/answer generation (not viable for the planned question bank) |
+| `cross-encoder/ms-marco-MiniLM-L-6-v2` | Slide retrieval reranker |
 | `Qwen/Qwen3-VL-2B-Instruct` | Slide pipeline Stage 3: reads diagrams, tables, formulas and picture-only slides (local, bf16, ~4.3 GB, fits 8 GB VRAM, ~10 s per slide). Run on CN's picture/table slides so far |
 | `qwen3:8b` via **Ollama** (GGUF Q4_K_M, llama.cpp engine) | Question-bank generator and judge (`slide_rag/qbank.py`, `llm_client.py`). Runs 100% on the RTX 5050 (~6.2 GB VRAM, 8,192-token context), ~45 tokens/s. Offline only — the app never calls it |
 | `Qwen/Qwen3-8B` (4-bit NF4, bitsandbytes) | Earlier feasibility test only (`slide_rag/llm_smoke_test.py`: ~16 tokens/s); replaced by Ollama, which is ~2.7× faster |
 | RapidOCR (ONNX) models | Slide pipeline: OCR of picture-only slides |
 | `distilroberta-base` | RoBERTa intent/difficulty/topic classifiers (weights not in repo) |
-| `bert-base-uncased` | Legacy resume domain classifier (never trained; untrained head) |
 | MediaPipe `face_landmarker.task` | Browser-side face mesh (478 landmarks), at `main_cap/cap/static/models/` |
 
 ### External services
 | Service | Status |
 |---|---|
-| **Google Gemini 2.5 Flash** (`GEMINI_API_KEY`) | Not on the production request path since the Milestone 7 cutover. Used by Shadow Mode dev tooling, `GeminiGenerationClient`, the Experiment 4 Gemini rewrite pilot, and `_verify_traceability.py`. |
+| **Google Gemini 2.5 Flash** (`GEMINI_API_KEY`) | Not on the production request path since the Milestone 7 cutover. Used by `GeminiGenerationClient` and the Experiment 4 Gemini rewrite pilot (research tooling), and by the manual parser fallback `CAP_RESUME_PARSER=gemini`. |
 | **Hugging Face Hub** | Model and tokenizer downloads on first run (DeBERTa ≈700 MB, SBERT, NLI, Qwen). |
 | **Ollama** (local, `http://localhost:11434`) | Local LLM server used only to generate the question bank offline (`qwen3:8b`). Installed with `winget install Ollama.Ollama`; model via `ollama pull qwen3:8b`. Not needed to run the app. |
 | **jsDelivr CDN** | `@mediapipe/tasks-vision@0.10.14` ESM bundle + WASM, loaded by the browser. |
@@ -248,9 +246,7 @@ Every answered turn is written to the database immediately, so a restart loses n
 | **Trained model layer** | `model_backbone.py`, `model_heads.py`, `model_dataset.py`, `model_checkpoint_io.py`, `model_evaluator.py`, `deployment_evaluator.py` | DeBERTa-v3 multi-task evaluator: training, inference, startup wiring | Evaluator registry |
 | **Coaching** | `strong_answer.py`, `concept_analysis.py` | Deterministic coaching note and concept-coverage % | Conversation engine |
 | **ML research track** | `training_example*.py`, `generation_*.py`, `prompt_*.py`, `coverage_strategy.py`, `dataset_*.py`, `labeling_operations.py`, `training_experimentation.py`, `rewrite_*.py`, `deterministic_rewrite*.py`, `run_*.py` | Produce and benchmark training data and checkpoints | Model layer (offline) |
-| **Legacy v1 discussion** | `discussion_engine.py`, `legacy_topic_pool_adapter.py` | Older adaptive engine (still routed at `/api/resume-discussion/*`, unused by the UI) | Planner via adapter |
 | **Slide RAG pipeline** | `rag_system/rag_tester/slide_rag/*`, `topics/`, `knowledge_base_v2/` | Offline: lecture slides → cleaned sections → hybrid index; topic lists; retrieval evaluation. Generates, ranks, repairs and curates the question bank | Offline by design; its `question_bank/` is read by `tech_interview/` |
-| **Supporting subsystems** | `rag_system/` (legacy RAG), `resume_classifier/`, `parser_tests/` (RoBERTa archived) | Old RAG question generation, legacy resume classifier, parser benchmark | Loosely via `sys.path` in `app.py` |
 
 ### 3.3 Data flow through the system
 
@@ -362,7 +358,7 @@ Flow invariants:
   - **Models downloaded at build time** (`docker/download_models.py`, into `HF_HOME=/opt/hf`): the container starts with no internet and loads every model in about 3 s.
   - **Layers ordered by how often they change** (torch → packages → models → code): a code change rebuilds only the last layer, in seconds. First build about 13 min (downloads about 3 GB); image about 6 GB.
   - **Exact package versions** (`docker/constraints.txt`): the image installs the tested versions; `Requirements_Global.txt` keeps lower bounds. Only the app's part of the requirements is installed (the slide pipeline, developer tools and tests are left out).
-  - **An allow-list `.dockerignore`**: only `main_cap/cap/` (without tests and `instance/`), `resume_classifier/`, the question bank and the requirements go into the image.
+  - **An allow-list `.dockerignore`**: only `main_cap/cap/` (without tests and `instance/`), the question bank and the requirements go into the image.
   - **The trained evaluator weights are mounted, not copied** (read-only, from `deployed_model_overall_single_v5_1088/`): they stay in git LFS, rebuilds don't copy 735 MB, and a missing or un-pulled file falls back to the heuristic evaluator as usual.
   - **Volumes**: `pgdata` (database), `redisdata` (live interviews), `app-data` on `instance/` (uploads and the generated secret key, so logins survive the container being replaced).
   - **PostgreSQL and Redis publish no ports**: only the app can reach them. The app runs as a non-root user, has a health check on `/health`, and every container restarts automatically (`restart: unless-stopped`).
@@ -384,15 +380,14 @@ capstone_latest/
 ├── README.md                         Project readme (partly outdated — see §7)
 ├── PROJECT_DOCUMENTATION.md          This document
 ├── grader_eval/                      Grader test sets: questions.json, output_questions.json (400 LLM-written
-│                                     answers), my_answers.json (40 real answers), tuning_set/, run_*.py,
-│                                     real_set/ (team answers + ANSWER_PROMPT.md), benchmark.py + baseline.json,
-│                                     sanity_check.py
-├── CONTRIBUTING.md                   Branch workflow (main / adaptive-engine / resume_classifier)
+│                                     answers), my_answers.json (40 real answers), real_set/ (team answers +
+│                                     ANSWER_PROMPT.md), benchmark.py + baseline.json, sanity_check.py
+├── CONTRIBUTING.md                   Branch workflow (main / adaptive-engine)
 ├── Requirements_Global.txt           The only requirements file (sectioned per subsystem)
 ├── .gitignore                        Ignores venvs, caches, *.pt/*.safetensors, artifacts/, .env, diagnostics
 ├── docs/architecture/                Design specs + milestone reports (see below)
 ├── main_cap/cap/                     ★ The application (Flask + all core modules)
-├── rag_system/rag_tester/            Legacy RAG CLI (app integration dead) + the new slide pipeline:
+├── rag_system/rag_tester/            The slide pipeline and the question bank:
 │   ├── slide_rag/                    ★ Slide RAG pipeline package (§4.24)
 │   ├── sources/<subject>/*.pdf       Faculty lecture slides, one slide per page (git-ignored)
 │   ├── topics/<subject>.txt          Curated topic lists (279 topics) checked against the slides
@@ -400,12 +395,10 @@ capstone_latest/
 │   ├── question_bank/<subject>.json  Generated technical-interview questions (+ <subject>_report.md for review;
 │   │                                 enrichment fields and enrich_report.md from slide_rag/enrich_bank.py)
 │   ├── knowledge_base_v2/<subject>/  Pipeline output: slides, sections, index, reports, quiz.json
-│   ├── knowledge_base/, samples/     Old page-per-chunk index and its PDFs (kept as the baseline)
 │   └── .slide_cache/, .vision_cache/, .qbank_cache/, .enrich_cache/   Stage 1 / vision / question-generation / enrichment caches (git-ignored)
 ├── archive/superseded_caches/        Archived old-version caches (safe to delete; see its README)
 ├── archive/Roberta/                  Archived: question intent/difficulty/topic classifiers + adaptive quiz (never used by the app; see §4.15)
-├── resume_classifier/                Legacy resume parser + SBERT/BERT domain classifier
-└── parser_tests/                     Benchmark harness for the legacy resume parser (10 PDFs)
+└── parser_tests/resumes/             10 real resumes for one parser test (git-ignored, personal data)
 ```
 
 **`docs/architecture/`**
@@ -430,7 +423,7 @@ capstone_latest/
 | `model_warmup.py` | Local-only model loading when all models are cached, and background model warm-up at startup (§5.1) |
 | `tech_interview/` | Question-bank technical interview: `bank.py`, `selector.py`, `grader.py`, `followup.py`, `session.py`, `terms.py` (abbreviation expansion) (§4.25) |
 | `session_history.py` | Records both interview types turn by turn; completed/terminated/abandoned; deletion |
-| `session_routes.py` | History API blueprint: `/api/sessions`, `/api/insights`, the legacy `/api/technical-sessions`, and the technical interview `/api/tech-interview/*` |
+| `session_routes.py` | History API blueprint: `/api/sessions`, `/api/insights`, and the technical interview `/api/tech-interview/*` |
 | `insights.py` | Home stats, score trend, "Focus next" |
 | `db_manage.py` | Minimal Flask app for `flask --app db_manage db migrate/upgrade` (skips loading ML models) |
 | `migrations/` | Alembic migrations (initial schema; `last_activity_at`; profile photo `a7c3e91f2b40`) |
@@ -458,11 +451,9 @@ capstone_latest/
 | `reasoning_dimension_relevance.py` | 12 dimension names; ReasoningType → relevant dimensions table |
 | `expected_concepts_registry.py` | Hand-curated technology → expected concepts table (4 entries) |
 | `concept_analysis.py` / `strong_answer.py` | Concept-coverage % and deterministic coaching note / "improved answer" |
-| `discussion_engine.py` / `legacy_topic_pool_adapter.py` | Legacy v1 engine and its dict-shaped adapter onto the v2 `TopicPool` |
-| `rag_integration.py` | Wrapper around `rag_system` (non-functional at present; see §4.15) |
 | `regenerate_promotion_decision.py` | CLI: re-benchmark a checkpoint and rewrite `final_promotion_decision.json` |
 | `training_example.py` … `run_experiment_4_*.py` | ML research track (see §4.9) |
-| `_planning_test_fixtures.py` / `_verify_traceability.py` | Shared test fixtures; manual Gemini-backed traceability check script |
+| `_planning_test_fixtures.py` | Shared test fixtures |
 | `deployed_model/` | `best_checkpoint.json`, `final_promotion_decision.json` (weights `.pt` absent) |
 | `experiment_3_reproducibility/` | Provenance package for the Experiment 3 dataset (README, COMPARISON, REPRODUCE, manifests, SHA-256 hashes) |
 | `static/models/face_landmarker.task` | MediaPipe model served to the browser |
@@ -490,7 +481,6 @@ capstone_latest/
 | `confidence.py` | Stage 8: `Confidence`, `AnnotatedCandidateProfile`, `DefaultConfidenceEngine` |
 | `candidate_profile_mapper.py` | Engine output → public `CandidateProfile` (domain, level, blueprint, summary) |
 | `*_gazetteer.py` (9 files) | Curated vocabularies: sections, technologies, concepts, job titles, locations, degrees, institutions, certifications, domains |
-| `devtools/shadow_mode.py`, `shadow_mode_batch.py`, `golden_corpus_report.py` | Dev-only comparison and report CLIs |
 | `tests/` | ~356 tests + `golden_corpus/` (31 resume fixtures + seed-synthesis fixtures) |
 
 ---
@@ -617,11 +607,6 @@ The mapper builds a real `candidate_profile_generator.CandidateProfile`, which v
 #### Observability (`pipeline_trace.py`)
 `PipelineTrace(document_id, engine_version, parser_versions, stages)` exposes `to_json()` and `to_console()`, which renders ✓ for `+` reasons and ⚠ for `-` reasons. `to_html()` raises `NotImplementedError`. Tracing has zero cost when `trace=None` (production).
 
-#### Devtools (dev-only; never imported by `app.py`)
-- `shadow_mode.py`: `compare_profiles(gemini, engine)` produces neutral discrepancy categories (`missing_in_engine`, `missing_in_gemini`, `different_value`, `count_mismatch`) and never decides which side is ground truth. `check_engine_topic_pool_health` runs the real `TopicPool`.
-- `shadow_mode_batch.py`: `python -m resume_engine.devtools.shadow_mode_batch --dir <resumes> --report out.json` (needs `GEMINI_API_KEY`). Errors are grouped by stage.
-- `golden_corpus_report.py`: `python -m resume_engine.devtools.golden_corpus_report`, a Milestone 1–3 fixture health report.
-
 ---
 
 ### 4.3 Candidate Profile (`candidate_profile_generator.py`)
@@ -651,7 +636,7 @@ class CandidateProfile(BaseModel):
 - `engine_supports_format(ext)`: `.pdf`, `.docx`, `.txt`.
 - `get_active_parser_backend()`: reads `CAP_RESUME_PARSER`. Note that `app.py` does not call it, so the engine is always used.
 - `profile_to_frontend_format(profile)`: produces the flat dict the UI uses (`name`, `email`, `phone`, `predicted_domain`, `discussion_domain`, `confidence`, `skills`, `experience{years, level}`, `education`, `projects`, `certifications`, `focus_topics`, `resume_summary`, `experience_detail`).
-- **Legacy Gemini path** `generate_candidate_profile(resume_text)`, kept for Shadow Mode:
+- **Legacy Gemini path** `generate_candidate_profile(resume_text)`, kept as a manual fallback (`CAP_RESUME_PARSER=gemini`):
   - `gemini-2.5-flash` with `response_schema=CandidateProfile`, temperature 0.1, 3 retries with exponential backoff on rate-limit, timeout or 5xx errors.
   - A 3-stage JSON parse fallback, `_post_process` (fuzzy domain match, confidence clamp, XOR shape gate), and a one-time retry when zero skills come back.
 
@@ -811,7 +796,7 @@ The 12 dimensions are: technical_accuracy, technical_depth, communication, compl
 result through `answer_gate.gate`: "idk"-style replies, replies under 3 words, keyword dumps, comma lists of
 terms, gibberish, repetition and pasted code/markup are capped at 0.1 / "poor" (strengths cleared, one
 weakness explaining why), whichever evaluator is active. A keyword dump previously scored 0.79 "good". It
-flags 0 of 628 genuine answers tested (`integration_checks/gate_check.py`).
+flags 0 of 628 genuine answers tested.
 
 ### 4.7 Trained model layer (DeBERTa)
 
@@ -913,8 +898,7 @@ Planner over 36 profiles → CoverageUnit pool
 3. `Flask(__name__, template_folder="templates", static_folder="static")`.
 4. `init_accounts(app)` (database, migrations, secret key, Flask-Login, accounts routes, 413 handler), `register_blueprint(sessions_bp)`, `abandon_all_open_sessions()`.
 5. `_require_login_for_api` (`before_request`): every `/api/*` path answers **401** without a session, except `/api/auth/login` and `/api/auth/signup`. `/` and `/health` stay public.
-6. `sys.path` gets `resume_classifier/`, then `from rag_integration import rag_generator` is attempted (`_rag_available` evaluates to False; see §4.15), then `resume_classifier` is re-prioritised.
-7. Profile sessions in the live store (`_put_profile_session` / `_profile_session` / `_get_profile`: profile session id → `{profile, user_id, resume_id}`, §4.26); module-level: the RAG question pool and `SAMPLE_QUESTIONS` (5 computer-networks questions with fill-mask).
+6. Profile sessions in the live store (`_put_profile_session` / `_profile_session` / `_get_profile`: profile session id → `{profile, user_id, resume_id}`, §4.26).
 
 **Routes** (the accounts and history routes are in §4.20–4.21):
 | Route | Method | Used by the UI | Summary |
@@ -926,13 +910,8 @@ Planner over 36 profiles → CoverageUnit pool
 | `/api/resume-discussion-v2/start` | POST `{session_id}` | ✅ | Checks the profile session belongs to `current_user`; `conversation_engine.start_conversation`; then `session_history.begin_resume_discussion` |
 | `/api/resume-discussion-v2/reply` | POST `{session_id, answer}` | ✅ | Ownership check (`owns_conversation`), `advance_conversation`, then `record_resume_discussion_turn` |
 | `/api/resume-discussion-v2/end` | POST `{session_id, integrity, attention_metrics}` | ✅ | Ownership check, `end_conversation(id, integrity=...)`, then `finish_resume_discussion` |
-| `/api/next_question` | POST `{asked_ids, difficulty, topic}` | — (legacy, unused) | Takes from the RAG pool if available (it never is), else `SAMPLE_QUESTIONS`; relaxes filters; `completed` when exhausted |
-| `/api/evaluate` | POST | — (legacy, unused) | Inline heuristic: gibberish filter, token overlap with the reference, fill-mask flexible match; `combined = 0.7·main + 0.3·fill` → marks /10. With a `session_id` of the user's in-progress technical session, the question is also recorded (`record_technical_turn`) |
 | `/api/candidate-profile/<id>` | GET | — | Raw stored profile |
-| `/api/get-resume-discussion` | POST | — | Legacy MCQ-style discussion generator + `_hardcoded_fallback` |
-| `/api/resume-discussion/{start,reply,end}` | POST | — | Legacy v1 `discussion_engine` |
 
-**Dead helpers:** `_build_local_candidate_profile` and `_map_local_level_to_profile_level` (no callers).
 
 ---
 
@@ -1027,48 +1006,17 @@ Limitation: enforcement is client-side and can be bypassed with DevTools.
 
 ---
 
-### 4.14 Legacy v1 discussion engine
+### 4.14 Removed legacy code
 
-`discussion_engine.py` (routed at `/api/resume-discussion/*`, **not used by the UI**):
-- `DiscussionMemory` does SBERT semantic dedup (≥ 0.82), tracks concept mastery, and sets difficulty from the last 3 scores.
-- Phrasing uses `random.choice` over styles and variants.
-- The local evaluator uses SBERT correctness, KeyBERT coverage, and an NLI flag. `EvaluationWeights` are correctness 0.30, depth 0.25, completeness 0.20, communication 0.15, coverage 0.10, and can be overridden via the `CAP_EVAL_W_*` env vars.
-- `_decide_action` thresholds, checked in order: skip < 0.15; move_on if 2 follow-ups have been used; probe_deeper ≥ 0.55 with missing concepts; clarify 0.25–0.55; otherwise move_on.
-- Session limits: a soft target of 12 and a hard cap of 20 questions.
-- It runs on the v2 `TopicPool` through `legacy_topic_pool_adapter._UnitView`, a live `MutableMapping` whose writes are routed through the pool's hardened lifecycle APIs.
+Removed on 2026-10-25 because nothing in the app reached it any more (it is still in the git history):
+- **Legacy routes:** `/api/next_question`, `/api/evaluate` and `/api/technical-sessions` (the old fill-in-the-blank quiz, replaced by the question-bank interview, §4.25), `/api/get-resume-discussion` and `/api/resume-discussion/*` (the v1 resume discussion, replaced by `conversation_engine`), with `discussion_engine.py`, `legacy_topic_pool_adapter.py` and `rag_integration.py`.
+- **Legacy RAG** (`rag_system/rag_tester/*.py` outside `slide_rag/`): the page-per-chunk index, Qwen2.5 generation, the rubric grader, the diagram pipeline and its CLI, replaced by the slide pipeline (§4.24) and the question bank (§4.25). The old index scored 68–82% section hit@5 on the gold sets, against 96–100% for the slide pipeline.
+- **`resume_classifier/`** (a legacy parser and an untrained BERT domain classifier) and **`parser_tests/`** (its benchmark), replaced by the resume engine.
+- **One-off scripts:** `integration_checks/` (2026-09-30 merge comparisons; their results are recorded in §4.3 and §4.6), `resume_engine/devtools/` (Shadow Mode), `_verify_traceability.py`, and `grader_eval/run_grader_eval.py` / `run_my_answers.py` (replaced by `benchmark.py`).
 
 ---
 
 ### 4.15 Supporting subsystems
-
-#### `rag_system/rag_tester/`: legacy RAG question generation and grading (standalone CLI)
-> Superseded for retrieval by the slide pipeline (§4.24). The old `knowledge_base/` is kept only as the evaluation baseline. `evaluate.py`'s rubric grader (below) is the planned grader for open technical answers once it is adapted (key points passed in, short reference answer, concept matching by meaning, no Qwen call per answer).
-
-- **Knowledge base:** `knowledge_base/{cn,dbms,dsa,ooad,os}/` each hold `index.faiss` (`IndexFlatIP`, MiniLM, normalised), `chunks.json`, `bm25.pkl`, `bm25_tokens.json`, `diagram_chunks.json` (empty) and `metadata.json`.
-
-  | Subject | Chunks |
-  |---|---|
-  | cn | 99 |
-  | dbms | 839 |
-  | dsa | 727 |
-  | ooad | 569 |
-  | os | 232 |
-
-  The source PDFs (≈189 MB) are in `samples/`.
-- **Ingestion (`dynamic_ingestor.py`):**
-  - One chunk per slide or page, using OCR fallback (`pytesseract`) for near-empty pages.
-  - Large pages go through semantic chunking (500 words, 100 overlap), and chunks under 100 words are merged.
-  - `embedding_text` = headings + concepts + text.
-- **Retrieval (`retrieval.py`):**
-  - Hybrid score = 0.6 × FAISS cosine + 0.4 × normalised BM25, with a threshold of 0.25.
-  - Optional rerank with `cross-encoder/ms-marco-MiniLM-L-6-v2`.
-  - `get_context_with_pages` returns `(context, pages, headings, concepts)`.
-- **Generation (`generate.py`):** `Qwen/Qwen2.5-1.5B-Instruct` with a grounding system prompt. It generates interview questions, reference answers, MCQs, pseudocode and coding questions, and test cases.
-- **Grading (`evaluate.py`):** overall = 0.45 × semantic + 0.35 × weighted concept + 0.20 × clarity, graded A to F.
-- **Extras:** `counterfactual_feedback.py` (minimal-edit analysis) and the diagram pipeline (`diagram_*.py`), where `call_vlm()` raises `NotImplementedError` by design.
-- **Tracking:** `tracking.py` stores per-user progress JSON.
-- **CLI:** `python main.py` (interactive menu).
-- **Integration with the app is broken:** `rag_integration.py` imports `ingestor.ingest_subject`, which doesn't exist, and expects a flat `*.index` layout and a `cn_unit1` subject. As a result, `/api/next_question` always serves the hardcoded `SAMPLE_QUESTIONS`.
 
 #### `archive/Roberta/roberta-multitask-model/`: question classification and adaptive quiz (archived)
 > **Archived.** It was part of the original plan (label questions with intent/difficulty/topic, drive an adaptive quiz) but never ran in the app: the trained weights were never committed (inference was always rule-based) and the UI never called its routes. Its job is now covered by the question bank (topic and difficulty by construction) and the planned Phase 2 selector. The folder moved to `archive/` and its `/roberta/classify` and `/adaptive/*` routes were removed from `app.py`.
@@ -1084,18 +1032,6 @@ Limitation: enforcement is client-side and can be bypassed with DevTools.
   - `adaptive_selector.py`: strategy weighted 60% weak topic, 30% weak intent, 10% random.
   - `session_manager.py`: CLI grader.
 - **App integration (before archiving):** `/roberta/classify` and `/adaptive/*`, which the UI never used.
-
-#### `resume_classifier/`: legacy parser and domain classifier
-- **`src/parser.py`:** `extract_text` (pdfplumber / python-docx / txt) and `parse_resume`.
-- **`src/features.py`:** experience, skills, education and project count.
-- **`src/models.py`:** `EnsembleClassifier` = 0.4 × SBERT similarity to `data/domains.json` + 0.6 × BERT. **The BERT model was never trained** (its head is random).
-- **`src/train.py`:** needs `data/labeled/labeled_resumes.json`, which is missing.
-- **Uses today:** only `shadow_mode_batch._extract_text` uses its parser. The main app does not use the classifier.
-
-#### `parser_tests/`: benchmark for the legacy parser
-- `generate_metadata.py`: pdfplumber layout heuristics → `metadata/*.json`.
-- `evaluate_parser.py [--resume 001] [--verbose]` runs `parse_resume` + features + `SBERTMatcher` → `baseline/*.json`, and scores against `ground_truth/`, which doesn't exist, so only baseline mode works.
-- There are 10 PDFs, and the baselines contain real PII.
 
 ---
 
@@ -1139,7 +1075,7 @@ Resume engine internals: TextSpan → DocumentModel → Section → ParserResult
 | **Dependency injection + composition root** | `resume_engine/factory.py` is the only module importing concrete stage classes; `ResumePipeline` depends only on Protocols |
 | **Pipeline / chain of stages** | `ResumePipeline.run`, the synthetic generation pipeline |
 | **Facade** | `Planner` (over TopicPool/Coverage/Traceability), `conversation_engine` (whole session) |
-| **Adapter** | `TrainedEvaluator` (PyTorch → Evaluator), `legacy_topic_pool_adapter._UnitView`, `candidate_profile_mapper`, `evaluation_engine.build_request` |
+| **Adapter** | `TrainedEvaluator` (PyTorch → Evaluator), `candidate_profile_mapper`, `evaluation_engine.build_request` |
 | **Decorator / composite** | `HybridEvaluator` wraps two evaluators behind the same Protocol |
 | **Lazy singleton with graceful fallback** | `_LazySemanticModel`, `_LazyKeyBERT`, `_get_sem_model`/`_get_nli_model`, `_get_genai_client` (they cache `False` on failure) |
 | **Immutable value objects** | Frozen Pydantic: `QuestionSpecification`, `InterviewQuestion`, `EvaluationRequest/Result`, `TrainingExample`, … |
@@ -1174,7 +1110,7 @@ Resume engine internals: TextSpan → DocumentModel → Section → ParserResult
 
 | Variable / constant | Default | Effect |
 |---|---|---|
-| `GEMINI_API_KEY` (`main_cap/cap/.env`) | unset | Needed only for Shadow Mode, Gemini generation, the rewrite pilot and `_verify_traceability.py` |
+| `GEMINI_API_KEY` (`main_cap/cap/.env`) | unset | Needed only for the research tooling (Gemini generation, the rewrite pilot) and `CAP_RESUME_PARSER=gemini` |
 | `CAP_RESUME_PARSER` | `engine` | Read by `get_active_parser_backend()` (tested), but **ignored by `app.py`** |
 | `CAP_DEBUG_SAVE_GEMINI_RESPONSES` | off | Legacy Gemini path writes `debug_candidate_profile*.json` (contains PII) |
 | `CAP_EVAL_W_{CORRECTNESS,TECH_DEPTH,COMPLETENESS,COMMUNICATION,COVERAGE}` | 0.30/0.25/0.20/0.15/0.10 | Legacy v1 evaluator weights only |
@@ -1335,7 +1271,6 @@ To create a new one: `flask --app db_manage db migrate -m "..."`.
 | `GET /api/sessions[?type=]` | Newest first; `to_dict()` includes the resume filename, integrity and attention |
 | `GET /api/sessions/<id>` | Everything plus `summary` and every turn |
 | `DELETE /api/sessions/<id>` | Also closes the session if it's live |
-| `POST /api/technical-sessions`, `POST /api/technical-sessions/<id>/end` | Legacy (old fill-in-the-blank quiz), unused by the UI |
 | `POST /api/tech-interview/start`, `/<id>/answer`, `/<id>/end` | The technical interview (§4.25) |
 | `GET /api/insights` | §4.22 |
 
@@ -1618,24 +1553,17 @@ Startup logs show which evaluator is active: `resume-evidence-evaluator-v2` norm
 |---|---|
 | `python app.py` (`main_cap/cap`) | Web app |
 | `flask --app db_manage db migrate -m "..."` / `db upgrade` (`main_cap/cap`) | Create / apply schema migrations after editing `models.py` (the app also applies them on startup) |
-| `python -m resume_engine.devtools.shadow_mode_batch --dir D --report R` (`main_cap/cap`) | Gemini vs engine comparison |
-| `python -m resume_engine.devtools.golden_corpus_report` (`main_cap/cap`) | Parser health report |
 | `python run_experiment_1.py generate\|train`, `run_experiment_2*.py`, `run_dataset_relabel.py relabel`, `run_experiment_4_*.py …` (`main_cap/cap`) | ML research track |
 | `python regenerate_promotion_decision.py` (`main_cap/cap`) | Rebuild the promotion decision |
-| `python _verify_traceability.py <resume>` (`main_cap/cap`) | Manual traceability check (needs Gemini or a cache) |
-| `python main.py` (`rag_system/rag_tester`) / `python dynamic_ingestor.py` | Legacy RAG CLI / old knowledge-base ingestion |
 | `python -m slide_rag.build [--subject cn]` (`rag_system/rag_tester`) | Build `knowledge_base_v2` (all subjects in `sources/`, or one) |
 | `python -m slide_rag.vision --subject cn [--pages 400,463] [--limit N]` (`rag_system/rag_tester`) | Stage 3: read flagged slides with the vision model (GPU); rebuild afterwards to merge |
-| `python -m slide_rag.retrieval_eval [--subject os] [--show-misses] [--no-baseline]` (`rag_system/rag_tester`) | Retrieval evaluation: gold + probe sets, vs the old index |
+| `python -m slide_rag.retrieval_eval [--subject os] [--show-misses]` (`rag_system/rag_tester`) | Retrieval evaluation: gold + probe sets |
 | `python -m pytest slide_rag/tests -q` (`rag_system/rag_tester`) | Slide pipeline unit tests |
 | `python -m slide_rag.topics [--subject os]` (`rag_system/rag_tester`) | Map topic lists to slide sections (`topic_map.json`, `topic_coverage.md`) |
 | `python -m slide_rag.qbank [--subject os] [--pilot] [--limit N]` (`rag_system/rag_tester`) | Generate the question bank with Ollama (resumable; needs Ollama running with `qwen3:8b`). Run from a normal terminal for long runs |
 | `python -m slide_rag.rank_bank [--threshold 0.75]` (`rag_system/rag_tester`) | Score, sort and activate/hold back questions |
 | `python -m slide_rag.enrich_bank [--subject cn] [--ids …] [--no-generate] [--strict-variants]` (`rag_system/rag_tester`) | Offline bank enrichment with Ollama (resumable, ~15 s/question); `--no-generate` re-applies cached results and filters |
-| `python grader_eval/run_grader_eval.py [output_questions.json \| tuning_set/answers.json]` (project root) | Technical grader vs hand-checked key-point labels |
-| `python grader_eval/run_my_answers.py [test]` (project root) | Technical grader vs the user's own answers and scores (tune/test halves) |
 | `ollama stop qwen3:8b` (full path: `%LOCALAPPDATA%\Programs\Ollama\ollama.exe`) | Unload the model from the GPU after a run |
-| `python evaluate_parser.py`, `python generate_metadata.py` (`parser_tests`) | Legacy parser benchmark |
 | `python -m pytest …`, `node test_*.js` (`main_cap/cap`) | Tests |
 
 ---
@@ -1782,7 +1710,7 @@ The code has no literal `TODO` markers. The items below come from docstrings, co
     - A section with a single entry can still fragment (`single_entry_sections_pdf`).
 24. **Stale markers in code:**
     - `ProjectParser` still emits `-interview_seeds_not_implemented_until_milestone_5`.
-    - Docstrings in `pipeline.py`, `factory.py`, `confidence.py` and `devtools/__init__.py` ("deleted at Milestone 7") are out of date.
+    - Docstrings in `pipeline.py`, `factory.py`, `confidence.py` are out of date.
     - The `DocumentModel.source_format` Literal lacks "txt".
     - `PipelineTrace.to_html()` is not implemented.
 25. **Smaller parser issues:**
@@ -1795,7 +1723,7 @@ The code has no literal `TODO` markers. The items below come from docstrings, co
 
 26. ~~Speech warnings can talk over Resume Discussion dictation~~ **Fixed 2026-09-30:** `speakAttentionWarning` mutes while either microphone is on (`isRecording` or `rdIsRecording`).
 27. **Technical round gaps:** `loadQuestion` and `handleSubmission` have no try/catch (a network error leaves the typing indicator up), and `#subject-select` on the practice setup screen is never read.
-28. **`/api/evaluate` quirks:** an empty fill-mask answer is counted correct (`"" in ref`), and scoring uses raw token overlap without stopword removal.
+28. *(Resolved 2026-10-25: the legacy `/api/evaluate` route was removed, §4.14.)*
 29. **Resume Discussion error handling:** `rdShowStageError` is a dead end with no retry button. A reply racing with termination can show a turn with grade "n/a".
 30. **The single 9,300-line `index.html`** holds all CSS, markup and JS, which is hard to maintain. The practice setup screen (`#subject-selection-section`) still uses the older, pre-redesign styling.
 
@@ -1817,7 +1745,7 @@ The code has no literal `TODO` markers. The items below come from docstrings, co
 
 **Slide RAG pipeline**
 
-36. **Legacy quiz routes are dead code.** The UI now runs the question-bank interview (`/api/tech-interview/*`, §4.25); `/api/next_question` (`SAMPLE_QUESTIONS`), `/api/evaluate` and `/api/technical-sessions` are no longer called but remain in the backend. Grading limits: the NLI grader checks that points are *stated*, not that the facts are right (confidently wrong answers average ~0.2–0.3 on the LLM-written sets). On real, short, informal answers it is too strict: correct answers phrased differently from the key point can score low (the follow-up is the second chance). Some questions have weak key points that miss the main idea (e.g. `os.deadlock_avoidance.easy1`); they need rewriting or deactivating by hand, since the automatic "main idea missing" flag was mostly false alarms. First server start on a machine without the models downloaded is slow (downloads).
+36. **Technical grading limits.** (The legacy quiz routes were removed on 2026-10-25, §4.14.) the NLI grader checks that points are *stated*, not that the facts are right (confidently wrong answers average ~0.2–0.3 on the LLM-written sets). On real, short, informal answers it is too strict: correct answers phrased differently from the key point can score low (the follow-up is the second chance). Some questions have weak key points that miss the main idea (e.g. `os.deadlock_avoidance.easy1`); they need rewriting or deactivating by hand, since the automatic "main idea missing" flag was mostly false alarms. First server start on a machine without the models downloaded is slow (downloads).
 37. **Stage 3 (vision) has only been run on CN's picture-heavy, picture-only and table slides** (243 slides, ~10 s each; 222 produced text). On CN it improved retrieval with no measured harm: gold hit@5 0.96 → 1.00 (MRR 0.83 → 0.89), a 20-question diagram set hit@1 0.45 → 0.55 (MRR 0.62 → 0.73), probes unchanged. A spot-check found misreadings (a layer stack in the wrong order; numeric graph weights), so vision text is a **retrieval aid, not ground truth**. The other subjects' picture/table slides (~550) and all subjects' diagram-plus-text slides (~1,100) are not processed yet.
 38. **OOAD's index predates the latest fixes.** OOAD was last built with extractor v3, before the "MCQ Solution" quiz fix, so its answer-key slides are still searchable and may have fed some generated questions; CN, DBMS, DSA and OS are current (DBMS/DSA at v5 with personal notes stripped and DSA's 255 picture-only slides OCR'd). Rebuild OOAD with `python -m slide_rag.build --subject ooad` (then re-map its topics).
 39. **Extraction limits:**
@@ -1853,8 +1781,8 @@ The code has no literal `TODO` markers. The items below come from docstrings, co
 
 | Suite | Location | How to run | Size / coverage |
 |---|---|---|---|
-| Resume engine | `main_cap/cap/resume_engine/tests/` | `python -m pytest resume_engine/tests -q` (from `main_cap/cap`) | 511 tests (incl. the Phase 1 tests and `test_integration_fixes.py`); golden corpus of 31 resume fixtures (PDF/DOCX; 3 expected-failure cases) plus seed-synthesis fixtures. Old-vs-new comparison and Round 1 smoke run: `integration_checks/` |
-| Planning / discussion | `test_topic_pool.py` (32), `test_question_specification.py` (43), `test_question_families.py` (40), `test_question_realizer.py` (30), `test_discussion_policy.py` (28), `test_lifecycle_hardening.py` (24), `test_traceability.py` (22), `test_conversation_engine.py` (20, incl. 4 integrity), `test_conversation_memory.py`, `test_planner.py`, `test_coverage_tracker.py`, `test_legacy_topic_pool_adapter.py`, `test_integration_planning.py`, `test_interview_question.py` | `python -m pytest test_*.py` | Determinism, traceability, lifecycle invariants, anti-repetition, import boundaries |
+| Resume engine | `main_cap/cap/resume_engine/tests/` | `python -m pytest resume_engine/tests -q` (from `main_cap/cap`) | 511 tests (incl. the Phase 1 tests and `test_integration_fixes.py`); golden corpus of 31 resume fixtures (PDF/DOCX; 3 expected-failure cases) plus seed-synthesis fixtures. |
+| Planning / discussion | `test_topic_pool.py` (32), `test_question_specification.py` (43), `test_question_families.py` (40), `test_question_realizer.py` (30), `test_discussion_policy.py` (28), `test_lifecycle_hardening.py` (24), `test_traceability.py` (22), `test_conversation_engine.py` (20, incl. 4 integrity), `test_conversation_memory.py`, `test_planner.py`, `test_coverage_tracker.py`, `test_integration_planning.py`, `test_interview_question.py` | `python -m pytest test_*.py` | Determinism, traceability, lifecycle invariants, anti-repetition, import boundaries |
 | Evaluation | `test_hybrid_evaluator.py` (72), `test_heuristic_evaluator.py` (41), `test_evaluation_result.py` (38), `test_evaluation_engine.py` (26), `test_model_*.py`, `test_deployment_evaluator.py`, `test_reasoning_dimension_relevance.py`, `test_expected_concepts_registry.py`, `test_evaluator_*.py`, `test_evaluation_request.py` | pytest | Contracts, calibration bands, guardrail cases reproduced from real bugs, fallback, CORAL maths |
 | Coaching | `test_strong_answer.py` (40), `test_concept_analysis.py` (11) | pytest | Grounded-only insertions, hide gates |
 | ML research track | `test_training_experimentation.py` (46), `test_training_example.py` (34), `test_dataset_manifest.py` (26), `test_labeling_operations.py` (25), `test_prompt_assembler.py` (23), … | pytest | Schemas, splits, QWK, provenance, AST import-boundary checks |
@@ -1867,8 +1795,6 @@ The code has no literal `TODO` markers. The items below come from docstrings, co
 | Frontend | `test_report_*.js`, `test_session_integrity.js` (13), `test_startup_guard.js`, `test_typeline_race.js` | `node <file>` | Each test extracts the exact function source from `index.html` and runs it with Node `vm` + `assert` (no framework). The integrity tests stub the `interview*` hooks |
 
 Tests that need the real `app.py` import `_app_test_setup.py`. It sets the test database (in-memory SQLite by default), a temporary upload folder, and stubs the DeBERTa bootstrap. **On PostgreSQL:** `CAP_TEST_DATABASE_URL=postgresql+psycopg://cap:cap@localhost:5432/cap_test python -m pytest --ignore=resume_engine/tests` (PostgreSQL in Docker: `docker start cap-postgres`). 1,245 passed on both SQLite and PostgreSQL 16 (2026-10-15).
-| Legacy | `test_e2e.py` | `python test_e2e.py` | A script with PASS/FAIL counters for v1; pytest collects nothing from it |
-| Legacy RAG | `rag_system/rag_tester/test_*.py` | — | Stale (expect old layouts) |
 | Slide RAG unit tests | `rag_system/rag_tester/slide_rag/tests/test_pipeline.py` (19, incl. personal-note stripping) | `python -m pytest slide_rag/tests -q` (from `rag_system/rag_tester`) | Synthetic slide PDFs built with PyMuPDF: header/footer and slide-number removal, title detection, diagram labels set aside, deck titles, contents/admin slides, incremental builds, "(contd.)" merging, title normalisation (incl. `IPv4`), generic stems, quiz detection, problem + solution stitching, section size cap, BM25 tokenizer parity |
 | Slide RAG retrieval evaluation | `slide_rag/retrieval_eval.py`, `slide_rag/eval/gold_{cn,dbms,dsa,ooad,os}.json` | `python -m slide_rag.retrieval_eval` | 122 hand-labelled questions + 750 generated probes; results and ablations in §4.24 |
 
@@ -1889,7 +1815,7 @@ The remaining suites weren't re-run for this update.
 |---|---|
 | **Candidate Profile** | The structured `CandidateProfile` produced from a resume; the single source of truth downstream |
 | **Resume Intelligence Engine** | The deterministic 8-stage local resume parser in `resume_engine/` that replaced the Gemini parser |
-| **Resume Discussion** | The 10-question, resume-grounded interview (v2 = `conversation_engine`; v1 = `discussion_engine`) |
+| **Resume Discussion** | The 10-question, resume-grounded interview (`conversation_engine`) |
 | **Technical Interview / Round 2** | The question-bank technical flow (main question, then a follow-up or clarification when needed; scores at the end). It is Round 2 of the full interview (8 questions), or standalone (10) |
 | **Full Interview** | One continuous proctored session: Round 1 Resume Discussion → summary → Round 2 Technical → combined results |
 | **Session (history)** | One saved interview round (`interview_sessions` row) with its turns; status `completed` / `terminated` / `abandoned` / `in_progress` |
@@ -1909,7 +1835,6 @@ The remaining suites weren't re-run for this update.
 | **Observation** | A validation finding (`info` / `notice` / `warning`) that never blocks generation |
 | **Confidence reasons (+/−)** | Explainable signals attached to a confidence score (`+` fired, `-` absent) |
 | **PipelineTrace** | Optional per-stage timing and diagnostics object for the resume engine |
-| **Shadow Mode** | Dev-only tooling comparing Gemini vs engine profiles without treating either as ground truth |
 | **Evaluator / Evaluator Registry** | The stable scoring interface and the name → implementation lookup with an active pointer |
 | **AveragedEvaluator** | Round 1 fallback evaluator: 0.8 × the fine-tuned DeBERTa-v3 overall model + 0.2 × the heuristic |
 | **ResumeEvidenceEvaluator** | Production Round 1 evaluator: evidence-based scoring v2, with an optional background LLM re-grade |
@@ -1932,7 +1857,7 @@ The remaining suites weren't re-run for this update.
 | **Session integrity / proctoring** | The full-screen, no-tab-switch, no-copy-paste rules, active for the whole interview; the first violation ends it |
 | **Liveness** | A challenge (head turn left/right) confirming a live person is in front of the webcam |
 | **RAG** | Retrieval-Augmented Generation: retrieve source material, then generate from it. Legacy: FAISS+BM25 over PDF pages + Qwen2.5-1.5B. New: the slide pipeline (§4.24) |
-| **KB** | Knowledge base. Legacy: `rag_system/rag_tester/knowledge_base/` (one chunk per page). New: `knowledge_base_v2/` (slides → sections) |
+| **KB** | Knowledge base: `rag_system/rag_tester/knowledge_base_v2/` (slides → sections) |
 | **Slide RAG pipeline** | `slide_rag/`: extract → classify → vision → sections → index → report, over faculty lecture slides |
 | **Section (slide pipeline)** | A run of consecutive slides that teach one idea; the unit that is retrieved and cited (with its page range) |
 | **Child / parent chunk** | Children (single slides, section openings) are searched; their parent sections are returned |

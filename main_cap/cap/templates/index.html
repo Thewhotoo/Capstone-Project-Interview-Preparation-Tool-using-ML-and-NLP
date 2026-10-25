@@ -4487,7 +4487,7 @@
         }
 
         // The record sent when a round ends (/api/resume-discussion-v2/end,
-        // /api/technical-sessions/<id>/end).
+        // /api/tech-interview/<id>/end).
         function proctorIntegrityPayload() {
             return proctorState.terminated
                 ? Object.assign({ terminated: true }, proctorState.violation)

@@ -4,7 +4,6 @@
 *
 !Requirements_Global.txt
 !docker/
-!resume_classifier/
 !rag_system/rag_tester/question_bank/
 !main_cap/cap/
 

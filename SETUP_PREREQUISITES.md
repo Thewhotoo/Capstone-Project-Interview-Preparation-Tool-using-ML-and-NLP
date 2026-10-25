@@ -127,7 +127,7 @@ This is Flask's development server, fine for local use and demos, not a producti
 - The non-Docker setup (section 2); **pytest** is in `Requirements_Global.txt`.
 - **Node.js** 18 or newer (tested on 24) for the frontend tests (`node test_*.js`); no npm packages needed.
 - Some grader tests load the real models; `CAP_SKIP_MODEL_TESTS=1` skips them.
-- The parser benchmark in `parser_tests/` needs real resumes that are **not in git** (personal data); ask the team for them if you need that benchmark. The rest of the test suite doesn't depend on them.
+- One parser test reads a real resume from `parser_tests/resumes/`, which is **not in git** (personal data); without it that test is skipped.
 
 Commands are in the README's Tests section.
 
@@ -156,5 +156,5 @@ Steps are in the README ("Rebuilding the question bank").
 | Database, uploaded resumes, secret key | User data | `main_cap/cap/instance/` |
 | Lecture slides and the search indexes built from them | Course material | `rag_system/rag_tester/sources/`, `knowledge_base*/` |
 | Question-generation caches | Regenerable | `rag_system/rag_tester/.qbank_cache/`, `.enrich_cache/` |
-| Real test resumes and their parsed outputs | Personal data | `parser_tests/resumes/`, `baseline/`, `metadata/` |
+| Real test resumes | Personal data | `parser_tests/resumes/` |
 | Backups and superseded docs | Project history | `archive/` |

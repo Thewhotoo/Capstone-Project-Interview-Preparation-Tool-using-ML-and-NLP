@@ -27,7 +27,7 @@ psycopg[binary]>=3.1            # 3.3.6 — PostgreSQL driver (CAP_DATABASE_URL=
 redis>=5.0                      # 8.1.0 — live interview state in Redis
 waitress>=3.0                   # 3.0.2 — multi-threaded production server (works on Windows)
 
-# ── Resume parsing (resume_engine, resume_classifier) ────────────────────────
+# ── Resume parsing (resume_engine) ───────────────────────────────────────────
 PyMuPDF>=1.24                   # 1.28.2 — PDF text and layout
 pdfplumber>=0.10                # 0.11.10
 pdfminer.six                    # 20260107

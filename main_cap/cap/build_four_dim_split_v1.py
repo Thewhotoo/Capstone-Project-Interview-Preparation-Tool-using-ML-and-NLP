@@ -59,7 +59,7 @@ def _validate_leakage(examples, split) -> dict:
 
     # Rewrite-lineage leakage: none of the 170 core-pool examples are
     # deterministic-rewrite derivatives (the rewrite pipeline was never used
-    # to expand this pool -- see DeBERTa_Dataset_Rebuild_Status.md). Checked
+    # to expand this pool -- see the dataset rebuild notes, since removed). Checked
     # via the schema's own lineage field rather than assumed.
     rewrite_lineage_examples = [
         e.metadata.example_id for e in examples

@@ -118,7 +118,7 @@ def _try_activate_resume_evidence() -> bool:
 
 
 # ── Tier 1: the averaged evaluator (heuristic + a teammate's DeBERTa-v3 model,
-# `overall_single_v5_1088`; resumeParser_integration.md step 5). The weights
+# `overall_single_v5_1088`; the 2026-09-30 integration). The weights
 # file (735 MB, git-ignored) must be placed in this folder by hand; without it
 # bootstrap falls through to the tiers below exactly as before.
 # CAP_TRAINED_EVALUATOR=0 skips it (e.g. a laptop short on memory).

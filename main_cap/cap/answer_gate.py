@@ -13,7 +13,7 @@ is capped at 0.1 / "poor", its strengths are cleared and one weakness says why;
 anything else is returned unchanged. Deterministic, no model.
 
 Adapted from a teammate's gate (`overall_single_evaluator._is_non_answer` +
-`correctness_nli_scorer.degeneracy`, see resumeParser_integration.md), with
+`correctness_nli_scorer.degeneracy`, integrated 2026-09-30), with
 three fixes so real answers are never zeroed:
   * non-answer phrases match whole words only, and only in SHORT replies
     ("pass" matched "passed"; "not sure" matched "we weren't sure about the

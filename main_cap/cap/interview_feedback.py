@@ -8,7 +8,7 @@ strong, and what to do about it. Deterministic, no model. It only speaks to what
 the evaluator measures (relevance/completeness, depth/specificity, grounding/
 ownership) and says plainly that it does not verify factual correctness.
 
-Adapted from a teammate's `interview_feedback.py` (resumeParser_integration.md
+Adapted from a teammate's `interview_feedback.py` (the 2026-09-30 integration
 step 6). His version read his evaluator's four canonical dimensions; ours reads
 the heuristic evaluator's dimensions (which the averaged evaluator keeps), mapped:
 
@@ -95,32 +95,6 @@ def _tech_mismatch_tip(timeline: list[dict] | None, tech_consistency_flags: list
         f"Double-check the technologies you described for {where} — what you said didn't clearly "
         f"match what's listed on your résumé there. Naming the exact tools you actually used will hold up better."
     )
-
-TECH_MISMATCH = "tech_consistency"
-
-
-def _tech_mismatch_tip(timeline: list[dict] | None, tech_consistency_flags: list | None) -> str | None:
-    """A soft, named-project nudge when one or more answers described a tech
-    stack that doesn't clearly match what the resume lists for that project
-    (tech_consistency_flag.py — a side signal, never an accusation; see its
-    module docstring for why it's deliberately conservative). None when there
-    is nothing to flag."""
-    if not tech_consistency_flags or not timeline:
-        return None
-    projects: list[str] = []
-    for turn, flag in zip(timeline, tech_consistency_flags):
-        if flag == POSSIBLE_MISMATCH:
-            name = (turn.get("project_reference") or "").strip()
-            if name and name not in projects:
-                projects.append(name)
-    if not projects:
-        return None
-    where = projects[0] if len(projects) == 1 else ", ".join(projects[:-1]) + f" and {projects[-1]}"
-    return (
-        f"Double-check the technologies you described for {where} — what you said didn't clearly "
-        f"match what's listed on your résumé there. Naming the exact tools you actually used will hold up better."
-    )
-
 
 def _evidence_scores(evaluation: dict) -> dict[str, float]:
     """This answer's score per evidence dimension (only those it reported)."""

@@ -94,7 +94,7 @@ class DimensionProfile:
 #     was also lowered 2 -> 1 to match what the authored answers actually
 #     demonstrate (thin, generic "we" ownership) rather than an
 #     unsubstantiated assumption.
-# See docs/architecture/DeBERTa_Dataset_Rebuild_Status.md for the full
+# See the dataset rebuild notes (since removed) for the full
 # forensic analysis and repair record.
 _HARD_CASE_VECTORS: dict[str, tuple[int, int, int, int]] = {
     "A": (4, 1, 3, 2),  # correct + shallow

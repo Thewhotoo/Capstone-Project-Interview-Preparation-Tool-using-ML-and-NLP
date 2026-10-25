@@ -57,7 +57,7 @@ _DANGLING_END_RE = re.compile(r"\b(?:to|and|or|of|the|a|an|for|with|in|on|at|by|
 
 def _is_not_a_certification_name(text: str, next_text: str = "") -> bool:
     """True for a line inside a Certifications section that cannot be a
-    certification's NAME (integration fix, resumeParser_integration.md §2):
+    certification's NAME (integration fix, the 2026-09-30 integration):
       - a date-only line ("01 Jun 2052- present", "2021 - 2022");
       - an issuer/company line ("Giggling Platypus Co.", "Acme Inc.");
       - a fragment of a description sentence: opens lowercase, opens with an

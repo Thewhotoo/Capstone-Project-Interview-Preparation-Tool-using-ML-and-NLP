@@ -13,7 +13,7 @@ silently fall back to CPU for local smoke-testing), this script **requires
 CUDA and fails clearly if it is unavailable** — a deliberate, explicit
 change for this experiment: a real training attempt on this project's
 7.5GB-RAM local machine was found to exceed available memory and stall
-under disk paging (see `docs/architecture/DeBERTa_Dataset_Rebuild_Status.md`'s
+under disk paging (see the dataset rebuild notes'
 Phase 4 checkpoint for the measured failure). Local execution of this
 script is for `--dry-run` only (see below); real training must happen on a
 GPU-backed Colab runtime.
@@ -51,7 +51,7 @@ is the smallest additive change that supports V2 without touching V1
 behavior at all: omitting the argument, or passing `v1` explicitly, is
 byte-for-byte identical to this script before this change.
 
-See docs/architecture/DeBERTa_Dataset_Rebuild_Status.md,
+See the dataset rebuild notes (since removed),
 artifacts/four_dim_experiment_v1/README.md, and
 artifacts/four_dim_experiment_v2/README.md for the frozen dataset/splits
 this script consumes.

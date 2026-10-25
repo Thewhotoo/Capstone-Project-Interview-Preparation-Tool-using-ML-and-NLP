@@ -1,6 +1,6 @@
 # Project Documentation — AI Resume-Grounded Interview Preparation Platform
 
-> Scope: this document describes the whole repository end to end, as the code actually behaves today, including where older documents (`README.md`, `docs/architecture/*`) have drifted from it. Superseded documents (the old version of this file, `WORKFLOW_INTEGRATION_GUIDE.md`, `WEBCAM_AND_GAZE_MONITORING.md`) were moved to `archive/` (not in the repository).
+> Scope: this document describes the whole repository end to end, as the code actually behaves today, including where older documents (`README.md`, `docs/architecture/*`) have drifted from it. Superseded documents (the old version of this file, `WORKFLOW_INTEGRATION_GUIDE.md`, `WEBCAM_AND_GAZE_MONITORING.md`) and old team notes and status logs were removed (2026-10-26; still in the git history).
 > Convention: paths are relative to the repository root. Unless noted otherwise, Python module names refer to files in `main_cap/cap/`.
 
 ---
@@ -394,8 +394,8 @@ capstone_latest/
 │   ├── sources/<subject>/*.pdf       Faculty lecture slides, one slide per page (git-ignored)
 │   ├── topics/<subject>.txt          Curated topic lists (279 topics) checked against the slides
 │   ├── question_bank/repairs/        Hand-written key-point repair batches (slide_rag/apply_repairs.py)
-│   ├── question_bank/<subject>.json  Generated technical-interview questions (+ <subject>_report.md for review;
-│   │                                 enrichment fields and enrich_report.md from slide_rag/enrich_bank.py)
+│   ├── question_bank/<subject>.json  Generated technical-interview questions (the <subject>_report.md review files
+│   │                                 and enrich_report.md are written locally and git-ignored)
 │   ├── knowledge_base_v2/<subject>/  Pipeline output: slides, sections, index, reports, quiz.json
 │   └── .slide_cache/, .vision_cache/, .qbank_cache/, .enrich_cache/   Stage 1 / vision / question-generation / enrichment caches (git-ignored)
 ├── archive/superseded_caches/        Archived old-version caches (safe to delete; see its README)
@@ -1436,7 +1436,7 @@ Three hand-written questions were added on 2026-10-25 (repair batch 7: OSI model
 |---|---|---|---|---|---|---|
 | Active | 39 | 61 | 50 | 64 | 68 | **282** (86 easy / 164 medium / 32 hard) |
 
-Change the cut-off with `python -m slide_rag.rank_bank --threshold 0.78` (0.70 keeps 358, 0.78 keeps 260). Review files: `question_bank/<subject>_report.md` (active first, then "Held back").
+Change the cut-off with `python -m slide_rag.rank_bank --threshold 0.78` (0.70 keeps 358, 0.78 keeps 260). Review files: `question_bank/<subject>_report.md` (active first, then "Held back"; written locally, git-ignored).
 
 **Quality funnel.** Each stage keeps every question in the bank and only changes what interviews draw from:
 

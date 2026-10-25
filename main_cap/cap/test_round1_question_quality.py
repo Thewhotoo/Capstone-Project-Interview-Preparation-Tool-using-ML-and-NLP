@@ -1,6 +1,6 @@
 """
 Round 1 question quality after integrating the teammate's planner changes
-(resumeParser_integration.md step 4): resume-specific seed questions (naming
+(the 2026-09-30 integration): resume-specific seed questions (naming
 their project, never two in a row), no repeated question wording, and a soft
 cooldown so one project doesn't take several turns in a row.
 """

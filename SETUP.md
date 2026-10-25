@@ -28,27 +28,19 @@ ls -l main_cap/cap/deployed_model_overall_single_v5_1088/best_checkpoint_weights
 If git-lfs isn't available, ask the repo owner for `best_checkpoint_weights.pt`
 and place it at that exact path.
 
-## 3. Install Python dependencies (Python 3.11–3.13)
+## 3. Install everything (one command)
 ```bash
-python -m venv .venv
-# Windows: .venv\Scripts\activate   |   macOS/Linux: source .venv/bin/activate
-pip install -r main_cap/cap/requirements.txt
+python install.py
 ```
-(See the torch note in `requirements.txt` if you're on a CPU-only machine.)
+This installs the Python packages (`Requirements_Global.txt`), **Ollama** (the local LLM server,
+which pip can't install), starts it and downloads the **`qwen3:4b`** model (~2.5 GB), then checks
+everything is ready. Safe to run again. Résumé-interview answers are graded with this local LLM,
+so **the app will not start without it**.
 
-## 4. Install the local LLM (required)
-Résumé-interview answers are re-graded in the background by a small local LLM served by
-[Ollama](https://ollama.com); it measurably improves grading (see
-`main_cap/cap/benchmarks/README.md`). **The app will not start without it.**
-```bash
-# Windows: winget install Ollama.Ollama   (macOS/Linux: https://ollama.com/download)
-ollama pull qwen3:4b        # ~2.5 GB, grades best; or: ollama pull qwen2.5:3b (~1.9 GB, lighter)
-```
-You don't need to start Ollama yourself: if it's installed but not running, the app starts it
-(the first start can take ~20 s). If something is missing, `python app.py` stops with a message
-saying exactly what to install or run.
+Doing it by hand instead: `pip install -r Requirements_Global.txt`, install Ollama from
+https://ollama.com/download (Windows: `winget install Ollama.Ollama`), then `ollama pull qwen3:4b`.
 
-## 5. Run
+## 4. Run
 ```bash
 cd main_cap/cap
 python app.py
@@ -66,10 +58,10 @@ python app.py
   it's absent.)
 - CPU-only is fine; expect a few seconds per evaluated answer.
 
-## Running without the LLM (not recommended)
-Set `CAP_ALLOW_NO_LLM=1` to start anyway; résumé answers then get only the fast evidence
-score (noticeably weaker on technically wrong answers). If Ollama crashes during an
-interview, the session carries on with the fast score instead of failing.
+## If Ollama stops
+The app starts Ollama itself when it's installed but not running (the first start can take
+~20 s). If Ollama crashes in the middle of an interview, that session finishes with the fast
+built-in score instead of failing; the next start requires the LLM again.
 
 ## What you'll see (current behavior)
 - Upload a résumé → personalized, résumé-grounded interview → per-answer scores

@@ -1,5 +1,5 @@
 """Startup requirement for the local LLM (llm_requirement.ensure_llm_ready), model-free:
-a fake checker stands in for Ollama. Covers explicit opt-out, ready, auto-starting the
+a fake checker stands in for Ollama. Covers: no opt-out, ready, auto-starting the
 server, not installed, server that won't start, and model not downloaded."""
 
 from __future__ import annotations
@@ -28,9 +28,7 @@ class _FakeChecker:
 
 
 @pytest.fixture(autouse=True)
-def _require_llm(monkeypatch):
-    monkeypatch.delenv("CAP_ALLOW_NO_LLM", raising=False)
-    monkeypatch.setenv("CAP_FACT_CHECK", "auto")       # conftest sets 0 for other tests
+def _no_real_sleep(monkeypatch):
     monkeypatch.setattr(llm_requirement.time, "sleep", lambda s: None)
 
 
@@ -40,9 +38,11 @@ def _ready(**overrides):
     return ensure_llm_ready(**kwargs)
 
 
-def test_explicit_opt_out_skips_the_check(monkeypatch):
-    monkeypatch.setenv("CAP_ALLOW_NO_LLM", "1")
-    assert _ready(checker=_FakeChecker([None], available=False)) is None
+def test_there_is_no_opt_out(monkeypatch):
+    monkeypatch.setenv("CAP_ALLOW_NO_LLM", "1")      # the old switch does nothing now
+    monkeypatch.setenv("CAP_FACT_CHECK", "0")
+    with pytest.raises(LLMNotReady, match="install.py"):
+        _ready(checker=_FakeChecker([None]), find_ollama=lambda: None)
 
 
 def test_ready_returns_the_model_and_warms_it():
@@ -68,5 +68,5 @@ def test_server_that_never_comes_up_explains_what_to_do():
 
 
 def test_missing_model_says_which_to_pull():
-    with pytest.raises(LLMNotReady, match="ollama pull"):
+    with pytest.raises(LLMNotReady, match="isn't downloaded"):
         _ready(checker=_FakeChecker([{"llama3:8b"}], available=False))

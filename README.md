@@ -38,10 +38,10 @@ Details, main files and LOC per module: [`PROJECT_DOCUMENTATION.md` §1.1](PROJE
 
 ## Quick start
 
-**Requirements:** Python 3.12, about 8 GB RAM, Chrome or Edge with a webcam, and internet on the first run. Node.js only for the frontend tests. A GPU is **not** needed to run the app. Full list (disk space, models, the weights file, browser permissions): [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
+**Requirements:** Python 3.12, about 8 GB RAM, Chrome or Edge with a webcam, internet on the first run, and [Ollama](https://ollama.com) with the `qwen3:4b` model (installed by `install.py`; an NVIDIA GPU with ~3 GB free makes it fast). Node.js only for the frontend tests. Full list (disk space, models, the weights file, browser permissions): [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
 
 ```bash
-pip install -r Requirements_Global.txt
+python install.py        # one-time: Python packages + Ollama + the qwen3:4b model
 cd main_cap/cap
 python app.py
 ```
@@ -77,8 +77,6 @@ All optional; set as environment variables.
 | `CAP_GRADER_ENRICHMENT` | `replies` | How much of the offline bank enrichment the technical grader uses (`off` / `replies` / `all`) |
 | `CAP_QUESTION_BANK_DIR` | `rag_system/rag_tester/question_bank` | Where the question bank is read from |
 | `CAP_MODEL_WARMUP` | on | `0` disables background model loading at startup |
-| `CAP_ALLOW_NO_LLM` | unset | `1` lets the app start without Ollama (résumé answers then get only the fast evidence score). Normally the app refuses to start without it |
-| `CAP_FACT_CHECK` | `auto` | Background LLM re-grade of résumé answers: `auto` when Ollama is ready, `0` off (also skips the startup requirement), `1` always queue |
 | `CAP_FACT_CHECK_MODEL` | first installed of `qwen3:4b`, `qwen2.5:3b` | Ollama model used for the re-grade |
 | `GEMINI_API_KEY` | unset | Only for optional developer tooling (parser shadow mode, experiment scripts); **not** needed to run the app |
 

@@ -1100,7 +1100,7 @@ def resume_discussion_v2_end():
 if __name__ == "__main__":
     # The local LLM (Ollama) is required: it measurably improves résumé-answer grading.
     # Checked before serving so a missing install fails loudly with instructions instead
-    # of silently grading worse. CAP_ALLOW_NO_LLM=1 opts out explicitly.
+    # of silently grading worse. There is no opt-out; `python install.py` sets it up.
     from llm_requirement import LLMNotReady, ensure_llm_ready
     try:
         ensure_llm_ready()

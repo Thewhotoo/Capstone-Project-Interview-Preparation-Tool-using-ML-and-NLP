@@ -1,6 +1,10 @@
 # Requirements for the whole project. Python 3.12 (tested on 3.12.10, Windows 11).
 #
-#   pip install -r Requirements_Global.txt
+#   python install.py        <- installs this file AND Ollama + the qwen3:4b model (recommended)
+#   pip install -r Requirements_Global.txt     <- this file only
+#
+# ALSO REQUIRED, NOT pip-installable: Ollama with the qwen3:4b model (the app won't start
+# without it). install.py sets it up; see SETUP_PREREQUISITES.md.
 #
 # PyTorch: the line below installs the default build from PyPI. On a machine
 # without an NVIDIA GPU, the smaller CPU-only build is enough to run the app:

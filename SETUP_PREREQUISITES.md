@@ -19,6 +19,8 @@ Everything a new machine needs, beyond `git clone`. The short version is in [`RE
 
 ### Python packages
 
+`python install.py` installs these together with Ollama (below). By hand:
+
 ```bash
 # no NVIDIA GPU? install the small CPU-only PyTorch first:
 pip install torch --index-url https://download.pytorch.org/whl/cpu
@@ -35,7 +37,7 @@ The résumé interview re-grades answers in the background with a small local LL
 | **Ollama** | [ollama.com](https://ollama.com) (Windows: `winget install Ollama.Ollama`), tested with 0.40. The app starts the Ollama server itself if it's installed but not running. |
 | **A model** | `ollama pull qwen3:4b` (about 2.5 GB; grades best) or `ollama pull qwen2.5:3b` (about 1.9 GB; lighter). The first one installed is used. |
 
-Not installable with pip: it's a separate program, like a database. `CAP_ALLOW_NO_LLM=1` starts the app without it (not recommended).
+Not installable with pip: it's a separate program, like a database. **`python install.py`** (repository root) installs it, downloads the model and checks it works, together with the Python packages.
 
 ### Git LFS, for the Round 1 evaluator weights
 

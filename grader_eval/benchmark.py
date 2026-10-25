@@ -61,6 +61,14 @@ class CachedJudge:
                 r = json.loads(line)
                 self.cache[r["key"]] = r["out"]
 
+    def judge_followup(self, followup, expected, point, reply):
+        key = f"fu|{self.judge_.model}|{zlib.crc32(llm_judge.FU_SYSTEM.encode())}|{zlib.crc32(f'{followup}|{expected}|{point}|{reply}'.encode())}"
+        if key not in self.cache:
+            self.cache[key] = self.judge_.judge_followup(followup, expected, point, reply)
+            with LLM_CACHE.open("a", encoding="utf-8") as f:
+                f.write(json.dumps({"key": key, "out": self.cache[key]}) + "\n")
+        return self.cache[key]
+
     def judge(self, q, answer):
         key = _judge_key(self.judge_.model, q, answer)
         if key not in self.cache:
@@ -139,7 +147,9 @@ def evaluate(rows: list[dict], bank: dict, judge=None) -> tuple[dict, list[dict]
         if judge is not None:   # the end-of-interview score: fast grade blended with the LLM re-grade
             record = {"answer": x["answer"], "score": g.score, "exchanges": [], "final_grade": g.to_dict(),
                       "key_points": [{"point": k.point} for k in q.key_points]}
-            g.score = llm_judge.blended(record, judge.judge(q, x["answer"]))["score"]
+            regrade = llm_judge.blended(record, judge.judge(q, x["answer"]))
+            g.score = regrade["score"]
+            g.covered, g.partial, g.missing = regrade["covered"], regrade["partial"], regrade["missing"]
         predicted = ["covered" if k.point in g.covered else "partial" if k.point in g.partial else "missing"
                      for k in q.key_points]
         labels = x.get("labels") or []
@@ -151,6 +161,9 @@ def evaluate(rows: list[dict], bank: dict, judge=None) -> tuple[dict, list[dict]
             kp = next((k for k in q.key_points if k.followup == fu.get("question")), None)
             if kp is not None:
                 verdict, _ = followup_covers(kp, fu["answer"], subject=q.subject)
+                if judge is not None:   # the re-grade's rule: both graders must accept the reply
+                    verdict = llm_judge.followup_verdict(
+                        verdict, judge.judge_followup(kp.followup, kp.followup_answer, kp.point, fu["answer"]))
                 fu_n += 1
                 fu_ok += (verdict != "missing") == fu["correct"]
                 if not fu["correct"]:

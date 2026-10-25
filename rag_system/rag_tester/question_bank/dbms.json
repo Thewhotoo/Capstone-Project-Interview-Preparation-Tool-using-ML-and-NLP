@@ -6567,21 +6567,27 @@
   "unit": "Fundamentals",
   "priority": "high",
   "topic_coverage": "good",
-  "question": "What is one key advantage of a database system over a file system?",
+  "question": "In a file-processing system, the same student's details may be stored in several files. What problems does this cause, and how does a DBMS avoid them?",
   "difficulty": "easy",
-  "reference_answer": "A database system provides persistent storage for program objects, such as in object-oriented DBMSs, which allows program objects to be stored and retrieved even after the program that created them has terminated. This is a significant advantage over file systems, which typically do not support such persistent storage for program objects. This feature enables more robust and reusable software development.",
+  "reference_answer": "Storing the same details in several files is data redundancy: it wastes storage, and when one copy is updated but another is not, the copies disagree, which is data inconsistency. A DBMS stores the information once, in a central database, so a change is made in a single place and every user sees the same data.",
   "key_points": [
    {
-    "point": "Persistent storage for program objects",
-    "quote": "Providing persistent storage for program Objects - E.g., Object-oriented DBMSs make program objects persistent",
-    "followup": "Can you explain why persistent storage for program objects is important in software development?",
-    "followup_answer": "Persistent storage for program objects allows them to be retained even after the program that created them has ended, which supports long-term data management and reuse."
+    "point": "Duplicated data wastes storage space.",
+    "quote": "Takes up more storage space",
+    "followup": "Apart from inconsistency, what is the cost of keeping the same data in many files?",
+    "followup_answer": "It takes up more storage space."
    },
    {
-    "point": "Enhanced data integrity and security",
-    "quote": "Restricting unauthorized access to data",
-    "followup": "How does a database system ensure that data is not accessed by unauthorized users?",
-    "followup_answer": "A database system restricts unauthorized access to data through access control mechanisms, which are not typically available in file systems."
+    "point": "If one copy is updated and another is not, the copies become inconsistent.",
+    "quote": "May also lead to Data Inconsistency in case of",
+    "followup": "What happens if a student's address is changed in one file but not in another?",
+    "followup_answer": "The two files now disagree, so the data is inconsistent."
+   },
+   {
+    "point": "A DBMS stores the data once, centrally, so a change is made in a single place.",
+    "quote": "Store information in centralized",
+    "followup": "How does storing data centrally help when a student's address changes?",
+    "followup_answer": "The address is stored once, so it is changed in a single place and everyone sees the new value."
    }
   ],
   "source_pages": [
@@ -6605,13 +6611,14 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": false,
-  "curated": false,
+  "active": true,
+  "curated": true,
   "interview_priority": 3,
-  "quality_score": 5,
-  "quality_note": "asks for one advantage but grades two specific ones (object persistence, security); any of many advantages is correct. Kept held back (repair 5)",
+  "quality_score": 8,
+  "quality_note": "rewritten (batch 7): was 'name one advantage' graded against two specific ones; now asks about redundancy and inconsistency",
   "repairs": [
-   "batch5_2026-10-25"
+   "batch5_2026-10-25",
+   "batch7_2026-10-25"
   ]
  },
  {
@@ -7133,21 +7140,27 @@
   "unit": "SQL",
   "priority": "high",
   "topic_coverage": "thin",
-  "question": "Explain how views can be used to improve security in a database system, and why some views are not updatable.",
+  "question": "What is a view in SQL, how can it improve security, and why are some views not updatable?",
   "difficulty": "medium",
-  "reference_answer": "Views improve security by allowing sensitive data to be excluded from the view, so users only see what they are authorized to access. This is because a view is a virtual table that hides the complexity of the underlying data structure. Some views are not updatable because they may involve joins, aggregations, or other operations that make it impossible to directly modify the base tables through the view.",
+  "reference_answer": "A view is a virtual table: it stores a query, not data, and shows the rows that query returns from the base tables. It improves security because users can be given the view instead of the table, so they see only the columns and rows it selects and the sensitive data is left out. A view is updatable only if each of its rows maps to exactly one row of a single base table; a view built with joins, aggregate functions, GROUP BY or DISTINCT cannot be updated, because the database cannot tell which base-table row a change should go to.",
   "key_points": [
    {
-    "point": "Views improve security by excluding sensitive information from the view.",
-    "quote": "It increases security by excluding sensitive information from the view.",
-    "followup": "Can a user modify data through a view that hides sensitive information?",
-    "followup_answer": "No, because the view is a virtual table and does not store actual data. The user can only see the data that is included in the view."
+    "point": "A view is a virtual table that stores a query, not data.",
+    "quote": "It doesn’t store actual data by itself but instead stores a query that pulls data from one or more tables (or even other views)",
+    "followup": "Does a view keep its own copy of the data?",
+    "followup_answer": "No, it stores only the query; the data stays in the base tables."
    },
    {
-    "point": "Some views are not updatable because they involve joins or aggregations.",
-    "quote": "NOTE: A view is updatable (CRUD operations) only if these criterias are met: ... Does not have joins or subqueries (query within query like select for example)",
-    "followup": "Why would a view that includes a join not be updatable?",
-    "followup_answer": "Because the database cannot determine which rows in the base tables to update when a row in the view is modified, leading to potential data inconsistencies."
+    "point": "Views improve security by exposing only selected columns and rows, leaving sensitive data out.",
+    "quote": "It increases security by excluding sensitive information from the view.",
+    "followup": "How would you let a clerk see employee names but not their salaries?",
+    "followup_answer": "Create a view that selects only the name columns and give the clerk access to the view instead of the table."
+   },
+   {
+    "point": "Views with joins, aggregates or GROUP BY are not updatable because a view row does not map to a single base-table row.",
+    "quote": "Does not contain aggregate functions like sum, max, count etc",
+    "followup": "Why can't you update a view that shows the total salary per department?",
+    "followup_answer": "Each row is an aggregate over many base rows, so the database cannot tell which base-table rows to change."
    }
   ],
   "source_pages": [
@@ -7174,9 +7187,14 @@
    "grounding": 0.5,
    "coverage": 0.85
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 3
+  "active": true,
+  "curated": true,
+  "interview_priority": 3,
+  "quality_score": 8,
+  "quality_note": "rewritten (batch 7): adds what a view is; fixed a follow-up answer that confused hiding data with updatability",
+  "repairs": [
+   "batch7_2026-10-25"
+  ]
  },
  {
   "id": "dbms.integrity_constraints.hard2",

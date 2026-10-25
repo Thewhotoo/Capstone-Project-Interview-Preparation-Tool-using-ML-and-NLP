@@ -4111,21 +4111,27 @@
   "unit": "Application layer",
   "priority": "high",
   "topic_coverage": "good",
-  "question": "Explain how the hierarchical structure of DNS enables efficient name resolution, and what happens if a local DNS server does not have the required information.",
-  "difficulty": "hard",
-  "reference_answer": "The hierarchical structure of DNS enables efficient name resolution by allowing queries to move from the root servers down through the domain hierarchy, progressively narrowing the search space. If a local DNS server does not have the required information, it forwards the query to higher-level DNS servers, starting with the root servers, until it finds an authoritative server that can provide the answer.",
+  "question": "What does DNS do, and how is a hostname resolved when the local DNS server does not already have the answer?",
+  "difficulty": "medium",
+  "reference_answer": "DNS translates human-readable hostnames into IP addresses. A host sends its query to its local DNS server, which acts as a proxy and forwards the query into the DNS hierarchy when the answer is not in its cache: a root server points it to the right top-level-domain (TLD) server, the TLD server points it to the domain's authoritative server, and the authoritative server returns the IP address. The local server then caches the mapping for a while (its TTL), so later queries for the same name are answered without visiting the hierarchy again.",
   "key_points": [
    {
-    "point": "DNS uses a hierarchical structure to progressively resolve domain names.",
-    "quote": "DNS: a distributed, hierarchical database",
-    "followup": "How does the structure help in resolving domain names?",
-    "followup_answer": "The structure allows queries to move from the root servers down through the domain hierarchy, progressively narrowing the search space."
+    "point": "DNS translates hostnames into IP addresses.",
+    "quote": "hostname to IP address",
+    "followup": "Why do we need DNS at all if computers communicate using IP addresses?",
+    "followup_answer": "Because people use names like www.amazon.com; DNS translates the name into the IP address the computer needs."
    },
    {
-    "point": "The process continues until an authoritative DNS server is reached.",
+    "point": "On a cache miss, the query goes from the root server to the TLD server to the domain's authoritative server, which returns the IP address.",
     "quote": "Client wants IP address for www.amazon.com; 1st approximation: - client queries root server to find .com DNS server - client queries .com DNS server to get amazon.com DNS server - client queries amazon.com DNS server to get IP address for www.amazon.com",
-    "followup": "What happens once the query reaches the correct DNS server?",
-    "followup_answer": "The authoritative DNS server provides the IP address for the requested domain name."
+    "followup": "Which DNS server finally gives the IP address for www.amazon.com?",
+    "followup_answer": "The authoritative DNS server for amazon.com."
+   },
+   {
+    "point": "The local DNS server caches the answer, so repeat queries skip the hierarchy until the entry's TTL expires.",
+    "quote": "once (any) name server learns mapping, it caches mapping - cache entries timeout (disappear) after some time (TTL)",
+    "followup": "If the same name is asked for again a minute later, does the local DNS server contact the root server again?",
+    "followup_answer": "No, it answers from its cache until the cached entry's TTL expires."
    }
   ],
   "source_pages": [
@@ -4148,9 +4154,14 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 3
+  "active": true,
+  "curated": true,
+  "interview_priority": 3,
+  "quality_score": 8,
+  "quality_note": "rewritten (batch 7): classic DNS resolution question; was held back at confidence 0.68",
+  "repairs": [
+   "batch7_2026-10-25"
+  ]
  },
  {
   "id": "cn.network_delays.easy1",
@@ -4791,5 +4802,111 @@
   "active": false,
   "curated": false,
   "interview_priority": 2
+ },
+ {
+  "id": "cn.osi_model.easy1",
+  "subject": "cn",
+  "topic_id": "cn.osi_model",
+  "topic": "OSI model",
+  "unit": "Introduction",
+  "priority": "high",
+  "topic_coverage": "good",
+  "question": "What are the seven layers of the OSI model, and what do the network and transport layers do?",
+  "difficulty": "easy",
+  "reference_answer": "From the bottom, the OSI model's seven layers are physical, data link, network, transport, session, presentation and application. The network layer routes packets from the source to the destination across different networks, using IP addresses. The transport layer provides end-to-end communication between applications, with services such as flow control and error recovery.",
+  "key_points": [
+   {
+    "point": "The seven layers are physical, data link, network, transport, session, presentation and application.",
+    "quote": "On the left is the OSI Model, which consists of seven layers: Application, Presentation, Session, Transport, Network, Data link, and Physical.",
+    "followup": "Which layer sits directly above the transport layer in the OSI model?",
+    "followup_answer": "The session layer."
+   },
+   {
+    "point": "The network layer routes data across different networks using IP addresses.",
+    "quote": "The third layer of the OSI model, responsible for routing data across different networks. It uses IP addresses to identify destinations.",
+    "followup": "Which layer decides the route a packet takes through the routers?",
+    "followup_answer": "The network layer."
+   },
+   {
+    "point": "The transport layer provides end-to-end communication between applications, with flow control and error recovery.",
+    "quote": "The fourth layer of the OSI model, responsible for end-to-end communication between applications. It provides services such as flow control and error recovery.",
+    "followup": "Which OSI layer do TCP and UDP belong to?",
+    "followup_answer": "The transport layer."
+   }
+  ],
+  "source_pages": [
+   84,
+   86,
+   89
+  ],
+  "source_sections": [],
+  "runtime": "hand-written",
+  "prompt_version": "hand",
+  "review": "hand_written",
+  "confidence": 0.9,
+  "confidence_signals": {
+   "hand_written": 1.0
+  },
+  "active": true,
+  "interview_priority": 3,
+  "quality_score": 8,
+  "quality_note": "new (batch 7): the topic had no question",
+  "curated": true,
+  "repairs": [
+   "batch7_2026-10-25"
+  ]
+ },
+ {
+  "id": "cn.tcp_ip_model.easy1",
+  "subject": "cn",
+  "topic_id": "cn.tcp_ip_model",
+  "topic": "TCP/IP model",
+  "unit": "Introduction",
+  "priority": "high",
+  "topic_coverage": "good",
+  "question": "How does the TCP/IP model differ from the OSI model?",
+  "difficulty": "easy",
+  "reference_answer": "The OSI model has seven layers, while the TCP/IP model used by the Internet has fewer: application, transport, network (internet) and link/physical. TCP/IP has no separate session and presentation layers; their services, such as encryption, compression and session checkpointing, are left to the application layer if an application needs them.",
+  "key_points": [
+   {
+    "point": "TCP/IP has fewer layers than OSI's seven: application, transport, network and link/physical.",
+    "quote": "On the right is the TCP/IP Protocol Suite, which has four layers: Application, Transport, Network, and Physical.",
+    "followup": "Which TCP/IP layer does IP belong to?",
+    "followup_answer": "The network (internet) layer."
+   },
+   {
+    "point": "TCP/IP has no separate session and presentation layers.",
+    "quote": "Internet stack “missing” these layers!",
+    "followup": "Which two OSI layers are missing from the TCP/IP model?",
+    "followup_answer": "The session and presentation layers."
+   },
+   {
+    "point": "Session and presentation services, such as encryption or compression, are handled by the application if needed.",
+    "quote": "presentation: allow applications to interpret meaning of data, (e.g., encryption,",
+    "followup": "In the Internet stack, who takes care of encryption if an application needs it?",
+    "followup_answer": "The application itself, at the application layer."
+   }
+  ],
+  "source_pages": [
+   84,
+   86,
+   93
+  ],
+  "source_sections": [],
+  "runtime": "hand-written",
+  "prompt_version": "hand",
+  "review": "hand_written",
+  "confidence": 0.9,
+  "confidence_signals": {
+   "hand_written": 1.0
+  },
+  "active": true,
+  "interview_priority": 3,
+  "quality_score": 8,
+  "quality_note": "new (batch 7): the topic had no question",
+  "curated": true,
+  "repairs": [
+   "batch7_2026-10-25"
+  ]
  }
 ]

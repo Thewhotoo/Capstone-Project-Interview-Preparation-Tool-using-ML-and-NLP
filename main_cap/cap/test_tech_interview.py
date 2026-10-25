@@ -372,6 +372,21 @@ class TestLLMRegrade(unittest.TestCase):
         kp = (1 + RECOVERED_CREDIT) / 3
         self.assertAlmostEqual(out["llm_score"], 0.85 * kp + 0.15 * 0.5 * min(1, kp / 0.5), places=2)
 
+    def test_followup_counts_only_when_both_graders_accept(self):
+        self.assertEqual(llm_judge.followup_verdict("covered", "covered"), "covered")
+        self.assertEqual(llm_judge.followup_verdict("covered", "partial"), "partial")
+        self.assertEqual(llm_judge.followup_verdict("covered", "missing"), "missing")
+        self.assertEqual(llm_judge.followup_verdict("missing", "covered"), "missing")
+        self.assertEqual(llm_judge.followup_verdict("partial", None), "partial")   # no LLM verdict
+
+    def test_llm_rejected_followup_recovers_nothing_and_lists_follow_the_llm(self):
+        ex = [{"kind": "followup", "key_point": "P2 point", "verdict": "covered", "answer": "x"}]
+        judged = {"verdicts": ["covered", "missing", "partial"], "wrong": False, "followups": {0: "missing"}}
+        out = llm_judge.blended(self.record(0.5, ex), judged)
+        self.assertEqual((out["covered"], out["partial"], out["missing"]), (["P1 point"], ["P3 point"], ["P2 point"]))
+        judged["followups"] = {0: "covered"}
+        self.assertIn("P2 point", llm_judge.blended(self.record(0.5, ex), judged)["covered"])
+
     def test_clarification_is_part_of_the_judged_answer(self):
         rec = self.record(exchanges=[{"kind": "clarify", "answer": "more detail"},
                                      {"kind": "followup", "answer": "not this"}])
@@ -387,6 +402,7 @@ class TestLLMRegradeRoutes(unittest.TestCase):
     def test_end_report_and_saved_turns_use_finished_regrades(self):
         fake = mock.Mock()
         fake.judge.side_effect = lambda q, a: {"verdicts": ["missing"] * len(q.key_points), "wrong": True}
+        fake.judge_followup.return_value = "missing"
         with mock.patch.dict(os.environ, {"CAP_TECH_LLM_GRADE": "1"}),                 mock.patch.object(llm_judge, "_get_judge", return_value=fake),                 mock.patch.object(llm_judge, "_pool", concurrent.futures.ThreadPoolExecutor(max_workers=1)):
             body = self.client.post("/api/tech-interview/start", json={"mode": "round2"}).get_json()
             sid = body["session"]["id"]
@@ -397,6 +413,7 @@ class TestLLMRegradeRoutes(unittest.TestCase):
         self.assertTrue(all(q["score"] <= llm_judge.WRONG_CAP for q in report["questions"]))
         turns = self.client.get(f"/api/sessions/{sid}").get_json()["session"]["turns"]
         self.assertTrue(all(t["evaluation"]["llm_grade"]["llm_wrong"] for t in turns))
+        self.assertTrue(all(q["covered"] == [] for q in report["questions"]))   # lists from the LLM verdicts
 
     def test_without_ollama_nothing_is_queued(self):
         with mock.patch.dict(os.environ, {"CAP_TECH_LLM_GRADE": "0"}),                 mock.patch.object(llm_judge, "_get_judge") as get:

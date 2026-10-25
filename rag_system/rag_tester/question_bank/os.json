@@ -6999,25 +6999,32 @@
   "unit": "Deadlocks",
   "priority": "high",
   "topic_coverage": "thin",
-  "question": "In the bridge crossing example, how do deadlock, starvation, and livelock differ in their implications for resource allocation and system behavior?",
-  "difficulty": "hard",
-  "reference_answer": "Deadlock occurs when cars are stuck waiting for each other to release resources, requiring one to back up to resolve. Starvation is possible when certain cars are consistently denied access to the bridge, even though they may eventually get it. Livelock is not explicitly mentioned, but it could imply that cars keep yielding without progress, which is different from deadlock and starvation.",
+  "question": "What is the difference between deadlock and starvation, and how can starvation be prevented?",
+  "difficulty": "medium",
+  "reference_answer": "In a deadlock, two or more processes wait forever for an event that only another of the waiting processes can cause, so none of them can make progress. In starvation, a process is blocked indefinitely while the rest of the system keeps running; for example, under priority scheduling a low-priority process may never get the CPU because higher-priority processes keep arriving. Starvation is prevented with aging: the longer a process waits, the more its priority is increased, until it eventually runs.",
   "key_points": [
    {
-    "point": "Deadlock requires a rollback to resolve, as cars must back up to release resources.",
-    "quote": "If a deadlock occurs, it can be resolved if one car backs up (preempt resources and rollback)",
-    "followup": "What happens if no car is willing to back up in the bridge example?",
-    "followup_answer": "A deadlock persists, and the system remains in a state of no progress."
+    "point": "In a deadlock, processes wait forever for an event that only another waiting process can cause, so none progress.",
+    "quote": "Deadlock – two or more processes are waiting indefinitely for an",
+    "followup": "In a deadlock, can any of the waiting processes continue on its own?",
+    "followup_answer": "No, each is waiting for another waiting process, so none of them can proceed."
    },
    {
-    "point": "The example highlights that OSes typically do not prevent or resolve deadlocks, implying that deadlock is a system-level challenge.",
-    "quote": "Note – Most OSes do not prevent or deal with deadlocks",
-    "followup": "Why might an OS not deal with deadlocks?",
-    "followup_answer": "Because detecting and resolving deadlocks can be computationally expensive and may introduce other complexities into the system."
+    "point": "In starvation, one process waits indefinitely while others keep running, e.g. a low-priority process never scheduled.",
+    "quote": "Problem ≡ Starvation – low priority processes may never execute",
+    "followup": "Under priority scheduling, which processes are at risk of starvation?",
+    "followup_answer": "Low-priority processes, because higher-priority ones keep getting the CPU."
+   },
+   {
+    "point": "Aging prevents starvation by increasing a waiting process's priority over time.",
+    "quote": "Solution ≡ Aging – as time progresses increase the priority of the process",
+    "followup": "How does aging guarantee that a low-priority process eventually runs?",
+    "followup_answer": "Its priority keeps increasing while it waits, so it eventually becomes high enough to be scheduled."
    }
   ],
   "source_pages": [
-   371
+   135,
+   327
   ],
   "source_sections": [
    251
@@ -7034,9 +7041,14 @@
    "grounding": 0.5,
    "coverage": 0.85
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 3
+  "active": true,
+  "curated": true,
+  "interview_priority": 3,
+  "quality_score": 8,
+  "quality_note": "rewritten (batch 7): was tied to the bridge example with a speculative livelock answer; the slides never cover livelock",
+  "repairs": [
+   "batch7_2026-10-25"
+  ]
  },
  {
   "id": "os.producer_consumer_problem.medium2",
@@ -7252,31 +7264,38 @@
   "unit": "Memory management",
   "priority": "high",
   "topic_coverage": "good",
-  "question": "Explain the trade-offs of using smaller versus larger page sizes in a paging system, and how they affect the system's memory usage and performance.",
-  "difficulty": "hard",
-  "reference_answer": "Smaller page sizes reduce internal fragmentation and allow for more efficient use of memory, but they increase the number of page table entries, which consumes more memory and can slow down address translation. Larger page sizes reduce the number of page table entries, lowering memory overhead and improving performance, but they may lead to higher internal fragmentation. The choice between small and large page sizes involves balancing these trade-offs based on the system's workload and memory constraints.",
+  "question": "What is paging, and how is a logical address translated into a physical address?",
+  "difficulty": "medium",
+  "reference_answer": "Paging divides physical memory into fixed-size blocks called frames and logical memory into blocks of the same size called pages, so a process's pages can sit in any free frames and memory need not be contiguous. This avoids external fragmentation, although internal fragmentation in the last page remains. A logical address is split into a page number and a page offset: the page number indexes the page table, which gives the base address of the frame holding that page, and the offset is added to that base to form the physical address.",
   "key_points": [
    {
-    "point": "Smaller page sizes reduce internal fragmentation.",
-    "quote": "Worst case fragmentation = 1 frame – 1 byte. On average fragmentation = 1 / 2 frame size.",
-    "followup": "What happens if the page size is very small, like 1 byte?",
-    "followup_answer": "It would significantly reduce internal fragmentation, but the number of page table entries would explode, making address translation very slow."
+    "point": "Physical memory is split into fixed-size frames and logical memory into pages of the same size.",
+    "quote": "Divide physical memory into fixed-sized blocks called frames",
+    "followup": "How does the size of a page compare to the size of a frame?",
+    "followup_answer": "They are the same size."
    },
    {
-    "point": "Larger page sizes reduce the number of page table entries.",
-    "quote": "If the page size is smaller, an overhead is involved with each page table entry.",
-    "followup": "How does increasing the page size affect the memory used by the page table?",
-    "followup_answer": "It reduces the number of page table entries, which decreases the memory required for the page table."
+    "point": "A logical address is split into a page number and a page offset.",
+    "quote": "The high-order m −n bits of a logical address designate the page number, and the n low-order bits designate the page offset",
+    "followup": "Which part of a logical address stays the same in the physical address?",
+    "followup_answer": "The page offset."
+   },
+   {
+    "point": "The page number indexes the page table to get the frame's base address, and the offset is added to it.",
+    "quote": "Page number (p) – used as an index into a page table which contains base address of each page in physical memory",
+    "followup": "What does the page table store for each page?",
+    "followup_answer": "The base address of the frame where that page is stored in physical memory."
+   },
+   {
+    "point": "Paging avoids external fragmentation because pages can go into any free frames.",
+    "quote": "Avoids external fragmentation and need for compaction",
+    "followup": "Does paging completely remove fragmentation?",
+    "followup_answer": "No, it removes external fragmentation, but internal fragmentation can remain in the last page."
    }
   ],
   "source_pages": [
    497,
-   498,
-   503,
-   504,
-   505,
-   524,
-   553
+   501
   ],
   "source_sections": [
    351,
@@ -7296,9 +7315,14 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 3
+  "active": true,
+  "curated": true,
+  "interview_priority": 3,
+  "quality_score": 8,
+  "quality_note": "rewritten (batch 7): the classic paging question (was a page-size trade-off question held back at confidence 0.62)",
+  "repairs": [
+   "batch7_2026-10-25"
+  ]
  },
  {
   "id": "os.critical_section_problem.hard2",
@@ -8111,5 +8135,64 @@
   "active": false,
   "curated": false,
   "interview_priority": 1
+ },
+ {
+  "id": "os.threads.easy1",
+  "subject": "os",
+  "topic_id": "os.threads",
+  "topic": "Threads",
+  "unit": "Processes and threads",
+  "priority": "high",
+  "topic_coverage": "good",
+  "question": "What is the difference between a process and a thread?",
+  "difficulty": "easy",
+  "reference_answer": "A process is a program in execution, with its own memory and resources. A thread is a unit of execution inside a process: each thread has its own thread ID, program counter, registers and stack, but threads of the same process share its code, data and other resources such as open files. Because of this sharing, creating and switching between threads is much cheaper than creating and switching between processes.",
+  "key_points": [
+   {
+    "point": "A thread is a unit of execution inside a process, and a process can have several threads.",
+    "quote": "A process can have multiple threads running at the same time. This is called multithreading.",
+    "followup": "Can one process run several threads at the same time?",
+    "followup_answer": "Yes, a process can have multiple threads; this is multithreading."
+   },
+   {
+    "point": "Each thread has its own program counter, registers and stack.",
+    "quote": "It consists of thread ID, Program counter, a register set and stack",
+    "followup": "Do two threads of the same process share a stack?",
+    "followup_answer": "No, each thread has its own stack, registers and program counter."
+   },
+   {
+    "point": "Threads of a process share its code, data and resources, while processes do not share memory by default.",
+    "quote": "Threads share resources like memory with other threads in the same process.",
+    "followup": "If one thread changes a global variable, does another thread of the same process see the change?",
+    "followup_answer": "Yes, because threads of the same process share its data."
+   },
+   {
+    "point": "Creating or switching threads is cheaper than creating or switching processes.",
+    "quote": "Process creation is heavy-weight while thread creation is light-weight",
+    "followup": "Why is creating a thread faster than creating a process?",
+    "followup_answer": "A new thread shares the process's existing memory and resources, so they do not have to be set up again."
+   }
+  ],
+  "source_pages": [
+   231,
+   234,
+   237
+  ],
+  "source_sections": [],
+  "runtime": "hand-written",
+  "prompt_version": "hand",
+  "review": "hand_written",
+  "confidence": 0.9,
+  "confidence_signals": {
+   "hand_written": 1.0
+  },
+  "active": true,
+  "interview_priority": 3,
+  "quality_score": 8,
+  "quality_note": "new (batch 7): 'process vs thread' is one of the most-asked OS questions",
+  "curated": true,
+  "repairs": [
+   "batch7_2026-10-25"
+  ]
  }
 ]

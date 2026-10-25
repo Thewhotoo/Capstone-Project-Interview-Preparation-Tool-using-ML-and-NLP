@@ -417,6 +417,7 @@ def apply_tech_regrades(session: InterviewSession, interview: Any, regrades: dic
     question index to llm_judge.blended(...)."""
     if not regrades:
         return
+    from tech_interview import llm_judge
     turns = sorted(session.turns, key=lambda t: t.turn_number or 0)
     for index, regrade in regrades.items():
         if not 0 <= index < len(interview.records):
@@ -424,6 +425,14 @@ def apply_tech_regrades(session: InterviewSession, interview: Any, regrades: dic
         record = interview.records[index]
         record["score"] = regrade["score"]
         record["llm_grade"] = regrade
+        if "covered" in regrade:   # the report's covered / missed lists come from the re-grade
+            for key in ("covered", "partial", "missing"):
+                record[key] = regrade[key]
+            for i, e in enumerate(record.get("exchanges", [])):
+                llm = (regrade.get("followup_verdicts") or {}).get(str(i))
+                if e.get("kind") == "followup" and llm is not None:
+                    e["fast_verdict"] = e.get("verdict")
+                    e["verdict"] = llm_judge.followup_verdict(e.get("verdict", "missing"), llm)
         if index < len(turns) and (turns[index].evaluation or {}).get("question_id") == record["question_id"]:
             turns[index].evaluation = dict(record)   # new dict, so the JSON column is marked dirty
             turns[index].overall_score = record["score"]

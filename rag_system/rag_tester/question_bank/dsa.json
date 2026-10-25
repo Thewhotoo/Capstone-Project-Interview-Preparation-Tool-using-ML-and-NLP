@@ -5610,21 +5610,27 @@
   "unit": "Algorithm design techniques",
   "priority": "high",
   "topic_coverage": "good",
-  "question": "Explain how the choice of pivot and partitioning affect the performance of quicksort, and why the worst-case scenario is a concern.",
-  "difficulty": "hard",
-  "reference_answer": "The choice of pivot directly influences the partitioning of the array, which in turn determines the depth of the recursion tree. In the worst case, the partitioning is highly unbalanced, leading to O(n²) comparisons. This happens when the pivot is the smallest or largest element in the subarray, causing one subarray to be empty and the other to contain n-1 elements. This unbalanced partitioning leads to a worst-case time complexity that is less efficient than the average case.",
+  "question": "How does quicksort's partition step work, and when does quicksort hit its O(n²) worst case?",
+  "difficulty": "medium",
+  "reference_answer": "Quicksort picks a pivot and partitions the array so that elements smaller than or equal to the pivot come before it and larger or equal ones after it; the pivot is then in its final sorted position, and the two sides are sorted recursively. When the splits are balanced, quicksort runs in O(n log n) on average. Its worst case is when the pivot is always the smallest or largest element, for example the first element of an already sorted array: one side gets n - 1 elements and the other none, so the work adds up to O(n²).",
   "key_points": [
    {
-    "point": "The pivot selection and partitioning determine the recursion tree depth and performance.",
-    "quote": "Select a pivot (partitioning element) - here, the first element",
-    "followup": "What happens if the pivot is the smallest element in the subarray?",
-    "followup_answer": "The partitioning becomes unbalanced, leading to a worst-case scenario with O(n²) comparisons."
+    "point": "Partition puts elements smaller than or equal to the pivot before it and larger ones after it.",
+    "quote": "Rearrange the list so that all the elements in the first S positions are smaller than or equal to the pivot and all the elements in the remaining n-s positions are larger than or equal to the pivot",
+    "followup": "After partitioning, where are the elements smaller than the pivot?",
+    "followup_answer": "All of them are before the pivot, in the left part of the array."
    },
    {
-    "point": "The partitioning process ensures the pivot is in its final position.",
-    "quote": "Exchange the pivot with the last element in the first (i.e., ≤)",
-    "followup": "What is the role of the last swap in the partitioning process?",
-    "followup_answer": "It places the pivot in its correct final position, after which the algorithm recursively sorts the two subarrays."
+    "point": "After partitioning the pivot is in its final position, and both sides are sorted recursively.",
+    "quote": "Sort the two subarrays recursively subarray — the pivot is now in its final position",
+    "followup": "Does the pivot move again in later recursive calls?",
+    "followup_answer": "No, it is already in its final sorted position; only the two subarrays are sorted further."
+   },
+   {
+    "point": "The worst case O(n²) happens when the pivot is always the smallest or largest element, so one side gets n - 1 elements.",
+    "quote": "The worst case occurs when the pivot selection is poor, e.g., always choosing the smallest or largest element. This results in highly unbalanced partitions, where one side has n - 1 elements and the other has 0.",
+    "followup": "If the first element is always the pivot, what input gives quicksort its worst case?",
+    "followup_answer": "An already sorted array, because the first element is then always the smallest."
    }
   ],
   "source_pages": [
@@ -5650,9 +5656,14 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 3
+  "active": true,
+  "curated": true,
+  "interview_priority": 3,
+  "quality_score": 8,
+  "quality_note": "rewritten (batch 7): classic partition + worst-case question; was held back at confidence 0.69",
+  "repairs": [
+   "batch7_2026-10-25"
+  ]
  },
  {
   "id": "dsa.simple_queue.hard2",
@@ -5844,21 +5855,27 @@
   "unit": "Trees",
   "priority": "high",
   "topic_coverage": "good",
-  "question": "Explain how the structure of a binary search tree ensures efficient search operations, and what happens if the tree becomes unbalanced.",
-  "difficulty": "hard",
-  "reference_answer": "The binary search tree ensures efficient search operations by maintaining the property that all elements in the left subtree of a node are less than the node's value, and all elements in the right subtree are greater than or equal to it. This allows for a divide-and-conquer approach during search, similar to binary search on a sorted array. However, if the tree becomes unbalanced, the search time can degrade to linear time in the worst case, which is equivalent to a linked list.",
+  "question": "What property defines a binary search tree, how is a key searched in it, and why can a search take O(n) time?",
+  "difficulty": "medium",
+  "reference_answer": "In a binary search tree, every element in a node's left subtree is less than the node, and every element in its right subtree is greater than or equal to it. To search, compare the key with the current node and go left if it is smaller or right otherwise, so each comparison discards one subtree and the search takes time proportional to the tree's height. The height depends on the order in which elements were inserted: inserting sorted keys makes a chain of height n - 1, so a search can take O(n), while a balanced tree keeps the height near log n.",
   "key_points": [
    {
-    "point": "The binary search tree ensures efficient search operations by maintaining the property that all elements in the left subtree of a node are less than the node's value.",
+    "point": "Left-subtree elements are smaller than the node and right-subtree elements are greater than or equal to it.",
     "quote": "all the elements in the left subtree of a node n are less than the contents of node n",
-    "followup": "What happens to the search time if the tree is not structured in a balanced way?",
-    "followup_answer": "If the tree is not balanced, the search time can increase significantly, potentially degrading to linear time in the worst case."
+    "followup": "Where would you find a value larger than the root in a BST?",
+    "followup_answer": "In the root's right subtree."
    },
    {
-    "point": "All elements in the right subtree of a node are greater than or equal to the node's value.",
-    "quote": "all the elements in the right subtree of a node n are greater than or equal to the contents of node n",
-    "followup": "How does this property help in searching for a target value?",
-    "followup_answer": "This property allows the search to eliminate half of the tree at each step, similar to binary search in a sorted array."
+    "point": "A search compares the key with each node and goes left or right, so it takes time proportional to the tree's height.",
+    "quote": "Height of the BST depends on the order of insertion of elements into tree",
+    "followup": "When searching for a key smaller than the current node, which way do you go?",
+    "followup_answer": "To the left child."
+   },
+   {
+    "point": "If keys are inserted in sorted order the tree becomes a chain of height n - 1, so search is O(n).",
+    "quote": "Tree can attain a height which can be as large as n-1",
+    "followup": "What does a BST look like if you insert 1, 2, 3, 4, 5 in that order?",
+    "followup_answer": "A chain where every node has only a right child, so it behaves like a linked list."
    }
   ],
   "source_pages": [
@@ -5886,9 +5903,14 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 3
+  "active": true,
+  "curated": true,
+  "interview_priority": 3,
+  "quality_score": 8,
+  "quality_note": "rewritten (batch 7): two points were halves of one property; now property, search and the degenerate case",
+  "repairs": [
+   "batch7_2026-10-25"
+  ]
  },
  {
   "id": "dsa.sorting_by_counting.medium2",

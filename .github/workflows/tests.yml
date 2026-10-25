@@ -47,7 +47,17 @@ jobs:
 
       - name: App and resume-engine tests
         working-directory: main_cap/cap
-        run: python -m pytest -q -p no:warnings
+        shell: bash
+        # failing tests are also reported as annotations (visible without opening the log)
+        run: |
+          set +e
+          python -m pytest -q -p no:warnings --tb=line -rf 2>&1 | tee pytest.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" != "0" ]; then
+            grep -E "^(FAILED|ERROR)|Killed|MemoryError" pytest.log | head -30 | sed 's/^/::error::/'
+            tail -3 pytest.log | sed 's/^/::error::/'
+          fi
+          exit $status
 
       - name: Slide pipeline tests
         working-directory: rag_system/rag_tester

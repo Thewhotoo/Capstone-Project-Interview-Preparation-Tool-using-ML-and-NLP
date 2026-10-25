@@ -4960,8 +4960,21 @@
                 }
 
             } catch (err) {
+                // Network failure (the server never answered): not a dead end. The
+                // question stays on screen and the answer goes back into the box so
+                // the candidate can simply send it again.
                 console.error("Discussion reply error:", err);
-                rdShowStageError("Something went wrong processing that answer. Please try again.");
+                if (proctorState.terminated || rdEnding) return;
+                if (answeredTurn) {
+                    answeredTurn.answer = null;
+                    if (rdHistoryList.lastElementChild) rdHistoryList.lastElementChild.remove();
+                    rdHistoryCount.textContent = String(rdHistoryList.children.length);
+                }
+                showToast("Your answer wasn't sent (connection problem). Check your connection and send it again.", "error", 6000);
+                setSystemLog("Answer not sent. Send it again.");
+                rdEnableInput();
+                rdInput.value = answer;
+                rdInput.dispatchEvent(new Event("input"));   // re-light the send button
             }
         }
 

@@ -2491,18 +2491,41 @@
     "followup": "What is the purpose of the first stage in heap sort?",
     "followup_answer": "It puts the largest element at the root, ready to be removed.",
     "followup_replies": [
-     "to build the heap.",
-     "to create the heap structure.",
-     "to position the largest element at the root.",
-     "to ensure the root is the maximum.",
-     "to prepare the array for extraction."
+     "to get the largest element ready",
+     "to put the max at the root",
+     "so the max is at the front",
+     "to prepare for the next stage",
+     "so it can be moved to the end"
+    ],
+    "variants": [
+     "the first stage makes a max heap so the biggest element is at the top",
+     "you build a heap so the largest value is at the root",
+     "the first step is to create a max heap from the array",
+     "building the heap puts the maximum element at the beginning",
+     "the first stage arranges the array into a max heap",
+     "you make a heap so the largest element is ready to be removed"
     ]
    },
    {
     "point": "Stage 2 repeatedly removes the root (maximum) and places it at the end of the array.",
     "quote": "Stage 1 (heap construction): Construct a heap for a given array. Stage 2 (maximum deletions): Apply the root-deletion operation n − 1 times to the remaining heap.",
     "followup": "What is the time complexity of heap sort?",
-    "followup_answer": "O(n log n) in every case."
+    "followup_answer": "O(n log n) in every case.",
+    "variants": [
+     "the second stage takes the max and puts it at the end of the array",
+     "you remove the root and place it at the end each time",
+     "the second step moves the max to the end of the array",
+     "you swap the root with the last element and shrink the heap",
+     "the second stage repeatedly removes the max and puts it at the end",
+     "you take the max out and put it at the end of the array"
+    ],
+    "followup_replies": [
+     "it's O(n log n) in all cases",
+     "n log n time",
+     "O(n log n)",
+     "log n per element",
+     "it's efficient in all scenarios"
+    ]
    }
   ],
   "source_pages": [
@@ -2538,25 +2561,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "Heap sort works by first building a max-heap and then repeatedly extracting the maximum element.",
-   "variants": [
-    "A heap sort begins by constructing a max-heap structure from the array.",
-    "Heap sort first arranges the array into a max-heap to facilitate sorting.",
-    "The first stage of heap sort is forming a max-heap from the input array.",
-    "Heap sort starts by building a max-heap to enable efficient element extraction.",
-    "In heap sort, the initial step is creating a max-heap to sort the elements."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.996
-  },
   "quality_score": 8,
   "quality_note": "points never named the two stages (repair 6)",
   "curated": true,
   "interview_priority": 3,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Heap sort works by first building a max-heap and then repeatedly extracting the maximum element.",
+   "variants": [
+    "A heap sort first constructs a max-heap and then removes the largest element repeatedly.",
+    "Heap sort begins by creating a max-heap and then removes the maximum element in each step.",
+    "Heap sort starts with building a max-heap and then extracts the maximum element repeatedly.",
+    "Heap sort first builds a max-heap and then extracts the maximum element one by one.",
+    "Heap sort operates by first forming a max-heap and then removing the maximum element each time."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.998
+  }
  },
  {
   "id": "dsa.binary_search.hard2",
@@ -3206,18 +3229,39 @@
     "followup": "What happens if the parent node is smaller than its child?",
     "followup_answer": "The algorithm swaps the parent with the largest child, ensuring the max-heap property is maintained at that level.",
     "followup_replies": [
-     "it swaps the parent with the largest child",
-     "the parent is swapped with the bigger child",
-     "it ensures the parent is the largest",
-     "the parent is moved down if needed",
-     "the largest child becomes the parent"
+     "O(n)",
+     "linear time",
+     "n time",
+     "O of n",
+     "linear"
+    ],
+    "variants": [
+     "if a parent is smaller than its child, it gets swapped down until it's bigger.",
+     "when a parent is smaller than a child, we swap it down to maintain the heap property.",
+     "the algorithm swaps the parent with the larger child if it's smaller.",
+     "so the parent is moved down until it's larger than its children.",
+     "if the parent is smaller than its child, the swap ensures the max-heap is maintained.",
+     "the parent is swapped down with the larger child to keep the heap valid."
     ]
    },
    {
     "point": "It starts at the last parent node and moves backwards to the root.",
     "quote": "a) The parental node keys will be in the first ⌊n/2⌋ positions of the array, while the leaf keys will occupy the last ⌈n/2⌉ positions",
     "followup": "What is the time complexity of bottom-up heap construction?",
-    "followup_answer": "O(n)."
+    "followup_answer": "O(n).",
+    "variants": [
+     "we start from the last parent and move up to the root.",
+     "the process begins at the last parent node and goes backward to the root.",
+     "the bottom-up method starts at the last parent and moves toward the root.",
+     "starting from the last parent and going to the root is how it works."
+    ],
+    "followup_replies": [
+     "O(n)",
+     "linear time",
+     "n time",
+     "O of n",
+     "linear"
+    ]
    }
   ],
   "source_pages": [
@@ -3253,25 +3297,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "The bottom-up heap construction algorithm ensures that the final array represents a valid max-heap by repeatedly applying the heapify operation from the last non-leaf node to the root.",
-   "variants": [
-    "A valid max-heap is formed by heapify-ing from the last non-leaf node to the root in bottom-up heap construction.",
-    "The bottom-up heap construction creates a valid max-heap by heapifying each node starting from the last non-leaf node.",
-    "Heapify-ing from the last non-leaf node to the root ensures the array is a valid max-heap in bottom-up construction.",
-    "Bottom-up heap construction builds a valid max-heap by heapifying nodes starting at the last non-leaf node.",
-    "The bottom-up heap construction algorithm builds a valid max-heap by heapifying from the last non-leaf node to the root."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.002
-  },
   "quality_score": 8,
   "quality_note": "circular point replaced by where it starts and the sift-down (repair 6)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The bottom-up heap construction algorithm ensures that the final array represents a valid max-heap by repeatedly applying the heapify operation from the last non-leaf node to the root.",
+   "variants": [
+    "A valid max-heap is formed by heapify-ing from the last non-leaf node to the root in bottom-up heap construction.",
+    "Bottom-up heap construction creates a valid max-heap by heapifying each node starting from the last non-leaf node.",
+    "The bottom-up heap construction algorithm builds a valid max-heap by heapifying nodes from the last non-leaf to the root.",
+    "Bottom-up heap construction ensures a valid max-heap by heapifying each node starting at the last non-leaf node.",
+    "The bottom-up heap construction algorithm produces a valid max-heap by heapifying from the last non-leaf node to the root."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.002
+  }
  },
  {
   "id": "dsa.double_ended_queue.medium1",
@@ -3502,9 +3546,17 @@
     "followup_replies": [
      "no effect",
      "nothing happens",
-     "it does nothing",
+     "it doesn't do anything",
      "no change",
-     "they are already merged"
+     "they're already in the same set"
+    ],
+    "variants": [
+     "union combines two separate sets into one.",
+     "when you union two elements, they join the same set.",
+     "the union operation merges two sets into a single set.",
+     "if two elements are in different sets, union joins them.",
+     "union is used to combine two disjoint sets.",
+     "the union operation takes two sets and makes them one."
     ]
    },
    {
@@ -3513,18 +3565,40 @@
     "followup": "How does the find operation help in determining if two elements are in the same set?",
     "followup_answer": "By finding the representative of each element, you can compare them to check if they belong to the same set.",
     "followup_replies": [
-     "compare their roots",
-     "check if roots are the same",
-     "same root means same set",
-     "roots match if same set",
-     "compare the representatives"
+     "compare their representatives",
+     "check if they have the same root",
+     "look at their set leaders",
+     "see if they share the same representative",
+     "compare the results of find on both"
+    ],
+    "variants": [
+     "find tells you which set an element is in.",
+     "find gives the representative of the set.",
+     "the find operation returns the set's leader.",
+     "you use find to check which set an element belongs to.",
+     "find identifies the root of the set.",
+     "find helps determine the set an element is part of."
     ]
    },
    {
     "point": "Kruskal's algorithm uses it to check whether an edge would form a cycle.",
     "quote": "Kruskal’s uses Disjoint Set (Union-Find) to check cycles",
     "followup": "How does Kruskal's use find to detect a cycle?",
-    "followup_answer": "If both endpoints of an edge have the same representative, they are already connected, so the edge would form a cycle."
+    "followup_answer": "If both endpoints of an edge have the same representative, they are already connected, so the edge would form a cycle.",
+    "variants": [
+     "kruskal's uses union-find to avoid cycles.",
+     "kruskal's algorithm checks for cycles with find.",
+     "in kruskal's, find helps detect cycles.",
+     "kruskal's uses union-find to track connected components.",
+     "find is used in kruskal's to check if edges form cycles."
+    ],
+    "followup_replies": [
+     "same representative",
+     "same root",
+     "same set",
+     "same leader",
+     "same find result"
+    ]
    }
   ],
   "source_pages": [
@@ -3553,25 +3627,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "The union and find operations maintain disjoint subsets by merging trees and finding roots, ensuring each element belongs to exactly one set.",
-   "variants": [
-    "The union-find structure keeps subsets disjoint by merging trees and finding roots, ensuring each element is in one set only.",
-    "The union and find operations keep subsets disjoint by merging trees and finding roots, ensuring each element is in one set only.",
-    "The union and find operations maintain disjoint subsets by merging trees and finding roots, ensuring each element is in one set only.",
-    "The union-find structure maintains disjoint subsets by merging trees and finding roots, ensuring each element is in one set only.",
-    "The union and find operations ensure disjoint subsets by merging trees and finding roots, ensuring each element is in one set only."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.0
-  },
   "quality_score": 8,
   "quality_note": "premise 'elements in multiple sets' contradicted 'disjoint'; circular point replaced by Kruskal (repair 6)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The union and find operations in a disjoint-set structure merge sets and find their root, maintaining connectivity information for efficient grouping and querying.",
+   "variants": [
+    "A disjoint-set structure uses union and find to merge sets and find their root, maintaining connectivity information.",
+    "Union and find in a disjoint-set structure merge sets and find their root, keeping track of connected components.",
+    "The union and find operations in a disjoint-set structure merge sets and find their root, maintaining group connectivity.",
+    "A disjoint-set structure's union and find operations merge sets and find their root, preserving connectivity data.",
+    "Union and find in a disjoint, set structure merge sets and find their root, maintaining information about connected components."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.003
+  }
  },
  {
   "id": "dsa.circular_queue.medium2",
@@ -3767,7 +3841,22 @@
     "point": "The number of leaves is one more than the number of degree-2 nodes: n0 = n2 + 1.",
     "quote": "For any non-empty binary tree, if n0 is the number of leaf nodes and n2 the nodes of degree 2, then n0 = n2 + 1",
     "followup": "A binary tree has 6 leaves. How many nodes have two children?",
-    "followup_answer": "5, because n0 = n2 + 1."
+    "followup_answer": "5, because n0 = n2 + 1.",
+    "variants": [
+     "the number of leaves is always one more than the nodes with two children",
+     "in a binary tree, leaves are one more than nodes with two kids",
+     "the formula for leaves is n0 equals n2 plus one",
+     "you can count leaves by adding one to the nodes with two children",
+     "the relationship between leaves and two-child nodes is n0 = n2 + 1",
+     "the count of leaves is always one greater than the count of nodes with two children"
+    ],
+    "followup_replies": [
+     "5",
+     "n2 is 5",
+     "five",
+     "5 nodes",
+     "n2 = 5"
+    ]
    }
   ],
   "source_pages": [
@@ -3791,25 +3880,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "A full binary tree has every non-leaf node with exactly two children, ensuring a strict one-to-one correspondence between leaf nodes and degree-2 nodes.",
-   "variants": [
-    "In a full binary tree, each non-leaf node has exactly two children, creating a direct link between leaf nodes and degree-2 nodes.",
-    "A full binary tree requires every non-leaf node to have two children, establishing a direct relationship between leaf nodes and degree-2 nodes.",
-    "Every non-leaf node in a full binary tree has two children, which directly relates leaf nodes to degree-2 nodes.",
-    "A full binary tree defines non-leaf nodes to have exactly two children, which directly connects leaf nodes to degree-2 nodes.",
-    "In a full binary tree, non-leaf nodes have exactly two children, which directly correlates leaf nodes with degree-2 nodes."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.001
-  },
   "quality_score": 8,
   "quality_note": "'full = all leaves on one level' is definition-dependent; question narrowed to n0 = n2 + 1 (repair 6)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "the number of leaves in a non-empty binary tree is always one more than the number of nodes with two children.",
+   "variants": [
+    "in a non-empty binary tree, leaves are always one more than nodes with two children.",
+    "for any non-empty binary tree, the leaf count exceeds nodes with two children by one.",
+    "a non-empty binary tree has leaves that are one more than nodes with two children.",
+    "the leaf count in a non-empty binary tree is one greater than nodes with two children.",
+    "non-empty binary trees have leaves that are exactly one more than nodes with two children."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.499
+  }
  },
  {
   "id": "dsa.sorting_by_counting.easy1",
@@ -4005,11 +4094,19 @@
     "followup": "Why is it necessary to use two stacks instead of one?",
     "followup_answer": "Two stacks are used to separate the processing of nodes from the printing of nodes, ensuring that the correct order is maintained.",
     "followup_replies": [
-     "to separate processing and printing",
-     "so the order is maintained",
-     "to avoid mixing traversal and output",
-     "it keeps the correct sequence",
-     "so the output is in postorder"
+     "to separate processing and printing.",
+     "so the order stays correct.",
+     "to keep the processing and output separate.",
+     "because it ensures the right sequence.",
+     "so the traversal and output are handled properly."
+    ],
+    "variants": [
+     "we use two stacks to keep track of the nodes properly.",
+     "two stacks are needed to handle the traversal correctly.",
+     "using two stacks helps separate the processing from the output.",
+     "you need two stacks to make sure the order is right.",
+     "two stacks are used to manage the traversal and printing separately.",
+     "two stacks are required to maintain the correct sequence."
     ]
    },
    {
@@ -4018,18 +4115,40 @@
     "followup": "Why is the printing done after s1 is empty?",
     "followup_answer": "Because s1 is used to process and push nodes onto s2 in the correct order, and s2 is then used to print them in postorder.",
     "followup_replies": [
-     "so the order is correct",
-     "because s1 pushes nodes in reverse",
-     "to get the right sequence",
-     "so the output is in post, right, root order",
-     "because s1 is used to process nodes"
+     "because it ensures the correct order.",
+     "so the nodes are processed in the right sequence.",
+     "to get the postorder sequence.",
+     "because stack 1 handles the traversal.",
+     "so the output is in the correct order."
+    ],
+    "variants": [
+     "each node is pushed to stack 2 and its children to stack 1.",
+     "when you pop a node, you push it to stack 2 and add its kids to stack 1.",
+     "stack 1 handles the traversal, stack 2 holds the nodes for output.",
+     "you push the node to stack 2 and its children to stack 1.",
+     "stack 1 processes nodes, stack 2 stores them for output.",
+     "nodes are moved to stack 2 and their children to stack 1."
     ]
    },
    {
     "point": "Popping stack 2 at the end gives the postorder sequence.",
     "quote": "while(!isEmpty(s2)) { //Print all the elements of stack2 print current->info }",
     "followup": "In what order does stack 2 receive the nodes?",
-    "followup_answer": "Root, right, left; reversing that gives left, right, root."
+    "followup_answer": "Root, right, left; reversing that gives left, right, root.",
+    "variants": [
+     "stack 2 is popped at the end to get the postorder sequence.",
+     "you pop stack 2 to get the final result.",
+     "stack 2 gives the nodes in the correct postorder order.",
+     "stack 2 is used to output the nodes in postorder.",
+     "stack 2 holds the nodes in the right order for printing."
+    ],
+    "followup_replies": [
+     "root, right, left.",
+     "in root-right-left order.",
+     "they are added in that order.",
+     "stack 2 receives them in that order.",
+     "root is added first, then right, then left."
+    ]
    }
   ],
   "source_pages": [
@@ -4066,24 +4185,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "iterative postorder traversal processes nodes by using two stacks to reverse the order of children and ensure left is processed before right.",
-   "variants": [
-    "iterative postorder traversal uses two stacks to reverse child order and process left before right.",
-    "iterative postorder traversal ensures left is processed before right using two stacks to reverse child order.",
-    "iterative postorder traversal processes nodes with two stacks to reverse children and left before right.",
-    "iterative postorder traversal ensures left is processed before right by reversing child order with two stacks."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.002
-  },
   "quality_score": 8,
   "quality_note": "referred to code the candidate never sees (repair 6)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Postorder traversal is done iteratively using two stacks by pushing nodes to the first stack and moving them to the second stack in reverse order.",
+   "variants": [
+    "A postorder traversal uses two stacks to reverse node order and simulate the traversal sequence.",
+    "Two stacks are used in postorder traversal to mimic the recursive process by reversing node insertion order.",
+    "Postorder traversal with two stacks reverses node insertion to achieve the correct traversal sequence.",
+    "Using two stacks, postorder traversal mimics recursion by reversing node order during traversal.",
+    "Postorder traversal iteratively uses two stacks to reverse node insertion and achieve the correct order."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.994
+  }
  },
  {
   "id": "dsa.binary_tree_properties.hard2",
@@ -4213,18 +4333,41 @@
     "followup": "What is the main drawback of this approach?",
     "followup_answer": "The main drawback is that it is computationally expensive, as it requires evaluating a large number of permutations or subsets.",
     "followup_replies": [
-     "it's computationally expensive.",
-     "it's slow for big problems.",
-     "costly in terms of time and resources.",
-     "takes too long for large inputs.",
-     "not efficient for big data."
+     "2^n subsets",
+     "exponential number",
+     "all subsets",
+     "2 to the power of n",
+     "every possible combination"
+    ],
+    "variants": [
+     "exhaustive search checks every possible solution and picks the best one.",
+     "it looks at all possible options and keeps the best one.",
+     "the method tries every candidate solution and selects the optimal one.",
+     "you check every possible way to solve the problem and choose the best.",
+     "exhaustive search evaluates all possible solutions to find the best.",
+     "it considers every possible solution and keeps the best one."
     ]
    },
    {
     "point": "It always finds the optimal solution.",
     "quote": "A brute-force search is simple to implement, and will always find a solution if it exists",
     "followup": "How many candidates does exhaustive search check for knapsack with n items?",
-    "followup_answer": "All 2^n subsets of the items."
+    "followup_answer": "All 2^n subsets of the items.",
+    "variants": [
+     "exhaustive search always finds the best solution.",
+     "it guarantees the optimal solution is found.",
+     "because it checks everything, it finds the best one.",
+     "it ensures the best solution is selected.",
+     "exhaustive search finds the optimal solution every time.",
+     "it always finds the best valid solution."
+    ],
+    "followup_replies": [
+     "n! permutations",
+     "factorial number",
+     "all permutations",
+     "n factorial",
+     "every possible ordering"
+    ]
    },
    {
     "point": "It is impractical for large inputs because the number of candidates grows very fast.",
@@ -4232,11 +4375,18 @@
     "followup": "What makes this approach impractical for large problems?",
     "followup_answer": "The number of permutations or subsets grows exponentially with the problem size, making it infeasible for large inputs.",
     "followup_replies": [
-     "it grows exponentially with the input size.",
-     "the number of options increases rapidly.",
-     "it's not feasible for large inputs.",
-     "the solution space becomes too big.",
-     "it's impractical for big problems."
+     "exponential growth",
+     "too many options",
+     "it's not feasible",
+     "grows too fast",
+     "not efficient for big problems"
+    ],
+    "variants": [
+     "the number of solutions grows too fast, so it's not practical.",
+     "because the number of candidates grows exponentially, it's not feasible for large inputs.",
+     "it's impractical because the number of permutations or subsets increases rapidly.",
+     "the approach is not efficient for large inputs because it checks too many options.",
+     "it's not efficient for large problems due to the rapid growth of candidates."
     ]
    }
   ],
@@ -4274,25 +4424,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "Exhaustive search means considering all possible solutions to find the optimal one.",
-   "variants": [
-    "Exhaustive search is when every possible solution is evaluated to find the best one.",
-    "Exhaustive search involves checking all potential solutions to determine the optimal one.",
-    "Exhaustive search refers to evaluating all possible options to identify the optimal solution.",
-    "Exhaustive search is the process of examining all possible solutions to find the optimal one.",
-    "Exhaustive search means all possible solutions are checked to find the optimal one."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.998
-  },
   "quality_score": 8,
   "quality_note": "unsupported 'discrete and finite' point replaced; points split (repair 4)",
   "curated": true,
   "interview_priority": 1,
   "repairs": [
    "batch4_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "exhaustive search means considering all possible solutions to find the optimal one.",
+   "variants": [
+    "exhaustive search is when all possible solutions are evaluated to find the best one.",
+    "exhaustive search involves checking every possible solution to determine the optimal one.",
+    "exhaustive search refers to evaluating all potential solutions to identify the optimal one.",
+    "exhaustive search means examining every possible solution to find the optimal one.",
+    "exhaustive search is the process of checking all possible solutions to find the optimal one."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.997
+  }
  },
  {
   "id": "dsa.n_ary_tree_to_binary_tree_conversion.easy1",
@@ -4310,7 +4460,21 @@
     "point": "Each node's left pointer points to its first (leftmost) child.",
     "quote": "The left child in binary tree is the node which is the oldest child of the given node in an n-ary tree.",
     "followup": "A node has three children. Which of them does it point to directly?",
-    "followup_answer": "Only the first (leftmost) child, through its left pointer; the other two are reached through the right (sibling) pointers."
+    "followup_answer": "Only the first (leftmost) child, through its left pointer; the other two are reached through the right (sibling) pointers.",
+    "variants": [
+     "each node's left pointer goes to its first child",
+     "left pointer points to the first child in the n-ary tree",
+     "left-child-right-sibling uses left pointer for the first child",
+     "the left pointer is for the first child in the binary tree",
+     "left pointer represents the first child in the binary tree",
+     "left pointer links to the first child in the binary tree"
+    ],
+    "followup_replies": [
+     "first child",
+     "leftmost child",
+     "the first one",
+     "leftmost"
+    ]
    },
    {
     "point": "Each node's right pointer points to its next sibling.",
@@ -4319,10 +4483,17 @@
     "followup_answer": "Siblings are represented by linking them through the right child pointer of the left child, so each node's right child points to its next sibling in the original n-ary tree.",
     "followup_replies": [
      "through the right pointer",
+     "by the right pointer",
      "right child pointer",
-     "right child links siblings",
-     "right pointer links siblings",
-     "right child points to next sibling"
+     "right pointer",
+     "right child"
+    ],
+    "variants": [
+     "right pointer links to the next sibling in the binary tree",
+     "right pointer points to the next sibling in the n-ary tree",
+     "sibling links are handled by the right pointer",
+     "right pointer represents the next sibling in the binary tree",
+     "right pointer connects to the next sibling in the binary tree"
     ]
    },
    {
@@ -4331,11 +4502,19 @@
     "followup": "Why do we delete all links except for the leftmost child?",
     "followup_answer": "We delete all links except for the leftmost child to ensure that the binary tree only has one left child and the rest of the children are represented through the right child pointer as siblings.",
     "followup_replies": [
-     "to keep the binary tree structure",
-     "to maintain the binary tree format",
-     "so the binary tree has one left child",
-     "to preserve binary tree structure",
-     "so the tree remains binary"
+     "to represent siblings through the right pointer",
+     "so siblings can be linked via the right pointer",
+     "to make the binary tree have only one left child",
+     "to use the right pointer for siblings",
+     "so the binary tree can represent siblings"
+    ],
+    "variants": [
+     "all children except the leftmost are removed in the binary tree",
+     "only the leftmost child is kept, others are deleted",
+     "we remove all children except the leftmost in the binary tree",
+     "other children are deleted to keep only the leftmost",
+     "we delete all but the leftmost child in the binary, tree",
+     "only the first child remains, others are deleted"
     ]
    }
   ],
@@ -4371,25 +4550,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "The left-child-right-sibling representation converts an n-ary tree into a binary tree by making each node's left child its first child and its right child its next sibling.",
-   "variants": [
-    "An n-ary tree becomes a binary tree using left-child-right-sibling by linking each node's left to its first child and right to its next sibling.",
-    "The left-child-right-sibling method transforms an n-ary tree into a binary tree by connecting each node's left to its first child and right to its next sibling.",
-    "Using left-child-right-sibling, an n-ary tree is converted into a binary tree by setting each node's left to its first child and right to its next sibling.",
-    "The left-child-right-sibling approach converts an n-ary tree to a binary tree by making each node's left child its first child and right child its next sibling.",
-    "An n-ary tree is converted into a binary tree via left-child-right-sibling by assigning each node's left to its first child and right to its next sibling."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.993
-  },
   "quality_score": 8,
   "quality_note": "sibling point was imprecise ('next sibling of the left child'); follow-up answer fixed (repair 4)",
   "curated": true,
   "interview_priority": 1,
   "repairs": [
    "batch4_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The left-child-right-sibling representation converts an n-ary tree into a binary tree by making each node's left child its first child and its right child its next sibling.",
+   "variants": [
+    "An n-ary tree becomes a binary tree using left-child-right-sibling by linking each node's left to its first child and right to its next sibling.",
+    "The left-child-right-sibling method transforms an n-ary tree into a binary tree by connecting each node's left to its first child and right to its next sibling.",
+    "Using left-child-right-sibling, an n-ary tree is converted into a binary tree by setting each node's left to its first child and right to its next sibling.",
+    "The left-child-right-sibling approach turns an n-ary tree into a binary tree by making each node's left child its first child and right child its next sibling.",
+    "An n-ary tree is converted into a binary tree via left-child-right-sibling by assigning each node's left to its first child and right to its next sibling."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.992
+  }
  },
  {
   "id": "dsa.suffix_tries_and_suffix_trees.medium1",
@@ -5042,19 +5221,60 @@
     "point": "Best case: the key is in the first position, so one comparison.",
     "quote": "Best-Case: Cbest(n) = 1",
     "followup": "What happens if the target is found immediately in the list?",
-    "followup_answer": "The algorithm would terminate after the first comparison, which is the best-case scenario."
+    "followup_answer": "The algorithm would terminate after the first comparison, which is the best-case scenario.",
+    "variants": [
+     "the best case for sequential search is when the target is first, so only one check is needed.",
+     "sequential search's best case is when the key is at the start, making it super fast.",
+     "the best case happens when the first element is the one you're looking for.",
+     "best case for sequential search is one comparison because the key is first."
+    ],
+    "followup_replies": [
+     "yes",
+     "it ends early",
+     "one comparison",
+     "immediate termination",
+     "first element"
+    ]
    },
    {
     "point": "The average case weighs every input by its probability; it is not the mean of best and worst.",
     "quote": "Average case: The algorithm runs the fastest among all possible inputs of size n. How to find the average case efficiency? NOT the average of worst and best case",
     "followup": "Why is the average case not calculated as the average of best and worst?",
-    "followup_answer": "Because average case considers the probability distribution of inputs, not just the extremes, and is derived from analyzing all possible cases."
+    "followup_answer": "Because average case considers the probability distribution of inputs, not just the extremes, and is derived from analyzing all possible cases.",
+    "variants": [
+     "average case considers how likely each input is, not just the extremes.",
+     "the average case isn't just the middle of best and worst because it's weighted by probability.",
+     "average case is calculated using probabilities, not just averaging the two.",
+     "it's not the average of best and worst because inputs have different chances.",
+     "average case depends on the input distribution, not just the two extremes.",
+     "the average case is based on expected probability, not just the mean of best and worst."
+    ],
+    "followup_replies": [
+     "because it uses probability",
+     "inputs have different weights",
+     "it's about expected value",
+     "probability distribution",
+     "weighted by likelihood"
+    ]
    },
    {
     "point": "Worst case: the key is last or absent, so n comparisons.",
     "quote": "Worst-Case: Cworst(n) = n",
     "followup": "Which inputs give the worst case for sequential search?",
-    "followup_answer": "A key in the last position, or a key that is not in the list at all."
+    "followup_answer": "A key in the last position, or a key that is not in the list at all.",
+    "variants": [
+     "the worst case for sequential search is when the key is last or not there at all.",
+     "worst case happens when the key is not in the list or is the last item.",
+     "the worst case is when the key is not found or is at the end.",
+     "when the key is last, you have to do n comparisons, that's the worst case."
+    ],
+    "followup_replies": [
+     "last element or not present",
+     "n comparisons",
+     "key is at the end",
+     "all elements checked",
+     "not found or last"
+    ]
    }
   ],
   "source_pages": [
@@ -5103,19 +5323,62 @@
     "point": "An adjacency list needs O(V + E) space.",
     "quote": "Space Complexity of Adjacency list is O(V+E), because it stores the information of edges that actually exists in the graph",
     "followup": "Why would you prefer adjacency list over adjacency matrix for a graph with many vertices but few edges?",
-    "followup_answer": "Because adjacency list only stores existing edges, it uses less space for sparse graphs."
+    "followup_answer": "Because adjacency list only stores existing edges, it uses less space for sparse graphs.",
+    "variants": [
+     "adjacency list uses space proportional to the number of edges and vertices",
+     "you store only the edges that exist in an adjacency list",
+     "adjacency list is more space-efficient for graphs with few edges",
+     "for sparse graphs, adjacency list is better in terms of space",
+     "adjacency list space is O(V + E) because it only stores existing connections"
+    ],
+    "followup_replies": [
+     "few edges",
+     "relatively few edges",
+     "few connections",
+     "sparse",
+     "fewer than V squared"
+    ]
    },
    {
     "point": "An adjacency list is better for sparse graphs.",
     "quote": "In case of low density edges, the adjacency matrix becomes sparse using adjacency list is better for representation",
     "followup": "What does it mean for a graph to be sparse?",
-    "followup_answer": "It means the graph has relatively few edges compared to the total possible number of edges."
+    "followup_answer": "It means the graph has relatively few edges compared to the total possible number of edges.",
+    "variants": [
+     "sparse graphs have few edges compared to the total possible",
+     "a sparse graph has a low number of edges",
+     "sparse means not many edges exist",
+     "few edges compared to all possible edges",
+     "sparse graphs are not densely connected",
+     "sparse graphs have a low edge-to-vertex ratio"
+    ],
+    "followup_replies": [
+     "few edges",
+     "not many edges",
+     "low edge count",
+     "less than V squared",
+     "fewer than V times V"
+    ]
    },
    {
     "point": "An adjacency matrix always needs O(V^2) space.",
     "quote": "space complexity is O(v2). v2 locations are required for graph with v nodes",
     "followup": "When would you still choose an adjacency matrix?",
-    "followup_answer": "For dense graphs, or when you need to check whether an edge exists in O(1) time."
+    "followup_answer": "For dense graphs, or when you need to check whether an edge exists in O(1) time.",
+    "variants": [
+     "matrix space is always V squared",
+     "you need V squared space for a matrix",
+     "matrix requires a square table of size V",
+     "matrix uses O(V squared) space",
+     "matrix is V by V, so space is V squared"
+    ],
+    "followup_replies": [
+     "dense graphs",
+     "many edges",
+     "high edge count",
+     "most edges exist",
+     "edges are common"
+    ]
    }
   ],
   "source_pages": [
@@ -5149,7 +5412,18 @@
   "quality_note": "adjacency-matrix space was missing from the points (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "An adjacency list uses variable space per edge while an adjacency matrix uses fixed space for all possible edges.",
+   "variants": [
+    "An adjacency list varies in space by edge count, while a matrix uses fixed space for all pairs.",
+    "Adjacency lists save space with sparse graphs, whereas matrices use fixed space regardless.",
+    "Adjacency lists scale with edges, matrices use fixed space for all potential edges.",
+    "Adjacency lists use space per edge, matrices use space for all vertex pairs regardless of edges."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.006
+  }
  },
  {
   "id": "dsa.simple_queue.medium1",
@@ -5167,13 +5441,42 @@
     "point": "The simple queue's structure leads to space wastage when elements are removed from the front.",
     "quote": "Cannot insert even after two elements are removed and Space available in the front.",
     "followup": "What happens to the unused space in the queue when elements are removed from the front?",
-    "followup_answer": "The unused space remains at the front of the array, making it unavailable for new insertions."
+    "followup_answer": "The unused space remains at the front of the array, making it unavailable for new insertions.",
+    "variants": [
+     "when you remove elements from the front, the space at the start stays unused.",
+     "the front pointer moves, but the unused space stays at the beginning.",
+     "simple queues leave unused space at the front when elements are dequeued.",
+     "the unused space in a simple queue is at the front of the array.",
+     "when elements are removed from the front, the space isn't reused.",
+     "the front of the array can't be reused after elements are dequeued."
+    ],
+    "followup_replies": [
+     "it stays at the front",
+     "unused space at the front",
+     "front of the array",
+     "can't be reused",
+     "space remains at front"
+    ]
    },
    {
     "point": "A circular queue resolves the space wastage issue by allowing the rear to wrap around to the beginning of the array.",
     "quote": "It is possible to insert in a circular queue by moving the rear rear front to the beginning of the queue",
     "followup": "How does a circular queue avoid the space wastage problem of a simple queue?",
-    "followup_answer": "A circular queue wraps around the array, allowing the rear to reuse the space at the front once it has been freed."
+    "followup_answer": "A circular queue wraps around the array, allowing the rear to reuse the space at the front once it has been freed.",
+    "variants": [
+     "the rear can loop back to the start of the array in a circular queue.",
+     "circular queues wrap around, so the rear can use the front space.",
+     "in a circular queue, the rear moves to the beginning after the front passes the end.",
+     "the rear wraps around to the beginning in a circular queue.",
+     "circular queues let the rear use the front space again."
+    ],
+    "followup_replies": [
+     "by reusing front space",
+     "rear can reuse front space",
+     "wrapping around",
+     "front space is reused",
+     "rear wraps around"
+    ]
    }
   ],
   "source_pages": [
@@ -5214,7 +5517,16 @@
   "quality_note": "good (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A circular queue resolves space wastage by reusing the front section after the rear reaches the end.",
+   "variants": [
+    "A circular queue prevents space waste by recycling the front area once the rear wraps around.",
+    "A circular queue fixes space wastage by reusing the front section after the rear completes the array."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.992
+  }
  },
  {
   "id": "dsa.hash_functions.medium1",
@@ -5232,13 +5544,43 @@
     "point": "Double hashing uses a second hash function to choose the probe step after a collision.",
     "quote": "Double Hashing (Open addressing, closed hashing) resolves collision by using a second hash function whenever there results a collision.",
     "followup": "What happens if the second hash function returns a value of zero?",
-    "followup_answer": "The probe would never move, so the second hash function must never return 0."
+    "followup_answer": "The probe would never move, so the second hash function must never return 0.",
+    "variants": [
+     "double hashing uses a second hash to determine the probe step after a collision.",
+     "when there's a collision, double hashing applies another hash to decide where to look next.",
+     "the second hash in double hashing tells how far to step when there's a collision.",
+     "double hashing adds a second hash function to calculate the probe sequence.",
+     "with double hashing, the second hash function helps find the next available slot.",
+     "the probe step in double hashing is determined by a second hash function."
+    ],
+    "followup_replies": [
+     "it would cause infinite loops.",
+     "nope, it's not allowed.",
+     "it would get stuck in the same spot.",
+     "the second hash can't be zero.",
+     "it would prevent moving to another slot."
+    ]
    },
    {
     "point": "Different keys get different probe steps, which avoids the clustering of linear probing.",
     "quote": "hash(key) = (hash1(key) + i * hash2(key)) % tableSize",
     "followup": "Why is it important for the second hash function to be different from the first?",
-    "followup_answer": "It is important for the second hash function to be different to ensure that the sequence of alternative positions is not predictable and to avoid clustering, which improves the overall performance of the hash table."
+    "followup_answer": "It is important for the second hash function to be different to ensure that the sequence of alternative positions is not predictable and to avoid clustering, which improves the overall performance of the hash table.",
+    "variants": [
+     "different probe steps help avoid the clustering that happens with linear probing.",
+     "double hashing prevents the grouping of keys that linear probing causes.",
+     "using two different hashes ensures the probe sequence is less predictable.",
+     "the second hash makes the probe sequence more random, avoiding clusters.",
+     "double hashing stops keys from bunching up like in linear probing.",
+     "the second hash helps spread out the keys more evenly."
+    ],
+    "followup_replies": [
+     "to avoid predictable patterns and clustering.",
+     "so the probe sequence isn't easy to guess.",
+     "to prevent keys from grouping together.",
+     "it ensures the probe sequence is not biased.",
+     "to make the hash table more efficient."
+    ]
    }
   ],
   "source_pages": [
@@ -5283,7 +5625,19 @@
   "quality_note": "duplicate point replaced by the clustering comparison the question asks for (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Double hashing resolves collisions by using a second hash function to determine the next probe sequence, avoiding clustering issues common in linear probing.",
+   "variants": [
+    "A hash table uses double hashing to resolve collisions by applying a second hash function for probe sequence generation.",
+    "Double hashing determines the next probe location using a secondary hash function, reducing clustering compared to linear probing.",
+    "Collisions in a hash table are resolved via double hashing, which employs a second hash function to generate probe positions.",
+    "Double hashing resolves collisions by generating a second probe sequence with a different hash function, improving efficiency over linear probing.",
+    "A hash table resolves collisions using double hashing, which calculates a second probe sequence through a distinct hash function."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.996
+  }
  },
  {
   "id": "dsa.graph_representation.medium2",
@@ -5301,13 +5655,42 @@
     "point": "Entry [i][j] stores the weight of the edge from i to j.",
     "quote": "cost/distance value specified on the edge between adjacent nodes are stored in the adjacency matrix",
     "followup": "How would you represent a graph with negative edge weights using this method?",
-    "followup_answer": "The matrix would still store the actual negative value as the weight, as it is a direct representation of the edge cost."
+    "followup_answer": "The matrix would still store the actual negative value as the weight, as it is a direct representation of the edge cost.",
+    "variants": [
+     "the matrix entry for i to j holds the weight of that edge.",
+     "each cell [i][j] in the matrix represents the weight of the edge from i to j.",
+     "in a weighted graph, the adjacency matrix stores the actual weight in [i][j].",
+     "the adjacency matrix directly maps each edge to its weight in the [i][j] cell.",
+     "for a weighted graph, the matrix uses [i][j] to store the edge's weight.",
+     "the weight of an edge from i to j is stored in the [i][j] position of the matrix."
+    ],
+    "followup_replies": [
+     "store the negative value directly.",
+     "just put the negative number in the cell.",
+     "negative weights are allowed in the matrix.",
+     "the matrix can handle negative weights.",
+     "you put the actual negative value in the cell."
+    ]
    },
    {
     "point": "Pairs of nodes with no edge store a special value such as infinity instead of a cost.",
     "quote": "cost/distance value specified on the edge between adjacent nodes are stored in the adjacency matrix",
     "followup": "How does this compare to the adjacency list representation for weighted graphs?",
-    "followup_answer": "In adjacency list representation, the weight is stored alongside the adjacent node in a linked list, whereas in the matrix, it is stored directly in a specific cell."
+    "followup_answer": "In adjacency list representation, the weight is stored alongside the adjacent node in a linked list, whereas in the matrix, it is stored directly in a specific cell.",
+    "variants": [
+     "no edge is represented by a special value like infinity in the matrix.",
+     "missing edges are marked with a special value in the matrix.",
+     "the matrix uses a placeholder for edges that don't exist.",
+     "unconnected nodes use a special value instead of a weight.",
+     "the matrix uses a special value for pairs with no edge."
+    ],
+    "followup_replies": [
+     "adjacency list stores weight with the node.",
+     "it's stored in a list with the adjacent node.",
+     "the weight is part of the list entry.",
+     "adjacency list keeps the weight with the neighbor.",
+     "the weight is stored with the connected node."
+    ]
    }
   ],
   "source_pages": [
@@ -5341,7 +5724,18 @@
   "quality_note": "thin: two points said the same thing; second point now the missing-edge value (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The adjacency matrix representation stores the weight of an edge in the matrix cell at the intersection of the two vertices.",
+   "variants": [
+    "An adjacency matrix holds the weight of each edge in the corresponding row and column cell.",
+    "Each edge's weight is stored in the matrix cell where its two vertices intersect.",
+    "The adjacency matrix uses the cell at the intersection of two vertices to store the edge's weight.",
+    "The weight of an edge is stored in the matrix cell corresponding to its two vertices."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.006
+  }
  },
  {
   "id": "dsa.recursive_tree_traversals.medium1",
@@ -5359,13 +5753,29 @@
     "point": "Preorder visits a node before its subtrees.",
     "quote": "Preorder: 1. Visit the root of the first tree in the forest 2. Traverse in preorder the forest formed by the subtrees of the first tree, if any 3. Traverse in preorder the forest formed by the remaining trees in the forest, if any",
     "followup": "What happens if you visit the root after its subtrees in preorder?",
-    "followup_answer": "It would no longer be preorder traversal; it would be postorder traversal."
+    "followup_answer": "It would no longer be preorder traversal; it would be postorder traversal.",
+    "variants": [],
+    "followup_replies": [
+     "it's postorder.",
+     "nope.",
+     "postorder.",
+     "it would be postorder.",
+     "that's postorder."
+    ]
    },
    {
     "point": "Postorder visits a node after its subtrees.",
     "quote": "Postorder: 1. Traverse in postorder the forest formed by the subtrees of the first tree, if any 2. Traverse in postorder the forest formed by the remaining trees in the forest, if any 3. Visit the root of the first tree in the forest",
     "followup": "Why is the root visited last in postorder traversal?",
-    "followup_answer": "Because postorder traversal processes the subtrees before the root, ensuring that all descendants are processed before their parent."
+    "followup_answer": "Because postorder traversal processes the subtrees before the root, ensuring that all descendants are processed before their parent.",
+    "variants": [],
+    "followup_replies": [
+     "because you process the children first.",
+     "to ensure all descendants are done first.",
+     "so the parent is last.",
+     "so the root is processed after the children.",
+     "because subtrees come before the root."
+    ]
    }
   ],
   "source_pages": [
@@ -5421,7 +5831,19 @@
   "quality_note": "'using the definitions provided' referred to text the candidate never sees (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "preorder traversal visits a node before its children, postorder traversal visits a node after its children.",
+   "variants": [
+    "a preorder traversal visits a node before its children, while postorder does so after.",
+    "in preorder, a node is visited before its children; in postorder, after.",
+    "preorder processes a node before its children, postorder does the reverse.",
+    "preorder traversal visits a node first, then its children; postorder does the opposite.",
+    "a node is visited before its children in preorder, and after in postorder."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.979
+  }
  },
  {
   "id": "dsa.time_and_space_complexity.medium2",
@@ -5618,19 +6040,63 @@
     "point": "Partition puts elements smaller than or equal to the pivot before it and larger ones after it.",
     "quote": "Rearrange the list so that all the elements in the first S positions are smaller than or equal to the pivot and all the elements in the remaining n-s positions are larger than or equal to the pivot",
     "followup": "After partitioning, where are the elements smaller than the pivot?",
-    "followup_answer": "All of them are before the pivot, in the left part of the array."
+    "followup_answer": "All of them are before the pivot, in the left part of the array.",
+    "variants": [
+     "the partition step moves smaller elements to the left of the pivot",
+     "elements less than or equal to the pivot go before it during partition",
+     "the partition process separates smaller elements from larger ones",
+     "in partition, smaller elements are placed before the pivot",
+     "the pivot splits the array into smaller and larger elements",
+     "during partition, elements are divided into two parts: smaller and larger"
+    ],
+    "followup_replies": [
+     "all of them",
+     "left side",
+     "before the pivot",
+     "left part",
+     "they are on the left"
+    ]
    },
    {
     "point": "After partitioning the pivot is in its final position, and both sides are sorted recursively.",
     "quote": "Sort the two subarrays recursively subarray — the pivot is now in its final position",
     "followup": "Does the pivot move again in later recursive calls?",
-    "followup_answer": "No, it is already in its final sorted position; only the two subarrays are sorted further."
+    "followup_answer": "No, it is already in its final sorted position; only the two subarrays are sorted further.",
+    "variants": [
+     "after partitioning, the pivot is in its correct sorted position",
+     "the pivot is fixed once partitioning is done",
+     "partition places the pivot in its final spot",
+     "the pivot doesn't move after the first partition",
+     "once partitioned, the pivot is where it should be",
+     "the pivot is in place after the partition step"
+    ],
+    "followup_replies": [
+     "no",
+     "it's already in place",
+     "no, it's already sorted",
+     "no, it's fixed",
+     "no, it's already in its correct position"
+    ]
    },
    {
     "point": "The worst case O(n²) happens when the pivot is always the smallest or largest element, so one side gets n - 1 elements.",
     "quote": "The worst case occurs when the pivot selection is poor, e.g., always choosing the smallest or largest element. This results in highly unbalanced partitions, where one side has n - 1 elements and the other has 0.",
     "followup": "If the first element is always the pivot, what input gives quicksort its worst case?",
-    "followup_answer": "An already sorted array, because the first element is then always the smallest."
+    "followup_answer": "An already sorted array, because the first element is then always the smallest.",
+    "variants": [
+     "the worst case for quicksort is when the pivot is the smallest or largest element",
+     "when the pivot is always the smallest, quicksort becomes O(n²)",
+     "if the pivot is always the smallest, the partition is unbalanced",
+     "unbalanced splits lead to O(n²) time for quicksort",
+     "when the pivot is the smallest, the algorithm performs poorly"
+    ],
+    "followup_replies": [
+     "sorted array",
+     "already sorted",
+     "sorted list",
+     "sorted input",
+     "already sorted array"
+    ]
    }
   ],
   "source_pages": [
@@ -5663,7 +6129,18 @@
   "quality_note": "rewritten (batch 7): classic partition + worst-case question; was held back at confidence 0.69",
   "repairs": [
    "batch7_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Quicksort's partition step rearranges elements around a pivot, placing smaller elements on one side and larger on the other.",
+   "variants": [
+    "A quicksort partition step moves elements so all smaller ones are on one side and all larger ones on the other.",
+    "The quicksort partition step separates elements into two groups based on their relation to the pivot.",
+    "Quicksort's partition step organizes elements by comparing them to a pivot and splitting them into two parts.",
+    "In quicksort, the partition step divides the array into two parts relative to a chosen pivot element."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.996
+  }
  },
  {
   "id": "dsa.simple_queue.hard2",
@@ -5863,19 +6340,57 @@
     "point": "Left-subtree elements are smaller than the node and right-subtree elements are greater than or equal to it.",
     "quote": "all the elements in the left subtree of a node n are less than the contents of node n",
     "followup": "Where would you find a value larger than the root in a BST?",
-    "followup_answer": "In the root's right subtree."
+    "followup_answer": "In the root's right subtree.",
+    "variants": [
+     "in a binary search tree, all left subtree values are smaller than the node",
+     "the left subtree has smaller elements, the right has bigger or equal",
+     "bsts have left nodes smaller and right nodes bigger than the parent",
+     "every node's left subtree contains smaller keys than the node",
+     "the bst property ensures left is less and right is greater or equal",
+     "in a bst, left subtree keys are less than the node, right are greater or equal"
+    ],
+    "followup_replies": [
+     "right subtree",
+     "right side",
+     "right child",
+     "right"
+    ]
    },
    {
     "point": "A search compares the key with each node and goes left or right, so it takes time proportional to the tree's height.",
     "quote": "Height of the BST depends on the order of insertion of elements into tree",
     "followup": "When searching for a key smaller than the current node, which way do you go?",
-    "followup_answer": "To the left child."
+    "followup_answer": "To the left child.",
+    "variants": [
+     "searching in a bst compares the key to the node and moves left or right",
+     "bst search moves left if the key is smaller, right otherwise",
+     "the search path in a bst depends on key comparisons",
+     "searching a bst follows the key comparisons to find the node"
+    ],
+    "followup_replies": [
+     "left",
+     "left child",
+     "left subtree",
+     "go left"
+    ]
    },
    {
     "point": "If keys are inserted in sorted order the tree becomes a chain of height n - 1, so search is O(n).",
     "quote": "Tree can attain a height which can be as large as n-1",
     "followup": "What does a BST look like if you insert 1, 2, 3, 4, 5 in that order?",
-    "followup_answer": "A chain where every node has only a right child, so it behaves like a linked list."
+    "followup_answer": "A chain where every node has only a right child, so it behaves like a linked list.",
+    "variants": [
+     "inserting sorted keys makes the bst into a chain, so search is slow",
+     "inserting in order makes the tree height equal to the number of nodes",
+     "if you insert in sorted order, the tree becomes a chain",
+     "sorted insertion results in a tree with height n - 1"
+    ],
+    "followup_replies": [
+     "linked list",
+     "chain",
+     "linear",
+     "linked list shape"
+    ]
    }
   ],
   "source_pages": [
@@ -5910,7 +6425,19 @@
   "quality_note": "rewritten (batch 7): two points were halves of one property; now property, search and the degenerate case",
   "repairs": [
    "batch7_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A binary search tree is a tree where each node's left subtree contains keys less than the node and the right subtree contains keys greater than the node.",
+   "variants": [
+    "A binary search tree is a tree with left and right subtrees containing keys less than and greater than the node respectively.",
+    "A binary search tree is a tree where every node's left subtree has smaller keys and the right subtree has larger keys.",
+    "A binary search tree is a tree with nodes such that all left descendants are smaller and all right descendants are larger.",
+    "A binary than search tree is a tree where each node's left subtree keys are less than the node and the right subtree keys are greater.",
+    "A binary search tree is a tree where for every node, left subtree keys are less than and right subtree keys are greater than the node."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.998
+  }
  },
  {
   "id": "dsa.sorting_by_counting.medium2",
@@ -5985,13 +6512,41 @@
     "point": "Kruskal’s algorithm uses Union-Find to detect cycles.",
     "quote": "Kruskal’s uses Disjoint Set (Union-Find) to check cycles",
     "followup": "What happens if an edge connects two nodes that are already in the same set?",
-    "followup_answer": "The edge is skipped to avoid creating a cycle."
+    "followup_answer": "The edge is skipped to avoid creating a cycle.",
+    "variants": [
+     "kruskal's uses union-find to check for cycles.",
+     "union-find helps kruskal's avoid cycles by tracking connected nodes.",
+     "kruskal's prevents cycles with union-find data structure.",
+     "when two nodes are in the same set, kruskal's skips the edge.",
+     "kruskal's uses union-find to detect if adding an edge would form a cycle.",
+     "the union-find structure stops krus, so it doesn't add edges that make cycles."
+    ],
+    "followup_replies": [
+     "it creates a cycle.",
+     "it's skipped.",
+     "no cycle formed.",
+     "edge is ignored.",
+     "cycle would form."
+    ]
    },
    {
     "point": "Edges are added only if they connect different components.",
     "quote": "If adding that edge does not create a cycle (that is, the two vertices are not already connected), add that edge to the minimum spanning tree.",
     "followup": "Why is it important that the edge connects different components?",
-    "followup_answer": "Because connecting two already connected components would create a cycle, which is not allowed in a tree."
+    "followup_answer": "Because connecting two already connected components would create a cycle, which is not allowed in a tree.",
+    "variants": [
+     "kruskal's only adds edges between separate components.",
+     "edges are added when they connect different parts of the graph.",
+     "kruskal's ensures edges connect different groups to avoid cycles.",
+     "edges must connect different components to prevent cycles."
+    ],
+    "followup_replies": [
+     "it creates a cycle.",
+     "cycle is formed.",
+     "it's not allowed.",
+     "no cycle allowed.",
+     "it's not safe."
+    ]
    }
   ],
   "source_pages": [
@@ -6028,7 +6583,18 @@
   "quality_note": "good (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Kruskal’s algorithm ensures acyclicity by adding edges only if they do not form a cycle with the existing tree.",
+   "variants": [
+    "Kruskal’s algorithm maintains acyclicity by selecting edges that do not create cycles.",
+    "Krusy’s algorithm avoids cycles by only including edges that don’t form a cycle.",
+    "Kruskal’s algorithm ensures acyclicity through edge selection that prevents cycles.",
+    "Kruskal’s algorithm guarantees acyclicity by adding edges without forming cycles."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.006
+  }
  },
  {
   "id": "dsa.huffman_coding.medium1",
@@ -6046,13 +6612,41 @@
     "point": "Huffman codes are read from a binary tree in which every symbol is a leaf.",
     "quote": "Huffman’s algorithm achieves data compression by finding the best variable length binary encoding scheme for the symbols that occur in the file to be compressed. Huffman coding uses frequencies of the symbols in the string to build a variable rate prefix code",
     "followup": "Why is it important that the encoding scheme is a prefix code?",
-    "followup_answer": "It is important because it ensures that no codeword is a prefix of another, allowing for unambiguous decoding of the compressed data."
+    "followup_answer": "It is important because it ensures that no codeword is a prefix of another, allowing for unambiguous decoding of the compressed data.",
+    "variants": [
+     "huffman codes are built from a binary tree where each symbol is a leaf node.",
+     "every symbol in huffman coding is a leaf in the binary tree, so no codeword is a prefix of another.",
+     "the binary tree in huffman coding ensures all symbols are leaves, making the code prefix-free.",
+     "since all symbols are leaves in the tree, their codes can't be prefixes of each other.",
+     "huffman coding uses a binary tree with all symbols as leaves, which prevents prefix issues.",
+     "the tree structure in huffman coding guarantees that no cod,eword is a prefix of another."
+    ],
+    "followup_replies": [
+     "no separators needed.",
+     "unambiguous decoding.",
+     "it allows unique decoding.",
+     "you don't need to know where one codeword ends.",
+     "decoding is straightforward."
+    ]
    },
    {
     "point": "No codeword is a prefix of another, so decoding needs no separators.",
     "quote": "No code is a prefix of another code (prefix free code)",
     "followup": "How does this property help in the decoding process?",
-    "followup_answer": "This property allows the receiver to uniquely determine the end of each codeword during decoding, eliminating the need for additional markers or separators."
+    "followup_answer": "This property allows the receiver to uniquely determine the end of each codeword during decoding, eliminating the need for additional markers or separators.",
+    "variants": [
+     "because no codeword is a prefix of another, you don't need to add special markers.",
+     "the prefix-free property lets you decode without separators.",
+     "the code is uniquely decodable because no codeword is a prefix.",
+     "prefix-free codes let you decode the stream directly."
+    ],
+    "followup_replies": [
+     "it allows unique decoding.",
+     "you can decode directly.",
+     "no need for special markers.",
+     "it ensures unique codeword identification.",
+     "it makes decoding straightforward."
+    ]
    }
   ],
   "source_pages": [
@@ -6082,7 +6676,19 @@
   "quality_note": "points shortened (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Huffman coding ensures no codeword is a prefix of another by constructing a binary tree with unique paths for each symbol.",
+   "variants": [
+    "A Huffman code is built so each symbol has a unique path in the tree, preventing prefix overlaps.",
+    "Huffman coding assigns codes with distinct paths in a tree, ensuring no codeword is a prefix of another.",
+    "In Huffman coding, each symbol's code is a unique leaf node path, avoiding prefix conflicts.",
+    "Huffman coding creates a tree where each symbol's code is a unique path, ensuring no prefix overlap.",
+    "A Huffman code guarantees each symbol has a unique path in the tree, preventing prefix relationships."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.578
+  }
  },
  {
   "id": "dsa.prim_s_algorithm.medium1",
@@ -6100,13 +6706,41 @@
     "point": "Prim's algorithm grows a single tree, adding edges that join new vertices to it.",
     "quote": "Prim's algorithm is very similar to Kruskal's: whereas Kruskal's 'grows' a forest of trees, Prim's algorithm grows a single tree until it becomes the minimum spanning tree.",
     "followup": "What happens if Prim's algorithm were to grow a forest instead of a single tree?",
-    "followup_answer": "It would no longer be Prim's algorithm, as the core idea is to maintain a single connected component throughout the process."
+    "followup_answer": "It would no longer be Prim's algorithm, as the core idea is to maintain a single connected component throughout the process.",
+    "variants": [
+     "prim's builds one tree by connecting new nodes with the cheapest edge.",
+     "prim's adds edges that link new vertices to the existing tree.",
+     "prim's grows the tree by attaching new nodes with the least cost edge.",
+     "prim's algorithm keeps everything connected in one tree throughout.",
+     "prim's focuses on expanding a single tree, not multiple."
+    ],
+    "followup_replies": [
+     "nope",
+     "it's not prim's anymore",
+     "it's not prim's algorithm",
+     "it wouldn't be prim's",
+     "it's not prim's"
+    ]
    },
    {
     "point": "Kruskal's algorithm grows a forest of trees that are merged.",
     "quote": "Prim's algorithm is very similar to Kruskal's: whereas Kruskal's 'grows' a forest of trees, Prim's algorithm grows a single tree until it becomes the minimum spanning tree.",
     "followup": "Which edge does Prim's algorithm add next?",
-    "followup_answer": "The cheapest edge joining a vertex in the tree to a vertex outside it."
+    "followup_answer": "The cheapest edge joining a vertex in the tree to a vertex outside it.",
+    "variants": [
+     "kruskal's builds multiple trees that merge as edges are added.",
+     "kruskal's grows a forest of trees that eventually connect.",
+     "kruskal's starts with multiple trees and merges them as needed.",
+     "kruskal's uses a forest structure until all trees are merged.",
+     "kruskal's algorithm builds a forest of trees that are merged together."
+    ],
+    "followup_replies": [
+     "the cheapest edge to a new node",
+     "cheapest edge connecting to the tree",
+     "the minimum weight edge to the tree",
+     "the least costly edge to the tree",
+     "the cheapest edge joining the tree"
+    ]
    }
   ],
   "source_pages": [
@@ -6141,7 +6775,19 @@
   "quality_note": "Kruskal's forest now a point (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Prim's algorithm grows the minimum spanning tree by adding vertices, while Kruskal's algorithm grows it by adding edges.",
+   "variants": [
+    "Prim's algorithm builds the minimum spanning tree by expanding one vertex at a time, whereas Kruskal's algorithm adds edges one by one.",
+    "Prim's algorithm expands the minimum spanning tree through vertex additions, while Krusk,al's algorithm does so via edge additions.",
+    "Prim's algorithm grows the minimum spanning tree by incorporating vertices, whereas Kruskal's algorithm incorporates edges.",
+    "Prim's algorithm adds vertices to the minimum spanning tree, while Kruskal's algorithm adds edges to it.",
+    "Prim's algorithm expands the minimum spanning tree by selecting vertices, while Kruskal's algorithm selects edges."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.019
+  }
  },
  {
   "id": "dsa.recurrence_relations.hard2",
@@ -6540,13 +7186,38 @@
     "point": "An empty right pointer points to the node's inorder successor instead.",
     "quote": "We can use the right pointer of a node to point to the inorder successor if in case it is not pointing to the child. Such a tree is called Right-In Threaded Binary Tree",
     "followup": "What is the purpose of having a right pointer that points to the inorder successor?",
-    "followup_answer": "The purpose is to allow traversal to continue without backtracking, eliminating the need for an explicit stack."
+    "followup_answer": "The purpose is to allow traversal to continue without backtracking, eliminating the need for an explicit stack.",
+    "variants": [
+     "in a right-in threaded tree, the right pointer points to the inorder successor when it's empty.",
+     "when the right pointer is null, it instead points to the node's inorder successor.",
+     "a right-in thread replaces a null right pointer with a link to the inorder successor."
+    ],
+    "followup_replies": [
+     "nope",
+     "to avoid backtracking",
+     "it lets you move forward",
+     "so you don't need a stack",
+     "to keep traversal simple"
+    ]
    },
    {
     "point": "The rthread field says whether the right pointer is a thread or a real child.",
     "quote": "We can use the right pointer of a node to point to the inorder successor if in case it is not pointing to the child. Such a tree is called Right-In Threaded Binary Tree",
     "followup": "Why is using a thread considered less expensive than using a stack?",
-    "followup_answer": "Using a thread is less expensive because it avoids the overhead of stack operations, allowing traversal to proceed with simple pointer manipulation."
+    "followup_answer": "Using a thread is less expensive because it avoids the overhead of stack operations, allowing traversal to proceed with simple pointer manipulation.",
+    "variants": [
+     "the rthread field tells if the right pointer is a real child or a thread.",
+     "rthread shows if the right pointer is a thread or a regular child.",
+     "the rthread field helps distinguish between a thread and a real right child.",
+     "the rthread field marks if the right pointer is a thread or a normal child."
+    ],
+    "followup_replies": [
+     "it's faster than stack operations",
+     "it avoids stack overhead",
+     "it's cheaper than using a stack",
+     "it saves memory and time",
+     "it's more efficient"
+    ]
    }
   ],
   "source_pages": [
@@ -6583,7 +7254,19 @@
   "quality_note": "points shortened; rthread now a point (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "a right-in-threaded binary tree uses rthread fields to simulate stack behavior during in-order traversal by pointing to in-order successors.",
+   "variants": [
+    "a right-in-threaded binary tree uses rthread to mimic stack behavior during in-order traversal by pointing to next nodes.",
+    "a right-in-threaded tree avoids an explicit stack by using rthread to point to in-order successors during traversal.",
+    "a right-in-threaded binary tree replaces stack with rthread pointers to in-order successors during in-order traversal.",
+    "a right-in-threaded tree uses rthread fields to simulate stack by pointing to in-order successors during traversal.",
+    "a right-in-threaded binary tree uses rthread to simulate stack behavior by pointing to in-order successors during traversal."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.995
+  }
  },
  {
   "id": "dsa.graph_connectivity_and_path_finding.medium1",
@@ -6601,19 +7284,64 @@
     "point": "Nodes on the current path are marked visited so the path never loops.",
     "quote": "visited[u]=1;//Mark the current node and and store it in the array path",
     "followup": "Why is it important to mark nodes as visited during the traversal?",
-    "followup_answer": "Marking nodes as visited prevents the algorithm from revisiting the same node, which would cause infinite loops and redundant path exploration."
+    "followup_answer": "Marking nodes as visited prevents the algorithm from revisiting the same node, which would cause infinite loops and redundant path exploration.",
+    "variants": [
+     "we mark nodes as visited to avoid loops in the path.",
+     "marking visited nodes stops the path from repeating itself.",
+     "visited nodes are marked to prevent the same node from being used again.",
+     "so we don't get stuck in a loop, we mark nodes as visited.",
+     "marking nodes as visited ensures the path doesn't cycle.",
+     "visited nodes are tracked to stop the path from looping."
+    ],
+    "followup_replies": [
+     "nope",
+     "it would loop",
+     "it would cause infinite loops",
+     "it would revisit nodes",
+     "it would create redundant paths"
+    ]
    },
    {
     "point": "The path is printed when the destination is reached.",
     "quote": "if(u==d) //if the current vertex is same as the destination then print the array",
     "followup": "What would happen if the destination was not marked as a special node?",
-    "followup_answer": "The algorithm would not recognize the destination and would not print the path, even if it had reached it."
+    "followup_answer": "The algorithm would not recognize the destination and would not print the path, even if it had reached it.",
+    "variants": [
+     "when we reach the destination, we print the path.",
+     "the path is shown once we get to the target node.",
+     "printing the path happens when the destination is found.",
+     "so we know when we've found the path, we print it.",
+     "the destination node triggers the path to be printed.",
+     "the path is output once the destination is reached."
+    ],
+    "followup_replies": [
+     "it wouldn't know to stop",
+     "it wouldn't recognize the destination",
+     "it would miss the path",
+     "it would not print the path",
+     "it would not detect the destination"
+    ]
    },
    {
     "point": "On backtracking the node is unmarked so other paths can use it.",
     "quote": "Visited[u]=0;",
     "followup": "What would go wrong without unmarking on backtrack?",
-    "followup_answer": "A node used by one path could never appear in another, so some paths would be missed."
+    "followup_answer": "A node used by one path could never appear in another, so some paths would be missed.",
+    "variants": [
+     "nodes are unmarked when backtracking to allow other paths.",
+     "unmarking nodes lets other paths use them later.",
+     "backtracking unmarks nodes so they can be reused.",
+     "so other paths can use the node, we unmark it on the way back.",
+     "unmarking nodes during backtracking prevents path blocking.",
+     "nodes are unmarked to let other paths use them."
+    ],
+    "followup_replies": [
+     "some paths would be missed",
+     "paths would be blocked",
+     "nodes would be unavailable",
+     "other paths couldn't use the node",
+     "some paths would be lost"
+    ]
    }
   ],
   "source_pages": [
@@ -6649,7 +7377,19 @@
   "quality_note": "backtracking, the key to finding all paths, added (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "DFS-based path finding ensures all paths are discovered by recursively exploring each neighbor before backtracking.",
+   "variants": [
+    "A DFS-based path finding algorithm discovers all paths by exploring each neighbor recursively before backtracking.",
+    "DFS-based path finding ensures all paths are found by exploring each neighbor recursively before backtracking.",
+    "DFS-based path finding discovers all paths by recursively exploring each neighbor before backtracking.",
+    "A DFS-based path finding algorithm ensures all paths are discovered through recursive neighbor exploration before backtracking.",
+    "DFS-based path finding ensures all paths are discovered by recursively exploring each neighbor before backtracking."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.024
+  }
  },
  {
   "id": "dsa.horspool_and_boyer_moore_string_matching.hard2",
@@ -6667,13 +7407,42 @@
     "point": "Horspool uses one shift table based on the text character.",
     "quote": "Horspool’s algorithm simplifies the Boyer-Moore algorithm by using just one table.",
     "followup": "What is the purpose of the single table in Horspool’s algorithm?",
-    "followup_answer": "The single table in Horspool’s algorithm is used to determine how far to shift the pattern when a mismatch occurs, based on the rightmost occurrence of the text character in the pattern."
+    "followup_answer": "The single table in Horspool’s algorithm is used to determine how far to shift the pattern when a mismatch occurs, based on the rightmost occurrence of the text character in the pattern.",
+    "variants": [
+     "horspool makes one table for text characters to shift the pattern",
+     "the table in horspool tells you how much to shift when a character mismatches",
+     "horspool uses a single shift table for characters in the text",
+     "the shift table in horspool is based on the rightmost occurrence of text characters",
+     "the single table in horspool maps characters to shift distances"
+    ],
+    "followup_replies": [
+     "to find shift distance",
+     "determine shift amount",
+     "tell how much to shift",
+     "find rightmost occurrence",
+     "decide shift based on text"
+    ]
    },
    {
     "point": "Boyer-Moore uses two tables: bad-symbol and good-suffix shifts.",
     "quote": "Boyer-Moore algorithm preprocesses pattern right to left and store information into two tables.",
     "followup": "Why does Boyer-Moore use two tables instead of one?",
-    "followup_answer": "Boyer-Moore uses two tables to handle both the bad-symbol shift and the good-suffix shift, allowing it to make more efficient skips in some cases compared to Horspool’s algorithm."
+    "followup_answer": "Boyer-Moore uses two tables to handle both the bad-symbol shift and the good-suffix shift, allowing it to make more efficient skips in some cases compared to Horspool’s algorithm.",
+    "variants": [
+     "boyer-moore uses two tables for bad symbol and good suffix shifts",
+     "the two tables in boyer-moore handle different shift types",
+     "boyer-moore has bad-symbol and good-suffix tables",
+     "two tables allow for more efficient skipping in boyer-moore",
+     "boyer-moore uses separate tables for bad and good shifts",
+     "the two tables in boyer-moore help with different shift strategies"
+    ],
+    "followup_replies": [
+     "to handle both shift types",
+     "for better skipping",
+     "to manage different shift cases",
+     "because of different shift mechanisms",
+     "to allow more efficient skips"
+    ]
    }
   ],
   "source_pages": [
@@ -6708,7 +7477,19 @@
   "quality_note": "points shortened (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Horspool’s and Boyer-Moore algorithms differ in preprocessing by building a shift table based on the last character of the pattern, affecting their average-case performance in string matching.",
+   "variants": [
+    "Boyer-Moore preprocesses by creating a shift table using the pattern's last character, which influences its string-matching efficiency.",
+    "Horspool’s preprocessing constructs a shift table from the pattern's last character, impacting its string-matching speed.",
+    "Boyer-Moore builds a shift table using the pattern's last character during preprocessing, altering its string-matching performance.",
+    "Horspool’s preprocessing involves creating a shift table based on the pattern's last character, which affects its string-matching efficiency.",
+    "Boyer-Moore preprocesses by generating a shift table from the pattern's last character, which changes its string-matching performance."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.002
+  }
  },
  {
   "id": "dsa.graph_terminology.hard2",

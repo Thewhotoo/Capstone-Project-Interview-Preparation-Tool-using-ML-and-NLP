@@ -2041,18 +2041,38 @@
     "followup": "How does the subnet mask reflect the network and host portions of an IP address?",
     "followup_answer": "The subnet mask uses 1s for the network portion and 0s for the host portion, indicating which bits are fixed and which can vary.",
     "followup_replies": [
-     "it identifies network and host parts",
-     "network and host portions",
-     "to find network and host",
-     "determines network and host",
-     "network and host identification"
+     "256",
+     "2^8",
+     "256 addresses",
+     "2^8 minus 2",
+     "254 usable hosts"
+    ],
+    "variants": [
+     "class c uses the first 24 bits for the network and the last 8 for hosts.",
+     "in classful addressing, class c has 24 network bits and 8 host bits.",
+     "the network part of a class c address is 24 bits, and the host is 8 bits.",
+     "class c addresses are divided into 24 bits for network and 8 for hosts.",
+     "the class c network portion is 24 bits, and the host is 8 bits.",
+     "class c has 24 bits for the network and 8 bits for the host."
     ]
    },
    {
     "point": "So the default mask is 24 ones then 8 zeros: 255.255.255.0.",
     "quote": "The addresses in color are the default masks for classes A, B, and C.",
     "followup": "How many usable hosts does a class C network have?",
-    "followup_answer": "254: 2^8 = 256 addresses minus the network and broadcast addresses."
+    "followup_answer": "254: 2^8 = 256 addresses minus the network and broadcast addresses.",
+    "variants": [
+     "the default mask for class c is 24 ones followed by 8 zeros.",
+     "class c's default subnet mask is 255.255.255.0.",
+     "the default subnet mask for class c is 255.255.255.0 (/24)."
+    ],
+    "followup_replies": [
+     "256",
+     "2^8",
+     "256 addresses",
+     "2^8 minus 2",
+     "254 usable hosts"
+    ]
    }
   ],
   "source_pages": [
@@ -2086,7 +2106,19 @@
   "interview_priority": 3,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The default subnet mask for a Class C network is derived from its classful addressing structure by reserving the first three octets for the network portion.",
+   "variants": [
+    "A Class C network's default subnet mask comes from its classful structure by using the first three octets as the network address.",
+    "The default subnet mask of a Class C network is based on classful addressing by allocating the first three octets to the network.",
+    "Classful addressing determines the default subnet mask for a Class C network by setting the first three octets as the network part.",
+    "The default subnet mask for a Class C network is derived from classful addressing by reserving the first three octets for the network.",
+    "In classful addressing, the default subnet mask for a Class C network is formed by using the first three octets as the network identifier."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.991
+  }
  },
  {
   "id": "cn.arp.hard2",
@@ -2106,24 +2138,56 @@
     "followup": "What is the purpose of sending the ARP query to the broadcast MAC address?",
     "followup_answer": "Sending the ARP query to the broadcast MAC address ensures that all devices on the LAN receive the request, allowing the target device to identify itself and respond.",
     "followup_replies": [
-     "so everyone can hear",
-     "broadcast",
+     "so everyone can see the request",
      "to reach all devices",
-     "ff-ff-ff-ff-ff-ff",
-     "ensures all devices receive it"
+     "broadcast mac address",
+     "every device gets the query",
+     "so the target can respond"
+    ],
+    "variants": [
+     "a sends an arp request to all devices on the lan",
+     "arp query is sent to the broadcast mac address so everyone gets it",
+     "broadcasting arp ensures all hosts get the request",
+     "sending to the broadcast mac lets all devices see the query",
+     "arp uses broadcast to reach all hosts on the same network",
+     "the arp request is sent to ff-ff-ff-ff-ff-ff to reach all"
     ]
    },
    {
     "point": "B replies to A with its MAC address.",
     "quote": "B replies to A with ARP response",
     "followup": "Why does only B reply?",
-    "followup_answer": "Every host receives the broadcast, but only B recognises its own IP address in the query."
+    "followup_answer": "Every host receives the broadcast, but only B recognises its own IP address in the query.",
+    "variants": [
+     "only host b responds with its mac address"
+    ],
+    "followup_replies": [
+     "because it matches the ip",
+     "only the target host knows its ip",
+     "it's the only one that matches",
+     "others don't recognize the ip",
+     "only the intended recipient replies"
+    ]
    },
    {
     "point": "A caches the IP-to-MAC mapping in its ARP table with a TTL.",
     "quote": "ARP table: each IP node (host, router) - IP/MAC address mappings for some < IP address; MAC address; TTL>",
     "followup": "Why do ARP table entries have a TTL?",
-    "followup_answer": "So stale mappings are removed, for example when a host leaves or its card is replaced."
+    "followup_answer": "So stale mappings are removed, for example when a host leaves or its card is replaced.",
+    "variants": [
+     "a stores the mac address in its arp table for later use",
+     "the mapping is saved with a time limit",
+     "arp cache has a time to live",
+     "entries in the arp table expire after some time",
+     "the mac is stored temporarily in the arp table"
+    ],
+    "followup_replies": [
+     "to remove old entries",
+     "so it doesn't use outdated info",
+     "to keep the table up to date",
+     "to handle device changes",
+     "so stale data is removed"
+    ]
    }
   ],
   "source_pages": [
@@ -2153,25 +2217,24 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "The sender broadcasts an ARP request to discover the target's MAC address.",
-   "variants": [
-    "The sender sends a broadcast ARP request to find the target's MAC address.",
-    "The sender initiates a broadcast ARP query to locate the target's MAC address.",
-    "The sender broadcasts an ARP request to determine the target's MAC address.",
-    "The sender issues a broadcast ARP message to identify the target's MAC address.",
-    "The sender transmits an ARP broadcast to find the target's MAC address."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.998
-  },
   "quality_score": 8,
   "quality_note": "contradictory premise (no knowledge of the target IP) and garbled text; reworded, one overlapping point dropped (repair 6)",
   "curated": true,
   "interview_priority": 3,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Host A sends an ARP request to discover B's MAC address.",
+   "variants": [
+    "Host A broadcasts an ARP request to find B's MAC address.",
+    "Host A uses ARP to resolve B's MAC address from its IP.",
+    "Host A sends an ARP message to determine B's MAC address.",
+    "Host A requests B's MAC address via ARP broadcast."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.997
+  }
  },
  {
   "id": "cn.tcp_vs_udp.medium2",
@@ -2191,18 +2254,39 @@
     "followup": "What happens if a TCP sender continues to send data when the network is already congested?",
     "followup_answer": "The sender will be throttled by TCP's congestion control mechanisms to prevent further network overload.",
     "followup_replies": [
-     "it halves",
-     "it slows down",
-     "it throttles",
-     "it reduces the transmission rate",
-     "it limits the sender's speed"
+     "no",
+     "it adapts to the network",
+     "it adjusts its rate",
+     "no minimum throughput",
+     "tcp only adapts its rate"
+    ],
+    "variants": [
+     "tcp slows down when the network is too busy.",
+     "when the network is overloaded, tcp throttles the sender.",
+     "tcp uses congestion control to avoid network overload.",
+     "tcp reduces sending rate when the network is congested.",
+     "congestion control in tcp prevents network overload.",
+     "tcp throttles the sender to avoid congestion."
     ]
    },
    {
     "point": "UDP has no congestion control, so the sender can send as fast as it likes.",
     "quote": "does not provide: timing, security, or connection minimum throughput guarantee, setup.",
     "followup": "Does TCP guarantee a minimum throughput?",
-    "followup_answer": "No. TCP only adapts its rate to the network; neither TCP nor UDP guarantees throughput or timing."
+    "followup_answer": "No. TCP only adapts its rate to the network; neither TCP nor UDP guarantees throughput or timing.",
+    "variants": [
+     "udp doesn't control congestion, so it sends as fast as it can.",
+     "udp has no congestion control, so it can send at full speed.",
+     "without congestion control, udp sends data without limits.",
+     "udp sends data regardless of network conditions.",
+     "udp doesn't slow down when the network is busy.",
+     "udp can send data as fast as it wants."
+    ],
+    "followup_replies": [
+     "no",
+     "no minimum throughput",
+     "tcp only adapts its rate"
+    ]
    }
   ],
   "source_pages": [
@@ -2230,25 +2314,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "TCP ensures throughput guarantees through congestion control, while UDP does not.",
-   "variants": [
-    "TCP provides throughput guarantees via congestion control, unlike UDP.",
-    "TCP uses congestion control for throughput guarantees, which UDP lacks.",
-    "Throughput guarantees in TCP rely on congestion control, absent in UDP.",
-    "TCP guarantees throughput with congestion control, UDP does not.",
-    "Congestion control enables TCP's throughput guarantees, which UDP lacks."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.997
-  },
   "quality_score": 8,
   "quality_note": "false point 'TCP guarantees minimum throughput' removed; neither protocol guarantees throughput (repair 6)",
   "curated": true,
   "interview_priority": 3,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "TCP ensures throughput guarantees through congestion control mechanisms, while UDP does not.",
+   "variants": [
+    "TCP provides throughput guarantees via congestion control, whereas UDP does not.",
+    "TCP uses congestion control for throughput guarantees, unlike UDP.",
+    "Throughput guarantees in TCP rely on congestion control, which UDP lacks.",
+    "TCP guarantees throughput with congestion control, UDP does not provide this.",
+    "TCP enforces throughput guarantees through congestion control, UDP lacks this."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.995
+  }
  },
  {
   "id": "cn.ftp.easy1",
@@ -2473,24 +2557,61 @@
     "followup": "Why would a protocol without connection establishment be useful for multimedia?",
     "followup_answer": "Because it allows for faster transmission without the overhead of setting up a connection, which is critical for real-time applications.",
     "followup_replies": [
-     "no connection setup",
-     "faster transmission",
-     "no overhead",
-     "real-time needs",
-     "low latency"
+     "nope",
+     "application layer",
+     "it adds reliability",
+     "application adds it",
+     "in the app"
+    ],
+    "variants": [
+     "udp doesn't need a handshake before sending data",
+     "no connection setup means faster start for media",
+     "udp avoids the 3-way handshake for quicker transmission",
+     "without connection setup, media starts flowing immediately",
+     "udp can send data without waiting for a connection",
+     "no handshake delay lets media start right away"
     ]
    },
    {
     "point": "UDP has no congestion control, so the sender can keep sending at the rate it needs.",
     "quote": "no congestion control",
     "followup": "Why is it acceptable for a video stream to lose some packets?",
-    "followup_answer": "Media is loss tolerant: a few lost packets only cause a small glitch, while waiting for retransmissions would make the stream stall."
+    "followup_answer": "Media is loss tolerant: a few lost packets only cause a small glitch, while waiting for retransmissions would make the stream stall.",
+    "variants": [
+     "udp doesn't slow down for congestion control",
+     "no congestion control means steady sending rate",
+     "udp sends at the stream's required rate",
+     "sender can keep sending without being throttled",
+     "udp doesn't adjust for network congestion",
+     "sender sends at the desired rate without delay"
+    ],
+    "followup_replies": [
+     "because it's loss tolerant",
+     "a few lost packets cause small glitches",
+     "media can handle some loss",
+     "it's loss tolerant",
+     "minor glitches are acceptable"
+    ]
    },
    {
     "point": "Streaming media tolerates some packet loss but needs a steady rate.",
     "quote": "streaming multimedia apps (loss tolerant, rate sensitive)",
     "followup": "If a streaming app needs some reliability over UDP, where is it added?",
-    "followup_answer": "In the application layer: the application adds the reliability or congestion control it needs itself, as HTTP/3 does."
+    "followup_answer": "In the application layer: the application adds the reliability or congestion control it needs itself, as HTTP/3 does.",
+    "variants": [
+     "media can handle some packet loss but needs steady flow",
+     "streaming apps tolerate some loss but need consistent rate",
+     "packet loss is okay but delay is not",
+     "streaming media is loss-tolerant but rate-sensitive",
+     "some loss is acceptable, but delay is not"
+    ],
+    "followup_replies": [
+     "application layer",
+     "application adds it",
+     "in the app",
+     "application handles it",
+     "it's added by the app"
+    ]
    }
   ],
   "source_pages": [
@@ -2514,25 +2635,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "UDP is suitable for streaming multimedia because it provides connectionless, low-latency transmission without reliability guarantees.",
-   "variants": [
-    "UDP supports streaming multimedia through its connectionless, low-latency, and unreliable transmission model.",
-    "Streaming multimedia uses UDP because it offers connectionless, low-latency, and unreliable data transfer.",
-    "UDP is ideal for streaming multimedia due to its connectionless, low-latency, and unreliable transmission features.",
-    "Streaming multimedia relies on UDP for its connectionless, low-latency, and unreliable data delivery mechanism.",
-    "UDP enables streaming multimedia by offering connectionless, low-latency, and unreliable transmission without reliability guarantees."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.91
-  },
   "quality_score": 8,
   "quality_note": "out-of-order point (not a reason UDP suits streaming) replaced by no congestion control and loss tolerance (repair 4)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch4_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "UDP is suitable for streaming multimedia because it provides connectionless, low-latency transmission without reliability guarantees.",
+   "variants": [
+    "UDP supports streaming multimedia through connectionless, low-latency delivery without reliability.",
+    "Streaming multimedia uses UDP for its connectionless, low-latency, and unreliable transmission.",
+    "UDP is used in streaming multimedia due to its connectionless, low-latency, and unreliable nature.",
+    "UDP enables streaming multimedia with connectionless, low-latency, and unreliable data transfer.",
+    "Streaming multimedia relies on UDP for connectionless, low-latency, and unreliable transmission."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.985
+  }
  },
  {
   "id": "cn.distance_vector_routing.medium1",
@@ -2634,25 +2755,40 @@
     "followup_answer": "The process cannot communicate with other processes over the network, as the transport layer relies on sockets to manage message delivery.",
     "variants": [
      "a socket is the way a process sends and receives messages",
-     "processes use sockets to send and receive messages",
-     "sockets are the interface for sending and receiving messages between processes",
-     "the transport layer uses sockets to send and receive messages",
-     "a socket is how a process communicates over the network",
-     "without a socket, a process can't send or receive messages"
+     "processes use sockets to send and receive data",
+     "sockets act as the interface for sending and receiving messages",
+     "the transport layer uses sockets to send messages between processes",
+     "a socket is the endpoint for message sending and receiving",
+     "sockets are the connection points for processes to communicate"
     ],
     "followup_replies": [
-     "nope",
-     "it can't send or receive",
      "no communication",
-     "it breaks the connection",
-     "it can't talk to others"
+     "can't send data",
+     "no network access",
+     "no message delivery",
+     "no way to send"
     ]
    },
    {
     "point": "The sending process passes data to its socket and the transport layer delivers it to the receiving socket.",
     "quote": "socket analogous to door - sending process shoves message out door",
     "followup": "How does the receiving host know which socket gets the data?",
-    "followup_answer": "From the port numbers in the segment header (demultiplexing)."
+    "followup_answer": "From the port numbers in the segment header (demultiplexing).",
+    "variants": [
+     "data goes from the sending process to its socket and then to the receiver",
+     "the transport layer moves data from one socket to another",
+     "the sending process gives data to its socket, and the transport layer handles the rest",
+     "data is passed to the socket and the transport layer delivers it",
+     "the transport layer uses sockets to move data between processes",
+     "the receiving socket gets the data from the transport layer"
+    ],
+    "followup_replies": [
+     "port numbers in the header",
+     "port numbers in the segment",
+     "port numbers identify the socket",
+     "port numbers tell where to deliver",
+     "port numbers are used for demultiplexing"
+    ]
    },
    {
     "point": "Two sockets are involved in a communication: one on each side of the connection.",
@@ -2660,19 +2796,19 @@
     "followup": "What would happen if only one socket was used?",
     "followup_answer": "The message would not be delivered properly, as there would be no receiving endpoint to accept the message.",
     "variants": [
-     "two sockets are needed for communication",
-     "one socket on each end of the connection",
-     "communication needs a sending and receiving socket",
-     "you need two sockets to send and receive",
-     "each side has its own socket",
-     "sockets are on both ends of the connection"
+     "each end of the communication has its own socket",
+     "two sockets are needed for a connection",
+     "one socket on each side of the connection",
+     "a connection needs a sending and receiving socket",
+     "both ends use a socket to communicate",
+     "each process uses a socket to send and receive"
     ],
     "followup_replies": [
-     "the message wouldn't be delivered",
-     "no receiver",
-     "it can't be received",
-     "nothing to accept it",
-     "it would be lost"
+     "message wouldn't be delivered",
+     "no receiving endpoint",
+     "no way to accept the data",
+     "data would be lost",
+     "no one to receive it"
     ]
    }
   ],
@@ -2701,6 +2837,13 @@
    "coverage": 1.0
   },
   "active": true,
+  "quality_score": 8,
+  "quality_note": "door-analogy point replaced (repair 6)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch6_2026-10-25"
+  ],
   "core_point": {
    "point": "A socket is a transport-layer endpoint for communication between processes.",
    "variants": [
@@ -2712,14 +2855,7 @@
    ],
    "review": "unreviewed",
    "stated_by_bank": 0.997
-  },
-  "quality_score": 8,
-  "quality_note": "door-analogy point replaced (repair 6)",
-  "curated": true,
-  "interview_priority": 2,
-  "repairs": [
-   "batch6_2026-10-25"
-  ]
+  }
  },
  {
   "id": "cn.ethernet.medium1",
@@ -3219,18 +3355,40 @@
     "followup": "What happens if a message is sent to the wrong socket?",
     "followup_answer": "The data would reach the wrong process, or none if no socket uses that port.",
     "followup_replies": [
-     "it wouldn't reach the right app",
-     "no",
-     "data would be lost",
-     "wrong process gets it",
-     "it would be discarded"
+     "it doesn't reach the right process",
+     "the data is lost",
+     "no process will receive it",
+     "it goes to the wrong process",
+     "it might not be delivered at all"
+    ],
+    "variants": [
+     "each process uses a socket with a unique port number",
+     "processes are identified by their port numbers in the socket",
+     "the transport layer uses port numbers to find the right socket",
+     "sockets are assigned port numbers to identify processes",
+     "port numbers help the transport layer find the correct socket",
+     "every process has a socket with a specific port number"
     ]
    },
    {
     "point": "The transport layer uses the destination port in the segment header to pick the socket.",
     "quote": "Three segments, all destined to IP address: B, dest port: 80 are demultiplexed to different sockets",
     "followup": "What is this delivery step called?",
-    "followup_answer": "Demultiplexing."
+    "followup_answer": "Demultiplexing.",
+    "variants": [
+     "the transport layer checks the destination port to deliver data",
+     "the destination port tells the transport layer which socket to use",
+     "the transport layer uses the port number to route data correctly",
+     "the port number in the header helps the transport layer demultiplex data",
+     "the transport layer looks at the destination port to find the right socket",
+     "the port number in the segment header determines where the data goes"
+    ],
+    "followup_replies": [
+     "demultiplexing",
+     "it's called demultiplexing",
+     "demultiplexing is the name for that step",
+     "that's called demultiplexing"
+    ]
    }
   ],
   "source_pages": [
@@ -3258,25 +3416,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "The transport layer ensures data reaches the correct process through port numbers.",
-   "variants": [
-    "The transport layer directs data to the right process using port numbers.",
-    "Port numbers in the transport layer identify the correct receiving process.",
-    "The transport layer uses port numbers to deliver data to the correct process.",
-    "Port numbers allow the transport layer to send data to the correct process.",
-    "The transport layer routes data to the correct process by using port numbers."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.004
-  },
   "quality_score": 8,
   "quality_note": "missed port numbers and demultiplexing; door analogy dropped (repair 6)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The transport layer ensures data reaches the correct process by using port numbers to identify the destination process.",
+   "variants": [
+    "The transport layer uses port numbers to direct data to the correct process.",
+    "Port numbers in the transport layer identify which process receives the data.",
+    "The transport layer routes data to the right process using port numbers.",
+    "Port numbers allow the transport layer to send data to the correct process.",
+    "The transport layer identifies the correct process through port numbers."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.996
+  }
  },
  {
   "id": "cn.collision_and_broadcast_domains.medium2",
@@ -3664,13 +3822,41 @@
     "point": "Devices inside are not directly reachable from the outside world.",
     "quote": "security: devices inside local net not directly addressable, visible by outside world",
     "followup": "What happens if a device inside the network is directly addressable from the outside?",
-    "followup_answer": "It becomes vulnerable to attacks and unauthorized access, as external entities can directly target and communicate with it."
+    "followup_answer": "It becomes vulnerable to attacks and unauthorized access, as external entities can directly target and communicate with it.",
+    "variants": [
+     "the outside world can't directly access devices on the local network.",
+     "because of nat, external users can't reach internal devices directly.",
+     "nat hides the internal ip addresses from the outside world.",
+     "internal devices are protected since they're not directly visible.",
+     "the router acts as a barrier, so external connections can't reach internal devices."
+    ],
+    "followup_replies": [
+     "vulnerable to attacks",
+     "can be hacked",
+     "exposed to unauthorized access",
+     "at risk of being targeted",
+     "nope"
+    ]
    },
    {
     "point": "All devices share one public IP address that the router translates.",
     "quote": "just one IP address needed from provider ISP for all devices",
     "followup": "How does the router know which inside device a reply belongs to?",
-    "followup_answer": "It keeps a NAT translation table mapping each (private address, port) to the (public address, new port) it used."
+    "followup_answer": "It keeps a NAT translation table mapping each (private address, port) to the (public address, new port) it used.",
+    "variants": [
+     "all devices use the same public ip address through the router.",
+     "the router translates private ips to a single public ip.",
+     "the router shares one public ip for all internal devices.",
+     "the public ip is used as a shared address for the local network.",
+     "the router acts as a translator for the public ip address."
+    ],
+    "followup_replies": [
+     "it keeps a translation table",
+     "it uses a mapping table",
+     "it tracks the (ip, port) pairs",
+     "it maintains a nat table",
+     "it uses a translation table to map internal to external addresses"
+    ]
    }
   ],
   "source_pages": [
@@ -3704,7 +3890,19 @@
   "quality_note": "narrow security question widened to what NAT is; address-change point moved to the reference (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "NAT translates private IP addresses to a public one for external communication.",
+   "variants": [
+    "NAT changes private IP addresses to a public one when communicating outside the network.",
+    "NAT maps internal IP addresses to a single public IP address for external traffic.",
+    "NAT converts local IP addresses to a public one to allow external network access.",
+    "NAT replaces private IP addresses with a public one for outside communication.",
+    "NAT uses a public IP address to represent private addresses when accessing the internet."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.025
+  }
  },
  {
   "id": "cn.mac_addressing.easy1",
@@ -3722,13 +3920,43 @@
     "point": "A MAC address is a 48-bit hardware address burned into the network card.",
     "quote": "48-bit MAC address (for most LANs) burned in NIC ROM, e.g.: 1A-2F-BB-76-09-AD",
     "followup": "How are MAC addresses assigned to devices?",
-    "followup_answer": "MAC addresses are assigned by the manufacturer and are burned into the NIC ROM to ensure uniqueness across all devices."
+    "followup_answer": "MAC addresses are assigned by the manufacturer and are burned into the NIC ROM to ensure uniqueness across all devices.",
+    "variants": [
+     "a mac address is a 48-bit identifier built into the network card.",
+     "the mac address is burned into the nic by the manufacturer.",
+     "the manufacturer assigns a unique mac address to each device.",
+     "mac addresses are unique because they're set in the hardware.",
+     "each device has a mac address that's hard-coded into its rom.",
+     "the mac address is a hardware address that's fixed for a device."
+    ],
+    "followup_replies": [
+     "manufacturer sets it.",
+     "burned into the nic.",
+     "it's unique per device.",
+     "no, it's not assigned by ip.",
+     "it's set during manufacturing."
+    ]
    },
    {
     "point": "It is used to deliver frames between interfaces on the same local network.",
     "quote": "used 'locally' to get frame from one interface to another physically-connected interface (same subnet, in",
     "followup": "Why is a MAC address important for communication within a LAN?",
-    "followup_answer": "A MAC address is important for communication within a LAN because it allows devices to directly communicate with each other without needing to rely on higher-layer addressing."
+    "followup_answer": "A MAC address is important for communication within a LAN because it allows devices to directly communicate with each other without needing to rely on higher-layer addressing.",
+    "variants": [
+     "mac addresses are used to send frames within the same network.",
+     "they help devices talk directly on a local network.",
+     "the mac address is used for local communication.",
+     "frames are delivered using mac addresses on the same subnet.",
+     "mac addresses allow direct communication between devices.",
+     "they're used to send data between devices on the same lan."
+    ],
+    "followup_replies": [
+     "it allows direct communication.",
+     "no routing needed.",
+     "it's for local delivery.",
+     "it's for lan communication.",
+     "it's for direct device-to-device."
+    ]
    }
   ],
   "source_pages": [
@@ -3762,7 +3990,17 @@
   "quality_note": "points shortened (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A MAC address is a unique identifier assigned to a network interface for data link layer communication.",
+   "variants": [
+    "A MAC address uniquely identifies a device at the data link layer.",
+    "A MAC address is a 48-bit address used to identify network interfaces.",
+    "A MAC address is used to uniquely identify network interfaces at the data link layer."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.997
+  }
  },
  {
   "id": "cn.packet_switching_vs_circuit_switching.medium1",
@@ -3780,13 +4018,43 @@
     "point": "Circuit switching reserves fixed bandwidth for each connection; packet switching shares it on demand.",
     "quote": "Q: human analogies of reserved resources (circuit switching) versus",
     "followup": "What happens to bandwidth when multiple users share a circuit-switched network?",
-    "followup_answer": "Each user's reserved bandwidth stays allocated even when that user is idle, so it is wasted."
+    "followup_answer": "Each user's reserved bandwidth stays allocated even when that user is idle, so it is wasted.",
+    "variants": [
+     "circuit switching keeps a fixed bandwidth for each call, while packet switching uses shared bandwidth.",
+     "in circuit switching, the bandwidth is always reserved, but in packet switching, it's shared.",
+     "circuit switching uses dedicated bandwidth, packet switching shares it among users.",
+     "packet switching shares bandwidth on demand, unlike circuit switching which reserves it.",
+     "circuit switching has fixed bandwidth, packet switching uses shared bandwidth as needed.",
+     "with circuit switching, bandwidth is reserved for the whole connection, but packet switching shares it."
+    ],
+    "followup_replies": [
+     "it's wasted.",
+     "no, it's wasted.",
+     "it's wasted, even when idle.",
+     "it's wasted when the user is silent.",
+     "it's wasted because the bandwidth is reserved even when not in use."
+    ]
    },
    {
     "point": "In packet switching, packets may arrive out of order and are reassembled at the destination.",
     "quote": "Message received in out of order, assembled at the dest",
     "followup": "Why is message ordering important in some applications?",
-    "followup_answer": "It is important for real-time applications like voice or video, where out-of-order delivery can cause noticeable delays or distortion."
+    "followup_answer": "It is important for real-time applications like voice or video, where out-of-order delivery can cause noticeable delays or distortion.",
+    "variants": [
+     "in packet switching, packets can arrive out of order and are fixed at the end.",
+     "packet switching may have out-of-order packets, which are reassembled later.",
+     "with packet switching, messages can be out of order, so they're reassembled at the destination.",
+     "packet switching allows packets to take different paths, so they might arrive out of order.",
+     "in packet switching, packets may not arrive in order, so they are fixed at the destination.",
+     "packet switching can lead to out-of-order delivery, which is handled at the destination."
+    ],
+    "followup_replies": [
+     "it's important for real-time apps.",
+     "real-time apps need ordered delivery.",
+     "no, it's important for real-time apps.",
+     "because of real-time needs like video or voice.",
+     "real-time apps rely on ordered delivery."
+    ]
    }
   ],
   "source_pages": [
@@ -3821,7 +4089,19 @@
   "quality_note": "reference had bandwidth backwards (circuit 'saves', packet 'wastes'); garbled quote replaced (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "packet switching allows multiple messages to share bandwidth and may reorder packets, while circuit switching reserves dedicated bandwidth and maintains message order.",
+   "variants": [
+    "in packet switching, multiple messages share bandwidth and packets may be reordered, unlike circuit switching which reserves bandwidth and maintains order.",
+    "packet switching shares bandwidth among messages and allows packet reordering, whereas circuit switching dedicates bandwidth and preserves message order.",
+    "packet switching uses shared bandwidth with possible packet reordering, while circuit switching uses dedicated bandwidth with preserved message order.",
+    "packet switching enables shared bandwidth and potential packet reordering, whereas circuit switching provides dedicated bandwidth and maintains order.",
+    "packet switching shares bandwidth and may reorder packets, while circuit switching reserves bandwidth and ensures message order."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.985
+  }
  },
  {
   "id": "cn.ipv4_addressing.easy1",
@@ -3839,13 +4119,40 @@
     "point": "The class is given by the leading bits of the address.",
     "quote": "a. The first bit is 0. This is a class A address.",
     "followup": "What leading bits mark a class A, B and C address?",
-    "followup_answer": "Class A starts with 0, class B with 10 and class C with 110."
+    "followup_answer": "Class A starts with 0, class B with 10 and class C with 110.",
+    "variants": [
+     "the class is determined by the first few bits of the address",
+     "the leading bits tell you which class the ip address belongs to",
+     "you look at the first bits to find out the class of an ip",
+     "the class is based on the first bits in the binary form",
+     "the class is identified by the leading bits of the ip address",
+     "the first bits of the ip address determine its class"
+    ],
+    "followup_replies": [
+     "0",
+     "10",
+     "110",
+     "zero",
+     "one zero"
+    ]
    },
    {
     "point": "The class decides the default subnet mask, i.e. the network and host parts.",
     "quote": "The addresses in color are the default masks for classes A, B, and C.",
     "followup": "What is the default subnet mask of a class C address?",
-    "followup_answer": "255.255.255.0: the first 24 bits are the network part and the last 8 the host part."
+    "followup_answer": "255.255.255.0: the first 24 bits are the network part and the last 8 the host part.",
+    "variants": [
+     "the class determines the default subnet mask and how the address is split",
+     "the class affects how the network and host parts are divided",
+     "the class defines the subnet mask and the network/host split",
+     "the class helps set the default subnet mask",
+     "the class determines the network and host portions",
+     "the class sets the default subnet mask and the network/host division"
+    ],
+    "followup_replies": [
+     "255.255.255.0",
+     "255.255.232.0"
+    ]
    }
   ],
   "source_pages": [
@@ -3879,7 +4186,19 @@
   "quality_note": "single class-C example point moved to a follow-up (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "the class of an ipv4 address is determined by the leading bits in its binary representation.",
+   "variants": [
+    "an ipv4 address's class is identified by its leading binary bits.",
+    "the leading bits of an ipv4 address define its class.",
+    "ipv4 address class is based on the leading binary bits.",
+    "the class of an ipv4 address is defined by its leading binary bits.",
+    "ipv4 address class is determined by the leading binary bits."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.754
+  }
  },
  {
   "id": "cn.tcp_congestion_control.easy1",
@@ -3897,13 +4216,43 @@
     "point": "The sender cuts its rate when a segment is lost.",
     "quote": "A lost segment implies congestion, and hence, the TCP sender’s rate should be decreased when a segment is lost.",
     "followup": "What happens if a sender continues to send at full capacity without any packet loss?",
-    "followup_answer": "The sender may cause congestion collapse, where the network becomes overwhelmed and throughput drops drastically."
+    "followup_answer": "The sender may cause congestion collapse, where the network becomes overwhelmed and throughput drops drastically.",
+    "variants": [
+     "when a segment is lost, the sender slows down.",
+     "the sender reduces its speed when a packet is dropped.",
+     "if a segment is lost, the sender backs off.",
+     "segment loss signals the sender to cut its rate.",
+     "the sender lowers its sending rate upon packet loss.",
+     "when a segment is lost, the sender decreases its rate."
+    ],
+    "followup_replies": [
+     "it causes congestion collapse.",
+     "network becomes overwhelmed.",
+     "throughput drops drastically.",
+     "congestion collapse happens.",
+     "network is overloaded."
+    ]
    },
    {
     "point": "The sender increases its rate as ACKs arrive.",
     "quote": "An acknowledged segment indicates that the network is delivering the sender’s segments to the receiver, and hence, the sender’s rate can be increased when an ACK arrives for a previously unacknowledged segment.",
     "followup": "What does an acknowledgment tell the sender about the network?",
-    "followup_answer": "An acknowledgment tells the sender that the network is functioning correctly and that it can safely increase its sending rate."
+    "followup_answer": "An acknowledgment tells the sender that the network is functioning correctly and that it can safely increase its sending rate.",
+    "variants": [
+     "the sender raises its rate when it gets ACKs.",
+     "acks let the sender increase its speed.",
+     "as ACKs arrive, the sender speeds up.",
+     "sender increases sending rate with ACKs.",
+     "acks signal the sender to send more.",
+     "the sender sends more when it gets ACKs."
+    ],
+    "followup_replies": [
+     "it means the network is working.",
+     "network is functioning normally.",
+     "network is not congested.",
+     "network is delivering data.",
+     "network is healthy."
+    ]
    }
   ],
   "source_pages": [
@@ -3935,7 +4284,19 @@
   "quality_note": "points shortened; reference states the ACK point (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "TCP congestion control uses window size adjustments to prevent network congestion from escalating into collapse.",
+   "variants": [
+    "TCP congestion control prevents collapse by adjusting window sizes based on network conditions.",
+    "TCP avoids congestion collapse through dynamic window size changes in response to network feedback.",
+    "TCP congestion control stops collapse by modifying its sending window according to congestion signals.",
+    "TCP prevents congestion collapse by adjusting its congestion window based on network performance.",
+    "TCP congestion control avoids collapse by dynamically changing its window size in response to congestion."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.002
+  }
  },
  {
   "id": "cn.nat.medium2",
@@ -3953,13 +4314,42 @@
     "point": "NAT translates private IP addresses and ports to a public IP and a new port.",
     "quote": "outgoing datagrams: replace (source IP address, port #) of every outgoing datagram to (NAT IP address, new port #)",
     "followup": "How does the NAT router ensure that responses are correctly routed back to the right device?",
-    "followup_answer": "The NAT router maintains a translation table that maps the public IP and port back to the original private IP and port, allowing it to correctly forward incoming responses."
+    "followup_answer": "The NAT router maintains a translation table that maps the public IP and port back to the original private IP and port, allowing it to correctly forward incoming responses.",
+    "variants": [
+     "nat changes private ips and ports to a public ip and a new port.",
+     "when devices send data, nat swaps their private ip and port for a public one.",
+     "nat uses a public ip and unique port to represent multiple private devices.",
+     "so each device gets a unique port on the public ip to avoid conflicts.",
+     "nat replaces the source ip and port with the public ip and a new port.",
+     "the router changes the private ip and port to the public ip and a new port."
+    ],
+    "followup_replies": [
+     "nope",
+     "it can't route responses correctly",
+     "communication fails",
+     "it would break the connection",
+     "responses wouldn't reach the right device"
+    ]
    },
    {
     "point": "NAT maintains a translation table to track the mapping of private to public addresses and ports.",
     "quote": "remember (in NAT translation table) every (source IP address, port #) to (NAT IP address, new port #) translation pair",
     "followup": "What would happen if the NAT router did not maintain this translation table?",
-    "followup_answer": "The router would not be able to correctly route incoming responses back to the correct device, leading to communication failures."
+    "followup_answer": "The router would not be able to correctly route incoming responses back to the correct device, leading to communication failures.",
+    "variants": [
+     "nat keeps track of which private ip and port maps to which public one.",
+     "the router has a table that shows the private and public address pairs.",
+     "nat uses a table to remember the private ip and port for each public port.",
+     "the translation table helps the router match incoming packets to the right device.",
+     "nat maintains a list of private to public mappings for each connection."
+    ],
+    "followup_replies": [
+     "it can't route responses correctly",
+     "communication fails",
+     "the router wouldn't know where to send the data",
+     "it would break the connection",
+     "responses wouldn't reach the right device"
+    ]
    }
   ],
   "source_pages": [
@@ -3993,7 +4383,19 @@
   "quality_note": "good (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "NAT enables multiple devices to share a single public IP by translating private addresses to the public one.",
+   "variants": [
+    "NAT allows multiple devices to use one public IP by changing private addresses to the public one.",
+    "NAT lets multiple devices share one public IP through address translation from private to public.",
+    "NAT supports multiple devices on a single public IP by translating private addresses into the public one.",
+    "NAT enables multiple devices to connect via one public IP by translating private addresses to the public one.",
+    "NAT allows multiple devices to use one public IP by translating their private addresses to the public one."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.998
+  }
  },
  {
   "id": "cn.dhcp.hard2",
@@ -4011,13 +4413,39 @@
     "point": "A host holds its address only while connected, so the address can be reused afterwards.",
     "quote": "allows reuse of addresses (only hold address while connected/on)",
     "followup": "What happens if a host doesn't renew its lease before the lease expires?",
-    "followup_answer": "The IP address is reclaimed by the DHCP server and can be reassigned to another host, improving address utilization."
+    "followup_answer": "The IP address is reclaimed by the DHCP server and can be reassigned to another host, improving address utilization.",
+    "variants": [
+     "dhcp gives out ip addresses for a limited time so they can be reused.",
+     "hosts only keep their ip while connected, so it's available when they leave.",
+     "dhcp uses time-limited leases to make ip addresses more efficient.",
+     "leases let the network reuse ip addresses after a host disconnects."
+    ],
+    "followup_replies": [
+     "it's reclaimed.",
+     "address is reused.",
+     "it goes back to the pool.",
+     "dhcp reclaims it.",
+     "it becomes available again."
+    ]
    },
    {
     "point": "Leases support mobile users who join and leave the network.",
     "quote": "support for mobile users who join/leave network",
     "followup": "How does lease renewal help a mobile user maintain connectivity?",
-    "followup_answer": "It gets an address automatically when it joins and gives it back when it leaves, with no manual setup."
+    "followup_answer": "It gets an address automatically when it joins and gives it back when it leaves, with no manual setup.",
+    "variants": [
+     "mobile users get an ip automatically when they join the network.",
+     "dhcp supports mobile users by giving them an ip when they connect.",
+     "mobile users can join and leave without changing their settings.",
+     "leases make it easy for mobile users to connect and disconnect."
+    ],
+    "followup_replies": [
+     "it gets an address automatically.",
+     "no manual configuration needed.",
+     "it connects without setup.",
+     "it joins and leaves easily.",
+     "dhcp handles the ip assignment."
+    ]
    }
   ],
   "source_pages": [
@@ -4049,7 +4477,19 @@
   "quality_note": "points were about leases in general, not renewal; question reworded to match; not hard (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "DHCP uses time-limited leases to allow IP address reallocation, enabling mobile users to maintain connectivity as they move between networks.",
+   "variants": [
+    "DHCP assigns temporary IP addresses to let mobile users stay connected while moving between networks.",
+    "DHCP provides time-limited IP addresses so mobile users can retain connectivity across network changes.",
+    "DHCP uses time-limited leases to enable mobile users to maintain network access as they move.",
+    "DHCP gives temporary IP addresses to support mobile users who switch networks.",
+    "DHCP uses time-limited leases to allow mobile users to keep connectivity when moving between networks."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.984
+  }
  },
  {
   "id": "cn.tcp_flow_control.hard2",
@@ -4119,19 +4559,64 @@
     "point": "DNS translates hostnames into IP addresses.",
     "quote": "hostname to IP address",
     "followup": "Why do we need DNS at all if computers communicate using IP addresses?",
-    "followup_answer": "Because people use names like www.amazon.com; DNS translates the name into the IP address the computer needs."
+    "followup_answer": "Because people use names like www.amazon.com; DNS translates the name into the IP address the computer needs.",
+    "variants": [
+     "dns turns names into ip addresses so computers can find them.",
+     "without dns, we'd have to remember ip addresses for every website.",
+     "dns is like a phonebook for the internet, matching names to ips.",
+     "computers use ips, but people use names, so dns helps bridge that gap.",
+     "dns makes it easier for users to access websites by using friendly names.",
+     "the main job of dns is to convert human-readable names into machine-readable ips."
+    ],
+    "followup_replies": [
+     "nope",
+     "because people use names",
+     "to translate names into ips",
+     "so computers can find the right ip",
+     "because it's easier for humans to remember names"
+    ]
    },
    {
     "point": "On a cache miss, the query goes from the root server to the TLD server to the domain's authoritative server, which returns the IP address.",
     "quote": "Client wants IP address for www.amazon.com; 1st approximation: - client queries root server to find .com DNS server - client queries .com DNS server to get amazon.com DNS server - client queries amazon.com DNS server to get IP address for www.amazon.com",
     "followup": "Which DNS server finally gives the IP address for www.amazon.com?",
-    "followup_answer": "The authoritative DNS server for amazon.com."
+    "followup_answer": "The authoritative DNS server for amazon.com.",
+    "variants": [
+     "if the local dns doesn't know, it asks the root servers first.",
+     "the query goes root -> tld -> authoritative server for the ip.",
+     "when the cache is empty, the dns hierarchy is used to find the ip.",
+     "the root server guides the query to the correct tld server.",
+     "the tld server then points to the domain's own dns server.",
+     "the authoritative server is the one that gives the final ip address."
+    ],
+    "followup_replies": [
+     "the authoritative server",
+     "amazon.com's dns server",
+     "the domain's dns server",
+     "the one that owns the domain",
+     "the one that holds the ip"
+    ]
    },
    {
     "point": "The local DNS server caches the answer, so repeat queries skip the hierarchy until the entry's TTL expires.",
     "quote": "once (any) name server learns mapping, it caches mapping - cache entries timeout (disappear) after some time (TTL)",
     "followup": "If the same name is asked for again a minute later, does the local DNS server contact the root server again?",
-    "followup_answer": "No, it answers from its cache until the cached entry's TTL expires."
+    "followup_answer": "No, it answers from its cache until the cached entry's TTL expires.",
+    "variants": [
+     "the local dns saves the ip so it doesn't have to ask again.",
+     "caching helps speed up future lookups by avoiding the hierarchy.",
+     "the dns server keeps the ip in memory for a while.",
+     "after the first lookup, the ip is stored until it expires.",
+     "the local dns remembers the ip for a set time called ttl.",
+     "caching means the same query can be answered without going through the hierarchy."
+    ],
+    "followup_replies": [
+     "no",
+     "it checks the cache first",
+     "it uses the cached entry",
+     "it doesn't need to ask again",
+     "it answers from the cache"
+    ]
    }
   ],
   "source_pages": [
@@ -4161,7 +4646,19 @@
   "quality_note": "rewritten (batch 7): classic DNS resolution question; was held back at confidence 0.68",
   "repairs": [
    "batch7_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "DNS translates hostnames to IP addresses by querying authoritative servers when the local DNS server lacks the answer.",
+   "variants": [
+    "DNS resolves hostnames to IP addresses by querying authoritative servers when the local DNS server doesn't know the answer.",
+    "DNS converts hostnames to IP addresses through recursive queries to authoritative servers when the local DNS lacks the information.",
+    "DNS finds the IP address of a hostname by recursively asking authoritative DNS servers when the local server doesn't have the answer.",
+    "DNS maps hostnames to IP addresses by recursively querying authoritative DNS servers when the local DNS server doesn't have the answer.",
+    "DNS resolves hostnames to IP addresses by recursively querying authoritative DNS servers when the local DNS server doesn't have the answer."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.998
+  }
  },
  {
   "id": "cn.network_delays.easy1",
@@ -4179,19 +4676,63 @@
     "point": "Transmission delay is the time to push all the packet's bits onto the link (L/R).",
     "quote": "Transmission delay: takes L/R seconds to transmit (push out) L-bit packet into",
     "followup": "What happens if the transmission rate is very high?",
-    "followup_answer": "The transmission delay decreases because the packet can be pushed out more quickly."
+    "followup_answer": "The transmission delay decreases because the packet can be pushed out more quickly.",
+    "variants": [
+     "transmission delay is how long it takes to send all the bits of a packet over the link",
+     "it takes time to push all the packet bits onto the link, that's transmission delay",
+     "transmission delay is calculated as packet length divided by transmission rate",
+     "the time to push the entire packet onto the link is called transmission delay",
+     "transmission delay is the time required to send all bits of a packet",
+     "when you send a packet, transmission delay is the time it takes to push all the bits out"
+    ],
+    "followup_replies": [
+     "no",
+     "it decreases",
+     "it gets smaller",
+     "transmission delay goes down",
+     "it reduces"
+    ]
    },
    {
     "point": "Delays on each link add up to the end-to-end delay.",
     "quote": "Total end-to-end delay is the sum of these six delays: 90 + 1678 + 810 = 2.578 ms",
     "followup": "Why is the total end-to-end delay the sum of individual delays?",
-    "followup_answer": "Because each link contributes its own transmission and propagation delay, and these delays add up as the packet travels through the network."
+    "followup_answer": "Because each link contributes its own transmission and propagation delay, and these delays add up as the packet travels through the network.",
+    "variants": [
+     "each link adds to the total end-to-end delay",
+     "the total delay is the sum of all the delays on each link",
+     "end-to-end delay is the total of all individual link delays",
+     "you add up the delays from each link to get the end-to-end delay",
+     "each link contributes its own delay, which adds up"
+    ],
+    "followup_replies": [
+     "because each link adds its own delay",
+     "they add up because they're sequential",
+     "each link's delay is added",
+     "yes, because they're sequential",
+     "they add up as the packet moves through the network"
+    ]
    },
    {
     "point": "Propagation delay is the time for a bit to travel along the link (d/s).",
     "quote": "Time it takes a bit to propagate from one router to the next.",
     "followup": "Does a faster link rate reduce propagation delay?",
-    "followup_answer": "No, propagation delay depends on distance and signal speed; the link rate only reduces transmission delay."
+    "followup_answer": "No, propagation delay depends on distance and signal speed; the link rate only reduces transmission delay.",
+    "variants": [
+     "propagation delay is how long it takes for a bit to travel across the link",
+     "the time it takes for a bit to go from one end to the other is propagation delay",
+     "propagation delay is distance divided by the speed of light",
+     "a bit takes time to travel the length of the link, that's propagation delay",
+     "propagation delay is the time for a signal to travel the distance of the link",
+     "the time it takes for a bit to move across the link is called propagation delay"
+    ],
+    "followup_replies": [
+     "no",
+     "nope",
+     "no, it doesn't",
+     "no, it's not affected",
+     "no, propagation delay is distance over speed"
+    ]
    }
   ],
   "source_pages": [
@@ -4231,7 +4772,19 @@
   "quality_note": "propagation delay was missing from the points (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Transmission delay is the time to push all bits into the link, and propagation delay is the time for a bit to travel from sender to receiver.",
+   "variants": [
+    "Transmission delay is the time to send all data bits over a link, while propagation delay is the time for a signal to travel across the physical medium.",
+    "Transmission delay occurs when data is sent over a link, and propagation delay is the time it takes for the signal to reach the destination.",
+    "Transmission delay is the time required to place all bits onto the transmission medium, and propagation delay is the time for the signal to traverse the physical distance.",
+    "Transmission delay is the time to transmit all bits onto the link, and propagation delay is the time for the signal to propagate through the medium.",
+    "Transmission delay is the time to push all bits into the link, and propagation delay is the time for the signal to travel from sender to receiver."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.001
+  }
  },
  {
   "id": "cn.collision_and_broadcast_domains.easy1",
@@ -4249,13 +4802,42 @@
     "point": "Hubs create a single collision domain.",
     "quote": "Collision Domain | Single collision domain | Multiple collision domains (one per port)",
     "followup": "Why would a hub cause more collisions than a switch?",
-    "followup_answer": "Because all devices connected to a hub share the same collision domain, increasing the chance of collisions during transmission."
+    "followup_answer": "Because all devices connected to a hub share the same collision domain, increasing the chance of collisions during transmission.",
+    "variants": [
+     "hubs make everything share one collision domain",
+     "all devices on a hub are in the same collision domain",
+     "hub creates a single collision domain for all connected devices",
+     "because hubs are physical layer, they create one collision domain",
+     "hub's collision domain includes all connected devices",
+     "hub's single collision domain causes more collisions"
+    ],
+    "followup_replies": [
+     "because they share the same domain",
+     "shared bandwidth",
+     "same collision domain",
+     "no isolation",
+     "more chance of collision"
+    ]
    },
    {
     "point": "Switches create multiple collision domains, one per port.",
     "quote": "Switching: A-to-A’ and B-to-B’ can transmit simultaneously, without collisions",
     "followup": "How does a switch allow multiple devices to transmit without collisions?",
-    "followup_answer": "Because each port on a switch is its own collision domain, allowing simultaneous, collision-free communication between devices connected to different ports."
+    "followup_answer": "Because each port on a switch is its own collision domain, allowing simultaneous, collision-free communication between devices connected to different ports.",
+    "variants": [
+     "switches make each port its own collision domain",
+     "each switch port has its own domain",
+     "switch creates multiple collision domains",
+     "switches split the collision domain per port",
+     "each port on a switch is a separate domain"
+    ],
+    "followup_replies": [
+     "because each port is its own domain",
+     "no shared bandwidth",
+     "isolated domains",
+     "collision-free per port",
+     "each port has its own domain"
+    ]
    }
   ],
   "source_pages": [
@@ -4286,7 +4868,17 @@
   "quality_note": "good (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A collision domain is a network segment where data collisions can occur due to shared media access.",
+   "variants": [
+    "A collision domain is a network segment where collisions can happen because devices share the same medium.",
+    "A collision domain is a segment where data collisions are possible due to shared media access.",
+    "A collision domain is a network segment where collisions can occur because all devices share the medium."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.001
+  }
  },
  {
   "id": "cn.link_state_routing.medium2",
@@ -4304,13 +4896,40 @@
     "point": "Each router broadcasts its direct link costs to all other routers.",
     "quote": "cx,y: direct link cost from",
     "followup": "What kind of information is included in the link-state packets?",
-    "followup_answer": "Link-state packets include information about direct links and their associated costs."
+    "followup_answer": "Link-state packets include information about direct links and their associated costs.",
+    "variants": [
+     "each router shares its direct link costs with everyone else",
+     "they send their link costs to all other routers",
+     "routers broadcast their link-state info to the whole network",
+     "they use link-state packets to share direct link costs",
+     "link-state packets carry the cost of each direct link"
+    ],
+    "followup_replies": [
+     "direct links and their costs",
+     "link costs and direct connections",
+     "costs of direct links",
+     "direct links and their associated costs",
+     "link-state packets include direct link costs"
+    ]
    },
    {
     "point": "So all nodes have the same complete topology information.",
     "quote": "all nodes have same info",
     "followup": "What does each router do with this information?",
-    "followup_answer": "It runs Dijkstra's algorithm itself to compute least-cost paths to every destination."
+    "followup_answer": "It runs Dijkstra's algorithm itself to compute least-cost paths to every destination.",
+    "variants": [
+     "all routers end up with the same network map",
+     "every node has a complete view of the network",
+     "each router has the same full network picture",
+     "the network topology is consistent across all nodes"
+    ],
+    "followup_replies": [
+     "it runs Dijkstra's algorithm",
+     "computes least-cost paths",
+     "runs Dijkstra's to find shortest paths",
+     "uses Dijkstra's to calculate paths",
+     "computes shortest paths using Dijkstra's"
+    ]
    }
   ],
   "source_pages": [
@@ -4344,7 +4963,19 @@
   "quality_note": "first point was about packet contents, second had no follow-up (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Dijkstra’s link-state routing algorithm ensures all nodes have identical topology information through synchronized flooding of link-state advertisements.",
+   "variants": [
+    "All nodes in the network share the same topology information via synchronized flooding of link-state updates.",
+    "Dijkstra’s algorithm guarantees identical network topology knowledge across all nodes using synchronized link-state advertisement flooding.",
+    "The algorithm ensures identical network topology information at all nodes through synchronized flooding of link-state data.",
+    "Dijkstra’s link-state routing makes all nodes have the same network topology info by flooding link-state advertisements synchronously.",
+    "All nodes maintain the same network topology knowledge using synchronized flooding of link-state advertisements in Dijkstra’s algorithm."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.011
+  }
  },
  {
   "id": "cn.error_detection.hard2",
@@ -4414,13 +5045,41 @@
     "point": "Peer-to-peer networks are self-scalable because new peers add service capacity.",
     "quote": "self scalability – new peers bring new service capacity, and new",
     "followup": "What happens to the system's capacity when a new peer joins in a P2P network?",
-    "followup_answer": "The system's capacity increases because the new peer can both request and provide service."
+    "followup_answer": "The system's capacity increases because the new peer can both request and provide service.",
+    "variants": [
+     "when a peer joins p2p, it helps handle more requests",
+     "p2p scales because each new peer contributes to the network",
+     "adding a peer in p2p increases the system's service capacity",
+     "p2p networks grow by letting new peers help serve others",
+     "each new peer in p2p makes the system more scalable"
+    ],
+    "followup_replies": [
+     "it increases",
+     "the system's capacity grows",
+     "it doubles",
+     "the system can handle more requests",
+     "it scales"
+    ]
    },
    {
     "point": "In P2P, peers can both request and provide service, unlike in client-server.",
     "quote": "peers request service from other peers, provide service in",
     "followup": "How does a peer in a P2P network differ from a client in a client-server model?",
-    "followup_answer": "A peer in a P2P network can both request and provide service, whereas a client in a client-server model only requests service."
+    "followup_answer": "A peer in a P2P network can both request and provide service, whereas a client in a client-server model only requests service.",
+    "variants": [
+     "peers in p2p can both send and receive data",
+     "in p2p, each peer acts as both client and server",
+     "p2p peers are not just requesters, they also provide service",
+     "peers in p2p can serve and request data",
+     "p2p allows peers to act as servers too"
+    ],
+    "followup_replies": [
+     "it can both request and provide service",
+     "it serves and requests",
+     "it acts as both client and server",
+     "it can provide and request",
+     "it's not just a client"
+    ]
    }
   ],
   "source_pages": [
@@ -4450,7 +5109,19 @@
   "quality_note": "fine; not hard (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "In a peer-to-peer network, the system scales by allowing each new peer to act as both client and server.",
+   "variants": [
+    "In a peer-to-peer network, each new peer functions as both a client and a server, enabling system scaling.",
+    "Peer-to-peer networks scale by letting each new peer serve and request resources simultaneously.",
+    "System scaling in peer-to-peer occurs when each new peer can both request and provide services.",
+    "Peer-to-peer scaling is achieved by having each new peer act as a client and a server.",
+    "In peer-to-peer, system scaling happens because each new peer can serve as both a client and a server."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.997
+  }
  },
  {
   "id": "cn.ftp.medium2",
@@ -4819,19 +5490,59 @@
     "point": "The seven layers are physical, data link, network, transport, session, presentation and application.",
     "quote": "On the left is the OSI Model, which consists of seven layers: Application, Presentation, Session, Transport, Network, Data link, and Physical.",
     "followup": "Which layer sits directly above the transport layer in the OSI model?",
-    "followup_answer": "The session layer."
+    "followup_answer": "The session layer.",
+    "variants": [
+     "the seven layers are physical, data link, network, transport, session, presentation, and application",
+     "physical, data link, network, transport, session, presentation, application are the seven layers",
+     "the osi model has seven layers: physical, data link, network, transport, session, presentation, and application",
+     "the network layer is above the data link layer and below the transport layer",
+     "the session layer is directly above the transport layer in the osi model",
+     "the session layer sits on top of the transport layer in the osi model"
+    ],
+    "followup_replies": [
+     "session",
+     "session layer",
+     "the session layer",
+     "layer 5"
+    ]
    },
    {
     "point": "The network layer routes data across different networks using IP addresses.",
     "quote": "The third layer of the OSI model, responsible for routing data across different networks. It uses IP addresses to identify destinations.",
     "followup": "Which layer decides the route a packet takes through the routers?",
-    "followup_answer": "The network layer."
+    "followup_answer": "The network layer.",
+    "variants": [
+     "the network layer routes data across different networks using ip addresses",
+     "the network layer handles routing between different networks using ip",
+     "the network layer is responsible for routing packets between networks",
+     "the network layer uses ip addresses to route packets from source to destination",
+     "the network layer determines the path packets take through different networks",
+     "the network layer sends packets from one network to another using ip addresses"
+    ],
+    "followup_replies": [
+     "network layer",
+     "network",
+     "layer 3"
+    ]
    },
    {
     "point": "The transport layer provides end-to-end communication between applications, with flow control and error recovery.",
     "quote": "The fourth layer of the OSI model, responsible for end-to-end communication between applications. It provides services such as flow control and error recovery.",
     "followup": "Which OSI layer do TCP and UDP belong to?",
-    "followup_answer": "The transport layer."
+    "followup_answer": "The transport layer.",
+    "variants": [
+     "the transport layer provides end-to-end communication between applications",
+     "transport layer handles communication between applications with flow control and error recovery",
+     "the transport layer ensures data is sent reliably between applications",
+     "transport layer provides flow control and error recovery for end-to-end communication",
+     "the transport layer manages communication between applications with error recovery",
+     "the transport layer ensures data is delivered correctly between applications"
+    ],
+    "followup_replies": [
+     "transport",
+     "transport layer",
+     "layer 4"
+    ]
    }
   ],
   "source_pages": [
@@ -4854,7 +5565,19 @@
   "curated": true,
   "repairs": [
    "batch7_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The OSI model's network layer routes data between networks, and the transport layer ensures reliable end-to-end data transfer.",
+   "variants": [
+    "The network layer in OSI routes data between networks, while the transport layer ensures reliable end-to-end delivery.",
+    "OSI's network layer handles routing between networks, and the transport layer manages reliable data transfer between hosts.",
+    "In the OSI model, the network layer routes data across networks, and the transport layer guarantees reliable end-to-end communication.",
+    "The OSI network layer routes data between networks, and the transport layer ensures reliable, end-to-end data transfer.",
+    "OSI's network layer is responsible for routing data between networks, and the transport layer ensures reliable end-to-end delivery."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.04
+  }
  },
  {
   "id": "cn.tcp_ip_model.easy1",
@@ -4872,19 +5595,62 @@
     "point": "TCP/IP has fewer layers than OSI's seven: application, transport, network and link/physical.",
     "quote": "On the right is the TCP/IP Protocol Suite, which has four layers: Application, Transport, Network, and Physical.",
     "followup": "Which TCP/IP layer does IP belong to?",
-    "followup_answer": "The network (internet) layer."
+    "followup_answer": "The network (internet) layer.",
+    "variants": [
+     "the tcp/ip model has four layers instead of seven like osi",
+     "osi has seven layers, but tcp/ip has only four: app, transport, network, and link",
+     "the internet uses a tcp/ip model with fewer layers than osi",
+     "tcp/ip layers are application, transport, network, and physical",
+     "the tcp/ip model groups some osi layers together"
+    ],
+    "followup_replies": [
+     "network",
+     "internet",
+     "network layer",
+     "the network layer",
+     "network (internet) layer"
+    ]
    },
    {
     "point": "TCP/IP has no separate session and presentation layers.",
     "quote": "Internet stack “missing” these layers!",
     "followup": "Which two OSI layers are missing from the TCP/IP model?",
-    "followup_answer": "The session and presentation layers."
+    "followup_answer": "The session and presentation layers.",
+    "variants": [
+     "tcp/ip doesn't have session or presentation layers",
+     "session and presentation are merged in tcp/ip",
+     "the session and presentation layers are missing from tcp/ip",
+     "tcp/ip skips the session and presentation layers",
+     "the tcp/ip model doesn't have separate session or presentation layers"
+    ],
+    "followup_replies": [
+     "session",
+     "presentation",
+     "session and presentation",
+     "session layer",
+     "presentation layer"
+    ]
    },
    {
     "point": "Session and presentation services, such as encryption or compression, are handled by the application if needed.",
     "quote": "presentation: allow applications to interpret meaning of data, (e.g., encryption,",
     "followup": "In the Internet stack, who takes care of encryption if an application needs it?",
-    "followup_answer": "The application itself, at the application layer."
+    "followup_answer": "The application itself, at the application layer.",
+    "variants": [
+     "encryption and compression are handled by the application in tcp/ip",
+     "the application layer does encryption if needed",
+     "tcp/ip leaves encryption to the application",
+     "the app layer takes care of encryption",
+     "applications handle encryption in tcp/ip",
+     "if encryption is needed, the app does it"
+    ],
+    "followup_replies": [
+     "application",
+     "app layer",
+     "application itself",
+     "the application",
+     "application layer"
+    ]
    }
   ],
   "source_pages": [
@@ -4907,6 +5673,18 @@
   "curated": true,
   "repairs": [
    "batch7_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The TCP/IP model differs from the OSI model by combining layers into fewer, more functionally integrated groups.",
+   "variants": [
+    "The TCP/IP model groups layers into fewer, more integrated functions compared to the OSI model.",
+    "TCP/IP combines layers into fewer groups than the OSI model, making it more functionally integrated.",
+    "The TCP/IP model has fewer, more integrated layers than the OSI model, differing in structure.",
+    "TCP/IP integrates layers into fewer groups than OSI, differing in its layered structure.",
+    "The TCP/IP model differs from OSI by having fewer, more integrated layers than the OSI model."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.009
+  }
  }
 ]

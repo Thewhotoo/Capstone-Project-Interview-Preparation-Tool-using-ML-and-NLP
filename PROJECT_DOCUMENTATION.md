@@ -293,7 +293,7 @@ sequenceDiagram
 Flow invariants:
 1. The **raw resume is read exactly once per upload**, by the engine. The parsed `CandidateProfile` is stored on the `Resume` row and reused for every later interview; nothing downstream re-reads the file (architecture principle NFR6).
 2. **No network call after upload.** The discussion, evaluation and coaching all run locally (the first run downloads the SBERT/NLI models from Hugging Face).
-3. **Evaluation never changes what is asked next** in v2. Results are appended to the ledger and returned, and the planner order is unconditional.
+3. **Evaluation changes what is asked next only through adaptive follow-ups** (since 2026-10-26): a weak-but-real answer (0.15–0.60) gets one deeper probe on the same topic, at most once per project and twice per interview. The planner's topic order itself never depends on scores.
 4. **Every answered turn is persisted before the response returns.** Interrupted sessions keep their answers and are marked `abandoned`.
 5. **Users only ever see their own data.** Every query filters by `current_user`; other users' ids answer 404.
 
@@ -1669,7 +1669,7 @@ The code has no literal `TODO` markers. The items below come from docstrings, co
 **Architecture and runtime**
 1. **Multiple workers need production mode** (§4.26). With the default memory live store, live interviews are per-process and end on restart. (Fixed 2026-10-15: profile sessions used to be kept forever; every live record now expires after 2 h.) The legacy v1 discussion engine and the RAG pool still keep their own in-memory state; neither is used by the UI.
 2. **No CI yet.** Production mode runs with `docker compose up` (§3.6), but tests are run by hand, and a deployment others can reach needs HTTPS in front of it (the browser allows the webcam only on HTTPS or `localhost`).
-3. **No login rate limiting, and no email verification yet.** `email_verified` exists but nothing checks it.
+3. **No email verification yet.** `email_verified` exists but nothing checks it. (Login rate limiting added 2026-10-27: 5 failed logins per email or 20 per IP address within 15 minutes lock further attempts until the window passes; counted in the live store, so it holds across workers.)
 4. **Some model weights are absent:** the old Experiment 4 `deployed_model/best_checkpoint_weights.pt` and the resume-classifier `bert_resume_model/`. The production Round 1 weights are in Git LFS; a clone made without Git LFS runs on the heuristic evaluator. (Startup now detects the missing weights and skips the DeBERTa download.)
 5. **Client-side enforcement.** The session-integrity rules and the attention monitoring can be bypassed with DevTools, and the backend trusts the sanitised integrity record.
 6. **The two rounds of a full interview aren't linked in the database.** Sessions lists them as two entries, and the combined results exist only live at the end of the interview.
@@ -1727,9 +1727,9 @@ The code has no literal `TODO` markers. The items below come from docstrings, co
 **Frontend**
 
 26. ~~Speech warnings can talk over Resume Discussion dictation~~ **Fixed 2026-09-30:** `speakAttentionWarning` mutes while either microphone is on (`isRecording` or `rdIsRecording`).
-27. **Technical round gaps:** `loadQuestion` and `handleSubmission` have no try/catch (a network error leaves the typing indicator up), and `#subject-select` on the practice setup screen is never read.
+27. *(Resolved: the question-bank technical round keeps a failed answer in the box and shows an error; the old practice screen was removed.)*
 28. *(Resolved 2026-10-25: the legacy `/api/evaluate` route was removed, §4.14.)*
-29. **Resume Discussion error handling:** `rdShowStageError` is a dead end with no retry button. A reply racing with termination can show a turn with grade "n/a".
+29. **Resume Discussion error handling:** a network failure while sending an answer now keeps the question on screen and puts the answer back in the box to resend (2026-10-27); a server-side error still shows the error message. If the server processed the answer but the reply was lost, resending answers the next question. A reply racing with termination can show a turn with grade "n/a".
 30. **The single 9,300-line `index.html`** holds all CSS, markup and JS, which is hard to maintain. The practice setup screen (`#subject-selection-section`) still uses the older, pre-redesign styling.
 
 **Supporting subsystems**

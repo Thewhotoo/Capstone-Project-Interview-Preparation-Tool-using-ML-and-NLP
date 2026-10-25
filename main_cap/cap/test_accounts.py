@@ -210,6 +210,23 @@ class TestLoginLogout(AccountsTestCase):
         self.assertEqual(unknown.status_code, 401)
         self.assertEqual(wrong.get_json(), unknown.get_json())
 
+    def test_repeated_failed_logins_are_locked_out(self):
+        from account_routes import MAX_FAILED_LOGINS_PER_EMAIL
+        for _ in range(MAX_FAILED_LOGINS_PER_EMAIL):
+            self.assertEqual(self.login(password="wrong123").status_code, 401)
+        locked = self.login()   # even the right password waits out the lockout
+        self.assertEqual(locked.status_code, 429)
+        self.assertIn("Too many failed attempts", locked.get_json()["error"])
+
+    def test_a_successful_login_clears_the_failed_count(self):
+        from account_routes import MAX_FAILED_LOGINS_PER_EMAIL
+        for _ in range(MAX_FAILED_LOGINS_PER_EMAIL - 1):
+            self.login(password="wrong123")
+        self.assertEqual(self.login().status_code, 200)
+        self.client.post("/api/auth/logout")
+        for _ in range(MAX_FAILED_LOGINS_PER_EMAIL - 1):
+            self.assertEqual(self.login(password="wrong123").status_code, 401)
+
     def test_disabled_account_cannot_log_in(self):
         def disable():
             db.session.scalars(db.select(User)).one().is_active = False

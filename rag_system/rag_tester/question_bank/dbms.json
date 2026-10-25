@@ -3569,11 +3569,17 @@
     "followup": "What happens if you don't use GROUP BY when you have multiple values in a column?",
     "followup_answer": "The query would return a single group containing all tuples, and aggregate functions would apply to the entire relation, not to individual groups.",
     "followup_replies": [
-     "it returns all data as one group.",
-     "all rows are grouped together.",
-     "no grouping, so no separate summaries.",
-     "the entire table is treated as a single group.",
-     "aggregate functions apply to the whole table."
+     "no grouping, all data in one group.",
+     "it returns one row with all data.",
+     "aggregate functions apply to the whole table.",
+     "no group by means no separate groups.",
+     "without group by, you get one big group."
+    ],
+    "variants": [
+     "group by splits the data into groups with same values.",
+     "it groups rows that have the same grouping attributes.",
+     "the group by clause organizes rows into groups with matching values.",
+     "group by partitions the table into groups with identical grouping values."
     ]
    },
    {
@@ -3582,18 +3588,40 @@
     "followup": "Why can't you apply an aggregate function to a non-grouped column in the SELECT clause?",
     "followup_answer": "Because the aggregate function would need to operate on a group, and without GROUP BY, there is no grouping structure to apply the function to.",
     "followup_replies": [
-     "because there's no grouping, the function has no group to operate on.",
-     "no grouping means no way to apply the function to a group.",
-     "without group by, the function has no context.",
-     "you can't apply it to a column not in the group.",
-     "it needs a group to work on, which group by provides."
+     "because there's no grouping structure.",
+     "no group by means no grouping to apply to.",
+     "you can't group without group by.",
+     "no grouping, so no per-group function.",
+     "aggregate functions need groups to work on."
+    ],
+    "variants": [
+     "aggregate functions are calculated for each group.",
+     "each group gets its own aggregate result.",
+     "group by computes aggregates per group.",
+     "sum, count, and avg are done per group.",
+     "the group by clause allows per-group aggregation.",
+     "aggregates are applied to each group separately."
     ]
    },
    {
     "point": "SELECT may contain only grouping attributes and aggregate functions.",
     "quote": "The SELECT clause must contain only the grouping attributes and aggregate functions applied on each group of tuples.",
     "followup": "Must a grouping attribute appear in SELECT?",
-    "followup_answer": "No, the query still works, but then the output does not show which group each row belongs to."
+    "followup_answer": "No, the query still works, but then the output does not show which group each row belongs to.",
+    "variants": [
+     "select can only have grouped columns or aggregates.",
+     "you can only choose grouping attributes or functions.",
+     "group by restricts select to grouped columns and functions.",
+     "select must include grouping columns or aggregate functions.",
+     "group by limits select to grouped columns and aggregate results."
+    ],
+    "followup_replies": [
+     "no, you can leave them out.",
+     "not required, but useful for identifying groups.",
+     "optional, but helpful for output.",
+     "you can exclude them if you don't need group info.",
+     "grouping columns don't have to be in select."
+    ]
    }
   ],
   "source_pages": [
@@ -3623,25 +3651,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "The GROUP BY clause partitions rows into groups based on grouping attributes, allowing aggregate functions to operate on each group.",
-   "variants": [
-    "A group by clause divides rows into groups using grouping attributes so aggregate functions can process each group.",
-    "Group by organizes rows into groups by grouping attributes, enabling aggregate functions to compute per-group results.",
-    "Group by partitions data into groups based on grouping attributes, allowing aggregate functions to calculate values for each group.",
-    "Group by clause groups rows using grouping attributes, which lets aggregate functions operate on each group separately.",
-    "Group by clause groups rows by grouping attributes, enabling aggregate functions to compute results for each group."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.991
-  },
   "quality_score": 8,
   "quality_note": "false premise (grouping columns must be in SELECT) reworded; follow-up answer fixed (repair 6)",
   "curated": true,
   "interview_priority": 3,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The GROUP BY clause groups rows with the same values in specified columns, allowing aggregate functions to operate on each group.",
+   "variants": [
+    "A grouped query uses GROUP BY to group rows by column values, enabling aggregate functions on each group.",
+    "Grouping rows by specified columns with GROUP BY lets aggregate functions calculate per-group results.",
+    "GROUP BY organizes rows into groups based on column values, so aggregate functions apply to each group.",
+    "A grouped query groups rows by column values using GROUP BY, allowing aggregate functions to act on each group.",
+    "GROUP BY arranges rows into groups by column values, enabling aggregate functions to compute results per group."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.041
+  }
  },
  {
   "id": "dbms.entities_and_attributes.easy1",
@@ -3659,13 +3687,38 @@
     "point": "A primary key is a set of attributes that uniquely identifies each entity in an entity set.",
     "quote": "Key for an entity is a set of attributes that distinguish entities.",
     "followup": "Give an example of a primary key in a university database.",
-    "followup_answer": "The ID attribute of the student entity set, because no two students share the same ID."
+    "followup_answer": "The ID attribute of the student entity set, because no two students share the same ID.",
+    "variants": [
+     "a primary key is a set of attributes that uniquely identifies each entity in an entity set.",
+     "the primary key is the unique identifier for each entity in the set.",
+     "you use a primary key to make sure no two entities have the same value.",
+     "the primary key ensures each entity has a unique combination of attributes.",
+     "to uniquely identify entities, you pick a primary key from the set.",
+     "the primary key is what makes each entity in the set distinct."
+    ],
+    "followup_replies": [
+     "student id"
+    ]
    },
    {
     "point": "The primary key is the candidate key chosen to identify the entities.",
     "quote": "Concepts of superkey, candidate key, and primary key apply to entity sets.",
     "followup": "What is the difference between a superkey and a candidate key?",
-    "followup_answer": "A superkey is any set of attributes that uniquely identifies an entity; a candidate key is a minimal superkey, with no extra attributes."
+    "followup_answer": "A superkey is any set of attributes that uniquely identifies an entity; a candidate key is a minimal superkey, with no extra attributes.",
+    "variants": [
+     "the primary key is the candidate key that you choose for the entity set.",
+     "you pick one candidate key to be the primary key for the entity set.",
+     "the primary key is the chosen candidate key from the set of possible ones.",
+     "the primary key is the candidate key that's selected as the main identifier.",
+     "the primary key is the candidate key that becomes the main key for the entity."
+    ],
+    "followup_replies": [
+     "superkey has extra attributes, candidate key is minimal.",
+     "candidate key is a minimal superkey.",
+     "superkey can have more attributes than needed.",
+     "candidate key is the smallest set that uniquely identifies.",
+     "superkey is not minimal, candidate key is."
+    ]
    }
   ],
   "source_pages": [
@@ -3702,25 +3755,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "A primary key is a unique attribute or set of attributes that identifies each distinct entity in an entity set.",
-   "variants": [
-    "A primary key is a unique identifier for each entity in an entity set.",
-    "A primary key uniquely identifies every entity in an entity set.",
-    "An entity set's primary key uniquely identifies each entity.",
-    "Each entity in an entity set is uniquely identified by the primary key.",
-    "A primary key ensures each entity in an entity set is uniquely identifiable."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.986
-  },
   "quality_score": 8,
   "quality_note": "duplicate points merged; candidate-key point added (repair 4)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch4_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A primary key is a unique attribute or set of attributes that identifies each distinct entity in an entity set.",
+   "variants": [
+    "A primary key is a unique identifier for each entity in an entity set.",
+    "A primary key uniquely identifies every entity within an entity set.",
+    "Each entity in an entity set is uniquely identified by the primary key.",
+    "An entity set's primary key uniquely identifies each of its entities.",
+    "The primary key is the unique identifier for all entities in an entity set."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.988
+  }
  },
  {
   "id": "dbms.stored_procedures_and_functions.medium2",
@@ -3945,11 +3998,19 @@
     "followup": "What happens if one operand is NULL and the other is a valid number in an arithmetic operation?",
     "followup_answer": "The result of the operation is NULL because the presence of NULL indicates an unknown value, and arithmetic with an unknown value cannot yield a known result.",
     "followup_replies": [
-     "null",
-     "it returns null",
-     "the result is null",
+     "it's null",
+     "the result is unknown",
      "you get null",
-     "it's null"
+     "it's not a valid number",
+     "the outcome is null"
+    ],
+    "variants": [
+     "arithmetic with null gives null because it's unknown",
+     "if any operand is null, the result is null",
+     "sql treats null like an unknown value in math",
+     "null in arithmetic means the result is also null",
+     "when you add null to a number, you get null",
+     "null in math operations makes the whole thing null"
     ]
    },
    {
@@ -3958,26 +4019,40 @@
     "followup": "Why is it problematic to treat NULL as a regular value in arithmetic operations?",
     "followup_answer": "Treating NULL as a regular value would introduce uncertainty into the result, making it impossible to determine the correctness of the arithmetic outcome.",
     "variants": [
-     "null means the value is missing or unknown.",
-     "null stands for missing or unknown data.",
-     "null represents an unknown or missing value.",
-     "in sql, null is an unknown or missing value.",
-     "null is used for unknown or missing data.",
-     "sql uses null to show missing or unknown values."
+     "null means missing or unknown data",
+     "null represents an unknown value in sql",
+     "it's like a placeholder for missing info",
+     "sql uses null to show incomplete data",
+     "null stands for an unknown or missing value",
+     "null is for when data isn't available"
     ],
     "followup_replies": [
-     "it creates uncertainty",
-     "uncertainty in the result",
-     "makes the result uncertain",
-     "introduces uncertainty",
-     "uncertain outcome"
+     "it introduces uncertainty",
+     "you can't know the result",
+     "it makes the result unreliable",
+     "it breaks the calculation",
+     "it's not a real number"
     ]
    },
    {
     "point": "A comparison with NULL gives UNKNOWN, not TRUE or FALSE.",
     "quote": "In other words, any comparison operation involving NULL values would result in an UNKNOWN.",
     "followup": "Why does WHERE salary = NULL return no rows, and what should you write instead?",
-    "followup_answer": "salary = NULL is UNKNOWN for every row and WHERE keeps only TRUE rows; write salary IS NULL instead."
+    "followup_answer": "salary = NULL is UNKNOWN for every row and WHERE keeps only TRUE rows; write salary IS NULL instead.",
+    "variants": [
+     "null in a comparison makes it unknown",
+     "sql comparisons with null return unknown",
+     "you can't say if something is less than null",
+     "null comparisons don't evaluate to true",
+     "null in a where clause is treated as unknown"
+    ],
+    "followup_replies": [
+     "it returns no rows",
+     "use is null instead",
+     "you need to check for null",
+     "it's not a valid comparison",
+     "you should use is null"
+    ]
    }
   ],
   "source_pages": [
@@ -4002,25 +4077,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "SQL treats NULL values in arithmetic operations as unknown, resulting in NULL output.",
-   "variants": [
-    "A NULL value in an arithmetic operation in SQL results in NULL.",
-    "When SQL performs arithmetic with NULL, the result is NULL.",
-    "In SQL, any arithmetic operation involving NULL yields NULL.",
-    "SQL arithmetic operations with NULL produce a NULL result.",
-    "A NULL operand in SQL arithmetic leads to a NULL result."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.996
-  },
   "quality_score": 8,
   "quality_note": "thin question widened to comparisons; generic point replaced by UNKNOWN (repair 4)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch4_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "SQL treats NULL as unknown, so arithmetic operations with NULL yield NULL and comparisons with NULL always evaluate to UNKNOWN.",
+   "variants": [
+    "A NULL value in SQL is treated as unknown, making arithmetic operations with it result in NULL and comparisons yield UNKNOWN.",
+    "In SQL, NULL represents unknown, so arithmetic operations involving it return NULL and comparisons result in UNKNOWN.",
+    "SQL handles NULL as unknown, leading arithmetic operations with it to produce NULL and comparisons to evaluate as UNKNOWN.",
+    "When SQL encounters NULL, it treats it as unknown, causing arithmetic operations to return NULL and comparisons to be UNKNOWN.",
+    "In SQL, NULL is considered unknown, so arithmetic operations with it result in NULL and comparisons evaluate to UNKNOWN."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.958
+  }
  },
  {
   "id": "dbms.set_operations_in_sql.medium2",
@@ -4135,17 +4210,40 @@
     "followup_answer": "It violates the participation constraint, meaning the database design is invalid under that rule.",
     "followup_replies": [
      "it violates the constraint",
-     "database design is invalid",
-     "constraint is broken",
-     "it's not allowed",
-     "database is invalid"
+     "the design is invalid",
+     "it breaks the rule",
+     "constraint violation",
+     "database design is wrong"
+    ],
+    "variants": [
+     "total participation means every entity has to be in at least one relationship",
+     "if an entity isn't in a relationship, total participation is broken",
+     "in total participation, all entities must be part of a relationship",
+     "every entity in the set must be connected to a relationship",
+     "total participation requires all entities to take part in a relationship",
+     "you can't have an entity that's not in a relationship if it's total participation"
     ]
    },
    {
     "point": "Total participation is drawn as a double line between the entity set and the relationship.",
     "quote": "We indicate the total participation of an entity in a relationship set using double lines.",
     "followup": "What is the opposite of total participation? Give an example.",
-    "followup_answer": "Partial participation: some entities need not take part, for example an instructor need not advise any student."
+    "followup_answer": "Partial participation: some entities need not take part, for example an instructor need not advise any student.",
+    "variants": [
+     "total participation is shown with a double line in the diagram",
+     "the double line shows that all entities must be involved",
+     "in the er diagram, total participation is a double line",
+     "double line means all entities are required",
+     "you draw a double line for total participation",
+     "double line indicates full participation"
+    ],
+    "followup_replies": [
+     "partial participation",
+     "some entities don't need to be in the relationship",
+     "instructors don't have to advise students",
+     "partial participation is the opposite",
+     "some entities can be left out"
+    ]
    }
   ],
   "source_pages": [
@@ -4168,25 +4266,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "Total participation means all entities in a relationship must participate.",
-   "variants": [
-    "All entities in a relationship must participate.",
-    "Every entity in the relationship must participate.",
-    "All entities are required to participate in the relationship.",
-    "Each entity in the relationship must participate.",
-    "All entities must be part of the relationship."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.998
-  },
   "quality_score": 8,
   "quality_note": "double-line point the reference failed reworded; partial participation as a follow-up (repair 4)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch4_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Total participation means all entities in a relationship must participate.",
+   "variants": [
+    "All entities in a relationship must participate.",
+    "Every entity in a relationship is required to participate.",
+    "All entities are required to be part of the relationship.",
+    "Each entity in the relationship must participate.",
+    "All entities must be involved in the relationship."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.996
+  }
  },
  {
   "id": "dbms.functional_dependency.hard2",
@@ -4596,7 +4694,21 @@
     "point": "2PL has a growing phase that only acquires locks, then a shrinking phase that only releases them.",
     "quote": "Phase 1: Growing Phase :A transaction may obtain locks, but may not release any lock. Phase 2: Shrinking Phase : A transaction may release locks, but may not obtain any new locks",
     "followup": "What does following 2PL guarantee?",
-    "followup_answer": "Conflict-serializable schedules."
+    "followup_answer": "Conflict-serializable schedules.",
+    "variants": [
+     "two-phase locking has a phase where you get locks and a phase where you release them",
+     "the two-phase protocol splits lock operations into getting and releasing",
+     "in 2pl, you first acquire all locks then release them one by one",
+     "the two-phase locking mechanism has a growing and shrinking phase",
+     "the two-phase approach ensures you get locks first, then release them"
+    ],
+    "followup_replies": [
+     "conflict-serializable",
+     "it guarantees serializability",
+     "conflict serializable schedules",
+     "it ensures conflict serializability",
+     "conflict serializable"
+    ]
    },
    {
     "point": "2PL does not prevent deadlocks.",
@@ -4604,11 +4716,16 @@
     "followup": "Why does the Two-Phase Locking protocol not prevent deadlocks?",
     "followup_answer": "Because transactions may hold locks and wait for other locks, creating a cycle that leads to a deadlock.",
     "followup_replies": [
-     "because they can wait for each other",
-     "they can hold locks and wait for others",
-     "it creates a cycle",
-     "they can form a deadlock cycle",
-     "it allows for circular wait"
+     "because they can hold locks and wait for others",
+     "they can wait for locks held by others",
+     "they can hold and wait for locks",
+     "they can hold locks and wait"
+    ],
+    "variants": [
+     "two-phase locking doesn't stop deadlocks from happening",
+     "deadlocks can still occur even with two-phase locking",
+     "2pl doesn't prevent cycles in lock requests",
+     "two-phase locking can't stop deadlocks"
     ]
    },
    {
@@ -4617,11 +4734,19 @@
     "followup": "What is the role of the lock manager in deadlock resolution?",
     "followup_answer": "The lock manager maintains a lock table and detects cycles in lock requests, which allows it to roll back a transaction to resolve a deadlock.",
     "followup_replies": [
-     "it tracks lock requests",
-     "it detects cycles",
-     "it manages locks",
-     "it resolves deadlocks",
-     "it maintains the lock table"
+     "detect cycles in the lock table",
+     "lock manager detects cycles",
+     "it detects cycles in lock requests",
+     "lock manager tracks lock dependencies",
+     "it tracks lock dependencies"
+    ],
+    "variants": [
+     "deadlocks are resolved by rolling back a transaction",
+     "when a deadlock happens, a transaction is rolled back",
+     "deadlock resolution involves rolling back a transaction",
+     "the system detects deadlocks and rolls back a tx",
+     "deadlock handling uses transaction rollback",
+     "deadlocks are handled by rolling back a transaction"
     ]
    }
   ],
@@ -4653,25 +4778,25 @@
    "coverage": 0.85
   },
   "active": true,
-  "core_point": {
-   "point": "Two-Phase Locking (2PL) prevents deadlocks by ensuring all locks are acquired before any are released.",
-   "variants": [
-    "Two-Phase Locking (2PL) prevents deadlocks by requiring all locks to be acquired before any are released.",
-    "Two-Phase Locking (2PL) prevents dead,locks by first acquiring all locks and then releasing them.",
-    "Two-Phase Locking (2PL) prevents deadlocks by ensuring all locks are obtained before any are relinquished.",
-    "Two-Phase Locking (2PL) prevents deadlocks by first acquiring all locks and then releasing them all.",
-    "Two-Phase Locking (2PL) prevents deadlocks by requiring all locks to be acquired before any can be released."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.0
-  },
   "quality_score": 8,
   "quality_note": "trick premise (2PL prevents deadlock) reworded; follow-up fixed (repair 6)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Two-phase locking prevents deadlocks by ensuring all locks are acquired before any are released.",
+   "variants": [
+    "Two-phase locking prevents deadlocks by requiring all locks to be acquired before any are released.",
+    "Two-phase locking prevents deadlocks through a growing phase where locks are acquired and a shrinking phase where they are released.",
+    "Two-phase locking prevents deadlocks by first acquiring all necessary locks and then releasing them.",
+    "Two-phase locking prevents deadlocks by ensuring all locks are acquired in the first phase and released in the second.",
+    "Two-phase locking prevents deadlocks by requiring a phase of acquiring locks followed by a phase of releasing them."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.003
+  }
  },
  {
   "id": "dbms.weak_entity_sets.medium1",
@@ -4689,7 +4814,22 @@
     "point": "A weak entity is identified by its owner's primary key plus its own discriminator.",
     "quote": "Instead of associating a primary key with a weak entity, we use the primary key of the identifying entity, along with extra attributes, called discriminator attributes to uniquely identify a weak entity.",
     "followup": "How is a weak entity set drawn in an ER diagram?",
-    "followup_answer": "As a double rectangle, with the discriminator underlined with a dashed line."
+    "followup_answer": "As a double rectangle, with the discriminator underlined with a dashed line.",
+    "variants": [
+     "a weak entity needs its owner's key to be identified",
+     "you use the owner's primary key plus your own to find a weak entity",
+     "the owner's key and your discriminator together make your key",
+     "weak entities are identified by combining the owner's key with their own attribute",
+     "the owner's primary key plus a discriminator is how you find a weak entity",
+     "you need the owner's key to identify a weak entity"
+    ],
+    "followup_replies": [
+     "double rectangle",
+     "double box",
+     "double rectangle with dashed line",
+     "double box and dashed underlining",
+     "double rectangle, dashed underlined discriminator"
+    ]
    },
    {
     "point": "It cannot exist or be identified without its owner, so every weak entity must have one.",
@@ -4697,11 +4837,19 @@
     "followup": "What is the purpose of the dashed line underlining the discriminator?",
     "followup_answer": "It indicates that the discriminator is a unique attribute used to distinguish between instances of the weak entity set.",
     "followup_replies": [
-     "it helps distinguish between instances.",
-     "it's a unique attribute.",
-     "it's used to differentiate instances.",
-     "it's a unique identifier for the weak entity.",
-     "it helps identify each instance."
+     "it shows the discriminator is unique",
+     "it marks the unique attribute",
+     "it highlights the unique identifier",
+     "it underlines the unique attribute",
+     "it indicates the unique attribute"
+    ],
+    "variants": [
+     "a weak entity can't exist without its owner",
+     "you need the owner to identify a weak entity",
+     "without the owner, a weak entity can't be found",
+     "the owner is required for a weak entity to exist",
+     "a weak entity depends on its owner for identification",
+     "you can't have a weak entity without its owner"
     ]
    },
    {
@@ -4710,16 +4858,18 @@
     "followup": "Why is total participation required for a weak entity set?",
     "followup_answer": "Because the existence of a weak entity depends entirely on the identifying entity set, ensuring that every instance of the weak entity is associated with an instance of the identifying entity.",
     "variants": [
-     "total participation ensures the weak entity is linked to an identifier.",
-     "a weak entity can't exist without its identifying entity.",
-     "the identifying entity must be linked to every weak entity instance."
+     "a weak entity must be connected to its owner",
+     "every weak entity has to be part of the identifying relationship",
+     "weak entities can't exist without being linked to their owner",
+     "total participation ensures weak entities are always attached to their owner",
+     "without total participation, a weak entity can't exist"
     ],
     "followup_replies": [
-     "because it depends on the identifying entity.",
-     "to ensure it's always linked.",
-     "it needs to be associated with an identifier.",
-     "it can't exist without the identifier.",
-     "it must be connected to the identifier."
+     "to ensure every weak entity is linked to an owner",
+     "because the weak entity depends on the owner",
+     "so every weak entity is associated with an owner",
+     "to guarantee the weak entity is always connected",
+     "so the weak entity is always part of the relationship"
     ]
    }
   ],
@@ -4754,25 +4904,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "A weak entity set is identified by a discriminator and must have total participation in its identifying relationship to ensure its existence depends entirely on the strong entity.",
-   "variants": [
-    "A weak entity set is identified with a discriminator and requires total participation in its identifying relationship to exist solely based on the strong entity.",
-    "A weak entity set is identified through a discriminator and must have total participation in its identifying relationship to depend entirely on the strong entity.",
-    "A weak entity set is identified by a discriminator and needs total participation in its identifying relationship to exist only when the strong entity exists.",
-    "A weak entity set is identified using a discriminator and must have total participation in its identifying relationship to ensure its existence is tied to the strong entity.",
-    "A weak entity set is identified with a discriminator and requires total participation in its identifying relationship to exist only in relation to the strong entity."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.977
-  },
   "quality_score": 8,
   "quality_note": "diagram-notation trivia replaced by why a weak entity needs an owner (repair 6)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "a weak entity set must have total participation in its identifying relationship to ensure its existence depends entirely on the owner entity.",
+   "variants": [
+    "a weak entity set requires total participation in its identifying relationship to exist solely based on the owner entity.",
+    "a weak entity set has total participation in its identifying relationship to guarantee its existence is dependent on the owner entity.",
+    "a weak entity set must be totally participative in its identifying relationship to exist only when the owner entity exists.",
+    "a weak entity set needs total participation in its identifying relationship to ensure it cannot exist without the owner entity.",
+    "a weak entity set has total participation in its identifying relationship to ensure its existence is contingent on the owner entity."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.126
+  }
  },
  {
   "id": "dbms.lossless_decomposition.medium1",
@@ -4792,18 +4942,37 @@
     "followup": "What happens if the decomposition is not lossless?",
     "followup_answer": "Spurious tuples may be introduced, leading to incorrect or incomplete data when the relations are joined back together.",
     "followup_replies": [
-     "spurious tuples appear.",
-     "data is wrong or missing.",
-     "join creates fake rows.",
-     "data is incomplete.",
-     "incorrect data is generated."
+     "spurious tuples are created.",
+     "you get extra rows.",
+     "data is incorrect.",
+     "it's lossy.",
+     "wrong results."
+    ],
+    "variants": [
+     "joining r1 and r2 gives back the original r.",
+     "natural join of r1 and r2 reconstructs r.",
+     "if you join r1 and r2, you get the original table.",
+     "lossless means joining r1 and r2 gives r back."
     ]
    },
    {
     "point": "The decomposition is lossless if the common attributes are a key of one of the tables.",
     "quote": "A decomposition D = {R1, R2} of R has the lossless join property with respect to a set of functional dependencies F on R if and only if either",
     "followup": "How can you test whether splitting R into R1 and R2 is lossless?",
-    "followup_answer": "Check whether the attributes common to R1 and R2 functionally determine all of R1 or all of R2, i.e. whether they form a key of one of the two tables."
+    "followup_answer": "Check whether the attributes common to R1 and R2 functionally determine all of R1 or all of R2, i.e. whether they form a key of one of the two tables.",
+    "variants": [
+     "the common attributes must be a key for one table.",
+     "the common attributes form a key of one table.",
+     "if the common attributes are a key, it's lossless.",
+     "shared attributes must be a key for the decomposition to be lossless."
+    ],
+    "followup_replies": [
+     "check if common attributes determine all of r1 or r2.",
+     "test if common attributes are a key of one table.",
+     "look for functional dependency between common attributes and one table.",
+     "verify the common attributes are a key of one of the tables.",
+     "check if the common attributes functionally determine one table."
+    ]
    },
    {
     "point": "If it is lossy, joining the smaller relations back creates spurious tuples instead of the original relation.",
@@ -4811,11 +4980,18 @@
     "followup": "What is the main consequence of not having a lossless decomposition?",
     "followup_answer": "The original relation cannot be accurately reconstructed, which leads to data loss or incorrect data being generated.",
     "followup_replies": [
-     "data loss or wrong data.",
-     "can't rebuild the table.",
-     "data is wrong or missing.",
-     "join fails to match original.",
-     "original data is lost."
+     "data is lost or incorrect.",
+     "you can't reconstruct r.",
+     "query results are wrong.",
+     "original data is not recovered.",
+     "the table can't be rebuilt."
+    ],
+    "variants": [
+     "joining r1 and r2 creates extra rows.",
+     "you get spurious tuples when it's lossy.",
+     "the join may add extra data.",
+     "the join creates false rows.",
+     "lossy decomposition adds incorrect data."
     ]
    }
   ],
@@ -4840,18 +5016,6 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "Lossless decomposition ensures that the join of decomposed relations reconstructs the original relation exactly.",
-   "variants": [
-    "A lossless decomposition allows the original relation to be exactly reconstructed by joining its decomposed parts.",
-    "Lossless decomposition guarantees the original relation is fully recovered without any data loss when relations are joined.",
-    "The decomposition is lossless if joining the relations restores the original relation precisely.",
-    "Lossless decomposition ensures that the original relation can be rebuilt exactly through a join operation.",
-    "When a decomposition is lossless, the original relation is exactly reconstructed by joining the decomposed relations."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.815
-  },
   "quality_score": 8,
   "quality_note": "circular question reworded; points from repair 1 kept (repair 4)",
   "curated": true,
@@ -4859,7 +5023,19 @@
   "repairs": [
    "batch1_2026-10-03",
    "batch4_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A decomposition is lossless if joining R1 and R2 reconstructs R.",
+   "variants": [
+    "A lossless decomposition occurs when R1 and R2 can be joined to recover R.",
+    "A decomposition is lossless if R1 ∪ R2 equals R and their join is R.",
+    "A decomposition is lossless when R1 and R2's join equals the original R.",
+    "A lossless decomposition ensures that R1 and R2 can be joined to get R.",
+    "A decomposition is lossless if the join of R1 and R2 results in R."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.89
+  }
  },
  {
   "id": "dbms.transaction_states.medium2",
@@ -5148,18 +5324,41 @@
     "followup": "What happens if the logical schema is changed but the external schema remains the same?",
     "followup_answer": "The external schema and application programs remain unaffected, ensuring that user views and queries continue to function as intended.",
     "followup_replies": [
-     "nope",
-     "external schema stays the same",
-     "user views stay functional",
      "applications keep working",
-     "queries continue as intended"
+     "user views stay the same",
+     "no need to rewrite apps",
+     "queries continue as before",
+     "external schema remains unchanged"
+    ],
+    "variants": [
+     "changing the logical schema doesn't affect the external schema",
+     "the external schema stays the same even if the logical schema changes",
+     "you can modify the conceptual schema without altering the user views",
+     "logical changes don't require updating the external schema",
+     "the external schema remains unaffected by changes to the logical schema",
+     "the logical schema can evolve without touching the external schema"
     ]
    },
    {
     "point": "So applications need not be rewritten when the logical schema changes.",
     "quote": "It refers to the characteristic of being able to modify the logical schema without affecting the external schema or application program.",
     "followup": "How does it differ from physical data independence?",
-    "followup_answer": "Physical data independence hides changes to storage structures from the logical schema."
+    "followup_answer": "Physical data independence hides changes to storage structures from the logical schema.",
+    "variants": [
+     "applications don't need to be rewritten when the logical schema changes",
+     "changing the logical schema doesn't require app changes",
+     "apps stay the same even if the logical schema evolves",
+     "logical changes don't impact application programs",
+     "the logical schema can change without affecting apps",
+     "applications remain unaffected by logical schema changes"
+    ],
+    "followup_replies": [
+     "physical data independence hides storage changes",
+     "it's about storage structures",
+     "physical hides storage changes",
+     "it's for storage structure changes",
+     "physical data independence deals with storage"
+    ]
    }
   ],
   "source_pages": [
@@ -5199,25 +5398,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "Logical data independence allows the University database to change the logical schema without altering application programs.",
-   "variants": [
-    "The University database can modify its logical schema without changing application programs due to logical data independence.",
-    "Logical data independence enables the University database to update its logical schema without affecting existing applications.",
-    "The University database benefits from logical data independence by allowing schema changes without modifying applications.",
-    "Logical data independence ensures the University database can alter its logical schema without requiring application changes.",
-    "The University database maintains application consistency through logical data independence by allowing schema modifications."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.996
-  },
   "quality_score": 8,
   "quality_note": "tied to the textbook's University example; made general (repair 6)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Logical data independence is when changes to the physical storage structure do not affect the logical schema.",
+   "variants": [
+    "Logical data independence is when the logical schema remains unchanged despite physical storage changes.",
+    "Logical data independence ensures the logical structure is unaffected by physical storage modifications.",
+    "Logical data independence allows the logical schema to remain stable despite changes in physical storage.",
+    "Logical data independence is the separation of logical schema from physical storage structure.",
+    "Logical data independence means the logical structure is independent of the physical storage changes."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.006
+  }
  },
  {
   "id": "dbms.triggers.hard2",
@@ -5440,7 +5639,22 @@
     "point": "A natural join matches rows on the columns with the same name in both tables.",
     "quote": "A natural join is a type of join operation that creates an implicit join by combining tables based on columns with the same name and data type.",
     "followup": "What does a natural join return if the two tables have no column names in common?",
-    "followup_answer": "With no common columns there is no join condition, so it returns the Cartesian product of the two tables."
+    "followup_answer": "With no common columns there is no join condition, so it returns the Cartesian product of the two tables.",
+    "variants": [
+     "natural join matches rows on same named columns in both tables",
+     "it pairs rows where columns have the same name in both tables",
+     "natural join uses column names to match rows between tables",
+     "when columns have the same name, natural join links those rows",
+     "it automatically finds matching columns by name for joining",
+     "natural join connects rows based on shared column names"
+    ],
+    "followup_replies": [
+     "cartesian product",
+     "no common columns",
+     "it returns all combinations",
+     "no join condition",
+     "no common columns, so it's a cross join"
+    ]
    },
    {
     "point": "No join condition is written; it is implied by the common columns.",
@@ -5449,17 +5663,39 @@
     "followup_answer": "No, you cannot use the ON clause with a natural join because it is an implicit join that automatically creates the join condition based on matching column names and data types.",
     "followup_replies": [
      "no",
-     "you can't",
-     "it's implicit",
-     "no on clause",
-     "it's not allowed"
+     "can't use on",
+     "no, it's implicit",
+     "you can't use on clause",
+     "no, it's automatic"
+    ],
+    "variants": [
+     "natural join doesn't need a join condition, it's implied",
+     "you don't write the join condition, it's automatic",
+     "no explicit join condition is used in natural join",
+     "natural join implicitly uses common columns for joining",
+     "it joins on common columns without writing anything"
     ]
    },
    {
     "point": "Each common column appears only once in the result.",
     "quote": "The resultant table always contains unique columns.",
     "followup": "How is a natural join different from an equi-join?",
-    "followup_answer": "An equi-join keeps both copies of the matching columns, while a natural join keeps only one copy."
+    "followup_answer": "An equi-join keeps both copies of the matching columns, while a natural join keeps only one copy.",
+    "variants": [
+     "natural join only keeps one copy of common columns",
+     "it removes duplicate columns from the result",
+     "common columns appear once in natural join output",
+     "natural join doesn't duplicate matching columns",
+     "it combines common columns without repeating them",
+     "natural join keeps only one instance of shared columns"
+    ],
+    "followup_replies": [
+     "equi-join keeps both",
+     "equi-join duplicates matching columns",
+     "no, equi-join keeps both",
+     "equi-join has both copies",
+     "equi-join keeps both columns"
+    ]
    }
   ],
   "source_pages": [
@@ -5488,25 +5724,25 @@
    "coverage": 0.85
   },
   "active": true,
-  "core_point": {
-   "point": "A natural join is a binary operation that combines two relations based on all common attributes with the same name and domain.",
-   "variants": [
-    "A natural join combines two relations using all common attributes of the same name and domain.",
-    "A natural join merges relations on all attributes that share the same name and domain.",
-    "A natural join links two relations by matching attributes with identical names and domains.",
-    "A natural join is a join that uses all attributes with matching names and domains between relations.",
-    "A natural join operates on two relations by equating attributes with the same name and domain."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.024
-  },
   "quality_score": 8,
   "quality_note": "follow-ups fixed (same name but different type was guessed) (repair 4)",
   "curated": true,
   "interview_priority": 1,
   "repairs": [
    "batch4_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A natural join is a binary operation that combines two relations based on all common attributes.",
+   "variants": [
+    "A natural join combines two relations using all their common attributes.",
+    "A natural join merges relations on all shared attribute names.",
+    "A natural join links relations by matching all identical attribute names.",
+    "A natural join is a relation combining two tables on all matching attribute names.",
+    "A natural join is a binary operation that matches and combines relations on all common attributes."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.021
+  }
  },
  {
   "id": "dbms.minimal_cover_of_fds.medium1",
@@ -6341,13 +6577,42 @@
     "point": "A cross join returns the Cartesian product: every row paired with every row.",
     "quote": "Cross Join returns the Cartesian Product",
     "followup": "What happens if you perform a cross join between two tables with 8 and 7 rows respectively?",
-    "followup_answer": "56 rows: 8 x 7."
+    "followup_answer": "56 rows: 8 x 7.",
+    "variants": [
+     "a cross join pairs every row from one table with every row from another.",
+     "it's like multiplying the number of rows from both tables.",
+     "cross join gives you all possible combinations of rows from two tables.",
+     "the result is the product of the number of rows in each table.",
+     "you get every row from table a matched with every row from table b.",
+     "it's the multiplication of the row counts from both tables."
+    ],
+    "followup_replies": [
+     "56",
+     "8 multiplied by 7",
+     "56 rows",
+     "8 times 7",
+     "56 total rows"
+    ]
    },
    {
     "point": "It uses no join condition.",
     "quote": "It does not use a join condition (ON ...), so it doesn’t care about matching columns.",
     "followup": "Can you use a WHERE clause to filter results from a cross join?",
-    "followup_answer": "Yes, you can use a WHERE clause to filter the results of a cross join, but it won’t affect the Cartesian product itself."
+    "followup_answer": "Yes, you can use a WHERE clause to filter the results of a cross join, but it won’t affect the Cartesian product itself.",
+    "variants": [
+     "a cross join doesn't require any join condition.",
+     "it joins tables without any specific condition.",
+     "there's no join clause in a cross join.",
+     "it combines tables without filtering based on columns.",
+     "no join condition is used in a cross join."
+    ],
+    "followup_replies": [
+     "yes",
+     "yes, you can",
+     "yes, it's allowed",
+     "yes, with where",
+     "yes, but it's not the same as an inner join"
+    ]
    }
   ],
   "source_pages": [
@@ -6377,7 +6642,19 @@
   "quality_note": "reference called a self join a special cross join with no condition (wrong) and the points covered only cross join; question narrowed to cross join (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A cross join produces all possible combinations of rows from two tables.",
+   "variants": [
+    "A cross join is when every row from one table pairs with every row from another table.",
+    "A cross join results in a Cartesian product of two tables' rows.",
+    "A cross join combines all rows from two tables without any join condition.",
+    "A cross join generates all possible row pairings between two tables.",
+    "A cross join returns the Cartesian product of two tables' row sets."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.006
+  }
  },
  {
   "id": "dbms.window_functions.easy1",
@@ -6395,13 +6672,39 @@
     "point": "A window function computes over related rows but keeps every row.",
     "quote": "OVER clause tells SQL to not collapse rows like GROUP BY and instead, calculate an aggregate in a ‘window’ while keeping all rows visible.",
     "followup": "What happens if you use a window function without specifying a PARTITION BY clause?",
-    "followup_answer": "The window function will apply the calculation across all rows in the table, treating them as a single window, which may not be the intended behavior."
+    "followup_answer": "The window function will apply the calculation across all rows in the table, treating them as a single window, which may not be the intended behavior.",
+    "variants": [
+     "window functions keep all rows, unlike regular aggregates",
+     "they calculate across related rows without grouping",
+     "window functions operate on a window of rows, not collapsing them",
+     "you can use window functions without grouping rows",
+     "window functions let you keep all rows while doing calculations",
+     "they let you do calculations across rows without losing data"
+    ],
+    "followup_replies": [
+     "it treats all rows as one group",
+     "all rows are part of the same window",
+     "it applies the function to the entire table",
+     "no partition by means one big window",
+     "it's like grouping by everything"
+    ]
    },
    {
     "point": "A GROUP BY aggregate collapses each group into one row.",
     "quote": "Aggregate window functions calculate aggregates over a window of rows while retaining individual rows.",
     "followup": "Can you give an example of a situation where a window function would be more useful than a regular aggregate function?",
-    "followup_answer": "A window function is more useful when you want to calculate an aggregate for each row while keeping all rows intact, such as calculating the average salary per department for each employee in the department."
+    "followup_answer": "A window function is more useful when you want to calculate an aggregate for each row while keeping all rows intact, such as calculating the average salary per department for each employee in the department.",
+    "variants": [
+     "group by reduces rows to one per group",
+     "aggregate functions return one result per group"
+    ],
+    "followup_replies": [
+     "you can show each employee's department average",
+     "it lets you keep all data while showing averages",
+     "you can rank employees within their department",
+     "it keeps all rows and adds aggregated values",
+     "you can calculate per-row aggregates"
+    ]
    }
   ],
   "source_pages": [
@@ -6440,7 +6743,19 @@
   "quality_note": "points shortened (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A window function computes an aggregate value for each row based on a group of rows, while a regular aggregate function computes a single value for the entire group.",
+   "variants": [
+    "A window function applies an aggregate operation across a set of rows, unlike a regular aggregate function that returns a single value for the entire group.",
+    "A window function operates on a group of rows to compute an aggregate, whereas a regular aggregate function returns a single result for the whole dataset.",
+    "A window function calculates an aggregate value for each row within a defined window, differing from a regular aggregate function that summarizes the entire group.",
+    "A window function aggregates data within a specified window of rows, while a regular aggregate function summarizes all rows in a group.",
+    "A window function computes aggregate values per row based on a defined window, unlike a regular aggregate function that provides a single summary for the group."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.937
+  }
  },
  {
   "id": "dbms.boyce_codd_normal_form_bcnf.easy1",
@@ -6458,13 +6773,43 @@
     "point": "In BCNF, for every non-trivial dependency X -> A, X is a superkey.",
     "quote": "A relation schema R is in Boyce-Codd Normal Form (BCNF) if whenever an FD X →A holds in R, then X is a superkey of R BCNF",
     "followup": "What happens if a functional dependency exists where X is not a superkey?",
-    "followup_answer": "The relation would not be in BCNF, as BCNF requires that all dependencies have X as a superkey."
+    "followup_answer": "The relation would not be in BCNF, as BCNF requires that all dependencies have X as a superkey.",
+    "variants": [
+     "in bcnf, every dependency has x as a superkey",
+     "bcnf means x is a superkey for all non-trivial dependencies",
+     "for bcnf, x must be a superkey if it determines a attribute",
+     "bcnf requires that all dependencies have x as a superkey",
+     "if x isn't a superkey, the relation isn't in bcnf",
+     "bcnf ensures that x is a superkey for every dependency"
+    ],
+    "followup_replies": [
+     "it's not in bcnf",
+     "relation isn't in bcnf",
+     "bcnf not satisfied",
+     "nope",
+     "relation fails bcnf"
+    ]
    },
    {
     "point": "BCNF is stricter than 3NF.",
     "quote": "Every BCNF relation is in 3NF",
     "followup": "Why is BCNF considered a stronger form than 3NF?",
-    "followup_answer": "Because BCNF enforces a stricter condition: all dependencies must have X as a superkey, whereas 3NF allows for some dependencies where X is not a superkey, as long as A is a prime attribute."
+    "followup_answer": "Because BCNF enforces a stricter condition: all dependencies must have X as a superkey, whereas 3NF allows for some dependencies where X is not a superkey, as long as A is a prime attribute.",
+    "variants": [
+     "bcnf is stricter than 3nf",
+     "3nf allows some dependencies, bcnf doesn't",
+     "bcnf is a stronger normal form than 3nf",
+     "bcnf has more requirements than 3nf",
+     "3nf is less strict than bcnf",
+     "bcnf enforces stricter conditions than 3nf"
+    ],
+    "followup_replies": [
+     "because it requires x to be a superkey",
+     "bcnf enforces stricter conditions",
+     "no, bcnf is stricter",
+     "bcnf requires all dependencies to have x as a superkey",
+     "yes, bcnf is stronger"
+    ]
    }
   ],
   "source_pages": [
@@ -6496,7 +6841,19 @@
   "quality_note": "points shortened (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A relation schema is in BCNF if for every functional dependency, the determinant is a superkey.",
+   "variants": [
+    "A relation schema is in BCNF when all functional dependencies have determinants that are superkeys.",
+    "A relation schema meets BCNF if every functional dependency's determinant is a superkey.",
+    "A relation schema is BCNF compliant if all dependencies have determinants as superkeys.",
+    "A relation schema is in BCNF when every functional dependency's left-hand side is a superkey.",
+    "A relation schema satisfies BCNF if every functional dependency has a superkey as its determinant."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.009
+  }
  },
  {
   "id": "dbms.foreign_key.easy1",
@@ -6514,13 +6871,43 @@
     "point": "A foreign key is a column that refers to the primary key of another table.",
     "quote": "ALTER TABLE employee ADD CONSTRAINT fk_dept FOREIGN KEY (dept_ref_id) REFERENCES department(id);",
     "followup": "What happens if a value in the foreign key column does not exist in the referenced primary key column?",
-    "followup_answer": "It violates the referential integrity constraint and typically results in an error, preventing the operation from completing."
+    "followup_answer": "It violates the referential integrity constraint and typically results in an error, preventing the operation from completing.",
+    "variants": [
+     "a foreign key is a column that points to another table's primary key",
+     "foreign keys link to the primary key of another table",
+     "the foreign key mechanism connects tables via primary keys",
+     "foreign keys refer to the primary key in another table",
+     "a foreign key is like a pointer to another table's primary key",
+     "foreign keys are used to link to the primary key of another table"
+    ],
+    "followup_replies": [
+     "it's an error",
+     "invalid reference",
+     "operation fails",
+     "constraint violation",
+     "no"
+    ]
    },
    {
     "point": "Each foreign-key value must exist as a primary key in the other table, or be NULL.",
     "quote": "Referential integrity constraints : The “foreign key “ must have a value that is already present as a primary key, or may be null",
     "followup": "What can happen when you delete a row that other rows refer to?",
-    "followup_answer": "The delete is rejected, or, if a referential action such as ON DELETE CASCADE is set, it propagates to the referring rows."
+    "followup_answer": "The delete is rejected, or, if a referential action such as ON DELETE CASCADE is set, it propagates to the referring rows.",
+    "variants": [
+     "a foreign key must match a primary key or be null",
+     "foreign keys can't have values that don't exist in the primary key",
+     "the foreign key value must be in the primary key column or null",
+     "foreign keys enforce that values exist in the referenced table",
+     "a foreign key can only have values that are already primary keys",
+     "foreign keys require matching primary keys or null"
+    ],
+    "followup_replies": [
+     "it's rejected or cascades",
+     "delete is blocked",
+     "cascading delete",
+     "it depends on the action",
+     "it can cascade or fail"
+    ]
    }
   ],
   "source_pages": [
@@ -6557,7 +6944,15 @@
   "quality_note": "ALTER TABLE trivia point replaced by the referential-integrity rule (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A foreign key is a field in a table that uniquely identifies a row in another table.",
+   "variants": [
+    "A foreign key is a field that uniquely identifies a row in another table."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.009
+  }
  },
  {
   "id": "dbms.dbms_vs_file_system.easy1",
@@ -6575,19 +6970,61 @@
     "point": "Duplicated data wastes storage space.",
     "quote": "Takes up more storage space",
     "followup": "Apart from inconsistency, what is the cost of keeping the same data in many files?",
-    "followup_answer": "It takes up more storage space."
+    "followup_answer": "It takes up more storage space.",
+    "variants": [
+     "storing same info in multiple files takes up more space",
+     "keeping data in multiple files wastes space",
+     "data redundancy leads to higher storage costs"
+    ],
+    "followup_replies": [
+     "more storage",
+     "wastes space",
+     "takes more space",
+     "higher storage use",
+     "increased storage"
+    ]
    },
    {
     "point": "If one copy is updated and another is not, the copies become inconsistent.",
     "quote": "May also lead to Data Inconsistency in case of",
     "followup": "What happens if a student's address is changed in one file but not in another?",
-    "followup_answer": "The two files now disagree, so the data is inconsistent."
+    "followup_answer": "The two files now disagree, so the data is inconsistent.",
+    "variants": [
+     "updating one file but not another causes data inconsistency",
+     "if one file is changed and another isn't, data becomes inconsistent",
+     "data inconsistency happens when files aren't updated together",
+     "files disagree when one is updated and not the other",
+     "data can get out of sync if not all files are updated",
+     "inconsistent data occurs when files are not kept in sync"
+    ],
+    "followup_replies": [
+     "data is inconsistent",
+     "files disagree",
+     "data is out of sync",
+     "inconsistent data",
+     "disagreement between files"
+    ]
    },
    {
     "point": "A DBMS stores the data once, centrally, so a change is made in a single place.",
     "quote": "Store information in centralized",
     "followup": "How does storing data centrally help when a student's address changes?",
-    "followup_answer": "The address is stored once, so it is changed in a single place and everyone sees the new value."
+    "followup_answer": "The address is stored once, so it is changed in a single place and everyone sees the new value.",
+    "variants": [
+     "a dbms stores data once, so changes are made in one place",
+     "central storage ensures changes are made in one location",
+     "dbms keeps data in one place to avoid duplication",
+     "centralized storage allows for single updates",
+     "storing data in one place avoids multiple updates",
+     "dbms centralizes data to make changes in one spot"
+    ],
+    "followup_replies": [
+     "everyone sees the same data",
+     "change is made in one place",
+     "updated data is seen everywhere",
+     "single update, all users see it",
+     "data is consistent across all users"
+    ]
    }
   ],
   "source_pages": [
@@ -6619,7 +7056,18 @@
   "repairs": [
    "batch5_2026-10-25",
    "batch7_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A DBMS avoids data redundancy by ensuring each student's details are stored in a single, centralized location.",
+   "variants": [
+    "A DBMS prevents duplicate student data by storing each student's details once.",
+    "A DBMS eliminates redundancy by keeping each student's details in one place.",
+    "A DBMS stops multiple storage of student data by centralizing it.",
+    "A DBMS ensures student data is stored only once to prevent duplication."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.001
+  }
  },
  {
   "id": "dbms.super_key_and_candidate_key.medium2",
@@ -6637,13 +7085,41 @@
     "point": "A candidate key is a minimal superkey.",
     "quote": "A key K is a superkey with the additional property that removal of any attribute from K will cause K not to be a superkey any more (ie minimal superkey).",
     "followup": "What happens if you remove one attribute from a candidate key?",
-    "followup_answer": "The resulting set is no longer a superkey, which confirms that the original set was minimal."
+    "followup_answer": "The resulting set is no longer a superkey, which confirms that the original set was minimal.",
+    "variants": [
+     "a candidate key is the smallest superkey you can have",
+     "minimal superkeys are called candidate keys",
+     "if you take away anything from a candidate key, it's no longer a superkey",
+     "candidate keys are superkeys with no redundant attributes",
+     "the minimal superkey is what defines a candidate key"
+    ],
+    "followup_replies": [
+     "it's no longer a superkey",
+     "it's not minimal anymore",
+     "loses its superkey property",
+     "it's not a candidate key anymore",
+     "it's not minimal"
+    ]
    },
    {
     "point": "{A, B} is a candidate key only if neither A alone nor B alone is a superkey.",
     "quote": "A key K is a superkey with the additional property that removal of any attribute from K will cause K not to be a superkey any more (ie minimal superkey).",
     "followup": "If A alone is a superkey, what is {A, B}?",
-    "followup_answer": "Still a superkey, but not a candidate key, because it is not minimal."
+    "followup_answer": "Still a superkey, but not a candidate key, because it is not minimal.",
+    "variants": [
+     "if a single attribute is a superkey, then the pair can't be a candidate key",
+     "a candidate key can't include an attribute that alone is a superkey",
+     "if A is a superkey, then {A, B} is not a candidate key",
+     "candidate keys can't have redundant attributes that are already superkeys",
+     "if one attribute is a superkey, the pair isn't a candidate key",
+     "the presence of a single superkey attribute disqualifies the pair as a candidate key"
+    ],
+    "followup_replies": [
+     "it's still a superkey",
+     "not a candidate key",
+     "still a superkey",
+     "it's not minimal"
+    ]
    }
   ],
   "source_pages": [
@@ -6679,7 +7155,19 @@
   "quality_note": "duplicate point replaced by the concrete test (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A candidate key must be a minimal superkey, so {A, B} can be a candidate key only if it is irreducible.",
+   "variants": [
+    "A candidate key is a minimal superkey, so {A, B} can be a candidate key if it is irreducible.",
+    "A candidate key must be minimal, so {A, B} can be a candidate key if it has no redundant attributes.",
+    "A candidate key is a minimal superkey, so {A, B} can be a candidate key if it cannot be reduced further.",
+    "A candidate key must be minimal, so {A, B} can be a candidate, if it is not superfluous.",
+    "A candidate key is a minimal superkey, so {A, B} can be a candidate key if it is not reducible."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.253
+  }
  },
  {
   "id": "dbms.inner_join.medium2",
@@ -6697,13 +7185,38 @@
     "point": "An inner join keeps only pairs of rows that satisfy the join condition.",
     "quote": "Inner Join query compares each row of the first table with each row of the second table to find all pairs of rows that satisfy the join-predicate.",
     "followup": "What happens if no rows in one table match any rows in the other table?",
-    "followup_answer": "If no rows match, the Inner Join will return an empty result set, as it only includes rows that satisfy the join-predicate."
+    "followup_answer": "If no rows match, the Inner Join will return an empty result set, as it only includes rows that satisfy the join-predicate.",
+    "variants": [
+     "inner join only combines rows that match the condition",
+     "inner join filters rows based on the join condition",
+     "the join condition is what selects which rows to combine"
+    ],
+    "followup_replies": [
+     "no rows",
+     "empty result",
+     "nothing",
+     "no data",
+     "it returns nothing"
+    ]
    },
    {
     "point": "Each matching pair is combined into one result row.",
     "quote": "When the join-predicate is satisfied, column values for each matched pair of rows of both tables are combined into a result row.",
     "followup": "What happens to rows that do not satisfy the join-predicate?",
-    "followup_answer": "Rows that do not satisfy the join-predicate are excluded from the result set, as Inner Join only includes rows that meet the condition."
+    "followup_answer": "Rows that do not satisfy the join-predicate are excluded from the result set, as Inner Join only includes rows that meet the condition.",
+    "variants": [
+     "each matching pair becomes one row in the result",
+     "the join combines matching rows into a single row",
+     "the result has one row per matched pair",
+     "matched rows are combined into a single result row"
+    ],
+    "followup_replies": [
+     "they are excluded",
+     "not included",
+     "filtered out",
+     "left out",
+     "not in the result"
+    ]
    }
   ],
   "source_pages": [
@@ -6733,7 +7246,16 @@
   "quality_note": "points shortened (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Inner Join combines rows from two tables where the join condition matches corresponding attributes.",
+   "variants": [
+    "An Inner Join merges rows from two tables when their join condition is satisfied.",
+    "Inner Join combines rows from two tables based on matching join conditions."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.982
+  }
  },
  {
   "id": "dbms.concurrency_anomalies.medium2",
@@ -6751,13 +7273,43 @@
     "point": "Another transaction changes the item between T's two reads of it.",
     "quote": "A transaction T reads the same item twice and the item is changed by another transaction T′ between the two reads. Hence, T receives different values for its two reads of the same item.",
     "followup": "What happens if a transaction reads the same data twice and the data changes in between?",
-    "followup_answer": "The transaction will see different values for the same data, which can lead to confusion or incorrect logic in the application."
+    "followup_answer": "The transaction will see different values for the same data, which can lead to confusion or incorrect logic in the application.",
+    "variants": [
+     "another transaction changes the data between two reads of the same item",
+     "the data is modified by another transaction between the first and second read",
+     "when another transaction alters the item between T's two reads",
+     "the item is changed by another transaction during T's two reads",
+     "another transaction modifies the data between T's first and second read",
+     "the same data is changed by another transaction between the two reads"
+    ],
+    "followup_replies": [
+     "different values",
+     "inconsistent data",
+     "confusion",
+     "logic errors",
+     "incorrect results"
+    ]
    },
    {
     "point": "So T's second read of the item returns a different value from its first read.",
     "quote": "A transaction T reads the same item twice and the item is changed by another transaction T′ between the two reads. Hence, T receives different values for its two reads of the same item.",
     "followup": "Why is this considered an anomaly in concurrency control?",
-    "followup_answer": "It is considered an anomaly because it violates the consistency of the transaction's view of the database, leading to potential errors in the application logic."
+    "followup_answer": "It is considered an anomaly because it violates the consistency of the transaction's view of the database, leading to potential errors in the application logic.",
+    "variants": [
+     "the second read shows a different value than the first",
+     "the transaction sees a different value on the second read",
+     "the value changes between the two reads",
+     "the second read returns a different value",
+     "the same data appears different after the second read",
+     "the second read gives a different result than the first"
+    ],
+    "followup_replies": [
+     "violates consistency",
+     "leads to errors",
+     "inconsistent view",
+     "application logic fails",
+     "transaction view is wrong"
+    ]
    }
   ],
   "source_pages": [
@@ -6787,7 +7339,19 @@
   "quality_note": "points split into the cause and the effect (repair 5); effect point made specific after a cross-question check",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Unrepeatable read occurs when a transaction reads data modified by another concurrent transaction, leading to inconsistent results.",
+   "variants": [
+    "A unrepeatable read happens when a transaction reads data changed by another active transaction, causing inconsistent results.",
+    "Unrepeatable read arises when a transaction reads data that has been altered by another concurrent transaction, resulting in inconsistent outcomes.",
+    "When a transaction reads data modified by another concurrent transaction, it causes an unrepeatable read, leading to incorrect results.",
+    "Unrepeatable read is when a transaction reads data that has been changed by another transaction, resulting in inconsistent results.",
+    "A transaction experiencing an unrepeatable read reads data modified by another concurrent transaction, causing inconsistent results."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.99
+  }
  },
  {
   "id": "dbms.isolation_levels.medium1",
@@ -6805,19 +7369,62 @@
     "point": "READ UNCOMMITTED allows dirty reads.",
     "quote": "READ UNCOMMITTED: Lowest isolation, allows reading uncommitted data",
     "followup": "What happens if a transaction reads data that another transaction has not yet committed?",
-    "followup_answer": "It may read uncommitted data, which could later be rolled back, leading to a dirty read."
+    "followup_answer": "It may read uncommitted data, which could later be rolled back, leading to a dirty read.",
+    "variants": [
+     "read uncommitted lets you read data that's not yet committed.",
+     "if a transaction reads uncommitted data, that's a dirty read.",
+     "read uncommitted is the lowest isolation level and allows dirty reads.",
+     "dirty reads happen when you read uncommitted data from another transaction.",
+     "without isolation, you can read data that's not finalized yet.",
+     "read uncommitted means you can see changes that might be rolled back."
+    ],
+    "followup_replies": [
+     "it may read uncommitted data.",
+     "data could be rolled back.",
+     "dirty read.",
+     "uncommitted data.",
+     "data might be rolled back."
+    ]
    },
    {
     "point": "REPEATABLE READ prevents both dirty and non-repeatable reads.",
     "quote": "REPEATABLE READ: Ensures that data read once will not change during the",
     "followup": "How does REPEATABLE READ prevent non-repeatable reads?",
-    "followup_answer": "By ensuring that once data is read, it remains unchanged for the duration of the transaction, even if other transactions modify it."
+    "followup_answer": "By ensuring that once data is read, it remains unchanged for the duration of the transaction, even if other transactions modify it.",
+    "variants": [
+     "repeatable read stops dirty and non-repeatable reads.",
+     "with repeatable read, data stays the same during the transaction.",
+     "repeatable read ensures data doesn't change during a transaction.",
+     "repeatable read prevents data from changing under you.",
+     "repeatable read stops other transactions from changing your data.",
+     "repeatable read keeps data consistent during a transaction."
+    ],
+    "followup_replies": [
+     "it locks the data.",
+     "it prevents changes.",
+     "it keeps data the same.",
+     "it stops other transactions.",
+     "it ensures consistency."
+    ]
    },
    {
     "point": "READ COMMITTED prevents dirty reads but allows non-repeatable reads.",
     "quote": "READ COMMITTED: Only reads data that has been committed.",
     "followup": "What problem can still happen under REPEATABLE READ?",
-    "followup_answer": "Phantom rows: a repeated query can return new rows that another transaction inserted."
+    "followup_answer": "Phantom rows: a repeated query can return new rows that another transaction inserted.",
+    "variants": [
+     "read committed stops dirty reads but allows non-repeatable reads.",
+     "non-repeatable reads are allowed under read committed.",
+     "read committed stops dirty reads but not changes to data.",
+     "read committed ensures you only see committed data."
+    ],
+    "followup_replies": [
+     "phantom rows.",
+     "new rows can appear.",
+     "rows can be added.",
+     "phantom records.",
+     "new data can appear."
+    ]
    }
   ],
   "source_pages": [
@@ -6848,7 +7455,19 @@
   "quality_note": "READ COMMITTED point added (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Isolation levels determine the degree of transaction visibility, thereby controlling the possibility of dirty reads and non-repeatable reads.",
+   "variants": [
+    "Isolation levels control transaction visibility, thus managing dirty reads and non-repeatable reads.",
+    "Isolation levels define transaction visibility, which affects dirty reads and non-repeatable reads.",
+    "Isolation levels manage transaction visibility, preventing dirty reads and non-repeatable reads.",
+    "Isolation levels set transaction visibility levels, which influence dirty reads and non-repeatable reads.",
+    "Isolation levels dictate transaction visibility, thereby affecting dirty reads and non-repeatable reads."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.907
+  }
  },
  {
   "id": "dbms.sql_command_categories.medium1",
@@ -6866,13 +7485,40 @@
     "point": "DDL is used to define and modify the structure of database objects.",
     "quote": "Data Definition Language (DDL) statements are used to define the database structure or schema.",
     "followup": "What happens if you try to update a table without first defining it?",
-    "followup_answer": "You would receive an error because the table does not exist, which means the structure hasn't been defined yet."
+    "followup_answer": "You would receive an error because the table does not exist, which means the structure hasn't been defined yet.",
+    "variants": [
+     "ddl is for creating and changing the database structure.",
+     "ddl defines the database objects like tables and views.",
+     "ddl commands like create and alter change the schema.",
+     "ddl is used to set up the database framework.",
+     "ddl modifies the structure of tables and users.",
+     "ddl is responsible for defining the database layout."
+    ],
+    "followup_replies": [
+     "no table exists",
+     "error: table not found",
+     "it won't work",
+     "table not defined",
+     "invalid operation"
+    ]
    },
    {
     "point": "DML is used to manipulate data within schema objects.",
     "quote": "Data Manipulation Language (DML) statements are used for managing data within schema objects.",
     "followup": "Can DML commands change the structure of a table?",
-    "followup_answer": "No, DML commands are used to manage data, not the structure of the table. Changing the structure requires DDL commands."
+    "followup_answer": "No, DML commands are used to manage data, not the structure of the table. Changing the structure requires DDL commands.",
+    "variants": [
+     "dml is for working with data inside tables.",
+     "dml handles inserting, updating, and deleting data.",
+     "dml is for manipulating the data in the database."
+    ],
+    "followup_replies": [
+     "no",
+     "only ddl can change structure",
+     "nope",
+     "ddl is needed",
+     "structure stays the same"
+    ]
    }
   ],
   "source_pages": [
@@ -6902,7 +7548,17 @@
   "quality_note": "good (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "DDL defines database structure, DML manipulates data within that structure.",
+   "variants": [
+    "DDL shapes the database schema, DML operates on the data stored in it.",
+    "DDL establishes database objects, DML interacts with the data they contain.",
+    "DDL describes the database's structure, DML handles data operations."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.995
+  }
  },
  {
   "id": "dbms.boyce_codd_normal_form_bcnf.medium2",
@@ -6920,13 +7576,43 @@
     "point": "It has a dependency X -> A where X is not a superkey and A is a prime attribute.",
     "quote": "In practice, most relation schemas that are in 3NF are in BCNF, only if there exists some X->A in R with X not being superkey and A being prime attribute, will R be in 3NF but not in BCNF.",
     "followup": "What happens if a functional dependency has X not being a superkey and A being a prime attribute?",
-    "followup_answer": "The relation is in 3NF but not in BCNF, because BCNF requires X to be a superkey for all functional dependencies."
+    "followup_answer": "The relation is in 3NF but not in BCNF, because BCNF requires X to be a superkey for all functional dependencies.",
+    "variants": [
+     "a relation in 3nf but not bcnf has a dependency where x isn't a superkey but a is prime",
+     "when x isn't a superkey and a is prime, the schema is in 3nf but not bcnf",
+     "bcnf requires x to be a superkey, but 3nf allows x to be non-superkey if a is prime",
+     "so long as a is prime, x can be non-superkey, which is allowed in 3nf but not bcnf",
+     "the difference is that 3nf lets x be non-superkey if a is prime, while bcnf doesn't",
+     "in 3nf, x can be non-superkey as long as a is prime, but bcnf doesn't allow that"
+    ],
+    "followup_replies": [
+     "it's in 3nf but not bcnf",
+     "bcnf requires x to be a superkey",
+     "so it's not bcnf",
+     "bcnf doesn't allow that",
+     "nope"
+    ]
    },
    {
     "point": "BCNF requires X to be a superkey for every dependency X -> A.",
     "quote": "A relation schema R is in BCNF if whenever a FD X → A holds in R, the X is a superkey of R.",
     "followup": "Why is BCNF considered a stronger normal form than 3NF?",
-    "followup_answer": "Because BCNF imposes a stricter condition on all functional dependencies, requiring X to be a superkey, whereas 3NF allows for X to be non-superkey as long as A is a prime attribute."
+    "followup_answer": "Because BCNF imposes a stricter condition on all functional dependencies, requiring X to be a superkey, whereas 3NF allows for X to be non-superkey as long as A is a prime attribute.",
+    "variants": [
+     "bcnf says x must be a superkey for every dependency",
+     "in bcnf, every dependency has x as a superkey",
+     "bcnf is stricter because it requires x to be a superkey",
+     "bcnf enforces that x is a superkey for all dependencies",
+     "bcnf is stronger because it requires x to be a superkey",
+     "bcnf makes sure x is a superkey for every dependency"
+    ],
+    "followup_replies": [
+     "because it requires x to be a superkey",
+     "bcnf has stricter rules",
+     "bcnf is more strict",
+     "it enforces x to be a superkey",
+     "yes"
+    ]
    }
   ],
   "source_pages": [
@@ -6958,7 +7644,18 @@
   "quality_note": "points shortened (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "a relation schema in 3NF but not BCNF has a prime attribute that is not a key, violating BCNF's condition that all dependencies are on superkeys.",
+   "variants": [
+    "a relation schema in 3NF but not BCNF has a dependency where the determinant is not a superkey.",
+    "a relation schema in 3.5NF but not BCNF has a dependency where the determinant is not a superkey.",
+    "a relation schema in 3NF but not BCNF has a dependency where the determinant is not a key.",
+    "a relation schema in 3NF but not BCNF has a dependency with a non-superkey determinant."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.995
+  }
  },
  {
   "id": "dbms.outer_joins.hard2",
@@ -6976,13 +7673,43 @@
     "point": "Combine a LEFT and a RIGHT outer join with UNION.",
     "quote": "To implement full outer join in MySQL, we will execute two queries in a single query. The first query will be of LEFT OUTER JOIN, and the second query will be of RIGHT OUTER JOIN. We will combine the first and the second query with the UNION operator to see the results of FULL OUTER JOIN.",
     "followup": "What is the purpose of using the UNION operator in this context?",
-    "followup_answer": "UNION removes the matched rows that both joins return; UNION ALL would show them twice."
+    "followup_answer": "UNION removes the matched rows that both joins return; UNION ALL would show them twice.",
+    "variants": [
+     "to get full outer join, you do left and right join with union",
+     "left and right joins combined with union simulate full outer join",
+     "using union on left and right joins gives full outer join effect",
+     "you combine left and right joins with union for full outer join",
+     "full outer join is made by unioning left and right joins",
+     "left and right outer joins with union act like full outer join"
+    ],
+    "followup_replies": [
+     "to avoid duplicates",
+     "removes duplicates",
+     "it removes duplicates",
+     "so duplicates aren't repeated",
+     "to prevent duplicate rows"
+    ]
    },
    {
     "point": "Unmatched rows are padded with NULLs for the other table's columns.",
     "quote": "In the SQL outer JOIN, all the content from both the tables is integrated together. Even though the records from both the tables are matched or not, the matching and nonmatching records from both the tables will be considered an output of the outer join in SQL.",
     "followup": "What happens to rows that do not have a matching tuple in the other table?",
-    "followup_answer": "Rows that do not have a matching tuple in the other table are padded with NULL values for the attributes of the other table, ensuring that all data from both tables is included in the result."
+    "followup_answer": "Rows that do not have a matching tuple in the other table are padded with NULL values for the attributes of the other table, ensuring that all data from both tables is included in the result.",
+    "variants": [
+     "unmatched rows get nulls for the other table's columns",
+     "when there's no match, nulls fill in the other table's fields",
+     "nulls are used for unmatched rows in the other table",
+     "unmatched rows are padded with nulls for the other table",
+     "no match means nulls for the other table's columns",
+     "other table's columns get nulls for unmatched rows"
+    ],
+    "followup_replies": [
+     "they get nulls",
+     "filled with nulls",
+     "null values",
+     "they are null",
+     "they are filled with nulls"
+    ]
    }
   ],
   "source_pages": [
@@ -7023,7 +7750,19 @@
   "quality_note": "reference said UNION 'may introduce duplicates' (it removes them; UNION ALL repeats matched rows); question reworded (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "MySQL can simulate FULL OUTER JOIN using UNION of LEFT and RIGHT JOINs, but you must ensure both sides are properly handled to avoid data loss.",
+   "variants": [
+    "A FULL OUTER JOIN in MySQL is simulated by combining LEFT and RIGHT JOINs with UNION, but you must ensure both sides are correctly handled to prevent data loss.",
+    "MySQL simulates FULL OUTER JOIN by using LEFT and RIGHT JOINs with UNION, but you must ensure both sides are properly managed to avoid missing data.",
+    "To simulate a FULL OUTER JOIN in MySQL, combine LEFT and RIGHT JOINs with UNION, but ensure both sides are correctly included to prevent data loss.",
+    "MySQL achieves a FULL OUTER JOIN by using LEFT and RIGHT JOINs with UNION, but you must ensure both sides are properly included to avoid data loss.",
+    "A FULL OUTER JOIN in MySQL is simulated by combining LEFT and RIGHT JOINs with UNION, but you must ensure both sides are correctly included to prevent data loss."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.003
+  }
  },
  {
   "id": "dbms.sql_vs_nosql.hard2",
@@ -7041,13 +7780,42 @@
     "point": "SQL databases store data in tables with a fixed schema.",
     "quote": "NoSQL databases ('not only SQL') are non-tabular databases and store data differently than relational tables.",
     "followup": "Why would a database need a fixed schema?",
-    "followup_answer": "A fixed schema allows for strict data validation and ensures consistency through ACID properties, which are critical for applications requiring precise data integrity."
+    "followup_answer": "A fixed schema allows for strict data validation and ensures consistency through ACID properties, which are critical for applications requiring precise data integrity.",
+    "variants": [
+     "sql databases use tables with a fixed schema.",
+     "they have a fixed schema because it's structured.",
+     "sql needs a fixed schema for consistency.",
+     "fixed schema in sql ensures data integrity.",
+     "sql databases require a fixed schema for validation.",
+     "fixed schema allows sql to enforce consistency."
+    ],
+    "followup_replies": [
+     "data validation",
+     "consistency",
+     "ACID properties",
+     "structured data",
+     "strict validation"
+    ]
    },
    {
     "point": "NoSQL systems favour scalability and availability over strict consistency.",
     "quote": "Most NOSQL systems are distributed databases or distributed storage systems, focusing on semi-structured data storage, high performance, availability, data replication, and scalability instead of emphasizing immediate data consistency, powerful query languages, and structured data storage.",
     "followup": "What does it mean for a database to prioritize scalability over consistency?",
-    "followup_answer": "It means the system is designed to handle large-scale data and high availability by allowing eventual consistency, which sacrifices immediate data accuracy for system reliability and performance."
+    "followup_answer": "It means the system is designed to handle large-scale data and high availability by allowing eventual consistency, which sacrifices immediate data accuracy for system reliability and performance.",
+    "variants": [
+     "nosql prioritizes scalability over consistency.",
+     "nosql systems focus on scalability and availability.",
+     "nosql gives up consistency for scalability.",
+     "nosql trades consistency for scalability.",
+     "nosql is designed for scalability, not strict consistency.",
+     "nosql sacrifices consistency for high availability."
+    ],
+    "followup_replies": [
+     "eventual consistency",
+     "high availability",
+     "scalable systems",
+     "trade consistency for scalability"
+    ]
    }
   ],
   "source_pages": [
@@ -7080,7 +7848,19 @@
   "quality_note": "points shortened; KP0 quote now about relational tables (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "SQL databases enforce strict schema and ACID compliance, while NoSQL databases offer flexible schema and eventual consistency for scalable, distributed systems.",
+   "variants": [
+    "SQL databases use fixed schemas and ACID properties, whereas NoSQL databases allow flexible schemas and eventual consistency for scalability.",
+    "SQL enforces rigid schemas and strong consistency, while NoSQL provides flexible schemas and eventual consistency for scalable systems.",
+    "SQL databases require fixed schemas and ensure consistency, while NoSQL databases allow dynamic schemas and prioritize scalability over consistency.",
+    "SQL enforces structured data and strong consistency, while No,SQL offers flexible data models and eventual consistency for scalable applications.",
+    "SQL databases use structured data with ACID guarantees, while NoSQL databases use flexible data models with eventual consistency for scalability."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.004
+  }
  },
  {
   "id": "dbms.indexing_basics.hard2",
@@ -7148,19 +7928,63 @@
     "point": "A view is a virtual table that stores a query, not data.",
     "quote": "It doesn’t store actual data by itself but instead stores a query that pulls data from one or more tables (or even other views)",
     "followup": "Does a view keep its own copy of the data?",
-    "followup_answer": "No, it stores only the query; the data stays in the base tables."
+    "followup_answer": "No, it stores only the query; the data stays in the base tables.",
+    "variants": [
+     "a view isn't a real table, it's just a saved query.",
+     "views don't store data, they just run the query when needed.",
+     "a view is like a saved sql query, not a real table.",
+     "views are virtual tables, they don't hold data themselves.",
+     "when you use a view, you're not storing data, you're running a query.",
+     "views are just a way to run a query without saving the data."
+    ],
+    "followup_replies": [
+     "nope",
+     "select name column only",
+     "only show name column",
+     "filter out salary column",
+     "create a view with just names"
+    ]
    },
    {
     "point": "Views improve security by exposing only selected columns and rows, leaving sensitive data out.",
     "quote": "It increases security by excluding sensitive information from the view.",
     "followup": "How would you let a clerk see employee names but not their salaries?",
-    "followup_answer": "Create a view that selects only the name columns and give the clerk access to the view instead of the table."
+    "followup_answer": "Create a view that selects only the name columns and give the clerk access to the view instead of the table.",
+    "variants": [
+     "views let you hide data so people only see what they need.",
+     "you can give users a view instead of the whole table for security.",
+     "security is better when users access views instead of tables.",
+     "views can be used to limit access to sensitive data.",
+     "views help keep data safe by controlling what users see."
+    ],
+    "followup_replies": [
+     "create a view with just names",
+     "select only name columns",
+     "hide salary column",
+     "only show employee names",
+     "filter out salary data"
+    ]
    },
    {
     "point": "Views with joins, aggregates or GROUP BY are not updatable because a view row does not map to a single base-table row.",
     "quote": "Does not contain aggregate functions like sum, max, count etc",
     "followup": "Why can't you update a view that shows the total salary per department?",
-    "followup_answer": "Each row is an aggregate over many base rows, so the database cannot tell which base-table rows to change."
+    "followup_answer": "Each row is an aggregate over many base rows, so the database cannot tell which base-table rows to change.",
+    "variants": [
+     "views with joins can't be updated because they don't map to one row.",
+     "you can't update a view that combines data from multiple tables.",
+     "views using group by or aggregate functions aren't updatable.",
+     "views that do joins or sums aren't updateable because they have multiple rows.",
+     "you can't update a view that shows aggregated data because it's not tied to one row.",
+     "views with joins or group by aren't updatable because they don't link to a single row."
+    ],
+    "followup_replies": [
+     "because it's an aggregate",
+     "it's a summary, not individual rows",
+     "it's a total, not a single row",
+     "it's grouped, so you can't update it",
+     "it's an aggregate, so no update"
+    ]
    }
   ],
   "source_pages": [
@@ -7194,7 +8018,19 @@
   "quality_note": "rewritten (batch 7): adds what a view is; fixed a follow-up answer that confused hiding data with updatability",
   "repairs": [
    "batch7_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A view is a virtual table based on the result of a query.",
+   "variants": [
+    "A view is a virtual table derived from a query's output.",
+    "A view represents a query's result as a table.",
+    "A view is a table-like structure formed by a query.",
+    "A view is a virtual table generated by a query.",
+    "A view is a query's result presented as a table."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.992
+  }
  },
  {
   "id": "dbms.integrity_constraints.hard2",
@@ -7473,13 +8309,41 @@
     "point": "Consistency, availability and partition tolerance cannot all be guaranteed together.",
     "quote": "The CAP theorem states that: 'It is not possible to guarantee all three of the desirable properties—consistency, availability, and partition tolerance—at the same, time in a distributed system with data replication'.",
     "followup": "When a network partition happens, what must the system choose between?",
-    "followup_answer": "Between consistency (refuse some requests) and availability (answer with possibly stale data)."
+    "followup_answer": "Between consistency (refuse some requests) and availability (answer with possibly stale data).",
+    "variants": [
+     "you can't have consistency, availability, and partition tolerance all at once",
+     "in a distributed system, you can't guarantee all three properties",
+     "the cap theorem says you can't have all three properties together",
+     "the system can't ensure consistency, availability, and partition tolerance simultaneously",
+     "the cap theorem states that all three properties can't be achieved together",
+     "in a distributed system, you can't have all three of those guarantees"
+    ],
+    "followup_replies": [
+     "consistency and availability",
+     "between consistency and availability",
+     "consistency or availability",
+     "choose between consistency and availability",
+     "consistency vs availability"
+    ]
    },
    {
     "point": "A designer must choose which two properties to guarantee.",
     "quote": "If this is the case, then the distributed system designer would have to choose two properties out of the three to guarantee.",
     "followup": "Why would a system designer have to make a choice between these properties?",
-    "followup_answer": "Because the CAP theorem states that it is not possible to guarantee all three properties at the same time, so a trade-off must be made."
+    "followup_answer": "Because the CAP theorem states that it is not possible to guarantee all three properties at the same time, so a trade-off must be made.",
+    "variants": [
+     "you can't have all three, so you pick two",
+     "the designer has to choose which two to prioritize",
+     "the system can't guarantee all three, so you have to choose two",
+     "you must select two properties to ensure"
+    ],
+    "followup_replies": [
+     "because you can't have all three at once",
+     "due to the cap theorem",
+     "because the theorem says you can't have all three",
+     "because the cap theorem forces a trade-off",
+     "because the cap theorem states it's not possible"
+    ]
    }
   ],
   "source_pages": [
@@ -7511,7 +8375,19 @@
   "quality_note": "follow-up answer fixed (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "the cap theorem states that a distributed system cannot simultaneously provide consistency, availability, and partition tolerance.",
+   "variants": [
+    "a distributed system cannot guarantee all three of consistency, availability, and partition tolerance at once.",
+    "a cap theorem defines that consistency, availability, and partition tolerance cannot all be achieved in a distributed system.",
+    "in a distributed system, consistency, availability, and partition tolerance cannot all be satisfied simultaneously.",
+    "the cap theorem asserts that a distributed system must sacrifice at least one of consistency, availability, or partition tolerance.",
+    "a distributed system must forgo at least one of consistency, availability, or partition tolerance according to the cap theorem."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.026
+  }
  },
  {
   "id": "dbms.lock_based_concurrency_control.easy1",
@@ -7529,13 +8405,41 @@
     "point": "A lock is a mechanism to control concurrent access to a data item.",
     "quote": "A lock is a mechanism to control concurrent access to a data item.",
     "followup": "What happens if two transactions try to access the same data item at the same time?",
-    "followup_answer": "One transaction will be blocked until the other releases its lock, ensuring exclusive access."
+    "followup_answer": "One transaction will be blocked until the other releases its lock, ensuring exclusive access.",
+    "variants": [
+     "a lock is how the system handles multiple transactions trying to access the same data",
+     "locks control when multiple transactions can access the same data item",
+     "so that transactions don't interfere, locks are used to control access",
+     "locks are the way the system ensures data is accessed properly by multiple transactions",
+     "to prevent conflicts, locks are used to control concurrent access to data"
+    ],
+    "followup_replies": [
+     "one gets blocked",
+     "one waits for the other",
+     "it blocks the second transaction",
+     "the second transaction waits",
+     "the first one holds the lock"
+    ]
    },
    {
     "point": "A transaction can access a data item only if it is currently holding a lock on it.",
     "quote": "A transaction can proceed only after the request is granted.",
     "followup": "What is the role of the concurrency-control manager in this process?",
-    "followup_answer": "The concurrency-control manager grants or denies lock requests based on compatibility and current lock modes."
+    "followup_answer": "The concurrency-control manager grants or denies lock requests based on compatibility and current lock modes.",
+    "variants": [
+     "you can only access data if you have the lock",
+     "transactions can't touch data without a lock",
+     "the lock is required before accessing data",
+     "you need the lock to read or write data",
+     "without a lock, a transaction can't access data"
+    ],
+    "followup_replies": [
+     "it checks compatibility",
+     "it decides if the lock is allowed",
+     "it manages the lock requests",
+     "it handles lock granting",
+     "it ensures locks are compatible"
+    ]
    }
   ],
   "source_pages": [
@@ -7572,7 +8476,19 @@
   "quality_note": "good (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A lock is a mechanism that prevents multiple transactions from accessing a data item simultaneously.",
+   "variants": [
+    "A lock stops multiple transactions from accessing the same data item at the same time.",
+    "A lock ensures only one transaction can access a data item at a time.",
+    "A lock controls access by blocking other transactions from using a data item.",
+    "A lock prevents concurrent access to a data item by transactions.",
+    "A lock manages data item access so only one transaction can use it at once."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.997
+  }
  },
  {
   "id": "dbms.set_operations_in_sql.easy1",
@@ -7590,13 +8506,43 @@
     "point": "UNION combines the rows of two SELECT results and removes duplicates.",
     "quote": "Duplicate tuples are eliminated.",
     "followup": "What happens if you try to combine two queries that return different numbers of columns?",
-    "followup_answer": "You will get an error because the relations must be union compatible, which requires them to have the same number of columns."
+    "followup_answer": "You will get an error because the relations must be union compatible, which requires them to have the same number of columns.",
+    "variants": [
+     "union takes rows from two selects and removes duplicates",
+     "when you use union, it merges results and deletes repeats",
+     "union combines results but only keeps unique rows",
+     "the union operator merges two queries and filters out duplicates",
+     "using union gives you a single result with no repeated rows",
+     "union combines rows from two selects and removes duplicates"
+    ],
+    "followup_replies": [
+     "nope",
+     "error",
+     "it's not allowed",
+     "you get an error",
+     "they must have the same number of columns"
+    ]
    },
    {
     "point": "Both SELECTs must be union compatible: same number of columns, compatible types.",
     "quote": "Two relations are said to be union compatible if 1. Both the relations have the same arity (number of attributes) and 2. The corresponding attribute domains must be compatible.",
     "followup": "What does it mean for two relations to be union compatible?",
-    "followup_answer": "It means they must have the same number of columns, and the data types of corresponding columns must be compatible."
+    "followup_answer": "It means they must have the same number of columns, and the data types of corresponding columns must be compatible.",
+    "variants": [
+     "both selects need to have same columns and compatible types",
+     "to use union, the columns must match in number and type",
+     "union requires the relations to be union compatible",
+     "the columns must be same count and type for union to work",
+     "union compatible means same number of columns and matching data types",
+     "the selects must be compatible for union to function"
+    ],
+    "followup_replies": [
+     "same number of columns and matching types",
+     "they must have same columns and data types",
+     "column count and type must match",
+     "same columns and compatible types",
+     "union compatibility means same columns and types"
+    ]
    }
   ],
   "source_pages": [
@@ -7627,7 +8573,19 @@
   "quality_note": "duplicate removal now in the first point (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The UNION operator combines rows from two relations into one, eliminating duplicates.",
+   "variants": [
+    "A UNION combines rows from two relations into one, removing duplicates.",
+    "The UNION operator merges two relations into a single result, eliminating duplicate rows.",
+    "Combining two relations into one with UNION removes duplicate rows.",
+    "The UNION operator merges relations into one, ensuring no duplicate rows.",
+    "A UNION combines two relations into one, eliminating duplicate rows."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.996
+  }
  },
  {
   "id": "dbms.database_architecture.medium1",
@@ -7645,13 +8603,42 @@
     "point": "Clients can reach the database server only through the middle tier.",
     "quote": "Database server only accessible via middle tier",
     "followup": "Why would allowing direct client access to the database be a security risk?",
-    "followup_answer": "Allowing direct client access to the database could expose sensitive data to unauthorized users and make the system more vulnerable to attacks."
+    "followup_answer": "Allowing direct client access to the database could expose sensitive data to unauthorized users and make the system more vulnerable to attacks.",
+    "variants": [
+     "clients can only access the database through the middle tier",
+     "the database is protected by the middle tier from direct client access",
+     "the middle tier acts as a gatekeeper between clients and the database",
+     "clients can't reach the database without going through the middle layer",
+     "the middle tier is the only way clients can connect to the database",
+     "the database is only accessible via the middle tier"
+    ],
+    "followup_replies": [
+     "exposes data",
+     "more vulnerable",
+     "unauthorized access",
+     "sensitive data at risk",
+     "higher attack surface"
+    ]
    },
    {
     "point": "The middle tier holds the business logic that controls access to the data.",
     "quote": "Stores the web connectivity software and the business logic part of the application used to access the corresponding data from the database server",
     "followup": "What else does the middle tier usually run?",
-    "followup_answer": "The application or web server: it takes client requests, applies the business rules and queries the database."
+    "followup_answer": "The application or web server: it takes client requests, applies the business rules and queries the database.",
+    "variants": [
+     "the middle tier holds the rules that control data access",
+     "business logic is stored in the middle tier",
+     "the middle tier enforces access control",
+     "the application logic is in the middle tier",
+     "the middle tier manages how data is processed"
+    ],
+    "followup_replies": [
+     "application server",
+     "web server",
+     "request handling",
+     "processing logic",
+     "client-server communication"
+    ]
    }
   ],
   "source_pages": [
@@ -7681,7 +8668,19 @@
   "quality_note": "slide-phrase point replaced by the business-logic point (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The three-tier architecture enhances security by isolating data access through the middle tier, which controls and mediates all database interactions.",
+   "variants": [
+    "The middle tier in three-tier architecture secures data by controlling all database access and communication.",
+    "Three-tier architecture secures databases by placing data access control in the middle tier.",
+    "Security in three-tier architecture is achieved by the middle tier managing all database interactions.",
+    "The middle tier ensures security in three-tier architecture by mediating database access.",
+    "Three-tier architecture enhances security through the middle tier's control over database access."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.006
+  }
  },
  {
   "id": "dbms.entities_and_attributes.medium2",
@@ -7699,13 +8698,43 @@
     "point": "Multivalued attributes require a separate relation schema.",
     "quote": "For a multivalued attribute M, create a relation schema R with an attribute A that corresponds to M and attributes corresponding to the primary key of the entity set or relationship set of which M is an attribute.",
     "followup": "What happens if you try to store multiple values of a multivalued attribute in a single column of a table?",
-    "followup_answer": "It would violate the atomicity principle of the relational model, making the data difficult to query and manage."
+    "followup_answer": "It would violate the atomicity principle of the relational model, making the data difficult to query and manage.",
+    "variants": [
+     "you need a separate table for multivalued attributes",
+     "multivalued attributes get their own table",
+     "when you have a multivalued attribute, you split it into its own relation",
+     "you can't put multiple values in one column, so you make a new table",
+     "to handle multivalued attributes, create a new relation",
+     "multivalued attributes require their own schema"
+    ],
+    "followup_replies": [
+     "it violates atomicity",
+     "data becomes hard to query",
+     "you can't store multiple values in one cell",
+     "it breaks the relational model rules",
+     "makes data management difficult"
+    ]
    },
    {
     "point": "A foreign-key constraint is added to the new relation schema.",
     "quote": "A foreign-key constraint is to be added to the relation schema created from the multivalued attribute.",
     "followup": "What is the purpose of the foreign-key constraint in this context?",
-    "followup_answer": "It ensures that the values in the multivalued attribute relation are linked to valid entities in the original entity set, preventing orphaned records."
+    "followup_answer": "It ensures that the values in the multivalued attribute relation are linked to valid entities in the original entity set, preventing orphaned records.",
+    "variants": [
+     "you add a foreign key to link the new table to the original entity",
+     "the new relation has a foreign key to the main entity",
+     "the multivalued attribute table references the main entity",
+     "foreign key ensures the new table links to valid entities",
+     "you set up a foreign key constraint for the new relation",
+     "the new schema has a foreign key to the original entity"
+    ],
+    "followup_replies": [
+     "it links the values to real entities",
+     "prevents orphaned records",
+     "ensures referential integrity",
+     "keeps the data consistent",
+     "makes sure the values belong to existing entities"
+    ]
    }
   ],
   "source_pages": [
@@ -7748,7 +8777,19 @@
   "quality_note": "good (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Multivalued attributes are represented in a relational schema using a separate relation for each attribute, ensuring first normal form.",
+   "variants": [
+    "A multivalued attribute is stored in its own table to maintain relational integrity.",
+    "Each multivalued attribute requires its own table to adhere to normalization rules.",
+    "To satisfy first normal form, multivalued attributes are split into separate tables.",
+    "Multivalued attributes are split into individual tables to avoid repetition and ensure atomicity.",
+    "A multivalued attribute is represented by a separate relation to enforce first normal form."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.22
+  }
  },
  {
   "id": "dbms.participation_constraints.medium2",
@@ -7819,13 +8860,43 @@
     "point": "A cycle in the precedence graph means the schedule is not conflict serializable.",
     "quote": "Clearly, there exists a cycle in the precedence graph. Therefore,",
     "followup": "What happens if a precedence graph has a cycle during conflict serializability testing?",
-    "followup_answer": "The schedule is not conflict serializable because cycles prevent the schedule from being reordered into a serial schedule."
+    "followup_answer": "The schedule is not conflict serializable because cycles prevent the schedule from being reordered into a serial schedule.",
+    "variants": [
+     "a cycle in the precedence graph means the schedule isn't conflict serializable",
+     "if there's a cycle in the precedence graph, the schedule can't be conflict serializable",
+     "the presence of a cycle in the precedence graph prevents conflict serializability",
+     "cycle in the precedence graph implies the schedule is not conflict serializable",
+     "when the precedence graph has a cycle, conflict serializability fails",
+     "cycle in the precedence graph makes the schedule non-conflict serializable"
+    ],
+    "followup_replies": [
+     "it's not conflict serializable",
+     "nope",
+     "the schedule can't be reordered",
+     "it's not serializable",
+     "it's not possible"
+    ]
    },
    {
     "point": "There is an edge Ti -> Tj when an operation of Ti conflicts with a later operation of Tj.",
     "quote": "4. For each case in S where Tj executes a write_item(X) after Ti executes a write_item(X), create an edge (Ti → Tj) in the precedence graph.",
     "followup": "If the graph has no cycle, how do you find an equivalent serial schedule?",
-    "followup_answer": "Take a topological order of the precedence graph."
+    "followup_answer": "Take a topological order of the precedence graph.",
+    "variants": [
+     "there's an edge from Ti to Tj if their operations conflict and Ti happens before Tj",
+     "when Ti's operation conflicts with Tj's and Ti is earlier, you draw Ti -> Tj",
+     "you add Ti -> Tj when Ti's operation conflicts with Tj's and Ti is before Tj",
+     "the precedence graph has Ti -> Tj if Ti's operation conflicts with Tj's and Ti is earlier",
+     "edge Ti -> Tj is added when Ti's operation conflicts with Tj's and Ti is before T,",
+     "Ti -> Tj edge is created when Ti's operation conflicts with Tj's and Ti is earlier"
+    ],
+    "followup_replies": [
+     "take a topological order",
+     "topological sort",
+     "topological order",
+     "topological sort gives the serial schedule",
+     "topological order of the graph"
+    ]
    }
   ],
   "source_pages": [
@@ -7861,7 +8932,19 @@
   "quality_note": "duplicate point replaced by how the edges are built (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A cycle in the precedence graph implies the schedule is not conflict serializable.",
+   "variants": [
+    "A schedule with a cycle in its precedence graph is not conflict serializable.",
+    "If a precedence graph has a cycle, the schedule lacks conflict serializability.",
+    "Conflict serializability fails when the precedence graph contains a cycle.",
+    "A cycle in the precedence graph makes the schedule non-conflict serializable.",
+    "The presence of a cycle in the precedence graph prevents conflict serializability."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.998
+  }
  },
  {
   "id": "dbms.select_query_clauses.medium1",
@@ -7936,13 +9019,42 @@
     "point": "A BEFORE INSERT trigger checks each new row before it is stored.",
     "quote": "The keyword BEFORE specifies that the trigger execution occurs before the triggering operation (in this case, insertion of tuples in the Marks_sample relation) is executed.",
     "followup": "Why is it important for the trigger to execute before the insertion?",
-    "followup_answer": "Because it allows the trigger to intercept and reject invalid data before it is actually stored in the table."
+    "followup_answer": "Because it allows the trigger to intercept and reject invalid data before it is actually stored in the table.",
+    "variants": [
+     "a before insert trigger checks the new row before it's added to the table.",
+     "before insert triggers validate data before it's stored.",
+     "the trigger runs before the row is inserted into the database.",
+     "using a before insert trigger ensures data is checked before being saved.",
+     "before insert triggers are used to validate data before insertion."
+    ],
+    "followup_replies": [
+     "so the data isn't stored if it's invalid.",
+     "it stops bad data from getting into the table.",
+     "invalid data is prevented from being saved.",
+     "the row is not added if it doesn't pass the check.",
+     "the trigger stops the insertion before it happens."
+    ]
    },
    {
     "point": "If the value is invalid, the trigger raises an error and the row is not inserted.",
     "quote": "If the specified condition is satisfied, the trigger raises an error, an appropriate error message is displayed and the tuple is not inserted (trigger execution occurs before insertion).",
     "followup": "What would happen if the trigger did not raise an error?",
-    "followup_answer": "The invalid data would be inserted into the table, violating the integrity constraints defined by the trigger."
+    "followup_answer": "The invalid data would be inserted into the table, violating the integrity constraints defined by the trigger.",
+    "variants": [
+     "if the mark is not between 0 and 100, the trigger throws an error.",
+     "the trigger raises an error if the value is invalid.",
+     "invalid marks cause the trigger to fail the insert.",
+     "the trigger stops the row from being inserted if it's invalid.",
+     "the trigger prevents invalid data from being stored.",
+     "the trigger blocks the insertion if the mark is out of range."
+    ],
+    "followup_replies": [
+     "the data would be inserted and break integrity.",
+     "the table would have invalid marks.",
+     "data integrity would be violated.",
+     "the database would store incorrect values.",
+     "the integrity constraints would be broken."
+    ]
    }
   ],
   "source_pages": [
@@ -7977,7 +9089,19 @@
   "quality_note": "reference named a trigger the candidate never sees (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A trigger enforces data integrity by automatically executing predefined actions in response to specific events.",
+   "variants": [
+    "A trigger enforces data integrity by running stored procedures when certain database events occur.",
+    "A trigger enforces data integrity by performing checks and actions when a database operation happens.",
+    "A trigger enforces data integrity by activating rules when a data modification event is detected.",
+    "A trigger enforces data integrity by executing validation logic upon a database action being performed.",
+    "A trigger enforces data integrity by applying constraints when a database event is triggered."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.001
+  }
  },
  {
   "id": "dbms.database_architecture.hard2",
@@ -8106,13 +9230,38 @@
     "point": "The cardinality ratio decides which table gets the foreign key.",
     "quote": "Mapping cardinalities, or cardinality ratios, express the number of entities to which another entity can be associated via a relationship set.",
     "followup": "What happens if you try to model a many-to-many relationship without a junction table?",
-    "followup_answer": "You would end up with an entity that has multiple parents, which is not allowed in a relational model."
+    "followup_answer": "You would end up with an entity that has multiple parents, which is not allowed in a relational model.",
+    "variants": [
+     "cardinality ratios tell you where to put the foreign key.",
+     "the foreign key goes in the table that can have multiple entries.",
+     "the cardinality ratio determines which table gets the foreign key.",
+     "if the ratio is 1:N, the many side gets the foreign key.",
+     "the foreign key is placed based on the cardinality ratio."
+    ],
+    "followup_replies": [
+     "nope",
+     "it's not allowed",
+     "you can't have multiple parents",
+     "relational model doesn't support it",
+     "you get a violation"
+    ]
    },
    {
     "point": "An M:N relationship needs a separate table holding pairs of keys.",
     "quote": "For each regular binary M:N relationship type R, create a new relation S to represent R. This is a relationship relation.",
     "followup": "How does a junction table resolve the many-to-many issue?",
-    "followup_answer": "Each row pairs one key from each side, so each entity can appear in many rows; it splits M:N into two 1:N relationships."
+    "followup_answer": "Each row pairs one key from each side, so each entity can appear in many rows; it splits M:N into two 1:N relationships.",
+    "variants": [
+     "many-to-many needs a separate table to hold the pairs.",
+     "the relationship table stores pairs of keys."
+    ],
+    "followup_replies": [
+     "it pairs one key from each side",
+     "it splits the relationship into two 1:N",
+     "it allows multiple entries per entity",
+     "it holds the key pairs",
+     "it creates two 1:N relationships"
+    ]
    }
   ],
   "source_pages": [
@@ -8151,7 +9300,18 @@
   "quality_note": "reference explained M:N as 'multiple parents'; the real reason is one value per foreign-key cell (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Cardinality ratios determine the number of entities that can be associated with each entity in a relationship, requiring a junction table for many-to-many relationships in the relational model.",
+   "variants": [
+    "A many-to-many relationship needs a junction table because cardinality ratios don't allow direct representation in relational databases.",
+    "Relational databases require a junction table for many-to-many relationships due to cardinality ratio constraints.",
+    "Cardinality ratios enforce that many-to-many relationships must use a junction table in relational schemas.",
+    "To represent many-to-many relationships, a junction table is needed due to cardinality ratio requirements in relational models."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.047
+  }
  },
  {
   "id": "dbms.two_phase_locking.hard2",

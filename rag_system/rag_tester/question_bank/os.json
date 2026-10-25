@@ -2343,10 +2343,17 @@
     "followup_answer": "Resource nodes are removed to focus on the waiting relationships between processes, which is essential for detecting deadlocks based on circular dependencies.",
     "followup_replies": [
      "to focus on process dependencies",
-     "so we can look at process waiting relationships",
-     "because we only care about processes waiting for each other",
-     "it simplifies the graph to show process dependencies",
-     "removing resources lets us focus on the wait-for relationships"
+     "it simplifies the graph",
+     "so you can see waiting relationships",
+     "removing resources makes it easier to detect cycles",
+     "to isolate process-to-process dependencies"
+    ],
+    "variants": [
+     "the wait-for graph is the resource-allocation graph without the resources.",
+     "you take out the resource nodes to make the graph simpler.",
+     "the graph shows only how processes are waiting for each other.",
+     "without resource nodes, you can see the waiting relationships clearly.",
+     "the wait-for graph is made by removing resource nodes from the resource-allocation graph."
     ]
    },
    {
@@ -2355,18 +2362,40 @@
     "followup": "How does this edge represent a deadlock condition?",
     "followup_answer": "This edge represents a direct dependency where Pi is waiting for Pj, and if such edges form a cycle, it indicates that each process in the cycle is waiting for another, creating a deadlock.",
     "followup_replies": [
-     "because it creates a cycle that shows mutual waiting",
-     "it forms a cycle which means each is waiting for another",
-     "a cycle means all are waiting for each other",
-     "it creates a loop that indicates deadlock",
-     "the cycle shows a mutual waiting condition"
+     "it creates a cycle that shows deadlock",
+     "it forms a loop that means no progress",
+     "it creates a circular dependency",
+     "it leads to a deadlock if it's part of a cycle",
+     "it's the basis for detecting a deadlock"
+    ],
+    "variants": [
+     "an edge from Pi to Pj means Pi is waiting for Pj to release something.",
+     "pi is waiting for pj to give up a resource.",
+     "pi is waiting for pj to finish using a resource.",
+     "the edge represents a direct dependency between processes.",
+     "the edge indicates pi is waiting for pj to release a resource."
     ]
    },
    {
     "point": "A cycle in the wait-for graph means there is a deadlock.",
     "quote": "A deadlock exists in the system if and only if the wait-for graph contains a cycle.",
     "followup": "What does a cycle in the wait-for graph tell you?",
-    "followup_answer": "That the processes in the cycle are deadlocked: each one waits for a resource held by the next one in the cycle, so none can proceed."
+    "followup_answer": "That the processes in the cycle are deadlocked: each one waits for a resource held by the next one in the cycle, so none can proceed.",
+    "variants": [
+     "a cycle in the wait-for graph means there's a deadlock.",
+     "if there's a cycle, the system is deadlocked.",
+     "the presence of a cycle indicates a deadlock.",
+     "a cycle means processes are waiting for each other.",
+     "deadlock happens when there's a cycle in the graph.",
+     "a cycle in the graph confirms a deadlock."
+    ],
+    "followup_replies": [
+     "it means processes are waiting for each other",
+     "it shows a circular dependency",
+     "it means no process can proceed",
+     "it confirms a deadlock condition",
+     "it means each process is waiting for another"
+    ]
    }
   ],
   "source_pages": [
@@ -2388,25 +2417,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "A wait-for graph detects deadlocks by representing cycles among processes waiting for resources.",
-   "variants": [
-    "A wait-for graph detects deadlocks by showing cycles where processes wait for resources.",
-    "A wait-for graph detects deadlocks by identifying cycles of resource requests.",
-    "A wait-for graph detects deadlocks by modeling dependencies that form cycles.",
-    "A wait-for graph detects deadlocks by showing processes waiting for resources in cycles.",
-    "A wait-for graph detects deadlocks by representing cycles of resource waiting processes."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.995
-  },
   "quality_score": 8,
   "quality_note": "good; key points reworded and the missing core idea (cycle = deadlock) added (repair 1)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch1_2026-10-03"
-  ]
+  ],
+  "core_point": {
+   "point": "A wait-for graph detects deadlocks by representing cycles among processes waiting for resources.",
+   "variants": [
+    "A wait-for graph detects deadlocks by showing cycles where processes wait for resources.",
+    "A wait-for graph detects deadlocks by identifying cycles of resource requests.",
+    "A wait-for graph detects deadlocks by modeling cycles of waiting processes.",
+    "A wait-for graph detects deadlocks by showing cycles of resource dependency.",
+    "A wait-for graph detects deadlocks by representing cycles of process waiting for resources."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.995
+  }
  },
  {
   "id": "os.multilevel_page_tables.hard2",
@@ -3346,10 +3375,17 @@
     "followup_answer": "Because the semaphore implementation may not prioritize processes, leading to indefinite blocking.",
     "followup_replies": [
      "no priority",
+     "no scheduling",
      "no fairness",
-     "queue not managed",
-     "process never selected",
-     "semaphore doesn't prioritize"
+     "no process selection",
+     "no removal"
+    ],
+    "variants": [
+     "if a process calls wait() without a matching signal(), it can starve.",
+     "starvation happens when a process never gets removed from the semaphore queue.",
+     "without proper signal(), a process might never get its turn on the semaphore.",
+     "starvation occurs when the semaphore doesn't prioritize processes correctly.",
+     "a process can be stuck waiting forever if signals aren't called."
     ]
    },
    {
@@ -3358,18 +3394,41 @@
     "followup": "Why is busy waiting considered inefficient in some cases?",
     "followup_answer": "Because processes spend time spinning in a loop instead of doing useful work when the critical section is not frequently accessed.",
     "followup_replies": [
-     "spinning in a loop",
-     "wastes CPU time",
-     "no progress",
-     "CPU busy waiting",
-     "no useful work"
+     "no sleep",
+     "wasted cycles",
+     "no context switch",
+     "no efficiency",
+     "not useful"
+    ],
+    "variants": [
+     "busy waiting uses CPU time when a process is just waiting.",
+     "spinning in a loop wastes CPU resources.",
+     "busy waiting keeps the CPU busy while waiting for a semaphore.",
+     "processes spin instead of sleeping when waiting for a semaphore.",
+     "busy waiting is inefficient when the critical section is rarely used.",
+     "spinning uses CPU cycles instead of letting the process sleep."
     ]
    },
    {
     "point": "Deadlock: processes wait forever for a signal that only another waiting process can give.",
     "quote": "Deadlock – two or more processes are waiting indefinitely for an",
     "followup": "Can you give an example of semaphores causing a deadlock?",
-    "followup_answer": "P0 does wait(S) then wait(Q) while P1 does wait(Q) then wait(S); each holds one semaphore and waits forever for the other."
+    "followup_answer": "P0 does wait(S) then wait(Q) while P1 does wait(Q) then wait(S); each holds one semaphore and waits forever for the other.",
+    "variants": [
+     "deadlock happens when processes wait for each other's signals.",
+     "two processes can deadlock if they wait for each other's semaphores.",
+     "deadlock occurs when no process can proceed because they're waiting for each other.",
+     "each process holds a semaphore and waits for the other's signal.",
+     "deadlock is when processes wait forever for signals that only others can give.",
+     "deadlock is when processes block each other indefinitely."
+    ],
+    "followup_replies": [
+     "two processes waiting for each other",
+     "circular wait",
+     "hold and wait",
+     "no release",
+     "no progress"
+    ]
    }
   ],
   "source_pages": [
@@ -3399,25 +3458,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "Deadlock and starvation occur when semaphores are misused due to improper resource allocation and priority inversion, and busy waiting wastes CPU time.",
-   "variants": [
-    "Deadlock and starvation happen when semaphores are used incorrectly, causing improper resource allocation and priority inversion, and busy waiting wastes CPU time.",
-    "Improper semaphore use leads to deadlock and starvation through incorrect resource allocation and priority inversion, with busy waiting causing CPU waste.",
-    "Deadlock and starvation result from incorrect semaphore usage, which causes improper resource allocation and priority inversion, and busy waiting wastes CPU time.",
-    "Deadlock and starvation occur due to incorrect semaphore use, leading to improper resource allocation and priority inversion, and busy waiting wastes CPU time.",
-    "Incorrect semaphore use causes deadlock and starvation through improper resource allocation and priority inversion, and busy waiting wastes CPU time."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.001
-  },
   "quality_score": 7,
   "quality_note": "deadlock was missing from the key points; added (repair 2)",
   "curated": true,
   "interview_priority": 3,
   "repairs": [
    "batch2_2026-10-03"
-  ]
+  ],
+  "core_point": {
+   "point": "Deadlock and starvation occur when semaphores are misused due to improper resource allocation order, and busy waiting wastes CPU time.",
+   "variants": [
+    "Deadlock and starvation happen when semaphores are used without proper resource ordering, and busy waiting consumes CPU time.",
+    "Improper semaphore use causes deadlock and starvation, and busy waiting leads to CPU time waste.",
+    "Deadlock and starvation result from incorrect semaphore usage, and busy waiting causes CPU time loss.",
+    "Semaphores misused lead to deadlock and starvation, and busy waiting wastes CPU time.",
+    "Deadlock and starvation arise from incorrect semaphore operations, and busy waiting uses CPU time inefficiently."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.004
+  }
  },
  {
   "id": "os.segmentation.medium2",
@@ -3437,11 +3496,18 @@
     "followup": "What is the purpose of splitting the logical address into two parts?",
     "followup_answer": "Splitting the logical address into a segment number and an offset allows the system to locate the correct segment and then determine the position within that segment.",
     "followup_replies": [
-     "to find the right segment and position.",
-     "to locate the segment and offset in memory.",
-     "so the system can find the correct segment and offset.",
-     "so the system knows which segment and where in it.",
-     "to determine the segment and the position within it."
+     "to locate the correct segment.",
+     "to find the segment and position.",
+     "so the system knows which segment to use.",
+     "to identify the segment and offset.",
+     "so it can find the right part of memory."
+    ],
+    "variants": [
+     "segmentation splits logical addresses into a segment number and an offset.",
+     "you split the address into segment and offset to find the right part of memory.",
+     "segment number and offset make up the logical address in segmentation.",
+     "segmentation uses a segment number and offset to locate memory.",
+     "segmentation divides the address into segment and offset parts."
     ]
    },
    {
@@ -3450,18 +3516,41 @@
     "followup": "What role does the segment table play in address translation?",
     "followup_answer": "The segment table stores the base address and limit of each segment, which are used to translate logical addresses into physical memory addresses.",
     "followup_replies": [
-     "it translates logical addresses to physical ones.",
-     "it helps convert logical to physical memory addresses.",
-     "it maps logical addresses to physical memory.",
-     "it allows address translation between logical and physical.",
-     "it translates logical addresses into physical addresses."
+     "it translates logical addresses to physical addresses.",
+     "it helps find the correct memory location.",
+     "it maps segments to memory.",
+     "it translates segment numbers to physical addresses.",
+     "it provides the base and limit for each segment."
+    ],
+    "variants": [
+     "the segment table has the base and limit for each segment.",
+     "segment table stores base and limit for address translation.",
+     "each segment's base and limit are in the segment table.",
+     "segment table holds the base and limit of each segment.",
+     "the segment table gives the base and limit for segments.",
+     "segment table contains base and limit for each segment."
     ]
    },
    {
     "point": "If the offset is beyond the segment's limit, the hardware traps to the operating system.",
     "quote": "The offset d of the logical address must be between 0 and the segment limit. If it is not, we trap to the operating system (logical addressing attempt beyond end of segment).",
     "followup": "What happens if a program uses an offset larger than its segment's limit?",
-    "followup_answer": "The hardware traps to the operating system with an addressing error, which usually ends the program (a segmentation fault)."
+    "followup_answer": "The hardware traps to the operating system with an addressing error, which usually ends the program (a segmentation fault).",
+    "variants": [
+     "if the offset is too big, the system traps to the OS.",
+     "invalid offset causes a trap to the operating system.",
+     "when offset exceeds the limit, the hardware traps to OS.",
+     "segmentation fault happens if offset is invalid.",
+     "if the offset is beyond the limit, the system traps.",
+     "invalid offset leads to a trap to the OS."
+    ],
+    "followup_replies": [
+     "it causes a segmentation fault.",
+     "the system traps to the OS.",
+     "it results in a segmentation fault.",
+     "the OS gets a trap.",
+     "the program is terminated."
+    ]
    }
   ],
   "source_pages": [
@@ -3494,7 +3583,19 @@
   "interview_priority": 3,
   "repairs": [
    "batch2_2026-10-03"
-  ]
+  ],
+  "core_point": {
+   "point": "Segmentation maps logical addresses to physical memory via a segment table, and an invalid offset causes a segmentation fault.",
+   "variants": [
+    "Segmentation uses a segment table to translate logical addresses to physical memory, and an invalid offset triggers a segmentation fault.",
+    "Segmentation translates logical addresses to physical memory with a segment table, and an invalid offset results in a segmentation fault.",
+    "Segmentation relies on a segment table to convert logical addresses to physical memory, and an invalid offset leads to a segmentation fault.",
+    "Segmentation employs a segment table to handle logical addresses, and an invalid offset causes a segmentation fault.",
+    "Segmentation maps logical addresses to physical memory using a segment table, and an invalid offset causes a segmentation fault."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.971
+  }
  },
  {
   "id": "os.banker_s_algorithm.medium1",
@@ -3512,7 +3613,21 @@
     "point": "A request is granted only if the system would still be in a safe state afterwards; otherwise the process waits.",
     "quote": "A state is safe if the system can allocate resources to each process (up to its maximum) in some order and still avoid a deadlock.",
     "followup": "What happens if granting a request would leave the system in an unsafe state?",
-    "followup_answer": "The request is not granted; the process waits until it can be granted safely."
+    "followup_answer": "The request is not granted; the process waits until it can be granted safely.",
+    "variants": [
+     "the banker's algorithm checks if granting a request keeps the system safe.",
+     "if the system would be unsafe, the request is denied.",
+     "the algorithm only allows a request if the system remains safe.",
+     "granting a request is only allowed if the system stays safe.",
+     "the process waits if granting the request would make the system unsafe."
+    ],
+    "followup_replies": [
+     "the request is denied",
+     "it waits",
+     "no grant",
+     "process waits",
+     "request is not granted"
+    ]
    },
    {
     "point": "The state is safe if some order exists in which every process can get its maximum need and finish.",
@@ -3520,11 +3635,19 @@
     "followup": "What would happen if not all Finish[i] are true after the algorithm completes?",
     "followup_answer": "The system is in an unsafe state, and there is a possibility of deadlock.",
     "followup_replies": [
-     "system could deadlock",
-     "it would be unsafe",
-     "deadlock might occur",
-     "unsafe state",
-     "dead, no progress"
+     "the system is unsafe",
+     "deadlock is possible",
+     "it's unsafe",
+     "deadlock may occur",
+     "system is in an unsafe state"
+    ],
+    "variants": [
+     "a safe state means all processes can finish in some order.",
+     "if all processes can finish, the state is safe.",
+     "the system is safe if there's a safe sequence of process completions.",
+     "the state is safe if every process can get its needs in some order.",
+     "the safety check finds a sequence where all processes can finish.",
+     "if all processes can finish, the system is safe."
     ]
    }
   ],
@@ -3553,25 +3676,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "The Banker’s algorithm ensures a safe state by guaranteeing that a resource allocation sequence exists where all processes can complete.",
-   "variants": [
-    "The Banker’s algorithm ensures a safe state by ensuring there's a resource allocation sequence that allows all processes to finish.",
-    "The Banker’s algorithm ensures a safe state by making sure there's an order to allocate resources so every process can complete.",
-    "The Banker’s algorithm ensures a safe state by verifying there's a sequence of resource allocations that lets all processes finish.",
-    "The Banker’s algorithm ensures a safe state by checking that a resource allocation sequence exists for all processes to complete.",
-    "The Banker’s algorithm ensures a safe state by confirming there's an order of resource allocation that allows all processes to finish."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.993
-  },
   "quality_score": 7,
   "quality_note": "implementation-variable key points replaced by the safe-state idea (repair 2)",
   "curated": true,
   "interview_priority": 3,
   "repairs": [
    "batch2_2026-10-03"
-  ]
+  ],
+  "core_point": {
+   "point": "The Banker’s algorithm ensures a safe state by guaranteeing that a resource allocation order exists where all processes can complete without deadlock.",
+   "variants": [
+    "The Banker’s algorithm maintains a safe state by ensuring there's an order to allocate resources so all processes can finish.",
+    "The Banker’s algorithm keeps the system safe by finding an order that lets all processes get their resources and finish.",
+    "The Banker’s algorithm ensures safety by verifying there's a resource allocation sequence that allows all processes to complete.",
+    "The Banker’s algorithm enforces a safe state by confirming an order exists for all processes to get resources and finish.",
+    "The Banker’s algorithm ensures a safe state by making sure there's a resource allocation order that lets every process complete without deadlock."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.91
+  }
  },
  {
   "id": "os.mutex_locks.medium2",
@@ -3784,7 +3907,22 @@
     "point": "A state is safe if there is an order in which every process can get its resources and finish.",
     "quote": "A sequence of processes <P1, P2, ..., Pn> is a safe sequence for the current allocation state if, for each Pi , the resource requests that Pi can still make can be satisfied by the currently available resources plus the resources held by all Pj, with j < i.",
     "followup": "Is every unsafe state a deadlock?",
-    "followup_answer": "No; an unsafe state may lead to deadlock, but is not necessarily deadlocked."
+    "followup_answer": "No; an unsafe state may lead to deadlock, but is not necessarily deadlocked.",
+    "variants": [
+     "a safe state means there's a way for all processes to get their resources and finish.",
+     "safe state is when processes can be ordered to get their needs met one by one.",
+     "in a safe state, there's a sequence where each process gets what it needs.",
+     "the banker's algorithm ensures the system stays in a safe state.",
+     "safe state means there's a safe sequence of process execution.",
+     "if there's a safe sequence, the system is in a safe state."
+    ],
+    "followup_replies": [
+     "no",
+     "unsafe state may lead to deadlock",
+     "not necessarily",
+     "it's not guaranteed",
+     "no, it's not deadlocked"
+    ]
    },
    {
     "point": "A safe state cannot lead to deadlock.",
@@ -3792,18 +3930,37 @@
     "followup": "How does the OS ensure that it remains in a safe state?",
     "followup_answer": "The OS ensures that resource allocation decisions always leave the system in a safe state, preventing it from entering an unsafe state.",
     "followup_replies": [
-     "by using the banker's algorithm.",
-     "resource allocation decisions.",
-     "it checks before allocating resources.",
-     "it ensures the system stays safe.",
-     "it uses safe state checks."
+     "by always keeping the system in a safe state",
+     "by ensuring resource allocation doesn't lead to unsafe states",
+     "by checking for safe sequences before granting requests",
+     "by using algorithms that prevent unsafe states",
+     "by ensuring every allocation keeps the system safe"
+    ],
+    "variants": [
+     "a safe state means the system can avoid deadlock by finishing all processes.",
+     "in a safe state, the system can safely allocate resources without deadlock.",
+     "safe state ensures that no deadlock can occur.",
+     "the system can finish all processes in a safe state.",
+     "safe state prevents the system from entering deadlock.",
+     "if the system is in a safe state, it can avoid deadlock."
     ]
    },
    {
     "point": "Avoidance grants a request only if the system stays in a safe state.",
     "quote": "As long as the state is safe, the OS can avoid unsafe states.",
     "followup": "Name an algorithm that does this.",
-    "followup_answer": "The banker's algorithm."
+    "followup_answer": "The banker's algorithm.",
+    "variants": [
+     "the system only grants requests if it remains in a safe state.",
+     "resource allocation is allowed only if the system stays safe.",
+     "deadlock avoidance requires the system to stay in a safe state.",
+     "the banker's algorithm ensures the system doesn't enter an unsafe state.",
+     "safe state is maintained by only allowing safe resource allocations.",
+     "the OS ensures that every request leaves the system in a safe state."
+    ],
+    "followup_replies": [
+     "banker's algorithm"
+    ]
    }
   ],
   "source_pages": [
@@ -3827,25 +3984,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "A safe state is a state in which some ordering of all processes lets each get its resources and finish.",
-   "variants": [
-    "A safe state is when there exists an order of processes that allows all to acquire resources and complete.",
-    "A safe state is when all processes can be scheduled in an order to acquire resources and finish.",
-    "A safe state is when there is an order of processes that enables each to get its resources and finish.",
-    "A safe state is when all processes can be arranged to get their resources and finish.",
-    "A safe state is when there exists an order of processes that allows each to acquire resources and finish."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.002
-  },
   "quality_score": 8,
   "quality_note": "circular points replaced by the safe-sequence definition (repair 6)",
   "curated": true,
   "interview_priority": 3,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A safe state is a state in which there exists a sequence of processes that can complete without causing deadlock.",
+   "variants": [
+    "A safe state is when there's an order of processes that can all finish without deadlock.",
+    "A safe state is when processes can be scheduled to finish without deadlock.",
+    "A safe state is when a deadlock-free execution sequence exists for all processes.",
+    "A safe state is when processes can be arranged to complete without deadlock.",
+    "A safe state is when there's a deadlock-free order for all processes to finish."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.998
+  }
  },
  {
   "id": "os.critical_section_problem.medium1",
@@ -3863,19 +4020,64 @@
     "point": "Mutual exclusion: only one process at a time can be in its critical section.",
     "quote": "1. Mutual Exclusion - If process Pi is executing in its critical section, then no other processes can be executing in their critical sections",
     "followup": "What can go wrong without mutual exclusion?",
-    "followup_answer": "A race condition: two processes update shared data at once and the result depends on timing."
+    "followup_answer": "A race condition: two processes update shared data at once and the result depends on timing.",
+    "variants": [
+     "mutual exclusion ensures only one process is in its critical section at a time.",
+     "you can't have two processes in their critical sections simultaneously.",
+     "the critical section can only be accessed by one process at a time.",
+     "without mutual exclusion, you get race conditions and data corruption.",
+     "mutual exclusion is the first requirement for safe concurrency.",
+     "only one process can be in the critical section, that's mutual exclusion."
+    ],
+    "followup_replies": [
+     "only those not in the remainder section",
+     "non-remainder processes",
+     "processes not in the remainder",
+     "those not in the remainder section",
+     "non-remainder processes only"
+    ]
    },
    {
     "point": "Progress: if the section is free, choosing who enters next cannot be postponed forever.",
     "quote": "2. Progress - If no process is executing in its critical section and there exist some processes that wish to enter their critical section, then the selection of the processes that will enter the critical section next cannot be postponed indefinitely",
     "followup": "Which processes may take part in deciding who enters next?",
-    "followup_answer": "Only those that are not executing in their remainder section, i.e. those that want to enter."
+    "followup_answer": "Only those that are not executing in their remainder section, i.e. those that want to enter.",
+    "variants": [
+     "progress means no one waits forever to enter the critical section.",
+     "the next process to enter can't be delayed indefinitely.",
+     "if the section is free, someone must get in eventually.",
+     "progress ensures no infinite waiting for the critical section.",
+     "no process should be blocked from entering forever.",
+     "the choice of who enters next can't be postponed."
+    ],
+    "followup_replies": [
+     "only those that want to enter",
+     "processes that want to enter",
+     "those not in the remainder",
+     "only the ones that want to enter",
+     "processes that are waiting"
+    ]
    },
    {
     "point": "Bounded waiting: a waiting process is let in after a limited number of others enter.",
     "quote": "3. Bounded Waiting - A bound must exist on the number of times that other processes are allowed to enter their critical sections after a process has made a request to enter its critical section and before that request is granted",
     "followup": "Which problem does bounded waiting prevent?",
-    "followup_answer": "Starvation of a process that keeps being overtaken."
+    "followup_answer": "Starvation of a process that keeps being overtaken.",
+    "variants": [
+     "bounded waiting ensures no process waits forever to get in.",
+     "a process can't be starved if bounded waiting is satisfied.",
+     "bounded waiting limits how many times others can enter before it.",
+     "bounded waiting prevents starvation by limiting priority inversion.",
+     "no process can be indefinitely blocked if bounded waiting holds.",
+     "bounded waiting guarantees a process will eventually get in."
+    ],
+    "followup_replies": [
+     "starvation",
+     "process starvation",
+     "no starvation",
+     "prevents starvation",
+     "starvation is prevented"
+    ]
    }
   ],
   "source_pages": [
@@ -3897,24 +4099,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "The progress condition ensures fairness by guaranteeing that if a process is ready, it will eventually enter the critical section.",
-   "variants": [
-    "A safe state is when some ordering of all processes lets each get its resources and finish.",
-    "A process is ready when it has all required resources and is waiting to execute.",
-    "The progress condition ensures that no process is starved by allowing ready processes to enter the critical section.",
-    "A safe state is when there exists an order of resource allocation that allows all processes to complete."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.059
-  },
   "quality_score": 8,
   "quality_note": "points confused progress with bounded waiting; now the three requirements (repair 6)",
   "curated": true,
   "interview_priority": 3,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A solution to the critical-section problem must ensure mutual exclusion, progress, and bounded waiting.",
+   "variants": [
+    "A critical-section solution requires mutual exclusion, progress, and bounded waiting.",
+    "Mutual exclusion, progress, and bounded waiting are the three critical requirements for a solution.",
+    "The three essential requirements for a critical-section solution are mutual exclusion, progress, and bounded waiting.",
+    "To solve the critical-section problem, mutual exclusion, progress, and bounded waiting must be met.",
+    "A critical-section solution must satisfy mutual exclusion, progress, and bounded waiting."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.013
+  }
  },
  {
   "id": "os.fcfs_scheduling.medium2",
@@ -3932,19 +4135,61 @@
     "point": "In the order P1, P2, P3 the average waiting time is (0 + 24 + 27)/3 = 17 ms.",
     "quote": "Average waiting time: (0 + 24 + 27)/3 = 17",
     "followup": "Why does P3 wait 27 ms?",
-    "followup_answer": "It has to wait for P1 (24 ms) and P2 (3 ms) to finish first."
+    "followup_answer": "It has to wait for P1 (24 ms) and P2 (3 ms) to finish first.",
+    "variants": [
+     "in the first order, p3 waits for p1 and p2 to finish, so it's 24 plus 3.",
+     "p3's waiting time is 27 because it has to wait for the first two processes.",
+     "the convoy effect makes p3 wait 27 ms because it's after a long process.",
+     "when p1 runs first, p3 has to wait 27 ms before it gets to run.",
+     "p3's waiting time is the sum of p1 and p2's burst times, which is 27 ms.",
+     "in the first order, p3 waits for both p1 and p2 to complete."
+    ],
+    "followup_replies": [
+     "sjf",
+     "shortest job first",
+     "sjf scheduling",
+     "shortest job first algorithm",
+     "sjf gives minimum average waiting time"
+    ]
    },
    {
     "point": "In the order P2, P3, P1 the average drops to (6 + 0 + 3)/3 = 3 ms.",
     "quote": "Average waiting time: (6 + 0 + 3)/3 = 3",
     "followup": "Which scheduling algorithm always gives the minimum average waiting time?",
-    "followup_answer": "Shortest-Job-First (SJF)."
+    "followup_answer": "Shortest-Job-First (SJF).",
+    "variants": [
+     "p1's waiting time is 6 because it's after two short processes.",
+     "the order p2, p3, p1 leads to a lower average waiting time.",
+     "when p2 and p3 run first, p1 waits only 6 ms.",
+     "the second order reduces the average waiting time to 3 ms.",
+     "p1 waits 6 ms because it's after two short processes."
+    ],
+    "followup_replies": [
+     "sjf",
+     "shortest job first",
+     "sjf scheduling",
+     "shortest job first algorithm",
+     "sjf gives minimum average waiting to wait"
+    ]
    },
    {
     "point": "Short processes waiting behind a long one is called the convoy effect.",
     "quote": "Convoy effect - short process behind long process",
     "followup": "Why is FCFS bad for interactive systems?",
-    "followup_answer": "It is non-preemptive, so one long process can make every short, interactive one wait."
+    "followup_answer": "It is non-preemptive, so one long process can make every short, interactive one wait.",
+    "variants": [
+     "short processes stuck behind long ones is called the convoy effect.",
+     "the convoy effect happens when short jobs are behind long ones.",
+     "the convoy effect is when short processes wait behind long ones.",
+     "short jobs waiting behind long ones is the convoy effect."
+    ],
+    "followup_replies": [
+     "it's non-preemptive",
+     "non-preemptive",
+     "can't be interrupted",
+     "no preemption",
+     "can't stop a running process"
+    ]
    }
   ],
   "source_pages": [
@@ -3966,14 +4211,6 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "The defining condition is that the order of process arrival directly determines the waiting time in FCFS scheduling.",
-   "variants": [
-    "The order of process arrival in FCFS scheduling directly determines the waiting time."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.985
-  },
   "quality_score": 8,
   "quality_note": "referred to an example the candidate never sees; the example is now in the question (repair 6)",
   "curated": true,
@@ -4000,26 +4237,41 @@
     "followup": "What happens if there are no processes in the ready queue?",
     "followup_answer": "The CPU would be idle until a process is added to the ready queue.",
     "variants": [
-     "the short-term scheduler picks a process from the ready queue",
-     "it chooses which process gets the CPU from the ready queue",
-     "the scheduler selects a process to run from the ready queue",
-     "the short-term scheduler is responsible for selecting a process from the ready queue",
-     "when a process is ready, the scheduler picks one from the ready queue",
-     "the short-term scheduler selects a process to run next from the ready queue"
+     "the short-term scheduler picks a process from the ready queue.",
+     "it chooses a process from the ready queue to run next.",
+     "the cpu scheduler selects a process from the ready queue.",
+     "the ready queue is where the scheduler picks the next process.",
+     "the scheduler takes a process from the ready queue to run.",
+     "the short-term scheduler selects from the ready queue."
     ],
     "followup_replies": [
-     "cpu is idle",
-     "no process to run",
-     "it waits for a process",
-     "the cpu stays idle",
-     "no process in the queue"
+     "the cpu is idle.",
+     "cpu is idle until a process is added.",
+     "cpu remains idle.",
+     "no process in ready queue, so cpu is idle.",
+     "cpu is idle until a process is added to the queue."
     ]
    },
    {
     "point": "It allocates the CPU to the selected process.",
     "quote": "Short-term scheduler selects from among the processes in ready queue, and allocates the CPU to one of them",
     "followup": "Which module actually hands the CPU to the chosen process?",
-    "followup_answer": "The dispatcher: it switches context, switches to user mode and jumps to the right place in the program."
+    "followup_answer": "The dispatcher: it switches context, switches to user mode and jumps to the right place in the program.",
+    "variants": [
+     "the short-term scheduler gives the cpu to the selected process.",
+     "it assigns the cpu to the chosen process.",
+     "the cpu scheduler hands over the cpu to the selected process.",
+     "the cpu is allocated to the process the scheduler picks.",
+     "the scheduler allocates the cpu to the process.",
+     "the cpu is given to the process the scheduler selects."
+    ],
+    "followup_replies": [
+     "the dispatcher.",
+     "dispatcher handles the context switch.",
+     "the dispatcher gives the cpu.",
+     "dispatcher switches context and gives cpu.",
+     "dispatcher is responsible for giving the cpu."
+    ]
    }
   ],
   "source_pages": [
@@ -4041,25 +4293,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "The short-term scheduler selects the next process to execute from the ready queue.",
-   "variants": [
-    "The short-term scheduler picks the next process to run from the ready queue.",
-    "The short-term scheduler chooses which process to run next from the ready queue.",
-    "The short-term scheduler selects the process to execute next from the ready queue.",
-    "The short-term scheduler assigns the next CPU to a process in the ready queue.",
-    "The short-term scheduler determines which process gets the CPU next from the ready queue."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.997
-  },
   "quality_score": 8,
   "quality_note": "queue-ordering and PCB trivia dropped; dispatcher as a follow-up (repair 4)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch4_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The short-term scheduler selects the next process to execute from the ready queue.",
+   "variants": [
+    "The short-term scheduler picks the next process to run from the ready queue.",
+    "The short-term scheduler chooses which process to execute next from the ready queue.",
+    "The short-term scheduler selects the process to run next from the ready queue.",
+    "The short-term scheduler assigns the next CPU to a process in the ready queue.",
+    "The short-term scheduler determines which process gets the CPU next from the ready queue."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.8
+  }
  },
  {
   "id": "os.user_level_vs_kernel_level_threads.easy1",
@@ -4318,18 +4570,18 @@
     "followup_answer": "The philosopher cannot eat and must wait until both chopsticks are available.",
     "variants": [
      "philosophers switch between thinking and eating.",
-     "they take turns thinking and eating.",
-     "the philosophers alternate between thinking and eating.",
-     "they switch between thinking and eating.",
-     "philosophers alternate between thinking and eating.",
-     "they alternate between thinking and eating."
+     "they think then eat, then think again.",
+     "they alternate between thinking and eating.",
+     "philosophers spend time thinking and eating.",
+     "they switch between thinking and eating states.",
+     "they think, then eat, then think again."
     ],
     "followup_replies": [
      "they wait.",
      "they block.",
      "they can't eat.",
      "they have to wait.",
-     "they can't eat until both are available."
+     "they can't proceed."
     ]
    },
    {
@@ -4339,17 +4591,18 @@
     "followup_answer": "The philosopher would not be able to eat and would have to wait until both chopsticks are available.",
     "variants": [
      "each needs two chopsticks to eat.",
-     "they need two chopsticks to eat.",
-     "two chopsticks are required to eat.",
-     "each philosopher needs two chopsticks.",
-     "you need two chopsticks to eat.",
-     "two chopsticks are needed for eating."
+     "two chopsticks are required for eating.",
+     "they need both chopsticks to eat.",
+     "eating requires two chopsticks.",
+     "a philosopher needs two chopsticks.",
+     "they must have two chopsticks to eat."
     ],
     "followup_replies": [
      "they can't eat.",
+     "they wait.",
+     "they can't proceed.",
      "they have to wait.",
-     "they can't eat with one.",
-     "nope."
+     "they can't eat until both are available."
     ]
    },
    {
@@ -4359,11 +4612,18 @@
     "followup_answer": "Each holds one chopstick and waits forever for the other one: a deadlock.",
     "variants": [
      "chopsticks are shared and must be coordinated.",
-     "chopsticks are shared resources.",
-     "chopsticks are shared and need coordination.",
-     "they are shared resources that must be coordinated.",
-     "chopsticks are shared and must be synchronized.",
-     "chopsticks are shared and need to be synchronized."
+     "chopsticks are shared resources that need coordination.",
+     "they are shared resources that must be synchronized.",
+     "chopsticks are shared, so they need coordination.",
+     "chopsticks are shared and must be managed.",
+     "they are shared resources that require coordination."
+    ],
+    "followup_replies": [
+     "deadlock occurs.",
+     "they deadlock.",
+     "they wait forever.",
+     "deadlock happens.",
+     "they get stuck."
     ]
    }
   ],
@@ -4389,25 +4649,22 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "The Dining Philosophers problem defines a situation where multiple processes compete for shared resources, leading to potential deadlock.",
-   "variants": [
-    "The Dining Philosophers problem is when multiple processes compete for shared resources, risking deadlock.",
-    "The Dining Philosophers problem occurs when philosophers compete for chopsticks, possibly causing deadlock.",
-    "The Dining Philosophers problem is about processes competing for shared resources, which may result in deadlock.",
-    "The Dining Philosophers problem defines a scenario where processes compete for shared resources, possibly leading to deadlock.",
-    "The Dining Philosophers problem is when multiple processes contend for shared resources, which can cause deadlock."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.001
-  },
   "quality_score": 8,
   "quality_note": "reference and follow-up now name the deadlock (repair 4)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch4_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The Dining Philosophers problem models resource allocation contention among processes competing for shared resources.",
+   "variants": [
+    "The Dining Philosophers problem represents five processes competing for five shared resources.",
+    "The Dining Philosophers problem captures resource contention in a cyclic dependency scenario."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.005
+  }
  },
  {
   "id": "os.resource_allocation_graph.medium2",
@@ -4428,10 +4685,18 @@
     "followup_answer": "If the algorithm does not find a cycle, it means there is no deadlock in the system at that moment.",
     "followup_replies": [
      "no deadlock",
-     "no cycle",
-     "no deadlock exists",
+     "no cycle means no deadlock",
      "it means no deadlock",
-     "no deadlock is present"
+     "no",
+     "no deadlocks"
+    ],
+    "variants": [
+     "the algorithm checks for cycles to find deadlocks",
+     "cycle detection is how we spot deadlocks",
+     "deadlock detection is cycle searching in the graph",
+     "the system looks for cycles to detect deadlocks",
+     "cycle detection is the main way to find deadlocks",
+     "the algorithm finds deadlocks by looking for cycles"
     ]
    },
    {
@@ -4440,18 +4705,41 @@
     "followup": "Why is a cycle in the graph considered a deadlock?",
     "followup_answer": "A cycle indicates that each process in the cycle is waiting for a resource held by another process in the cycle, creating a circular dependency that cannot be resolved.",
     "followup_replies": [
-     "because of mutual waiting",
+     "because it creates a circular dependency",
      "it creates a circular dependency",
-     "no way to resolve",
+     "circular dependency",
      "it's a circular dependency",
-     "no process can proceed"
+     "because of circular dependency"
+    ],
+    "variants": [
+     "a cycle means each process is waiting for another",
+     "each process in a cycle is waiting for a resource held by another",
+     "cycle shows circular dependency between processes",
+     "the cycle means processes are waiting for each other",
+     "processes in a cycle are waiting for each other's resources",
+     "a cycle shows mutual waiting between processes"
     ]
    },
    {
     "point": "With one instance per resource type, a cycle always means deadlock.",
     "quote": "if only one instance per resource type, then deadlock",
     "followup": "With several instances of each resource type, does a cycle always mean deadlock?",
-    "followup_answer": "No; the system may or may not be deadlocked."
+    "followup_answer": "No; the system may or may not be deadlocked.",
+    "variants": [
+     "one instance means a cycle is a deadlock",
+     "with single instances, cycles mean deadlocks",
+     "cycle = deadlock when there's only one instance",
+     "single instance makes cycle = deadlock",
+     "cycle always means deadlock with one instance",
+     "single instance ensures cycle = deadlock"
+    ],
+    "followup_replies": [
+     "no",
+     "not always",
+     "no, it may or may not be",
+     "no, it's possible",
+     "no, the system may not be deadlocked"
+    ]
    }
   ],
   "source_pages": [
@@ -4478,25 +4766,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "The resource allocation graph algorithm detects deadlocks by identifying cycles in the graph that include all resource nodes and process nodes.",
-   "variants": [
-    "A deadlock is detected when the resource allocation graph has a cycle involving all processes and resources.",
-    "The algorithm finds deadlocks by detecting cycles that encompass all resource and process nodes.",
-    "Deadlock detection occurs when the graph contains a cycle that includes every process and resource node.",
-    "The resource allocation graph detects deadlocks through cycles that involve all processes and resource instances.",
-    "Deadlock is detected when the graph has a cycle that includes all processes and resource nodes."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.001
-  },
   "quality_score": 8,
   "quality_note": "n-squared trivia point replaced by the single-instance rule (repair 4)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch4_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The resource allocation graph algorithm detects deadlocks by identifying cycles in the graph that include all resource nodes and process nodes.",
+   "variants": [
+    "A deadlock is detected when the resource allocation graph has a cycle involving all processes and resources.",
+    "The algorithm finds deadlocks by detecting cycles that encompass all processes and resource instances.",
+    "Deadlock detection occurs when the graph contains a cycle that includes every process and resource node.",
+    "The resource allocation graph detects deadlocks through cycles that involve all processes and resource types.",
+    "Deadlock is detected when the graph has a cycle that includes all processes and resource instances."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.002
+  }
  },
  {
   "id": "os.translation_lookaside_buffer.medium2",
@@ -4702,10 +4990,17 @@
     "followup_answer": "User programs would not be able to perform file operations directly, as they would lack the necessary privileges and mechanisms to interact with the file system.",
     "followup_replies": [
      "nope",
-     "banker's algorithm",
-     "it halves",
-     "user programs would have no way to access the file system",
-     "they'd need to manage hardware directly"
+     "they can't",
+     "no direct access",
+     "they need the os to do it",
+     "they lack the privileges"
+    ],
+    "variants": [
+     "user programs use system calls to access os services",
+     "system calls act as the bridge between user apps and the os",
+     "they're the way user code interacts with the operating system",
+     "system calls let user programs request os services",
+     "without system calls, user programs can't access os features"
     ]
    },
    {
@@ -4719,13 +5014,35 @@
      "open",
      "close",
      "seek"
+    ],
+    "variants": [
+     "file operations are a big part of system calls",
+     "system calls handle things like reading and writing files",
+     "file manipulation is one of the main uses for system calls",
+     "file handling is a major category of system calls",
+     "system calls are used for file operations like open and read"
     ]
    },
    {
     "point": "A system call switches the CPU from user mode to kernel mode.",
     "quote": "System call changes mode to kernel, return from call resets it to user",
     "followup": "Why can't a user program just read the disk directly?",
-    "followup_answer": "Hardware access is privileged and allowed only in kernel mode, so the program has to ask the OS through a system call."
+    "followup_answer": "Hardware access is privileged and allowed only in kernel mode, so the program has to ask the OS through a system call.",
+    "variants": [
+     "system calls switch the cpu to kernel mode",
+     "they change the cpu mode from user to kernel",
+     "system calls move the cpu into kernel mode",
+     "switching to kernel mode is part of a system call",
+     "system calls require a mode switch to kernel",
+     "kernel mode is entered when a system call is made"
+    ],
+    "followup_replies": [
+     "it's privileged",
+     "only kernel can access hardware",
+     "it's protected",
+     "no direct access",
+     "kernel mode is required"
+    ]
    }
   ],
   "source_pages": [
@@ -4749,6 +5066,13 @@
    "coverage": 1.0
   },
   "active": true,
+  "quality_score": 8,
+  "quality_note": "generic point replaced by the switch to kernel mode (repair 4)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch4_2026-10-25"
+  ],
   "core_point": {
    "point": "System calls provide a controlled interface for user programs to request OS services, enabling direct interaction with kernel-level file operations.",
    "variants": [
@@ -4756,18 +5080,11 @@
     "User programs use system calls to communicate with the OS, enabling direct control over file operations in the kernel.",
     "System calls serve as the mechanism through which user programs request file operations from the operating system kernel.",
     "The OS uses system calls to mediate file operations between user programs and its kernel-level resources.",
-    "System calls enable user programs to initiate file operations by invoking OS services through a standardized interface."
+    "System calls enable user programs to initiate file operations by invoking OS services through a structured interface."
    ],
    "review": "unreviewed",
-   "stated_by_bank": 0.007
-  },
-  "quality_score": 8,
-  "quality_note": "generic point replaced by the switch to kernel mode (repair 4)",
-  "curated": true,
-  "interview_priority": 2,
-  "repairs": [
-   "batch4_2026-10-25"
-  ]
+   "stated_by_bank": 0.99
+  }
  },
  {
   "id": "os.dining_philosophers_problem.medium2",
@@ -4789,17 +5106,17 @@
     "variants": [
      "odd philosophers take the left chopstick first to break symmetry.",
      "odd-numbered philosophers start with the left chopstick to avoid deadlock.",
-     "asymmetric solution has odd philosophers pick left first, breaking circular wait.",
-     "odd philosophers pick left first, which prevents all from waiting indefinitely.",
-     "the asymmetric approach has odd philosophers take left first, reducing deadlock risk.",
-     "odd-numbered philosophers take left first, ensuring no circular dependency."
+     "asymmetric solution makes odd philosophers pick left first, which stops circular wait.",
+     "odd philosophers grab left first, which changes the order and prevents deadlock.",
+     "odd philosophers take left first, so they don't all wait for the same chopstick.",
+     "odd philosophers start with left, which breaks the deadlock cycle."
     ],
     "followup_replies": [
      "breaks symmetry",
-     "prevents circular wait",
-     "reduces deadlock risk",
-     "avoids all waiting",
-     "breaks deadlock possibility"
+     "stops circular wait",
+     "changes order",
+     "avoids deadlock",
+     "prevents deadlock"
     ]
    },
    {
@@ -4808,25 +5125,40 @@
     "followup": "How does this affect the overall system behavior?",
     "followup_answer": "It introduces an asymmetry in the resource allocation, which helps avoid the circular wait condition that leads to deadlock.",
     "variants": [
-     "even philosophers take the right chopstick first to create asymmetry.",
-     "even-numbered philosophers start with the right chopstick to avoid deadlock.",
-     "asymmetric solution has even philosophers pick right first, breaking symmetry.",
-     "even philosophers pick right first, which prevents circular wait.",
-     "even-numbered philosophers take right first, ensuring no circular dependency."
+     "even philosophers take the right chopstick first to avoid deadlock.",
+     "even-numbered philosophers start with the right chopstick to prevent circular wait.",
+     "even philosophers grab right first, which changes the order and prevents deadlock.",
+     "even philosophers take right first, so they don't all wait for the same chopstick.",
+     "even philosophers start with right, which breaks the deadlock cycle."
     ],
     "followup_replies": [
-     "avoids circular wait",
      "introduces asymmetry",
-     "prevents deadlock",
+     "avoids circular wait",
      "breaks symmetry",
-     "reduces deadlock chance"
+     "prevents deadlock",
+     "stops deadlock"
     ]
    },
    {
     "point": "This prevents a circular wait, so deadlock cannot occur.",
     "quote": "If these protocols are used then circular wait will not exist.",
     "followup": "Name another way to prevent deadlock in this problem.",
-    "followup_answer": "Allow at most four philosophers at the table at once, or let a philosopher pick up chopsticks only if both are available."
+    "followup_answer": "Allow at most four philosophers at the table at once, or let a philosopher pick up chopsticks only if both are available.",
+    "variants": [
+     "asymmetric solution stops circular wait, so deadlock can't happen.",
+     "asymmetric allocation prevents circular wait, which stops deadlock.",
+     "asymmetric solution breaks the circular wait condition, so deadlock is avoided.",
+     "asymmetric allocation stops the circular wait, which prevents deadlock.",
+     "asymmetric solution makes circular wait impossible, so deadlock can't occur.",
+     "asymmetric resource allocation breaks the deadlock cycle."
+    ],
+    "followup_replies": [
+     "limit number of philosophers",
+     "banker's algorithm",
+     "restrict access",
+     "resource allocation graph",
+     "limit table size"
+    ]
    }
   ],
   "source_pages": [
@@ -4851,25 +5183,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "asymmetric solution ensures one philosopher always yields first, breaking the circular wait condition.",
-   "variants": [
-    "the asymmetric solution prevents deadlock by having one philosopher always yield first.",
-    "deadlock is avoided in the asymmetric solution because one philosopher yields first.",
-    "the asymmetric solution breaks deadlock by ensuring one philosopher yields first.",
-    "deadlock prevention in the asymmetric solution relies on one philosopher yielding first.",
-    "the asymmetric solution prevents deadlock through the first philosopher yielding first."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.001
-  },
   "quality_score": 8,
   "quality_note": "reference said 'reduces the chance' of circular wait; it prevents it. Point added (repair 4)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch4_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "asymmetric solution prevents deadlock by ensuring at least one philosopher always has access to both chopsticks.",
+   "variants": [
+    "the asymmetric solution avoids deadlock by allowing one philosopher to pick up both chopsticks first.",
+    "deadlock is prevented in the asymmetric solution because one philosopher can take both chopsticks at once.",
+    "the asymmetric solution stops deadlock by letting one philosopher grab both chopsticks initially.",
+    "asymmetric solution prevents deadlock through the initial allocation of both chopsticks to one philosopher.",
+    "deadlock is avoided in the asymmetric solution by reserving both chopsticks for one philosopher first."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.996
+  }
  },
  {
   "id": "os.logical_vs_physical_address.medium2",
@@ -5206,7 +5538,22 @@
     "point": "flag[i] = true means process i is ready to enter its critical section.",
     "quote": "The flag array is used to indicate if a process is ready to enter the critical section. flag[i] = true implies that process Pi is ready!",
     "followup": "Why does a process set turn to the other process before waiting?",
-    "followup_answer": "So that if both want to enter at once, exactly one of them gets in; without it they could wait for each other forever or both enter."
+    "followup_answer": "So that if both want to enter at once, exactly one of them gets in; without it they could wait for each other forever or both enter.",
+    "variants": [
+     "flag[i] being true means process i is ready to enter the critical section.",
+     "when a process sets flag[i] to true, it's showing it wants to enter the critical section.",
+     "the flag variable tells other processes if a process is ready to enter the critical section.",
+     "process i sets its flag to true to signal it wants to enter the critical section.",
+     "the flag[i] variable is used to indicate that process i is ready to enter the critical section.",
+     "flag[i] = true means process i is in the process of entering the critical section."
+    ],
+    "followup_replies": [
+     "so udp can lose packets",
+     "to avoid starvation",
+     "to ensure one process gets in",
+     "to prevent deadlock",
+     "to ensure mutual exclusion"
+    ]
    },
    {
     "point": "Before waiting, a process gives the turn to the other process.",
@@ -5214,17 +5561,40 @@
     "followup": "How does the turn variable help the other process decide to wait?",
     "followup_answer": "The turn variable signals that the other process should yield, allowing it to proceed to the waiting loop and release the critical section.",
     "followup_replies": [
-     "it tells the other process to wait",
-     "it signals the other process to yield",
-     "it gives the other process a turn",
-     "it allows the other process to yield"
+     "it allows the other process to proceed",
+     "it ensures the other process can enter",
+     "it prevents infinite waiting",
+     "it gives the other process priority",
+     "it ensures progress"
+    ],
+    "variants": [
+     "a process gives the turn to the other before waiting to avoid deadlock.",
+     "before waiting, a process sets turn to the other to let it go first.",
+     "turn is set to the other process to ensure fairness.",
+     "setting turn to the other process ensures the other process can enter first.",
+     "the turn variable is used to let the other process enter first.",
+     "before waiting, the process gives the turn to the other to avoid waiting forever."
     ]
    },
    {
     "point": "A process waits only while the other is ready and it is the other's turn.",
     "quote": "while (flag[j] && turn = = j);",
     "followup": "Which three requirements does Peterson's solution satisfy?",
-    "followup_answer": "Mutual exclusion, progress and bounded waiting."
+    "followup_answer": "Mutual exclusion, progress and bounded waiting.",
+    "variants": [
+     "a process waits only if the other is ready and it's their turn.",
+     "a process waits while the other is ready and it's their turn.",
+     "the process waits until the other is ready and it's their turn.",
+     "a process waits only when the other is in the critical section and it's their turn.",
+     "the process waits while the other is ready and it's their turn to enter.",
+     "the process waits if the other is still in the critical section and it's their turn."
+    ],
+    "followup_replies": [
+     "mutual exclusion, progress, bounded waiting",
+     "it satisfies all three requirements",
+     "mutual exclusion, progress, and bounded waiting",
+     "yes, all three"
+    ]
    }
   ],
   "source_pages": [
@@ -5248,25 +5618,24 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "The turn variable ensures mutual exclusion by indicating which process can enter its critical section next.",
-   "variants": [
-    "The turn variable in Peterson’s solution determines which process can proceed into its critical section.",
-    "Peterson’s turn variable specifies the next process allowed to enter its critical section.",
-    "The turn variable in Peterson’s algorithm designates the process that can enter its critical section.",
-    "Peterson’s turn variable enforces mutual exclusion by selecting the next process to enter its critical section.",
-    "The turn variable in Peterson’s solution identifies which process is granted access to its critical section."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.001
-  },
   "quality_score": 8,
   "quality_note": "narrow question with three copies of one quote; now how flag and turn work together (repair 6)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Peterson's solution uses flag and turn variables to ensure mutual exclusion through process cooperation and turn-based arbitration.",
+   "variants": [
+    "Peterson's algorithm uses flags and a turn variable to guarantee mutual exclusion by allowing processes to signal interest and yield turn.",
+    "Peterson's method employs flags and a turn variable to protect the critical section via cooperative process signaling and turn selection.",
+    "Peterson's solution relies on flags and a turn variable to enforce mutual exclusion through process cooperation and turn-based priority.",
+    "Peterson's algorithm uses flags and a turn variable to ensure mutual exclusion by allowing processes to signal and yield turn priority."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.003
+  }
  },
  {
   "id": "os.swapping.medium1",
@@ -5364,12 +5733,18 @@
     "followup": "What does an edge Pi -> Pj in a wait-for graph mean?",
     "followup_answer": "Pi is waiting for a resource that Pj currently holds.",
     "variants": [
-     "the wait-for graph is made by removing resource nodes and combining edges from the resource-allocation graph",
-     "you take out resource nodes and merge edges to get the wait-for graph",
-     "the wait-for graph is a simplified version of the resource-allocation graph with resources removed",
-     "when you remove resource nodes, the wait-for graph is formed by collapsing edges",
-     "the wait-for graph is derived by eliminating resource nodes and combining edges",
-     "the wait-for graph is built by removing resources and merging edges from the resource-allocation graph"
+     "you remove the resource nodes and merge the edges to get the wait-for graph",
+     "the wait-for graph is made by taking the resource-allocation graph and removing resources",
+     "you collapse the edges and remove resources to form the wait-for graph",
+     "the wait-for graph is created by eliminating resources and combining the edges",
+     "to get the wait-for graph, you take the resource-allocation graph and strip out the resources",
+     "you make the wait-for graph by removing resource nodes and collapsing the edges"
+    ],
+    "followup_replies": [
+     "pi is waiting for a resource that pj has",
+     "pi is waiting for a resource held by pj",
+     "pi is waiting for a resource that pj holds",
+     "pi is waiting for a resource that pj is holding"
     ]
    },
    {
@@ -5379,18 +5754,18 @@
     "followup_answer": "A cycle in the wait-for graph indicates that a deadlock exists in the system.",
     "variants": [
      "a cycle in the wait-for graph means there's a deadlock",
-     "if the wait-for graph has a cycle, a deadlock exists",
-     "deadlock is present when there's a cycle in the wait-for graph",
+     "deadlock happens when the wait-for graph has a cycle",
+     "if the wait-for graph has a cycle, there's a deadlock",
      "the presence of a cycle in the wait-for graph indicates a deadlock",
-     "a cycle in the wait-for graph is a sign of a deadlock",
-     "deadlock exists if the wait-for graph has a cycle"
+     "deadlock is detected when the wait-for graph has a cycle",
+     "a cycle in the wait-for graph means the system is deadlocked"
     ],
     "followup_replies": [
-     "cycle means deadlock",
-     "cycle indicates deadlock",
-     "cycle equals deadlock",
-     "cycle is a sign of deadlock",
-     "cycle means deadlock exists"
+     "it shows a cycle, which means a deadlock",
+     "it means there's a cycle, which is a deadlock",
+     "it means a cycle exists, which is a deadlock",
+     "it means a cycle, which is a deadlock",
+     "it means a cycle, which indicates a deadlock"
     ]
    }
   ],
@@ -5413,25 +5788,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "The wait-for graph loses an edge when a resource is allocated, potentially removing cycles and making deadlock detection possible.",
-   "variants": [
-    "The wait-for graph loses an edge upon resource allocation, possibly eliminating cycles and enabling deadlock detection.",
-    "When a resource is allocated, the wait-for graph loses an edge, which may break cycles and allow deadlock detection.",
-    "Resource allocation removes an edge from the wait-for graph, possibly breaking cycles and enabling deadlock detection.",
-    "Allocating a resource removes an edge from the wait-for graph, which may eliminate cycles and allow deadlock detection.",
-    "The wait-for graph has an edge removed when a resource is allocated, which may break cycles and make deadlock detection possible."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.997
-  },
   "quality_score": 8,
   "quality_note": "odd premise reworded; n-squared trivia point dropped (repair 6)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "a wait-for graph is derived from a resource-allocation graph by removing resource nodes and edges, and is used to detect cycles indicating deadlock.",
+   "variants": [
+    "a wait-for graph is formed by eliminating resource nodes and edges from a resource-allocation graph to detect deadlock cycles.",
+    "a wait-for graph is created by removing resource nodes and edges from a resource-allocation graph to identify deadlock.",
+    "a wait-for graph is obtained by removing resource nodes and edges from a resource-allocation graph to detect deadlock.",
+    "a wait-for graph is generated from a resource-allocation graph by removing resource nodes and edges to detect deadlock.",
+    "a wait, for graph is derived from a resource-allocation graph by removing resource nodes and edges to detect deadlock."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.995
+  }
  },
  {
   "id": "os.process_creation_and_termination.easy1",
@@ -5561,13 +5936,43 @@
     "point": "Reordering requests reduces seek time (head movement).",
     "quote": "Minimize seek time",
     "followup": "What makes up the time to access a disk block?",
-    "followup_answer": "Seek time plus rotational latency plus transfer time."
+    "followup_answer": "Seek time plus rotational latency plus transfer time.",
+    "variants": [
+     "reordering requests helps reduce head movement",
+     "seek time is the main reason we reorder disk requests",
+     "scheduling disk requests minimizes the head's movement",
+     "reordering cuts down on the time the head has to move",
+     "seek time is the biggest part of disk access time, so reordering helps",
+     "by reordering, we make the head move less"
+    ],
+    "followup_replies": [
+     "seek time",
+     "seek time and rotational latency",
+     "seek time plus rotational latency",
+     "seek time, rotational latency, and transfer time",
+     "seek time, latency, and transfer"
+    ]
    },
    {
     "point": "Algorithms like SCAN also avoid starvation under heavy load.",
     "quote": "SCAN and C-SCAN perform better for systems that place a heavy load on the disk - Less starvation.",
     "followup": "Why can SSTF starve a request?",
-    "followup_answer": "If new requests keep arriving near the head, a far-away request may never be the closest."
+    "followup_answer": "If new requests keep arriving near the head, a far-away request may never be the closest.",
+    "variants": [
+     "scan avoids starvation by moving the head in one direction",
+     "scan ensures all requests get served eventually",
+     "scan prevents some requests from being ignored",
+     "scan keeps the waiting time fair for all requests",
+     "scan doesn't let some requests wait forever",
+     "scan makes sure no request gets stuck waiting"
+    ],
+    "followup_replies": [
+     "it keeps arriving requests close to the head",
+     "requests keep coming near the head",
+     "it can't serve far requests if new ones keep arriving",
+     "new requests near the head block far ones",
+     "far requests get stuck if new ones keep coming"
+    ]
    }
   ],
   "source_pages": [
@@ -5590,25 +5995,23 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "Disk scheduling is important because it optimizes the order of I/O requests to minimize seek time and improve throughput.",
-   "variants": [
-    "Disk scheduling is important because it reduces disk seek time by ordering I/O requests efficiently.",
-    "Disk scheduling is important because it ensures efficient use of disk resources through optimized request ordering.",
-    "Disk scheduling is important because it minimizes disk access time by prioritizing I/O requests effectively.",
-    "Disk scheduling is important because it enhances disk performance by arranging I/O requests in an optimal sequence.",
-    "Disk scheduling is important because it improves disk I/O efficiency by organizing requests to reduce seek time."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.0
-  },
   "quality_score": 8,
   "quality_note": "vague question; now why requests are reordered (repair 6)",
   "curated": true,
   "interview_priority": 2,
   "repairs": [
    "batch6_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "an operating system schedules disk i/o requests to ensure sequential access to the disk surface.",
+   "variants": [
+    "disk i/o requests are scheduled to ensure sequential access to the disk surface.",
+    "the os schedules disk i/o requests to ensure sequential access to the disk surface.",
+    "scheduling disk i/o requests ensures sequential access to the disk surface."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.002
+  }
  },
  {
   "id": "os.deadlock_prevention.hard2",
@@ -5628,18 +6031,41 @@
     "followup": "What is the consequence of a process being preempted for a resource?",
     "followup_answer": "The process must release all resources it currently holds, and it will be restarted only when it can regain all its previously held resources and the new ones it is requesting.",
     "followup_replies": [
-     "it releases its resources",
-     "it gives up its resources",
-     "it must drop all resources",
-     "resources are released",
-     "it lets go of its resources"
+     "it releases all its resources",
+     "releases its current resources",
+     "drops everything it's holding",
+     "gives up its held resources",
+     "it must release all resources"
+    ],
+    "variants": [
+     "if a process can't get a resource, it gives up all the resources it has.",
+     "when a process can't get a resource, it releases everything it's holding.",
+     "this is called resource preemption, where the process lets go of its resources.",
+     "so the process must release its resources if it can't get what it needs.",
+     "the process drops all its resources when it can't get another one.",
+     "the process gives up its current resources if it can't get the new one."
     ]
    },
    {
     "point": "This breaks the no-preemption condition for deadlock.",
     "quote": "No preemption – If a process that is holding some resources requests another resource that cannot be immediately allocated to it, then all resources currently being held are released.",
     "followup": "Which of the four deadlock conditions does this scheme remove?",
-    "followup_answer": "The 'no preemption' condition: resources can now be taken away from a process that is waiting."
+    "followup_answer": "The 'no preemption' condition: resources can now be taken away from a process that is waiting.",
+    "variants": [
+     "this breaks the no preemption rule for deadlocks.",
+     "by allowing preemption, the no preemption condition is removed.",
+     "this scheme removes the no preemption condition.",
+     "preemption breaks the no preemption deadlock condition.",
+     "the no preemption condition is no longer in place.",
+     "this method allows taking away resources, breaking the no preemption rule."
+    ],
+    "followup_replies": [
+     "no preemption",
+     "the no preemption condition",
+     "resources can be taken away",
+     "it removes no preemption",
+     "no preemption is broken"
+    ]
    },
    {
     "point": "The preempted resources are added to the list of resources the process is waiting for.",
@@ -5647,11 +6073,19 @@
     "followup": "What happens to the resources that are preempted?",
     "followup_answer": "The preempted resources are added to the list of resources for which the process is waiting, and the process will be restarted only when it can regain all its previously held resources and the new ones it is requesting.",
     "followup_replies": [
-     "they go to the waiting list",
      "they are added to the waiting list",
-     "they are queued",
-     "they are placed in the waiting list",
-     "they are added to the process's list"
+     "the process keeps track of them",
+     "they go to the waiting list",
+     "they are added to the list",
+     "they are part of the waiting list"
+    ],
+    "variants": [
+     "the preempted resources are added to the process's waiting list.",
+     "when a process is preempted, its resources go to the waiting list.",
+     "the process keeps track of the preempted resources in its wait list.",
+     "the process adds the preempted resources to its waiting list.",
+     "the resources are moved to the process's waiting list.",
+     "the process's waiting list now includes the preempted resources."
     ]
    }
   ],
@@ -5677,18 +6111,6 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "preemption allows a process to be forcibly removed from a resource, preventing deadlock by ensuring resource release before allocation.",
-   "variants": [
-    "preemption lets a process lose a resource, avoiding deadlock by forcing release before allocation.",
-    "preemption removes a process from a resource, preventing deadlock through forced release before allocation.",
-    "preemption enables resource removal from a process, preventing deadlock by ensuring release before allocation.",
-    "preemption allows resource removal from a process, preventing deadlock through forced release before allocation.",
-    "preemption lets a process lose a resource, preventing deadlock by forcing release before allocation."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.012
-  },
   "quality_score": 8,
   "quality_note": "correct after repair 1; re-reviewed (repair 4)",
   "curated": true,
@@ -5696,7 +6118,18 @@
   "repairs": [
    "batch1_2026-10-03",
    "batch4_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "preemption allows a process to be forcibly removed from a resource, which can prevent deadlock by ensuring resource release.",
+   "variants": [
+    "preemption lets a process lose a resource, helping avoid deadlock by allowing resource release.",
+    "when a process is preempted, it must release its resource, which prevents deadlock.",
+    "preemption forces a process to release a resource, thus preventing deadlock.",
+    "preemption enables resource release by a process, which prevents deadlock."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.008
+  }
  },
  {
   "id": "os.linux_and_windows_scheduling.easy1",
@@ -5836,9 +6269,17 @@
     "followup_replies": [
      "nope",
      "it keeps running",
-     "it continues as normal",
-     "the process ignores it",
-     "it doesn't stop unless handled"
+     "it ignores it",
+     "it doesn't stop",
+     "the program continues"
+    ],
+    "variants": [
+     "sigint is when you hit control-c and it usually stops the program.",
+     "control-c sends sigint, which normally ends the process.",
+     "sigint comes from the user pressing control-c, and it kills the program by default.",
+     "when you press control-c, the process gets a sigint and usually exits.",
+     "sigint is the signal for control-c, and it terminates the program by default.",
+     "the user pressing control-c sends sigint, which normally ends the process."
     ]
    },
    {
@@ -5848,17 +6289,39 @@
     "followup_answer": "Yes, a process can set and reset the timer using the alarm function, which determines when SIGALRM is delivered.",
     "followup_replies": [
      "yes",
-     "with alarm function",
-     "it can set and reset the timer",
-     "using alarm function",
-     "yes, via alarm function"
+     "it can set and reset it",
+     "yes, with alarm",
+     "it controls the timer",
+     "it can manage when it's sent"
+    ],
+    "variants": [
+     "sigalrm is when the alarm timer goes off, and it triggers the signal.",
+     "sigalrm is sent when the alarm function's timer expires.",
+     "sigal, like the alarm function, sends a signal when the timer runs out.",
+     "the alarm function sets a timer, and sigalrm is delivered when it expires.",
+     "sigalrm is used for timeouts and is triggered by the alarm timer.",
+     "when the alarm timer expires, the process gets a sigalrm signal."
     ]
    },
    {
     "point": "A process can replace either signal's default action with its own handler.",
     "quote": "This default action can be overridden by a user-defined signal handler that is called to handle the signal.",
     "followup": "Why might a program catch SIGINT instead of letting it end the program?",
-    "followup_answer": "To clean up first, for example save data or close files, before exiting."
+    "followup_answer": "To clean up first, for example save data or close files, before exiting.",
+    "variants": [
+     "a process can catch sigint instead of letting it exit.",
+     "you can override the default for sigint with your own handler.",
+     "sigint can be handled by the process instead of just ending it.",
+     "processes can replace the default action for sigint with their own code.",
+     "you can write a handler for sigint to do something before exiting."
+    ],
+    "followup_replies": [
+     "to clean up before exiting",
+     "to save data",
+     "to do cleanup",
+     "for graceful exit",
+     "to handle it properly"
+    ]
    }
   ],
   "source_pages": [
@@ -5880,24 +6343,25 @@
    "coverage": 1.0
   },
   "active": true,
-  "core_point": {
-   "point": "SIGINT and SIGALRM differ in that SIGINT is generated by user input and SIGALRM is generated by a timer.",
-   "variants": [
-    "SIGINT is from user input, while SIGALRM is from a timer.",
-    "SIGINT comes from keyboard input, and SIGALRM is triggered by a clock timer.",
-    "SIGINT is sent by the user, whereas SIGAL3RM is sent by the system timer.",
-    "SIGINT is user-generated, and SIGALRM is timer-generated."
-   ],
-   "review": "unreviewed",
-   "stated_by_bank": 0.992
-  },
   "quality_score": 8,
   "quality_note": "SIGALRM is set by the process, not 'system-initiated'; vague point replaced by handlers (repair 4)",
   "curated": true,
   "interview_priority": 1,
   "repairs": [
    "batch4_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "SIGINT and SIGALRM differ in that SIGINT is generated by user input and SIGALRM is generated by a timer.",
+   "variants": [
+    "SIGINT comes from keyboard input, while SIGALRM is triggered by a clock timer.",
+    "SIGINT is sent by the user, whereas SIGALRM is sent by the system timer.",
+    "SIGINT is initiated by the user, and SIGAL,ARM is initiated by the alarm clock.",
+    "SIGINT is user-generated, and SIGALRM is system-generated via a timer.",
+    "SIGINT is from the keyboard, and SIGALRM is from a timer interrupt."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.476
+  }
  },
  {
   "id": "os.multiprocessor_scheduling.medium1",
@@ -6730,13 +7194,42 @@
     "point": "Internal fragmentation is allocated memory that the process does not use.",
     "quote": "Internal Fragmentation – allocated memory may be slightly larger than requested memory; this size difference is memory internal to a partition, but not being used",
     "followup": "What happens if a process requests exactly the size of a memory block?",
-    "followup_answer": "The process would use the entire block, and there would be no internal fragmentation for that block."
+    "followup_answer": "The process would use the entire block, and there would be no internal fragmentation for that block.",
+    "variants": [
+     "internal fragmentation is unused memory allocated to a process",
+     "when a process gets more memory than it needs, that's internal fragmentation",
+     "it's wasted space inside a memory block that's allocated to a process",
+     "the memory block is bigger than the process needs, causing internal fragmentation",
+     "the unused part of a memory block is internal fragmentation",
+     "internal fragmentation happens when allocated memory isn't fully used"
+    ],
+    "followup_replies": [
+     "no internal fragmentation",
+     "no wasted space",
+     "the entire block is used",
+     "no fragmentation in that block",
+     "no unused memory"
+    ]
    },
    {
     "point": "It happens because memory is given out in fixed-size blocks.",
     "quote": "Divide physical memory into fixed-sized blocks called frames",
     "followup": "How is it different from external fragmentation?",
-    "followup_answer": "External fragmentation is free memory between allocations that is enough in total but not contiguous."
+    "followup_answer": "External fragmentation is free memory between allocations that is enough in total but not contiguous.",
+    "variants": [
+     "memory is given in fixed blocks, leading to internal fragmentation",
+     "fixed-size memory blocks cause internal fragmentation",
+     "because memory is divided into fixed chunks, fragmentation happens",
+     "memory is allocated in fixed units, which causes internal fragmentation",
+     "fixed memory blocks are the reason for internal fragmentation"
+    ],
+    "followup_replies": [
+     "external fragmentation is free memory that's scattered",
+     "external fragmentation is unused memory in between allocations",
+     "external fragmentation is non-contiguous free memory",
+     "external fragmentation is when there's enough memory but not in one place",
+     "external fragmentation is free memory that's not contiguous"
+    ]
    }
   ],
   "source_pages": [
@@ -6765,7 +7258,19 @@
   "quality_note": "duplicate point replaced by the cause (fixed-size blocks) (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "internal fragmentation is when memory is wasted within allocated blocks due to fixed-size allocation.",
+   "variants": [
+    "internal fragmentation occurs when allocated memory blocks have unused space due to fixed-size allocation.",
+    "internal fragmentation happens when memory blocks have unused space because of fixed-size allocation.",
+    "internal fragmentation is caused by fixed-size allocation leaving unused space in memory blocks.",
+    "internal fragmentation results from fixed-size allocation leaving unused space in memory blocks.",
+    "internal fragmentation is when fixed-size allocation leaves unused space in memory blocks."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.998
+  }
  },
  {
   "id": "os.thrashing.easy1",
@@ -6783,13 +7288,43 @@
     "point": "Thrashing is when a process spends its time swapping pages in and out instead of executing.",
     "quote": "Thrashing ≡ a process is busy swapping pages in and out",
     "followup": "What happens to CPU utilization when thrashing occurs?",
-    "followup_answer": "CPU utilization decreases because the system spends more time swapping pages than executing instructions."
+    "followup_answer": "CPU utilization decreases because the system spends more time swapping pages than executing instructions.",
+    "variants": [
+     "thrashing is when a process swaps pages instead of running",
+     "when a process is swapping pages, it's thrashing",
+     "thrashing means the system is swapping pages instead of executing",
+     "the system thrashes when it's swapping pages in and out",
+     "thrashing happens when the process is busy swapping pages",
+     "thrashing is when the system spends time swapping pages"
+    ],
+    "followup_replies": [
+     "cpu utilization drops",
+     "it decreases",
+     "cpu utilization goes down",
+     "it drops",
+     "cpu usage falls"
+    ]
    },
    {
     "point": "It happens when the processes' localities do not fit in memory.",
     "quote": "Why does thrashing occur? Σ size of locality > total memory size",
     "followup": "What is the role of locality in thrashing?",
-    "followup_answer": "Locality refers to the tendency of a process to access a limited set of pages over a short period, and when this exceeds memory capacity, thrashing occurs."
+    "followup_answer": "Locality refers to the tendency of a process to access a limited set of pages over a short period, and when this exceeds memory capacity, thrashing occurs.",
+    "variants": [
+     "thrashing happens when memory can't hold all the localities",
+     "if the localities don't fit in memory, thrashing occurs",
+     "when memory is too small for the localities, thrashing happens",
+     "thrashing is caused by localities exceeding memory",
+     "localities not fitting in memory leads to thrashing",
+     "thrashing is when memory can't hold the process's localities"
+    ],
+    "followup_replies": [
+     "locality is when a process accesses a limited set of pages",
+     "it's when a process accesses a few pages repeatedly",
+     "locality means accessing the same pages over time",
+     "locality is the tendency to reuse pages",
+     "locality refers to page reuse in a short time"
+    ]
    }
   ],
   "source_pages": [
@@ -6821,7 +7356,19 @@
   "quality_note": "'severe performance problems' point replaced by what thrashing is (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "thrashing is when the system spends more time swapping pages than executing instructions due to excessive page faults.",
+   "variants": [
+    "thrashing occurs when the system swaps pages more than it runs code because of too many page faults.",
+    "thrashing happens when the system spends most of its time swapping pages due to frequent page faults.",
+    "thrashing is when the system's time is mostly spent swapping pages because of high page fault rates.",
+    "thrashing occurs when the system swaps pages more than it executes instructions due to many page faults.",
+    "thrashing is when the system spends more time swapping pages than running processes because of excessive page faults."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.994
+  }
  },
  {
   "id": "os.round_robin_scheduling.easy1",
@@ -6839,13 +7386,42 @@
     "point": "Each process runs for at most one time quantum, then goes to the back of the queue.",
     "quote": "The CPU scheduler goes around the ready queue, allocating the CPU to each process for a time interval of up to 1 time quantum",
     "followup": "What happens if the time quantum is made very large?",
-    "followup_answer": "Round robin behaves like FCFS."
+    "followup_answer": "Round robin behaves like FCFS.",
+    "variants": [
+     "in round robin, each process gets the cpu for a time quantum then goes back to the queue",
+     "round robin gives each process a time slice before putting it back in line",
+     "with round robin, processes are interrupted after a time quantum and moved to the end",
+     "the time quantum limits how long a process can run in round robin",
+     "each process in round robin runs for a time quantum then is sent back to the ready queue"
+    ],
+    "followup_replies": [
+     "it behaves like fcfs",
+     "nope",
+     "it's the same as fcfs",
+     "fcfs",
+     "same as fcfs"
+    ]
    },
    {
     "point": "Unlike FCFS, round robin preempts a running process.",
     "quote": "It is similar to FCFS scheduling, but preemption is added to enable the system to switch between processes.",
     "followup": "How does round-robin scheduling differ from FC,FS in terms of process switching?",
-    "followup_answer": "Round robin preempts a process when its time quantum ends; FCFS never interrupts a running process, it runs until it finishes or blocks."
+    "followup_answer": "Round robin preempts a process when its time quantum ends; FCFS never interrupts a running process, it runs until it finishes or blocks.",
+    "variants": [
+     "round robin preempts a process when its time quantum is up",
+     "in round robin, the cpu is taken away if a process runs too long",
+     "round robin interrupts a process after a time quantum",
+     "round robin stops a process before it finishes if it runs too long",
+     "the cpu is taken from a process in round robin when its time quantum ends",
+     "round robin uses preemption to switch between processes"
+    ],
+    "followup_replies": [
+     "it preempts when the time quantum ends",
+     "preempts on time quantum",
+     "preempts",
+     "yes",
+     "preemption"
+    ]
    }
   ],
   "source_pages": [
@@ -6873,7 +7449,19 @@
   "quality_note": "time quantum point added; follow-up said FCFS has a time slice (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "round-robin scheduling is a preemptive scheduling algorithm that allocates CPU time in fixed time slices to each process in a cyclic order.",
+   "variants": [
+    "round-robin scheduling is a preemptive algorithm that cycles through processes giving each a fixed time slice.",
+    "round-robin scheduling is a preemptive method that assigns equal time slices to each process in turn.",
+    "round-robin scheduling is a preemptive technique that rotates processes with fixed time slices.",
+    "round-robin scheduling is a preemptive approach that gives each process a time slice in a round-robin fashion.",
+    "round-robin scheduling is a preempt, equal-time-slice, cyclic process scheduling method."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.011
+  }
  },
  {
   "id": "os.virtual_memory_and_demand_paging.medium2",
@@ -6891,13 +7479,41 @@
     "point": "The lazy swapper only swaps pages into memory when they are needed.",
     "quote": "Lazy swapper – never swaps a page into memory unless page will be needed",
     "followup": "What happens if a page is swapped into memory before it is needed?",
-    "followup_answer": "It results in unnecessary I/O operations and wasted memory resources."
+    "followup_answer": "It results in unnecessary I/O operations and wasted memory resources.",
+    "variants": [
+     "the lazy swapper only brings pages in when they're needed",
+     "it swaps pages in memory only when they're actually required",
+     "lazy swapper waits until a page is needed before swapping it in",
+     "pages are loaded into memory only when a page fault occurs",
+     "the lazy approach ensures pages are swapped in on demand"
+    ],
+    "followup_replies": [
+     "unnecessary i/o",
+     "wasted memory",
+     "it's inefficient",
+     "it's a waste",
+     "nope"
+    ]
    },
    {
     "point": "The lazy swapper reduces unnecessary I/O operations.",
     "quote": "Less I/O needed, no unnecessary I/O",
     "followup": "Why would unnecessary I/O be a problem in demand paging?",
-    "followup_answer": "Unnecessary I/O increases the time required to load pages into memory and reduces system performance."
+    "followup_answer": "Unnecessary I/O increases the time required to load pages into memory and reduces system performance.",
+    "variants": [
+     "the lazy swapper cuts down on extra disk reads",
+     "it avoids loading pages that aren't needed yet",
+     "lazy swapper reduces the number of disk operations",
+     "it minimizes the I/O overhead",
+     "fewer disk accesses mean better performance"
+    ],
+    "followup_replies": [
+     "it slows things down",
+     "it uses more time",
+     "it hurts performance",
+     "it's slower",
+     "nope"
+    ]
    }
   ],
   "source_pages": [
@@ -6933,7 +7549,17 @@
   "quality_note": "good (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The lazy swapper improves efficiency by only swapping pages when they are actually needed.",
+   "variants": [
+    "The lazy swapper boosts efficiency by swapping pages only when required.",
+    "The lazy swapper improves efficiency by deferring page swaps until necessary.",
+    "The lazy swapper enhances efficiency by swapping pages only when they are used."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.996
+  }
  },
  {
   "id": "os.sjf_and_srtf_scheduling.medium1",
@@ -6951,13 +7577,43 @@
     "point": "SRTF is a preemptive version of SJF.",
     "quote": "Preemptive SJF Scheduling is sometimes called SRTF.",
     "followup": "What happens if a new process arrives with a shorter burst time than the currently running process?",
-    "followup_answer": "The currently running process is preempted, and the new shorter process is scheduled next."
+    "followup_answer": "The currently running process is preempted, and the new shorter process is scheduled next.",
+    "variants": [
+     "srtf is preemptive like sjf but can stop a running process if a shorter one comes.",
+     "in srtf, if a new process has a shorter burst time, the current one gets interrupted.",
+     "srtf is like sjf but with preemption, so shorter jobs get priority.",
+     "srtf allows preemption, so a shorter job can take over the cpu.",
+     "srtf is a preemptive version of sjf, which means it can interrupt longer processes.",
+     "when a shorter job arrives, srtf stops the current process and runs the new one."
+    ],
+    "followup_replies": [
+     "preempted",
+     "interrupted",
+     "yes",
+     "it gets preempted",
+     "the current process is preempted"
+    ]
    },
    {
     "point": "SRTF can lead to starvation of longer processes.",
     "quote": "SRTF scheduling is a form of SJF scheduling; may cause starvation of some requests.",
     "followup": "What trade-off does SRTF introduce in scheduling?",
-    "followup_answer": "SRTF improves average waiting time but may cause starvation of longer processes if they are continually preempted."
+    "followup_answer": "SRTF improves average waiting time but may cause starvation of longer processes if they are continually preempted.",
+    "variants": [
+     "longer processes in srtf can get starved if shorter ones keep arriving.",
+     "srtf might leave longer jobs waiting forever if they're constantly preempted.",
+     "srtf can cause starvation because shorter jobs keep getting priority.",
+     "if longer processes keep getting preempted, they might never finish.",
+     "srtf can starve longer processes if they're always interrupted by shorter ones.",
+     "longer jobs can be starved in srtf due to preemption from shorter tasks."
+    ],
+    "followup_replies": [
+     "trade-off between waiting time and starvation",
+     "improves waiting time but risks starvation",
+     "waiting time vs starvation",
+     "better waiting time but possible starvation",
+     "reduces waiting time but may starve longer jobs"
+    ]
    }
   ],
   "source_pages": [
@@ -6989,7 +7645,17 @@
   "quality_note": "good (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "SRTF uses remaining burst time to prioritize processes, while SJF uses predicted burst time.",
+   "variants": [
+    "SRTF prioritizes based on remaining burst time, unlike SJF which uses predicted burst time.",
+    "SRTF dynamically adjusts priorities using remaining burst time, not the initial predicted burst time of SJF.",
+    "SRTF differs from SJF by using the remaining burst time instead of the estimated burst time for scheduling."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.002
+  }
  },
  {
   "id": "os.deadlock_vs_starvation_vs_livelock.hard2",
@@ -7007,19 +7673,63 @@
     "point": "In a deadlock, processes wait forever for an event that only another waiting process can cause, so none progress.",
     "quote": "Deadlock – two or more processes are waiting indefinitely for an",
     "followup": "In a deadlock, can any of the waiting processes continue on its own?",
-    "followup_answer": "No, each is waiting for another waiting process, so none of them can proceed."
+    "followup_answer": "No, each is waiting for another waiting process, so none of them can proceed.",
+    "variants": [
+     "in deadlock, processes wait forever for each other to release resources",
+     "deadlock happens when processes are stuck waiting for each other",
+     "no process can move forward because they're all waiting for each other",
+     "deadlock is when all processes are waiting for another to release something",
+     "deadlock means no progress because everyone is waiting on someone else",
+     "deadlock is when processes are stuck in a cycle of waiting for each other"
+    ],
+    "followup_replies": [
+     "no",
+     "no one can proceed",
+     "none can continue",
+     "no, they’re all waiting on each other",
+     "they can’t move forward"
+    ]
    },
    {
     "point": "In starvation, one process waits indefinitely while others keep running, e.g. a low-priority process never scheduled.",
     "quote": "Problem ≡ Starvation – low priority processes may never execute",
     "followup": "Under priority scheduling, which processes are at risk of starvation?",
-    "followup_answer": "Low-priority processes, because higher-priority ones keep getting the CPU."
+    "followup_answer": "Low-priority processes, because higher-priority ones keep getting the CPU.",
+    "variants": [
+     "starvation happens when a process is blocked forever while others run",
+     "a process can be stuck waiting indefinitely if others keep getting CPU",
+     "starvation is when a process never gets scheduled because others take priority",
+     "starvation is when a process is ignored indefinitely by the scheduler",
+     "starvation is when a process is never given CPU time"
+    ],
+    "followup_replies": [
+     "low-priority ones",
+     "low-priority processes",
+     "lower priority",
+     "low-priority",
+     "low priority"
+    ]
    },
    {
     "point": "Aging prevents starvation by increasing a waiting process's priority over time.",
     "quote": "Solution ≡ Aging – as time progresses increase the priority of the process",
     "followup": "How does aging guarantee that a low-priority process eventually runs?",
-    "followup_answer": "Its priority keeps increasing while it waits, so it eventually becomes high enough to be scheduled."
+    "followup_answer": "Its priority keeps increasing while it waits, so it eventually becomes high enough to be scheduled.",
+    "variants": [
+     "aging ensures a process gets scheduled by increasing its priority over time",
+     "starvation is prevented by making a process more important as it waits",
+     "aging helps a process eventually get CPU by raising its priority",
+     "aging is the method that prevents starvation by boosting priority",
+     "aging makes waiting processes eventually get scheduled",
+     "aging guarantees that a process will eventually run"
+    ],
+    "followup_replies": [
+     "it keeps increasing",
+     "its priority goes up",
+     "priority increases",
+     "it gets higher priority",
+     "priority rises"
+    ]
    }
   ],
   "source_pages": [
@@ -7048,7 +7758,19 @@
   "quality_note": "rewritten (batch 7): was tied to the bridge example with a speculative livelock answer; the slides never cover livelock",
   "repairs": [
    "batch7_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Starvation is when a process never gets resources, while deadlock is when all processes are blocked waiting for each other.",
+   "variants": [
+    "Starvation occurs when a process is perpetually denied resources, whereas deadlock involves mutual blocking between processes.",
+    "Starvation is the indefinite postponement of a process's resource allocation, while deadlock is a circular wait condition.",
+    "Starvation happens when a process is denied resources indefinitely, whereas deadlock is a state of mutual resource waiting.",
+    "Starvation is when a process never receives the resources it needs, while deadlock is when all processes are waiting for each other.",
+    "Starvation is the indefinite denial of resources to a process, while deadlock is when all processes are waiting for resources held by others."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.015
+  }
  },
  {
   "id": "os.producer_consumer_problem.medium2",
@@ -7272,25 +7994,85 @@
     "point": "Physical memory is split into fixed-size frames and logical memory into pages of the same size.",
     "quote": "Divide physical memory into fixed-sized blocks called frames",
     "followup": "How does the size of a page compare to the size of a frame?",
-    "followup_answer": "They are the same size."
+    "followup_answer": "They are the same size.",
+    "variants": [
+     "physical memory is split into frames and logical memory into pages of the same size",
+     "frames and pages are both fixed size and same in length",
+     "the page size matches the frame size exactly",
+     "memory is divided into frames and pages, both same size",
+     "frames and pages are fixed and equal in size",
+     "the size of a frame is the same as a page"
+    ],
+    "followup_replies": [
+     "same size",
+     "equal",
+     "they match",
+     "nope",
+     "banker's algorithm"
+    ]
    },
    {
     "point": "A logical address is split into a page number and a page offset.",
     "quote": "The high-order m −n bits of a logical address designate the page number, and the n low-order bits designate the page offset",
     "followup": "Which part of a logical address stays the same in the physical address?",
-    "followup_answer": "The page offset."
+    "followup_answer": "The page offset.",
+    "variants": [
+     "a logical address is split into a page number and an offset",
+     "page number and offset make up the logical address",
+     "the address is divided into page and offset parts",
+     "logical address has a page and an offset",
+     "page and offset are the two parts of an address",
+     "the address is split into page and offset"
+    ],
+    "followup_replies": [
+     "page offset",
+     "offset",
+     "the offset",
+     "nope",
+     "it stays"
+    ]
    },
    {
     "point": "The page number indexes the page table to get the frame's base address, and the offset is added to it.",
     "quote": "Page number (p) – used as an index into a page table which contains base address of each page in physical memory",
     "followup": "What does the page table store for each page?",
-    "followup_answer": "The base address of the frame where that page is stored in physical memory."
+    "followup_answer": "The base address of the frame where that page is stored in physical memory.",
+    "variants": [
+     "the page number finds the frame in the page table",
+     "page number looks up the frame base address",
+     "page table gives the frame's base address",
+     "the page number is used to find the frame",
+     "the page table maps the page to a frame",
+     "the page number indexes the page table"
+    ],
+    "followup_replies": [
+     "base address",
+     "frame address",
+     "frame's base",
+     "nope",
+     "frame location"
+    ]
    },
    {
     "point": "Paging avoids external fragmentation because pages can go into any free frames.",
     "quote": "Avoids external fragmentation and need for compaction",
     "followup": "Does paging completely remove fragmentation?",
-    "followup_answer": "No, it removes external fragmentation, but internal fragmentation can remain in the last page."
+    "followup_answer": "No, it removes external fragmentation, but internal fragmentation can remain in the last page.",
+    "variants": [
+     "paging avoids external fragmentation by allowing pages to go anywhere",
+     "pages can be placed in any free frame, so no external fragmentation",
+     "external fragmentation is avoided because pages can be scattered",
+     "paging lets pages go into any frame, so no external fragmentation",
+     "external fragmentation is prevented by paging",
+     "paging allows pages to be placed anywhere, avoiding external fragmentation"
+    ],
+    "followup_replies": [
+     "no",
+     "nope",
+     "it halves",
+     "internal",
+     "no, internal remains"
+    ]
    }
   ],
   "source_pages": [
@@ -7322,7 +8104,19 @@
   "quality_note": "rewritten (batch 7): the classic paging question (was a page-size trade-off question held back at confidence 0.62)",
   "repairs": [
    "batch7_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "paging is a memory management mechanism that translates logical addresses to physical addresses using a page table.",
+   "variants": [
+    "paging uses a page table to convert logical addresses into physical addresses.",
+    "paging translates logical addresses to physical addresses via a page table.",
+    "paging maps logical addresses to physical addresses with a page table.",
+    "paging relies on a page table to translate logical to physical addresses.",
+    "paging converts logical addresses to physical addresses through a page table."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.997
+  }
  },
  {
   "id": "os.critical_section_problem.hard2",
@@ -7440,13 +8234,42 @@
     "point": "System calls provide an interface to the services made available by an operating system.",
     "quote": "System calls provide an interface to the services made available by an operating system.",
     "followup": "What is the purpose of having an interface between programs and the operating system?",
-    "followup_answer": "The purpose is to allow programs to request services from the operating system in a controlled and secure manner."
+    "followup_answer": "The purpose is to allow programs to request services from the operating system in a controlled and secure manner.",
+    "variants": [
+     "system calls let programs ask the os for help",
+     "programs use system calls to access os services",
+     "system calls are how apps talk to the os",
+     "system calls provide a way for apps to use os features",
+     "system calls are the bridge between apps and the os"
+    ],
+    "followup_replies": [
+     "to keep things secure",
+     "control access",
+     "standardized access",
+     "prevent direct hardware access",
+     "secure and controlled way"
+    ]
    },
    {
     "point": "A system call switches the CPU from user mode to kernel mode.",
     "quote": "System call changes mode to kernel, return from call resets it to user",
     "followup": "Why would a programmer use a system call instead of directly interacting with hardware?",
-    "followup_answer": "A programmer uses a system call because it abstracts the complexity of hardware interaction and provides a standardized way to access operating system services."
+    "followup_answer": "A programmer uses a system call because it abstracts the complexity of hardware interaction and provides a standardized way to access operating system services.",
+    "variants": [
+     "system calls switch the cpu to kernel mode",
+     "when you make a system call, the cpu mode changes",
+     "system calls move the cpu to kernel mode",
+     "the cpu mode flips on a system call",
+     "system calls trigger a mode switch",
+     "system calls switch from user to kernel mode"
+    ],
+    "followup_replies": [
+     "because it's safer",
+     "to protect hardware",
+     "it abstracts hardware",
+     "to prevent direct access",
+     "it keeps the system secure"
+    ]
    }
   ],
   "source_pages": [
@@ -7476,7 +8299,19 @@
   "quality_note": "'written in a high-level or assembly language' trivia replaced by the switch to kernel mode (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "System calls are the interface between user programs and the kernel, enabling controlled access to privileged operations.",
+   "variants": [
+    "System calls allow user programs to request kernel services securely and efficiently.",
+    "System calls provide a mechanism for user-level programs to interact with the operating system kernel.",
+    "System calls are the only way user programs can access kernel-level resources and functions.",
+    "System calls enable controlled communication between user applications and the operating system kernel.",
+    "System calls serve as the formalized method for user programs to invoke kernel-level operations."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.001
+  }
  },
  {
   "id": "os.resource_allocation_graph.easy1",
@@ -7494,13 +8329,41 @@
     "point": "A claim edge, drawn dashed, shows a process may request a resource in future.",
     "quote": "A claim edge Pi → Rj indicates that process Pi may request resource Rj at some time in the future. This edge resembles a request edge in direction but is represented in the graph by a dashed line.",
     "followup": "What happens when a process actually requests a resource?",
-    "followup_answer": "When a process actually requests a resource, the claim edge is converted to a request edge."
+    "followup_answer": "When a process actually requests a resource, the claim edge is converted to a request edge.",
+    "variants": [
+     "a claim edge shows a process might need a resource later",
+     "claim edges are dashed lines for future resource requests",
+     "the claim edge is like a promise of a future request",
+     "processes declare possible future needs with claim edges",
+     "claim edges are used to track potential resource requests",
+     "a claim edge indicates a resource might be needed later"
+    ],
+    "followup_replies": [
+     "it becomes a request edge",
+     "claim edge turns into request edge",
+     "request edge",
+     "it changes to a request edge",
+     "claim edge becomes request edge"
+    ]
    },
    {
     "point": "All claim edges must be declared before the process starts.",
     "quote": "The resources must be claimed a priori in the system. That is, before process Pi starts executing, all its claim edges must already appear in the resource-allocation graph.",
     "followup": "What are claim edges used for?",
-    "followup_answer": "Deadlock avoidance: a request is granted only if turning the claim edge into an assignment edge creates no cycle."
+    "followup_answer": "Deadlock avoidance: a request is granted only if turning the claim edge into an assignment edge creates no cycle.",
+    "variants": [
+     "all future resource needs are declared before the process starts",
+     "claim edges are declared at the start of a process",
+     "processes must declare all possible resource needs before running",
+     "claim edges are declared before the process begins"
+    ],
+    "followup_replies": [
+     "deadlock avoidance",
+     "to prevent deadlocks",
+     "deadlock prevention",
+     "deadlock avoidance mechanism",
+     "to avoid deadlocks"
+    ]
    }
   ],
   "source_pages": [
@@ -7533,7 +8396,19 @@
   "quality_note": "claim edges are for deadlock avoidance, not detection (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "a claim edge represents a potential resource request from a process to a resource class in a resource allocation graph.",
+   "variants": [
+    "a claim edge shows a process's future resource need in the graph.",
+    "a claim edge indicates a resource request that may be fulfilled in the graph.",
+    "a claim edge is a directed edge from a process to a resource class in the graph.",
+    "a claim edge represents a possible resource allocation request in the graph.",
+    "a claim edge is a potential resource claim from a process to a resource in the graph."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.003
+  }
  },
  {
   "id": "os.file_allocation_methods.medium2",
@@ -7551,13 +8426,43 @@
     "point": "Indexed allocation has more pointer overhead than linked allocation.",
     "quote": "The pointer overhead for indexed allocation is greater than linked allocation.",
     "followup": "What causes indexed allocation to have higher pointer overhead?",
-    "followup_answer": "Because each file requires its own index block(s) to store pointers, which uses more disk space compared to linked allocation."
+    "followup_answer": "Because each file requires its own index block(s) to store pointers, which uses more disk space compared to linked allocation.",
+    "variants": [
+     "indexed allocation uses more pointers than linked allocation.",
+     "each file in indexed allocation needs its own index block.",
+     "indexed allocation requires an index block per file, which is more than linked.",
+     "linked allocation uses fewer pointers because it stores them in data blocks.",
+     "indexed allocation has more pointer overhead because of the index block.",
+     "indexed allocation needs an index block for every file, which is more space."
+    ],
+    "followup_replies": [
+     "each file needs its own index block.",
+     "index blocks take more space.",
+     "it uses an index block per file.",
+     "more disk space is used for pointers.",
+     "index blocks are per file."
+    ]
    },
    {
     "point": "Very small files still need a whole index block, which wastes space.",
     "quote": "For very small files, say files that expand only 2-3 blocks, the indexed allocation would keep one entire block (index block) for the pointers which is inefficient in terms of memory utilization.",
     "followup": "Why is indexed allocation inefficient for small files?",
-    "followup_answer": "Because it reserves an entire block for the index, even if the file only needs a few blocks, leading to wasted space."
+    "followup_answer": "Because it reserves an entire block for the index, even if the file only needs a few blocks, leading to wasted space.",
+    "variants": [
+     "small files still use a whole index block.",
+     "even small files need an index block in indexed allocation.",
+     "indexed allocation wastes space for small files.",
+     "small files take up an entire index block.",
+     "indexed allocation is inefficient for small files.",
+     "a few blocks still need a whole index block."
+    ],
+    "followup_replies": [
+     "it reserves a whole block for the index.",
+     "it uses a full block for a few pointers.",
+     "it allocates a block even for small files.",
+     "it uses a block for the index regardless of size.",
+     "it uses a whole block for the index."
+    ]
    }
   ],
   "source_pages": [
@@ -7592,7 +8497,18 @@
   "quality_note": "question asked about external fragmentation, which no point covered; refocused on the two disadvantages (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "Indexed allocation requires a separate index block for each file, while linked allocation uses pointers within the file to link disk blocks.",
+   "variants": [
+    "Indexed allocation uses an index block per file, whereas linked allocation links disk blocks via pointers within the file.",
+    "Indexed allocation needs an index block for each file, unlike linked allocation which uses internal pointers.",
+    "Indexed allocation requires an index block per file, whereas linked allocation uses internal pointers to link disk blocks.",
+    "Indexed allocation uses an index block for each file, while linked allocation links disk blocks with internal pointers."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.002
+  }
  },
  {
   "id": "os.interrupts.medium1",
@@ -7610,13 +8526,43 @@
     "point": "The operating system saves the state of the CPU during an interrupt.",
     "quote": "The operating system saves the state of the CPU by storing registers and the program counter",
     "followup": "What happens if the operating system doesn't save the state of the CPU during an interrupt?",
-    "followup_answer": "The interrupted program could not resume where it left off, because its registers and program counter would be lost."
+    "followup_answer": "The interrupted program could not resume where it left off, because its registers and program counter would be lost.",
+    "variants": [
+     "the os saves the cpu state when an interrupt happens",
+     "saving cpu state is how the os handles interrupts",
+     "interrupts require the os to save the cpu registers",
+     "the os must save the program counter during an interrupt",
+     "without saving the state, the cpu can't resume the interrupted process",
+     "interrupt handling starts with saving the cpu context"
+    ],
+    "followup_replies": [
+     "nope",
+     "program counter and registers",
+     "it can't resume",
+     "context is lost",
+     "the process would crash"
+    ]
    },
    {
     "point": "Interrupts are transferred to the appropriate service routine via the interrupt vector.",
     "quote": "Interrupt transfers control to the interrupt service routine generally, through the interrupt vector, which contains the addresses of all the service routines",
     "followup": "Why is the interrupt vector important in handling interrupts?",
-    "followup_answer": "The interrupt vector is important because it provides the addresses of the service routines, allowing the OS to quickly locate and execute the correct handler for each type of interrupt."
+    "followup_answer": "The interrupt vector is important because it provides the addresses of the service routines, allowing the OS to quickly locate and execute the correct handler for each type of interrupt.",
+    "variants": [
+     "the interrupt vector tells the os where to find the service routine",
+     "the os uses the interrupt vector to locate the handler",
+     "interrupt vectors map interrupts to their service routines",
+     "the interrupt vector is like a table of addresses",
+     "the vector table helps the os find the right handler",
+     "interrupt vectors are how the os finds the service routine"
+    ],
+    "followup_replies": [
+     "it provides the addresses",
+     "it's a lookup table",
+     "it tells where the handler is",
+     "it's a list of service routines",
+     "it helps the os find the right code"
+    ]
    }
   ],
   "source_pages": [
@@ -7648,7 +8594,19 @@
   "quality_note": "follow-up answer fixed (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "the operating system saves the current state, switches to kernel mode, and executes an interrupt handler to respond to the interrupt.",
+   "variants": [
+    "the os preserves context, enters kernel mode, and runs an interrupt service routine to handle the interrupt.",
+    "when an interrupt occurs, the os saves the process state, switches to kernel mode, and executes the handler.",
+    "the os handles interrupts by saving the process state, switching to kernel mode, and invoking the handler.",
+    "interrupt handling involves saving the current state, switching to kernel, and executing the handler by the os.",
+    "the os manages interrupts by saving the process context, entering kernel mode, and running the handler."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.001
+  }
  },
  {
   "id": "os.readers_writers_problem.medium1",
@@ -7666,19 +8624,63 @@
     "point": "Multiple readers can access the shared resource simultaneously.",
     "quote": "Any number of readers can read from the shared resource simultaneously, but only one writer can write to the shared resource.",
     "followup": "What happens if a writer arrives while readers are already accessing the resource?",
-    "followup_answer": "The writer will have to wait until all readers have finished reading, as the writer cannot proceed while any readers are active."
+    "followup_answer": "The writer will have to wait until all readers have finished reading, as the writer cannot proceed while any readers are active.",
+    "variants": [
+     "multiple readers can read at the same time",
+     "readers can all access the resource without blocking each other",
+     "the system allows several readers to read simultaneously",
+     "readers don't block each other when accessing the shared data",
+     "the read_count lets multiple readers in at once",
+     "readers can all be in the resource at the same time"
+    ],
+    "followup_replies": [
+     "writer waits",
+     "writer blocks",
+     "writer can't proceed",
+     "writer has to wait",
+     "writer waits for readers to finish"
+    ]
    },
    {
     "point": "A writer cannot write if there are active readers.",
     "quote": "A writer cannot write to the resource if there are non zero number of readers accessing the resource at that time.",
     "followup": "How does the solution ensure that a writer cannot write while readers are active?",
-    "followup_answer": "The writer process uses the rw_mutex semaphore to block until no readers are accessing the resource, which is enforced by the read_count variable."
+    "followup_answer": "The writer process uses the rw_mutex semaphore to block until no readers are accessing the resource, which is enforced by the read_count variable.",
+    "variants": [
+     "writers can't write while readers are active",
+     "writers are blocked when readers are reading",
+     "readers block writers from writing",
+     "writer can't proceed if readers are in the resource",
+     "writer waits until readers are done",
+     "writers are prevented from writing when readers are present"
+    ],
+    "followup_replies": [
+     "rw_mutex blocks the writer",
+     "read_count stops writers",
+     "writer waits on the mutex",
+     "writer checks read_count",
+     "writer can't write while readers are active"
+    ]
    },
    {
     "point": "Writers can starve if readers keep arriving.",
     "quote": "Both may have starvation leading to even more variations",
     "followup": "How can the solution be changed to stop writers starving?",
-    "followup_answer": "Give writers priority: once a writer is waiting, new readers must wait too."
+    "followup_answer": "Give writers priority: once a writer is waiting, new readers must wait too.",
+    "variants": [
+     "writers can starve if readers keep coming",
+     "writers might wait forever if readers arrive often",
+     "readers can block writers indefinitely",
+     "writers can be delayed if readers keep arriving",
+     "writers might not get their turn if readers keep coming"
+    ],
+    "followup_replies": [
+     "give writers priority",
+     "make readers wait for writers",
+     "prioritize writers over readers",
+     "change the priority order",
+     "favor writers over readers"
+    ]
    }
   ],
   "source_pages": [
@@ -7711,7 +8713,19 @@
   "quality_note": "starvation half of the question had no point (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "The readers-writers problem is solved using semaphores and the read_count variable to ensure mutual exclusion and allow multiple readers.",
+   "variants": [
+    "The readers-writers problem uses semaphores and read_count to allow multiple readers while ensuring mutual exclusion.",
+    "Semaphores and read_count solve the readers-writers problem by allowing multiple readers and enforcing mutual exclusion.",
+    "The solution to the readers-writers problem uses semaphores and read_count to let multiple readers access while preventing conflicts.",
+    "Readers-writers problem is solved with semaphores and read_count to allow multiple readers and ensure mutual exclusion.",
+    "The readers-writers problem is addressed by semaphores and read_count to allow multiple readers and enforce mutual exclusion."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.901
+  }
  },
  {
   "id": "os.raid_levels.medium1",
@@ -7729,19 +8743,61 @@
     "point": "RAID 1 mirrors data on two disks, so either can fail without data loss.",
     "quote": "Disk mirroring, or RAID level 1, is a robust scheme that uses a mirror set — two equally sized partitions on two disks with identical data contents.",
     "followup": "What happens if one of the disks in a RAID 1 array fails?",
-    "followup_answer": "The data remains intact because the mirror set on the second disk contains an exact copy of the data."
+    "followup_answer": "The data remains intact because the mirror set on the second disk contains an exact copy of the data.",
+    "variants": [
+     "raid 1 keeps a copy of data on two disks, so if one fails, the other still has it.",
+     "raid 1 duplicates data, so a single disk failure doesn't lose data.",
+     "raid 1 uses mirroring, meaning both disks have the same data, so one can fail.",
+     "raid 1 has two disks with the same data, so one can fail and data is safe."
+    ],
+    "followup_replies": [
+     "nope",
+     "it stays intact",
+     "data remains",
+     "it doesn't lose data",
+     "mirror disk has the data"
+    ]
    },
    {
     "point": "RAID 10 mirrors and stripes, giving speed and redundancy at half the capacity.",
     "quote": "RAID level 10 - combining RAID 1 and RAID 0 - provides security by mirroring all data on secondary drives while using striping across each set of drives to speed up data transfers.",
     "followup": "What is the main trade-off of using RAID 10?",
-    "followup_answer": "RAID 10 sacrifices half of the storage capacity to the mirroring process, making it less storage-efficient than RAID 5."
+    "followup_answer": "RAID 10 sacrifices half of the storage capacity to the mirroring process, making it less storage-efficient than RAID 5.",
+    "variants": [
+     "raid 10 stripes data and mirrors it, so it's fast and safe but uses half the space.",
+     "raid 10 combines raid 1 and raid 0, giving speed and redundancy but less storage.",
+     "raid 10 has mirrored striped sets, so it's fast and redundant, but storage is halved.",
+     "raid 10 stripes and mirrors, so it's good for speed and redundancy but uses half the space.",
+     "raid 10 gives high performance and redundancy but sacrifices half the storage."
+    ],
+    "followup_replies": [
+     "it halves",
+     "storage efficiency is half",
+     "half the capacity",
+     "it's half as efficient",
+     "storage is cut in half"
+    ]
    },
    {
     "point": "RAID 5 spreads parity across all disks, using less space than mirroring.",
     "quote": "RAID level 5 stripes file data and checks data over all the disks",
     "followup": "Why are writes slower on RAID 5?",
-    "followup_answer": "Every write must also read and update the parity block."
+    "followup_answer": "Every write must also read and update the parity block.",
+    "variants": [
+     "raid 5 uses parity across disks, so it's more space-efficient than mirroring.",
+     "raid 5 spreads parity across multiple disks, using less space than raid 1.",
+     "raid 5 has parity, so it uses less storage than raid 1's mirroring.",
+     "raid 5 uses parity, making it more storage-efficient than raid 1.",
+     "raid 5 spreads parity, so it uses less space than raid 1's duplication.",
+     "raid 5 uses parity information, which takes less space than mirroring."
+    ],
+    "followup_replies": [
+     "because parity must be updated",
+     "parity blocks need to be read and written",
+     "every write needs parity",
+     "parity is read and written with each write",
+     "parity blocks are updated with each write"
+    ]
    }
   ],
   "source_pages": [
@@ -7776,7 +8832,19 @@
   "quality_note": "question asks about RAID 5 but no point covered it (repair 5)",
   "repairs": [
    "batch5_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "RAID 1 mirrors data across disks, RAID 5 uses distributed parity, RAID 10 combines mirroring and striping.",
+   "variants": [
+    "RAID 1 duplicates data on multiple disks, RAID 5 spreads parity across all disks, RAID 10 mirrors and stripes data.",
+    "RAID 1 provides redundancy by duplicating data, RAID 5 offers redundancy with parity, RAID 10 uses mirrored striped data.",
+    "RAID 1 uses full disk mirroring for redundancy, RAID 5 uses distributed parity for redundancy, RAID 10 uses mirrored striping.",
+    "RAID 1 duplicates data for redundancy, RAID 5 uses parity for redundancy, RAID 10 mirrors and stripes data for redundancy.",
+    "RAID 1 provides redundancy through mirroring, RAID 5 through parity, RAID 10 through mirrored striping."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.992
+  }
  },
  {
   "id": "os.schedulers.medium2",
@@ -8152,25 +9220,85 @@
     "point": "A thread is a unit of execution inside a process, and a process can have several threads.",
     "quote": "A process can have multiple threads running at the same time. This is called multithreading.",
     "followup": "Can one process run several threads at the same time?",
-    "followup_answer": "Yes, a process can have multiple threads; this is multithreading."
+    "followup_answer": "Yes, a process can have multiple threads; this is multithreading.",
+    "variants": [
+     "a thread is like a smaller part of a process",
+     "threads run inside a process, not on their own",
+     "you can have multiple threads in one process",
+     "processes can have several threads running",
+     "threads are lightweight parts of a process",
+     "a process can have many threads at once"
+    ],
+    "followup_replies": [
+     "yes",
+     "yes, that's multithreading",
+     "yes, they can run simultaneously",
+     "yes, that's what multithreading is",
+     "yes, multiple threads can run in a process"
+    ]
    },
    {
     "point": "Each thread has its own program counter, registers and stack.",
     "quote": "It consists of thread ID, Program counter, a register set and stack",
     "followup": "Do two threads of the same process share a stack?",
-    "followup_answer": "No, each thread has its own stack, registers and program counter."
+    "followup_answer": "No, each thread has its own stack, registers and program counter.",
+    "variants": [
+     "each thread has its own stack and registers",
+     "threads have their own program counter",
+     "a thread has its own stack and registers",
+     "each thread has its own program counter and stack",
+     "threads have separate stacks and registers",
+     "thread has its own stack, registers, and pc"
+    ],
+    "followup_replies": [
+     "no",
+     "no, they don't share a stack",
+     "no, each has its own stack",
+     "no, stacks are separate",
+     "no, threads have their own stack"
+    ]
    },
    {
     "point": "Threads of a process share its code, data and resources, while processes do not share memory by default.",
     "quote": "Threads share resources like memory with other threads in the same process.",
     "followup": "If one thread changes a global variable, does another thread of the same process see the change?",
-    "followup_answer": "Yes, because threads of the same process share its data."
+    "followup_answer": "Yes, because threads of the same process share its data.",
+    "variants": [
+     "threads share the same code and data",
+     "processes don't share memory by default",
+     "threads of the same process share data",
+     "shared memory is part of the process",
+     "threads can access the same data",
+     "processes don't share memory, threads do"
+    ],
+    "followup_replies": [
+     "yes",
+     "yes, they see the change",
+     "yes, because they share data",
+     "yes, data is shared",
+     "yes, they share the same data"
+    ]
    },
    {
     "point": "Creating or switching threads is cheaper than creating or switching processes.",
     "quote": "Process creation is heavy-weight while thread creation is light-weight",
     "followup": "Why is creating a thread faster than creating a process?",
-    "followup_answer": "A new thread shares the process's existing memory and resources, so they do not have to be set up again."
+    "followup_answer": "A new thread shares the process's existing memory and resources, so they do not have to be set up again.",
+    "variants": [
+     "thread creation is cheaper than process creation",
+     "switching threads is faster than switching processes",
+     "threads share resources, so they're faster",
+     "processes require more setup, threads don't",
+     "threads are lighter than processes",
+     "creating a thread is faster because it shares memory"
+    ],
+    "followup_replies": [
+     "because they share memory",
+     "they share the process's memory",
+     "no setup needed",
+     "they reuse existing resources",
+     "because they share memory and resources"
+    ]
    }
   ],
   "source_pages": [
@@ -8193,6 +9321,18 @@
   "curated": true,
   "repairs": [
    "batch7_2026-10-25"
-  ]
+  ],
+  "core_point": {
+   "point": "A process is an independent unit of execution with its own memory space, while a thread is a lightweight sub-process that shares memory with other threads in the same process.",
+   "variants": [
+    "A process has its own memory space, while a thread shares memory with other threads in the same process.",
+    "Processes are independent with separate memory, threads share memory within a process.",
+    "A process is an independent execution unit with separate memory, whereas a thread shares memory with other threads.",
+    "Processes have separate memory spaces, threads share memory within a process.",
+    "A process is an independent unit with its own memory, while a thread shares memory with other threads in the same process."
+   ],
+   "review": "unreviewed",
+   "stated_by_bank": 0.005
+  }
  }
 ]

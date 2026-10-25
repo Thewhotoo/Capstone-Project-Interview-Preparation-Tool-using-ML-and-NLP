@@ -16,7 +16,7 @@
 // extracts typeLine()'s EXACT source text out of templates/index.html
 // (never a hand-copied duplicate that could drift) and evaluates it with
 // Node's built-in `vm` + `assert` modules, driving its `setTimeout` calls
-// through a controlled fake queue -- real per-character timer delays would
+// (and its requestAnimationFrame frames) through a controlled fake queue -- real timer delays would
 // make the async race untestable/flaky; draining a queue in an explicitly
 // chosen order is what lets this deterministically reproduce "a second
 // invocation starts while the first is mid-animation."
@@ -45,14 +45,19 @@ function extractBlock(source, startMarker) {
     return source.slice(start, i);
 }
 
-const typeLineSrc = extractBlock(src, "function typeLine(el, text, pace = 1) {");
+const typeLineSrc = extractBlock(src, "function typeLine(el, text, pace = 1, endPause = 550) {");
 
-// A fresh sandbox + fake element per test: `setTimeout` pushes onto `queue`
-// instead of actually waiting, so the test drives the exact interleaving.
+// A fresh sandbox + fake element per test: `setTimeout` and `requestAnimationFrame`
+// push onto `queue` instead of actually waiting, so the test drives the exact
+// interleaving. typeLine() is time-based (it reveals as many characters as the
+// elapsed time allows), so each animation frame advances a fake clock by 20 ms.
 function makeSandbox() {
     const queue = [];
+    let now = 0;
     const sandbox = {
         setTimeout: (cb) => { queue.push(cb); return queue.length; },
+        requestAnimationFrame: (cb) => { queue.push(() => cb(now += 20)); return queue.length; },
+        performance: { now: () => now },
         Math, Promise, console,
     };
     vm.createContext(sandbox);

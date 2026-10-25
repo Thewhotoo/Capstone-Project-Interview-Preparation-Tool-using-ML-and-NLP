@@ -1,0 +1,138 @@
+{
+  "dataset_path": "artifacts\\v4_diagnostic\\v4_diagnostic_58.jsonl",
+  "total_examples": 58,
+  "category_counts": {
+    "relevance_alignment": 16,
+    "multipart_completeness": 9,
+    "technical_correctness": 12,
+    "depth_control": 6,
+    "grounding_ownership": 9,
+    "cross_dimension": 6
+  },
+  "pair_group_counts": {
+    "REL-1": 2,
+    "REL-2": 2,
+    "REL-3": 2,
+    "REL-4": 2,
+    "REL-5": 2,
+    "REL-6": 2,
+    "REL-7": 2,
+    "REL-8": 2,
+    "MP-1": 3,
+    "MP-2": 3,
+    "MP-3": 3,
+    "TC-1": 4,
+    "TC-2": 4,
+    "TC-3": 4,
+    "DEP-1": 3,
+    "DEP-2": 3,
+    "GRD-1": 5,
+    "GRD-2": 4,
+    "XD-1": 3,
+    "XD-2": 3
+  },
+  "checks": [
+    {
+      "check": "total_count",
+      "status": "PASS",
+      "detail": "58 examples"
+    },
+    {
+      "check": "canonical_dimensions_and_range",
+      "status": "PASS",
+      "detail": "all 58 examples have all 4 dims, all in [0,4]"
+    },
+    {
+      "check": "unique_example_ids",
+      "status": "PASS",
+      "detail": "58 unique ids"
+    },
+    {
+      "check": "no_duplicate_qa_pairs",
+      "status": "PASS",
+      "detail": "0 exact (question, answer) duplicates"
+    },
+    {
+      "check": "no_unintended_duplicate_answers",
+      "status": "PASS",
+      "detail": "0 duplicate answers (V4 design never intentionally reuses answer text)"
+    },
+    {
+      "check": "diagnostic_category_present",
+      "status": "PASS",
+      "detail": "all 58 examples have a diagnostic_category"
+    },
+    {
+      "check": "category_counts_match_design",
+      "status": "PASS",
+      "detail": "{\"relevance_alignment\": 16, \"multipart_completeness\": 9, \"technical_correctness\": 12, \"depth_control\": 6, \"grounding_ownership\": 9, \"cross_dimension\": 6}"
+    },
+    {
+      "check": "pair_group_id_present",
+      "status": "PASS",
+      "detail": "all 58 examples have a pair_group_id"
+    },
+    {
+      "check": "pair_groups_have_multiple_members",
+      "status": "PASS",
+      "detail": "20 groups, all size >=2"
+    },
+    {
+      "check": "paired_examples_share_context",
+      "status": "PASS",
+      "detail": "every group shares one question + one grounding.title + one source_id"
+    },
+    {
+      "check": "multipart_expected_concepts",
+      "status": "PASS",
+      "detail": "every multipart_completeness example has >=2 expected_concepts (the two requested components)"
+    },
+    {
+      "check": "rationale_never_in_model_input",
+      "status": "PASS",
+      "detail": "verified via v4_input_builder.build_v4_model_input on all 58 examples: rationale/gold_labels/diagnostic_category/pair_group_id never appear in the built (text_a, text_b) pair"
+    },
+    {
+      "check": "no_first_person_in_grounding",
+      "status": "PASS",
+      "detail": "0 first-person markers in any grounding.title/technologies/summary (summary is '' for all 58 by design)"
+    },
+    {
+      "check": "no_rubric_leakage",
+      "status": "PASS",
+      "detail": "0 rubric/tier/label words found in question/answer/expected_concepts text"
+    },
+    {
+      "check": "no_answer_copy_in_grounding",
+      "status": "PASS",
+      "detail": "grounding.summary is '' for all 58 examples by design; no answer text appears in grounding.title"
+    },
+    {
+      "check": "hypothetical_source_marking",
+      "status": "PASS",
+      "detail": "all 58 examples: source_id prefixed 'v4h_' and hypothetical_source=True"
+    },
+    {
+      "check": "isolated_from_training_pipeline",
+      "status": "PASS",
+      "detail": "0 source_id collisions (checked against 64 frozen source_ids), 0 example_id collisions (checked against 220 frozen example_ids), four_dim_experiment_split.py/run_four_dim_training.py do not reference v4_diagnostic or v4h_ at all"
+    }
+  ],
+  "all_passed": true,
+  "sbert_near_duplicate_check": {
+    "status": "RAN",
+    "model": "all-MiniLM-L6-v2",
+    "threshold": 0.92,
+    "v4_internal_near_duplicates": [
+      {
+        "a": "v4_diag_dep1_b",
+        "b": "v4_diag_dep1_c",
+        "cosine": 0.9342
+      }
+    ],
+    "v4_internal_pairs_checked": 1653,
+    "v4_vs_frozen_pool_near_duplicates": [],
+    "v4_vs_frozen_pool_pairs_checked": 12760,
+    "frozen_pool_answers_checked": 220
+  }
+}

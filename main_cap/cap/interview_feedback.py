@@ -58,6 +58,43 @@ SCOPE_NOTE = (
     "This report reflects how relevant, specific, and grounded your answers were. It does not "
     "independently verify the factual correctness of individual technical claims."
 )
+# Used when the background AI re-grade ran on at least one answer (conversation_engine).
+SCOPE_NOTE_FACT_CHECKED = (
+    "This report reflects how relevant, specific, and grounded your answers were. Technical claims "
+    "were also checked by an automated AI fact-checker running on this computer; it can make "
+    "mistakes, so treat its judgments as a second opinion."
+)
+_FACT_CHECKED_MARKER = "checked by an automated AI fact-checker"
+
+
+def _scope_note(evaluations: list[dict]) -> str:
+    fact_checked = any(_FACT_CHECKED_MARKER in (e.get("reasoning") or "") for e in evaluations)
+    return SCOPE_NOTE_FACT_CHECKED if fact_checked else SCOPE_NOTE
+
+TECH_MISMATCH = "tech_consistency"
+
+
+def _tech_mismatch_tip(timeline: list[dict] | None, tech_consistency_flags: list | None) -> str | None:
+    """A soft, named-project nudge when one or more answers described a tech
+    stack that doesn't clearly match what the resume lists for that project
+    (tech_consistency_flag.py — a side signal, never an accusation; see its
+    module docstring for why it's deliberately conservative). None when there
+    is nothing to flag."""
+    if not tech_consistency_flags or not timeline:
+        return None
+    projects: list[str] = []
+    for turn, flag in zip(timeline, tech_consistency_flags):
+        if flag == POSSIBLE_MISMATCH:
+            name = (turn.get("project_reference") or "").strip()
+            if name and name not in projects:
+                projects.append(name)
+    if not projects:
+        return None
+    where = projects[0] if len(projects) == 1 else ", ".join(projects[:-1]) + f" and {projects[-1]}"
+    return (
+        f"Double-check the technologies you described for {where} — what you said didn't clearly "
+        f"match what's listed on your résumé there. Naming the exact tools you actually used will hold up better."
+    )
 
 TECH_MISMATCH = "tech_consistency"
 
@@ -169,7 +206,7 @@ def build_feedback(
         "summary": summary,
         "strengths": strengths,
         "focus_areas": focus_areas,
-        "scope_note": SCOPE_NOTE,
+        "scope_note": _scope_note(evaluations),
         "stats": {
             "questions": n,
             "mean_overall": round(sum(overalls) / n, 3),

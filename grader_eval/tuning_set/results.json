@@ -1,0 +1,3734 @@
+[
+  {
+    "question_id": "cn.link_state_routing.easy1",
+    "style": "good",
+    "answer": "A link-state algorithm is what's called a centralized or global routing algorithm, meaning every node has the complete picture of the network topology and all the link costs. Each router floods its link-state information so everyone ends up with the same map. Then each node independently runs something like Dijkstra's algorithm to compute the least-cost path to every other node. That's different from distance-vector, where a node only knows what its neighbors tell it and the computation is iterative and distributed.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "topic": "Link state routing",
+    "subject": "cn",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.833
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.884
+      }
+    ],
+    "key_points": [
+      "A link-state routing algorithm is centralized.",
+      "Each node computes the least-cost paths to all other nodes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.link_state_routing.easy1",
+    "style": "partial",
+    "answer": "In link-state routing, every router runs Dijkstra's algorithm on its own to figure out the shortest path to every other router in the network. So each node ends up with its own forwarding table built from those least-cost paths.",
+    "labels": [
+      "missing",
+      "covered"
+    ],
+    "overall": 0.5,
+    "topic": "Link state routing",
+    "subject": "cn",
+    "score": 0.543,
+    "predicted": [
+      "missing",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.001,
+        "similarity": 0.61
+      },
+      {
+        "entailment": 0.996,
+        "similarity": 0.757
+      }
+    ],
+    "key_points": [
+      "A link-state routing algorithm is centralized.",
+      "Each node computes the least-cost paths to all other nodes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.link_state_routing.easy1",
+    "style": "vague",
+    "answer": "Link-state routing is one of the main ways routers decide where to send packets. It uses information about the links in the network, which makes it pretty efficient compared to other approaches. It's widely used in real networks and it's an important part of how the internet works.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1,
+    "topic": "Link state routing",
+    "subject": "cn",
+    "score": 0.287,
+    "predicted": [
+      "partial",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.073,
+        "similarity": 0.729
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.425
+      }
+    ],
+    "key_points": [
+      "A link-state routing algorithm is centralized.",
+      "Each node computes the least-cost paths to all other nodes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.link_state_routing.easy1",
+    "style": "confident_wrong",
+    "answer": "Link-state routing is a fully decentralized algorithm where each router only knows the cost to its directly connected neighbors. Routers exchange their distance vectors with neighbors and gradually converge using the Bellman-Ford equation. So no node ever has the full topology, and that's the key difference from distance-vector.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "topic": "Link state routing",
+    "subject": "cn",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.015,
+        "similarity": 0.771
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.607
+      }
+    ],
+    "key_points": [
+      "A link-state routing algorithm is centralized.",
+      "Each node computes the least-cost paths to all other nodes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.firewalls.medium1",
+    "style": "good_paraphrase",
+    "answer": "Think of a firewall as a gatekeeper that checks every packet coming in or going out against a rulebook the admin writes, like drop anything to port 23 or allow HTTPS from anywhere. A simple packet filter works down at the network and transport level, so it can only look at things like IP addresses and port numbers. An application-level gateway sits higher up and can actually read the content, say the HTTP request or the FTP commands. That matters because the higher you go, the finer-grained your control, so you could block a specific website or a malicious command instead of just a whole port.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "topic": "Firewalls",
+    "subject": "cn",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.996,
+        "similarity": 0.63
+      },
+      {
+        "entailment": 0.995,
+        "similarity": 0.771
+      },
+      {
+        "entailment": 0.995,
+        "similarity": 0.55
+      }
+    ],
+    "key_points": [
+      "Firewalls can operate at different layers of the network stack.",
+      "Firewalls make decisions based on a defined set of security rules.",
+      "Operating at different layers affects the level of detail the firewall can inspect."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.firewalls.medium1",
+    "style": "partial",
+    "answer": "A firewall filters traffic based on a set of rules configured by the administrator, and it either allows or blocks each packet. For example, you can block certain IP addresses or ports. That's important because it keeps unauthorized traffic out of the internal network.",
+    "labels": [
+      "missing",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.4,
+    "topic": "Firewalls",
+    "subject": "cn",
+    "score": 0.383,
+    "predicted": [
+      "missing",
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.018,
+        "similarity": 0.613
+      },
+      {
+        "entailment": 0.996,
+        "similarity": 0.669
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.565
+      }
+    ],
+    "key_points": [
+      "Firewalls can operate at different layers of the network stack.",
+      "Firewalls make decisions based on a defined set of security rules.",
+      "Operating at different layers affects the level of detail the firewall can inspect."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.firewalls.medium1",
+    "style": "hesitant",
+    "answer": "Um, so a firewall basically, it has these rules, right, and it checks traffic against them. And it can work at, uh, the transport layer where it's like looking at ports, or at the application layer where it can, you know, actually look inside the data. So the higher layer one is, um, more detailed, it can be more precise about what it blocks.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.75,
+    "topic": "Firewalls",
+    "subject": "cn",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.689
+      },
+      {
+        "entailment": 0.996,
+        "similarity": 0.721
+      },
+      {
+        "entailment": 0.989,
+        "similarity": 0.672
+      }
+    ],
+    "key_points": [
+      "Firewalls can operate at different layers of the network stack.",
+      "Firewalls make decisions based on a defined set of security rules.",
+      "Operating at different layers affects the level of detail the firewall can inspect."
+    ],
+    "unclear": true
+  },
+  {
+    "question_id": "cn.firewalls.medium1",
+    "style": "off_topic",
+    "answer": "Encryption is used to keep data confidential while it travels over the network. In TLS, the client and server do a handshake to agree on a session key using public-key cryptography, and then use symmetric encryption for the actual data. That way even if someone intercepts the packets, they can't read them.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0,
+    "topic": "Firewalls",
+    "subject": "cn",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.011,
+        "similarity": 0.426
+      },
+      {
+        "entailment": 0.009,
+        "similarity": 0.347
+      },
+      {
+        "entailment": 0.008,
+        "similarity": 0.447
+      }
+    ],
+    "key_points": [
+      "Firewalls can operate at different layers of the network stack.",
+      "Firewalls make decisions based on a defined set of security rules.",
+      "Operating at different layers affects the level of detail the firewall can inspect."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.cidr.medium1",
+    "style": "good",
+    "answer": "CIDR, classless inter-domain routing, replaces the fixed class A, B and C boundaries with variable-length subnet masks, so the network prefix can be any length. Addresses are written as a.b.c.d/x, where x is the number of bits in the network part. So if an organization needs about 500 addresses, you give it a /23 instead of a whole class B with 65,000 addresses. That's why far fewer addresses are wasted than with classful addressing.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0,
+    "topic": "CIDR",
+    "subject": "cn",
+    "score": 0.995,
+    "predicted": [
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.68
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.69
+      }
+    ],
+    "key_points": [
+      "CIDR allows for variable-length subnet masks.",
+      "CIDR addresses are written in the format a.b.c.d/x."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.cidr.medium1",
+    "style": "partial",
+    "answer": "With classful addressing you could only get blocks of fixed sizes, like class B or class C, so a lot of addresses got wasted. CIDR lets the subnet part of the address be any length, so you can hand out blocks that match what an organization actually needs.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6,
+    "topic": "CIDR",
+    "subject": "cn",
+    "score": 0.575,
+    "predicted": [
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.995,
+        "similarity": 0.783
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.658
+      }
+    ],
+    "key_points": [
+      "CIDR allows for variable-length subnet masks.",
+      "CIDR addresses are written in the format a.b.c.d/x."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.cidr.medium1",
+    "style": "confident_wrong",
+    "answer": "CIDR is more efficient because it lets a router assign IP addresses dynamically to hosts when they join the network and take them back when they leave. That's done using the slash-x notation, where x tells you how many hours the lease lasts. So addresses are recycled instead of being permanently assigned to a class.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "topic": "CIDR",
+    "subject": "cn",
+    "score": 0.564,
+    "predicted": [
+      "missing",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.028,
+        "similarity": 0.601
+      },
+      {
+        "entailment": 0.825,
+        "similarity": 0.535
+      }
+    ],
+    "key_points": [
+      "CIDR allows for variable-length subnet masks.",
+      "CIDR addresses are written in the format a.b.c.d/x."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.cidr.medium1",
+    "style": "dont_know",
+    "answer": "Honestly, I don't remember much about CIDR. I know it has something to do with IP addresses, but I couldn't explain how it compares to class-based addressing.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0,
+    "topic": "CIDR",
+    "subject": "cn",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.001,
+        "similarity": 0.64
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.685
+      }
+    ],
+    "key_points": [
+      "CIDR allows for variable-length subnet masks.",
+      "CIDR addresses are written in the format a.b.c.d/x."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.persistent_vs_non_persistent_http.medium1",
+    "style": "good_paraphrase",
+    "answer": "Say a web page has one HTML file and ten images. With non-persistent HTTP, every one of those eleven objects needs a fresh TCP connection, so you pay one round trip to set up the connection and another round trip to request and receive the object, two RTTs each. With persistent HTTP, the server leaves the connection open after the first response, so the browser just keeps sending requests down the same pipe. You skip all those extra handshakes, and with pipelining you can get all the images in roughly one extra RTT.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "topic": "Persistent vs non-persistent HTTP",
+    "subject": "cn",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.993,
+        "similarity": 0.768
+      },
+      {
+        "entailment": 0.992,
+        "similarity": 0.797
+      }
+    ],
+    "key_points": [
+      "Persistent HTTP reuses a single TCP connection for multiple objects.",
+      "Non-persistent HTTP requires two RTTs per object."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.persistent_vs_non_persistent_http.medium1",
+    "style": "partial",
+    "answer": "Persistent HTTP keeps the TCP connection open after sending a response, so the client can request more objects on that same connection. That saves time because you don't have to keep opening new connections for each object.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55,
+    "topic": "Persistent vs non-persistent HTTP",
+    "subject": "cn",
+    "score": 0.575,
+    "predicted": [
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.997,
+        "similarity": 0.828
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.503
+      }
+    ],
+    "key_points": [
+      "Persistent HTTP reuses a single TCP connection for multiple objects.",
+      "Non-persistent HTTP requires two RTTs per object."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.persistent_vs_non_persistent_http.medium1",
+    "style": "vague",
+    "answer": "Persistent HTTP is basically a more efficient version of HTTP. It improves performance and makes pages load faster because it handles things in a smarter way. Non-persistent HTTP is older and has more overhead, so it's generally slower.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1,
+    "topic": "Persistent vs non-persistent HTTP",
+    "subject": "cn",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.001,
+        "similarity": 0.674
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.473
+      }
+    ],
+    "key_points": [
+      "Persistent HTTP reuses a single TCP connection for multiple objects.",
+      "Non-persistent HTTP requires two RTTs per object."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.persistent_vs_non_persistent_http.medium1",
+    "style": "hesitant",
+    "answer": "So, um, in non-persistent, each object, like, gets its own TCP connection, and that's, uh, two RTTs per object, one for the handshake and one for the, you know, request and response. Persistent just, um, keeps the one connection open and reuses it. So you save a lot of those round trips.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8,
+    "topic": "Persistent vs non-persistent HTTP",
+    "subject": "cn",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.025,
+        "similarity": 0.758
+      },
+      {
+        "entailment": 0.014,
+        "similarity": 0.728
+      }
+    ],
+    "key_points": [
+      "Persistent HTTP reuses a single TCP connection for multiple objects.",
+      "Non-persistent HTTP requires two RTTs per object."
+    ],
+    "unclear": true
+  },
+  {
+    "question_id": "cn.arp.hard2",
+    "style": "good",
+    "answer": "The sender builds an ARP query packet that contains the target's IP address and sends it to the broadcast MAC address, FF-FF-FF-FF-FF-FF, so every device on the LAN receives it. Every adapter passes it up to its ARP module, but only the one whose IP matches responds. That target sends back an ARP reply to the sender containing its MAC address. The sender then stores the IP-to-MAC mapping in its ARP table along with a TTL, typically around 20 minutes, after which the entry expires.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0,
+    "topic": "ARP",
+    "subject": "cn",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.912
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.703
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.897
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.813
+      }
+    ],
+    "key_points": [
+      "The sender broadcasts an ARP query to the broadcast MAC address.",
+      "The ARP query includes the target’s IP address.",
+      "The target device responds with its MAC address in an ARP reply.",
+      "The sender adds the IP-to-MAC mapping to its ARP table with a TTL."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.arp.hard2",
+    "style": "partial",
+    "answer": "The sender would broadcast an ARP request asking who has that IP address. The device with that IP answers with its MAC address, and then the sender can build the frame and send the packet.",
+    "labels": [
+      "partial",
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55,
+    "topic": "ARP",
+    "subject": "cn",
+    "score": 0.783,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.984,
+        "similarity": 0.748
+      },
+      {
+        "entailment": 0.993,
+        "similarity": 0.725
+      },
+      {
+        "entailment": 0.996,
+        "similarity": 0.714
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.668
+      }
+    ],
+    "key_points": [
+      "The sender broadcasts an ARP query to the broadcast MAC address.",
+      "The ARP query includes the target’s IP address.",
+      "The target device responds with its MAC address in an ARP reply.",
+      "The sender adds the IP-to-MAC mapping to its ARP table with a TTL."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.arp.hard2",
+    "style": "confident_wrong",
+    "answer": "If the MAC isn't in the ARP table, the sender contacts the DNS server, which keeps a mapping of IP addresses to MAC addresses for the whole LAN. The DNS server replies with the target's MAC, and the sender stores it permanently in its ARP table so it never has to ask again.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "topic": "ARP",
+    "subject": "cn",
+    "score": 0.287,
+    "predicted": [
+      "missing",
+      "missing",
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.0,
+        "similarity": 0.788
+      },
+      {
+        "entailment": 0.01,
+        "similarity": 0.593
+      },
+      {
+        "entailment": 0.988,
+        "similarity": 0.718
+      },
+      {
+        "entailment": 0.002,
+        "similarity": 0.765
+      }
+    ],
+    "key_points": [
+      "The sender broadcasts an ARP query to the broadcast MAC address.",
+      "The ARP query includes the target’s IP address.",
+      "The target device responds with its MAC address in an ARP reply.",
+      "The sender adds the IP-to-MAC mapping to its ARP table with a TTL."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "cn.arp.hard2",
+    "style": "off_topic",
+    "answer": "When a host joins a network, it uses DHCP to get an IP address. It broadcasts a DHCP discover message, a server responds with an offer, the host sends a request, and the server acknowledges it. After that the host has its IP address, subnet mask, gateway and DNS server.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0,
+    "topic": "ARP",
+    "subject": "cn",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.0,
+        "similarity": 0.481
+      },
+      {
+        "entailment": 0.017,
+        "similarity": 0.456
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.451
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.411
+      }
+    ],
+    "key_points": [
+      "The sender broadcasts an ARP query to the broadcast MAC address.",
+      "The ARP query includes the target’s IP address.",
+      "The target device responds with its MAC address in an ARP reply.",
+      "The sender adds the IP-to-MAC mapping to its ARP table with a TTL."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.stored_procedures_and_functions.easy1",
+    "style": "good_paraphrase",
+    "answer": "A stored procedure is basically a named chunk of SQL that lives inside the database server and is already compiled, so you just call it by name, like CALL transfer_funds with some parameters. The nice thing is that if five different applications need the same logic, they all call the same procedure instead of each rewriting the queries, so the code is more modular and easier to maintain. And since the work happens on the server, you don't have to ship a bunch of intermediate rows back and forth to the client, which cuts down network traffic.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "topic": "Stored procedures and functions",
+    "subject": "dbms",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.995,
+        "similarity": 0.901
+      },
+      {
+        "entailment": 0.994,
+        "similarity": 0.627
+      },
+      {
+        "entailment": 0.987,
+        "similarity": 0.692
+      }
+    ],
+    "key_points": [
+      "A stored procedure is a collection of pre-compiled SQL statements stored inside the database.",
+      "Stored procedures reduce duplication of effort and improve software modularity.",
+      "Stored procedures can reduce data transfer and communication cost between the client and server."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.stored_procedures_and_functions.easy1",
+    "style": "partial",
+    "answer": "A stored procedure is a set of SQL statements that's saved in the database and precompiled, and you can call it from your application. It's useful because you can reuse the same logic from different programs instead of writing it again.",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.55,
+    "topic": "Stored procedures and functions",
+    "subject": "dbms",
+    "score": 0.383,
+    "predicted": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.914
+      },
+      {
+        "entailment": 0.007,
+        "similarity": 0.627
+      },
+      {
+        "entailment": 0.002,
+        "similarity": 0.592
+      }
+    ],
+    "key_points": [
+      "A stored procedure is a collection of pre-compiled SQL statements stored inside the database.",
+      "Stored procedures reduce duplication of effort and improve software modularity.",
+      "Stored procedures can reduce data transfer and communication cost between the client and server."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.stored_procedures_and_functions.easy1",
+    "style": "hesitant",
+    "answer": "Um, a stored procedure is, like, a bunch of SQL statements that are, uh, precompiled and stored in the database itself. It's useful because, um, different apps can just call it, so you're not, you know, duplicating code everywhere, it's more modular. And I think also it, uh, reduces traffic between the client and the server, because the processing happens there.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.75,
+    "topic": "Stored procedures and functions",
+    "subject": "dbms",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.972
+      },
+      {
+        "entailment": 0.997,
+        "similarity": 0.698
+      },
+      {
+        "entailment": 0.977,
+        "similarity": 0.703
+      }
+    ],
+    "key_points": [
+      "A stored procedure is a collection of pre-compiled SQL statements stored inside the database.",
+      "Stored procedures reduce duplication of effort and improve software modularity.",
+      "Stored procedures can reduce data transfer and communication cost between the client and server."
+    ],
+    "unclear": true
+  },
+  {
+    "question_id": "dbms.stored_procedures_and_functions.easy1",
+    "style": "vague",
+    "answer": "Stored procedures are an important feature of database systems. They help make things more efficient and organized, and a lot of companies use them in production. They're generally considered a good practice.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1,
+    "topic": "Stored procedures and functions",
+    "subject": "dbms",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.001,
+        "similarity": 0.809
+      },
+      {
+        "entailment": 0.002,
+        "similarity": 0.77
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.701
+      }
+    ],
+    "key_points": [
+      "A stored procedure is a collection of pre-compiled SQL statements stored inside the database.",
+      "Stored procedures reduce duplication of effort and improve software modularity.",
+      "Stored procedures can reduce data transfer and communication cost between the client and server."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.window_functions.medium2",
+    "style": "good",
+    "answer": "All three number rows in order, but they treat ties differently. RANK gives tied rows the same rank and then skips ahead, so if two people tie for 2nd, the next person is 4th. DENSE_RANK also gives ties the same rank but doesn't skip, so the next person would be 3rd. ROW_NUMBER ignores ties completely and gives every row a unique sequential number, so the two tied rows would get 2 and 3 in some arbitrary order.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0,
+    "topic": "Window functions",
+    "subject": "dbms",
+    "score": 0.998,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.987,
+        "similarity": 0.767
+      },
+      {
+        "entailment": 0.997,
+        "similarity": 0.831
+      },
+      {
+        "entailment": 0.983,
+        "similarity": 0.802
+      }
+    ],
+    "key_points": [
+      "RANK() skips the next rank after ties.",
+      "DENSE_RANK() does not skip ranks after ties.",
+      "ROW_NUMBER() assigns unique ranks to all rows, even with ties."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.window_functions.medium2",
+    "style": "partial",
+    "answer": "RANK and DENSE_RANK both give the same rank to rows with equal values. The difference I remember is that RANK leaves gaps after a tie, so you might go 1, 2, 2, 4.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.4,
+    "topic": "Window functions",
+    "subject": "dbms",
+    "score": 0.191,
+    "predicted": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.08,
+        "similarity": 0.657
+      },
+      {
+        "entailment": 0.019,
+        "similarity": 0.728
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.736
+      }
+    ],
+    "key_points": [
+      "RANK() skips the next rank after ties.",
+      "DENSE_RANK() does not skip ranks after ties.",
+      "ROW_NUMBER() assigns unique ranks to all rows, even with ties."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.window_functions.medium2",
+    "style": "confident_wrong",
+    "answer": "RANK gives tied rows the same number and continues without gaps, so 1, 2, 2, 3. DENSE_RANK is the one that leaves gaps, like 1, 2, 2, 4, because it densely counts every row. ROW_NUMBER just gives every row a unique number regardless of ties.",
+    "labels": [
+      "missing",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.3,
+    "topic": "Window functions",
+    "subject": "dbms",
+    "score": 0.858,
+    "predicted": [
+      "partial",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.057,
+        "similarity": 0.693
+      },
+      {
+        "entailment": 0.945,
+        "similarity": 0.734
+      },
+      {
+        "entailment": 0.997,
+        "similarity": 0.875
+      }
+    ],
+    "key_points": [
+      "RANK() skips the next rank after ties.",
+      "DENSE_RANK() does not skip ranks after ties.",
+      "ROW_NUMBER() assigns unique ranks to all rows, even with ties."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.window_functions.medium2",
+    "style": "hesitant",
+    "answer": "Okay so, um, RANK, when there's a tie, they get the same rank and then it, uh, skips, like 1, 1, 3. DENSE_RANK is, um, same thing but it doesn't skip, so 1, 1, 2. And ROW_NUMBER just, like, gives everyone a different number, even if the values are the same.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8,
+    "topic": "Window functions",
+    "subject": "dbms",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.991,
+        "similarity": 0.817
+      },
+      {
+        "entailment": 0.996,
+        "similarity": 0.838
+      },
+      {
+        "entailment": 0.994,
+        "similarity": 0.785
+      }
+    ],
+    "key_points": [
+      "RANK() skips the next rank after ties.",
+      "DENSE_RANK() does not skip ranks after ties.",
+      "ROW_NUMBER() assigns unique ranks to all rows, even with ties."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.update_anomalies.medium2",
+    "style": "good_paraphrase",
+    "answer": "Imagine a table where every course row also stores the instructor's name and office, so an instructor teaching five courses shows up five times. If they move offices and you only change one of those rows, now the database says they're in two places at once, and you can't tell which is right. That inconsistency is the anomaly, and it happens because the schema was badly designed and mixes facts that should live in separate tables. Normalizing so each fact is stored once is how you avoid it.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "topic": "Update anomalies",
+    "subject": "dbms",
+    "score": 0.939,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.986,
+        "similarity": 0.547
+      },
+      {
+        "entailment": 0.966,
+        "similarity": 0.53
+      },
+      {
+        "entailment": 0.996,
+        "similarity": 0.645
+      }
+    ],
+    "key_points": [
+      "Update anomalies occur when redundant data is stored in multiple places.",
+      "Update anomalies result in inconsistent data.",
+      "Update anomalies are a consequence of poor schema design."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.update_anomalies.medium2",
+    "style": "partial",
+    "answer": "An update anomaly happens when the same data is stored in multiple rows, and you update it in some rows but not others. Then the data becomes inconsistent.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6,
+    "topic": "Update anomalies",
+    "subject": "dbms",
+    "score": 0.717,
+    "predicted": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.96,
+        "similarity": 0.781
+      },
+      {
+        "entailment": 0.997,
+        "similarity": 0.826
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.632
+      }
+    ],
+    "key_points": [
+      "Update anomalies occur when redundant data is stored in multiple places.",
+      "Update anomalies result in inconsistent data.",
+      "Update anomalies are a consequence of poor schema design."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.update_anomalies.medium2",
+    "style": "off_topic",
+    "answer": "Deadlock happens when two transactions each hold a lock the other one needs, so neither can proceed. For example, T1 locks row A and wants row B, while T2 locks row B and wants row A. The DBMS usually detects this with a wait-for graph and aborts one of the transactions.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0,
+    "topic": "Update anomalies",
+    "subject": "dbms",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.006,
+        "similarity": 0.379
+      },
+      {
+        "entailment": 0.015,
+        "similarity": 0.342
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.307
+      }
+    ],
+    "key_points": [
+      "Update anomalies occur when redundant data is stored in multiple places.",
+      "Update anomalies result in inconsistent data.",
+      "Update anomalies are a consequence of poor schema design."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.update_anomalies.medium2",
+    "style": "vague",
+    "answer": "Update anomalies are problems that can happen when you update data in a database. They can cause issues with the data and make the database less reliable, so it's important to be careful about them.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1,
+    "topic": "Update anomalies",
+    "subject": "dbms",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.001,
+        "similarity": 0.858
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.767
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.783
+      }
+    ],
+    "key_points": [
+      "Update anomalies occur when redundant data is stored in multiple places.",
+      "Update anomalies result in inconsistent data.",
+      "Update anomalies are a consequence of poor schema design."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.aggregate_functions_and_group_by.medium2",
+    "style": "good",
+    "answer": "GROUP BY splits the rows of a relation into groups where the grouping attributes have the same values, say all employees in the same department. Then each aggregate function, like COUNT or AVG, is computed separately for each group, giving one summary value per group. You include the grouping attributes in the SELECT because they're what defines each group, so each output row needs them to show which group that count or average belongs to. Otherwise you'd just get a list of numbers with no idea which department each one is for.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0,
+    "topic": "Aggregate functions and GROUP BY",
+    "subject": "dbms",
+    "score": 0.989,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.997,
+        "similarity": 0.734
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.832
+      },
+      {
+        "entailment": 0.997,
+        "similarity": 0.686
+      }
+    ],
+    "key_points": [
+      "The GROUP BY clause partitions a relation into groups based on the values of one or more attributes.",
+      "Each group is processed independently by aggregate functions, which compute summary values for each group.",
+      "It is necessary to include grouping attributes in the SELECT clause because these attributes define the groups."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.aggregate_functions_and_group_by.medium2",
+    "style": "partial",
+    "answer": "GROUP BY puts rows with the same value in a column into groups, and then aggregate functions like SUM or COUNT are calculated for each group separately. So you get one result row per group.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6,
+    "topic": "Aggregate functions and GROUP BY",
+    "subject": "dbms",
+    "score": 0.355,
+    "predicted": [
+      "missing",
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.158,
+        "similarity": 0.558
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.811
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.453
+      }
+    ],
+    "key_points": [
+      "The GROUP BY clause partitions a relation into groups based on the values of one or more attributes.",
+      "Each group is processed independently by aggregate functions, which compute summary values for each group.",
+      "It is necessary to include grouping attributes in the SELECT clause because these attributes define the groups."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.aggregate_functions_and_group_by.medium2",
+    "style": "hesitant",
+    "answer": "So GROUP BY, um, it partitions the rows into groups based on, like, the column values. And then the aggregates, uh, run on each group separately. And you need the grouping column in SELECT because, um, it's what defines the group, otherwise you don't know which, you know, which group the number is for.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.75,
+    "topic": "Aggregate functions and GROUP BY",
+    "subject": "dbms",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.959,
+        "similarity": 0.721
+      },
+      {
+        "entailment": 0.988,
+        "similarity": 0.692
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.722
+      }
+    ],
+    "key_points": [
+      "The GROUP BY clause partitions a relation into groups based on the values of one or more attributes.",
+      "Each group is processed independently by aggregate functions, which compute summary values for each group.",
+      "It is necessary to include grouping attributes in the SELECT clause because these attributes define the groups."
+    ],
+    "unclear": true
+  },
+  {
+    "question_id": "dbms.aggregate_functions_and_group_by.medium2",
+    "style": "confident_wrong",
+    "answer": "GROUP BY sorts the table by the given column, and then the aggregate functions run over the whole sorted table to produce a single overall value. You have to put the grouping attribute in SELECT because SQL uses the SELECT list to decide the sort order.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "topic": "Aggregate functions and GROUP BY",
+    "subject": "dbms",
+    "score": 0.36,
+    "predicted": [
+      "missing",
+      "missing",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.05,
+        "similarity": 0.618
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.614
+      },
+      {
+        "entailment": 0.742,
+        "similarity": 0.725
+      }
+    ],
+    "key_points": [
+      "The GROUP BY clause partitions a relation into groups based on the values of one or more attributes.",
+      "Each group is processed independently by aggregate functions, which compute summary values for each group.",
+      "It is necessary to include grouping attributes in the SELECT clause because these attributes define the groups."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.isolation_levels.hard2",
+    "style": "good_paraphrase",
+    "answer": "The phantom problem is when a transaction reads a set of rows using some condition, like all employees in department 5, and meanwhile another transaction inserts a new row that also matches that condition. REPEATABLE READ only protects the rows you already read, so if you rerun the query, that new phantom row can suddenly show up. SERIALIZABLE goes further and gives complete isolation, as if the transactions ran one after the other, so the result has to match some serial order. If that order is T1 then T2, T1 will never see the inserted row.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "topic": "Isolation levels",
+    "subject": "dbms",
+    "score": 0.383,
+    "predicted": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.996,
+        "similarity": 0.778
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.818
+      },
+      {
+        "entailment": 0.016,
+        "similarity": 0.773
+      }
+    ],
+    "key_points": [
+      "SERIALIZABLE guarantees complete isolation from other transactions.",
+      "The phantom record problem occurs when a transaction T1 reads a set of rows, and another transaction T3 inserts a new row that satisfies T1's WHERE clause.",
+      "REPEATABLE READ does not prevent the phantom record problem."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.isolation_levels.hard2",
+    "style": "partial",
+    "answer": "SERIALIZABLE is the strictest isolation level and fully isolates transactions from each other, so it prevents phantoms. REPEATABLE READ is weaker and doesn't stop phantom reads.",
+    "labels": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.55,
+    "topic": "Isolation levels",
+    "subject": "dbms",
+    "score": 0.717,
+    "predicted": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.995,
+        "similarity": 0.791
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.477
+      },
+      {
+        "entailment": 0.992,
+        "similarity": 0.851
+      }
+    ],
+    "key_points": [
+      "SERIALIZABLE guarantees complete isolation from other transactions.",
+      "The phantom record problem occurs when a transaction T1 reads a set of rows, and another transaction T3 inserts a new row that satisfies T1's WHERE clause.",
+      "REPEATABLE READ does not prevent the phantom record problem."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.isolation_levels.hard2",
+    "style": "dont_know",
+    "answer": "I'm not sure about this one. I remember SERIALIZABLE is the highest isolation level, but I don't really know how it handles phantom records differently from REPEATABLE READ.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "topic": "Isolation levels",
+    "subject": "dbms",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.001,
+        "similarity": 0.739
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.49
+      },
+      {
+        "entailment": 0.002,
+        "similarity": 0.702
+      }
+    ],
+    "key_points": [
+      "SERIALIZABLE guarantees complete isolation from other transactions.",
+      "The phantom record problem occurs when a transaction T1 reads a set of rows, and another transaction T3 inserts a new row that satisfies T1's WHERE clause.",
+      "REPEATABLE READ does not prevent the phantom record problem."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dbms.isolation_levels.hard2",
+    "style": "confident_wrong",
+    "answer": "Actually REPEATABLE READ already prevents phantom records, since it locks every row the transaction reads for its whole duration. SERIALIZABLE just adds the extra guarantee of preventing dirty reads, which REPEATABLE READ allows. A phantom is when a transaction reads data that another transaction wrote but hasn't committed yet.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "topic": "Isolation levels",
+    "subject": "dbms",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.011,
+        "similarity": 0.674
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.672
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.867
+      }
+    ],
+    "key_points": [
+      "SERIALIZABLE guarantees complete isolation from other transactions.",
+      "The phantom record problem occurs when a transaction T1 reads a set of rows, and another transaction T3 inserts a new row that satisfies T1's WHERE clause.",
+      "REPEATABLE READ does not prevent the phantom record problem."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.expression_trees.easy1",
+    "style": "good",
+    "answer": "An expression tree is a data structure that represents an arithmetic expression hierarchically, as a binary tree. The operands, the numbers or variables, are the leaves, and the operators are the internal nodes. Each operator node has its operands as its children, so for a plus b times c, the root is plus, its left child is a, and its right child is a times node with b and c under it. Evaluating the tree bottom-up gives you the value, and the structure captures precedence automatically.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0,
+    "topic": "Expression trees",
+    "subject": "dsa",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.978
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.789
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.654
+      }
+    ],
+    "key_points": [
+      "An expression tree is a data structure that represents an arithmetic expression in a hierarchical form.",
+      "The tree is constructed such that operands are leaves and operators are internal nodes.",
+      "Each operator connects to its operands as children."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.expression_trees.easy1",
+    "style": "partial",
+    "answer": "An expression tree represents an arithmetic expression as a tree, where the numbers and variables are the leaf nodes and the operators like plus and times are the internal nodes. You can evaluate it by traversing it.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6,
+    "topic": "Expression trees",
+    "subject": "dsa",
+    "score": 0.717,
+    "predicted": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.996,
+        "similarity": 0.908
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.716
+      },
+      {
+        "entailment": 0.08,
+        "similarity": 0.443
+      }
+    ],
+    "key_points": [
+      "An expression tree is a data structure that represents an arithmetic expression in a hierarchical form.",
+      "The tree is constructed such that operands are leaves and operators are internal nodes.",
+      "Each operator connects to its operands as children."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.expression_trees.easy1",
+    "style": "vague",
+    "answer": "An expression tree is a type of tree used in computer science for expressions. It helps the computer understand and work with expressions more easily, and it's used in things like compilers.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.15,
+    "topic": "Expression trees",
+    "subject": "dsa",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.0,
+        "similarity": 0.883
+      },
+      {
+        "entailment": 0.002,
+        "similarity": 0.557
+      },
+      {
+        "entailment": 0.005,
+        "similarity": 0.259
+      }
+    ],
+    "key_points": [
+      "An expression tree is a data structure that represents an arithmetic expression in a hierarchical form.",
+      "The tree is constructed such that operands are leaves and operators are internal nodes.",
+      "Each operator connects to its operands as children."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.expression_trees.easy1",
+    "style": "off_topic",
+    "answer": "A binary search tree is a tree where every node's left subtree has smaller keys and the right subtree has larger keys. That lets you search, insert and delete in O(log n) time on average. If it gets unbalanced, though, it can degrade to O(n).",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0,
+    "topic": "Expression trees",
+    "subject": "dsa",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.003,
+        "similarity": 0.465
+      },
+      {
+        "entailment": 0.029,
+        "similarity": 0.513
+      },
+      {
+        "entailment": 0.01,
+        "similarity": 0.237
+      }
+    ],
+    "key_points": [
+      "An expression tree is a data structure that represents an arithmetic expression in a hierarchical form.",
+      "The tree is constructed such that operands are leaves and operators are internal nodes.",
+      "Each operator connects to its operands as children."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.graph_terminology.medium1",
+    "style": "good_paraphrase",
+    "answer": "Whether a graph is directed depends on whether its edges have a direction. Think of Twitter follows: I can follow you without you following me, so each edge only goes one way, and that's a directed graph. Facebook friendships are mutual, so an edge just connects two people with no direction, and that's undirected. Weights are a totally separate property, like putting a distance on each road in a map, and you can put weights on either kind, so you can have a weighted directed graph or a weighted undirected one.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "topic": "Graph terminology",
+    "subject": "dsa",
+    "score": 0.703,
+    "predicted": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.992,
+        "similarity": 0.866
+      },
+      {
+        "entailment": 0.992,
+        "similarity": 0.762
+      },
+      {
+        "entailment": 0.003,
+        "similarity": 0.804
+      }
+    ],
+    "key_points": [
+      "The directionality of edges determines whether a graph is directed or undirected.",
+      "In a directed graph, edges have a specific direction, meaning the relationship between vertices is one-way.",
+      "Weighted graphs are a separate classification, where each edge has a numerical value, but this does not affect whether the graph is directed or undirected."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.graph_terminology.medium1",
+    "style": "partial",
+    "answer": "If edges have a direction, like an arrow from A to B, the graph is directed, and if the edges don't have a direction, it's undirected. So in a directed graph you can go from A to B but not necessarily from B to A.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6,
+    "topic": "Graph terminology",
+    "subject": "dsa",
+    "score": 0.353,
+    "predicted": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.986,
+        "similarity": 0.845
+      },
+      {
+        "entailment": 0.005,
+        "similarity": 0.778
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.502
+      }
+    ],
+    "key_points": [
+      "The directionality of edges determines whether a graph is directed or undirected.",
+      "In a directed graph, edges have a specific direction, meaning the relationship between vertices is one-way.",
+      "Weighted graphs are a separate classification, where each edge has a numerical value, but this does not affect whether the graph is directed or undirected."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.graph_terminology.medium1",
+    "style": "confident_wrong",
+    "answer": "Direction determines directed versus undirected, yes, but weights are tied to that. A weighted graph has to be directed, because the weight represents the cost of travelling from the source vertex to the destination, and that only makes sense in one direction. Undirected graphs are always unweighted.",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.25,
+    "topic": "Graph terminology",
+    "subject": "dsa",
+    "score": 0.717,
+    "predicted": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.972,
+        "similarity": 0.762
+      },
+      {
+        "entailment": 0.976,
+        "similarity": 0.67
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.806
+      }
+    ],
+    "key_points": [
+      "The directionality of edges determines whether a graph is directed or undirected.",
+      "In a directed graph, edges have a specific direction, meaning the relationship between vertices is one-way.",
+      "Weighted graphs are a separate classification, where each edge has a numerical value, but this does not affect whether the graph is directed or undirected."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.graph_terminology.medium1",
+    "style": "hesitant",
+    "answer": "Um, so, if the edges have, like, a direction, one-way, then it's directed, and if they're, uh, just unordered pairs, it's undirected. And weighted is, um, separate, it's just, like, a number on each edge. So you could have, you know, directed and weighted, or undirected and weighted, it doesn't matter.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.75,
+    "topic": "Graph terminology",
+    "subject": "dsa",
+    "score": 0.998,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.841,
+        "similarity": 0.785
+      },
+      {
+        "entailment": 0.99,
+        "similarity": 0.733
+      },
+      {
+        "entailment": 0.995,
+        "similarity": 0.743
+      }
+    ],
+    "key_points": [
+      "The directionality of edges determines whether a graph is directed or undirected.",
+      "In a directed graph, edges have a specific direction, meaning the relationship between vertices is one-way.",
+      "Weighted graphs are a separate classification, where each edge has a numerical value, but this does not affect whether the graph is directed or undirected."
+    ],
+    "unclear": true
+  },
+  {
+    "question_id": "dsa.iterative_tree_traversals.medium2",
+    "style": "good",
+    "answer": "The iterative version uses two stacks to mimic what recursion would do. You push the root onto s1, then repeatedly pop a node from s1, push it onto s2, and push its left and then right child onto s1. Because of that, s2 ends up holding the nodes in the reverse of root-right-left, which is exactly left-right-root. Once s1 is empty, you pop everything off s2 and print it, and that's the postorder sequence.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0,
+    "topic": "Iterative tree traversals",
+    "subject": "dsa",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.978,
+        "similarity": 0.803
+      },
+      {
+        "entailment": 0.99,
+        "similarity": 0.705
+      }
+    ],
+    "key_points": [
+      "The iterative postorder traversal uses two stacks to simulate the recursive process.",
+      "The second stack (s2) stores nodes in the order they should be printed."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.iterative_tree_traversals.medium2",
+    "style": "partial",
+    "answer": "It uses two stacks, s1 and s2. You push the root into s1, and then keep popping from s1 and pushing children, so it processes the tree without recursion.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.45,
+    "topic": "Iterative tree traversals",
+    "subject": "dsa",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.015,
+        "similarity": 0.639
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.607
+      }
+    ],
+    "key_points": [
+      "The iterative postorder traversal uses two stacks to simulate the recursive process.",
+      "The second stack (s2) stores nodes in the order they should be printed."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.iterative_tree_traversals.medium2",
+    "style": "dont_know",
+    "answer": "I don't know this one, sorry. I can do postorder recursively, but I've never really worked through the iterative version with the code.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0,
+    "topic": "Iterative tree traversals",
+    "subject": "dsa",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.0,
+        "similarity": 0.662
+      },
+      {
+        "entailment": 0.031,
+        "similarity": 0.338
+      }
+    ],
+    "key_points": [
+      "The iterative postorder traversal uses two stacks to simulate the recursive process.",
+      "The second stack (s2) stores nodes in the order they should be printed."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.iterative_tree_traversals.medium2",
+    "style": "vague",
+    "answer": "The iterative postorder traversal goes through the tree in a specific order without recursion. It uses some data structures to keep track of the nodes, and at the end it outputs them in postorder.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1,
+    "topic": "Iterative tree traversals",
+    "subject": "dsa",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.001,
+        "similarity": 0.779
+      },
+      {
+        "entailment": 0.002,
+        "similarity": 0.571
+      }
+    ],
+    "key_points": [
+      "The iterative postorder traversal uses two stacks to simulate the recursive process.",
+      "The second stack (s2) stores nodes in the order they should be printed."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.postfix_expression_evaluation.medium2",
+    "style": "good_paraphrase",
+    "answer": "In postfix, every operator comes right after the two operands it works on, so in 5 3 minus, the minus applies to the 5 and 3 right before it. The algorithm reads left to right and pushes each number onto a stack. When it hits an operator, the two operands it needs are sitting on top of the stack, so it pops them, does the operation, and pushes the result back. That result then becomes an operand for whatever operator comes next, which is why you never need parentheses.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "topic": "Postfix expression evaluation",
+    "subject": "dsa",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.965,
+        "similarity": 0.78
+      },
+      {
+        "entailment": 0.994,
+        "similarity": 0.841
+      },
+      {
+        "entailment": 0.996,
+        "similarity": 0.757
+      }
+    ],
+    "key_points": [
+      "Each operator in a postfix string refers to the previous two operands.",
+      "When an operator is reached, its operands will be the top two elements on the stack.",
+      "The two elements are popped out, the indicated operation is performed on them and result is pushed on the stack so that it will be available for use as an operand of the next operator."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.postfix_expression_evaluation.medium2",
+    "style": "partial",
+    "answer": "You scan the expression and push operands onto a stack. When you see an operator, you pop the top two values and apply the operator to them.",
+    "labels": [
+      "missing",
+      "covered",
+      "partial"
+    ],
+    "overall": 0.5,
+    "topic": "Postfix expression evaluation",
+    "subject": "dsa",
+    "score": 0.676,
+    "predicted": [
+      "missing",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.004,
+        "similarity": 0.49
+      },
+      {
+        "entailment": 0.994,
+        "similarity": 0.813
+      },
+      {
+        "entailment": 0.948,
+        "similarity": 0.825
+      }
+    ],
+    "key_points": [
+      "Each operator in a postfix string refers to the previous two operands.",
+      "When an operator is reached, its operands will be the top two elements on the stack.",
+      "The two elements are popped out, the indicated operation is performed on them and result is pushed on the stack so that it will be available for use as an operand of the next operator."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.postfix_expression_evaluation.medium2",
+    "style": "hesitant",
+    "answer": "So, um, you use a stack. Each operator in postfix, like, refers to the, uh, two operands just before it. So when you get an operator, the top two on the stack are its operands, you pop them, do the operation, and, um, push the result back so the next operator can use it.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.75,
+    "topic": "Postfix expression evaluation",
+    "subject": "dsa",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.958,
+        "similarity": 0.895
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.868
+      },
+      {
+        "entailment": 0.997,
+        "similarity": 0.839
+      }
+    ],
+    "key_points": [
+      "Each operator in a postfix string refers to the previous two operands.",
+      "When an operator is reached, its operands will be the top two elements on the stack.",
+      "The two elements are popped out, the indicated operation is performed on them and result is pushed on the stack so that it will be available for use as an operand of the next operator."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.postfix_expression_evaluation.medium2",
+    "style": "off_topic",
+    "answer": "To convert infix to postfix, you use the shunting-yard algorithm. Operands go straight to the output, and operators go onto a stack, but before pushing you pop any operators with higher or equal precedence. Left parentheses are pushed, and when you hit a right parenthesis you pop until the matching left one.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "topic": "Postfix expression evaluation",
+    "subject": "dsa",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.011,
+        "similarity": 0.676
+      },
+      {
+        "entailment": 0.006,
+        "similarity": 0.789
+      },
+      {
+        "entailment": 0.038,
+        "similarity": 0.763
+      }
+    ],
+    "key_points": [
+      "Each operator in a postfix string refers to the previous two operands.",
+      "When an operator is reached, its operands will be the top two elements on the stack.",
+      "The two elements are popped out, the indicated operation is performed on them and result is pushed on the stack so that it will be available for use as an operand of the next operator."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.binary_tree_properties.hard2",
+    "style": "good",
+    "answer": "In a complete binary tree of depth d, every node at a level less than d minus 1 has two children. Also, if a node has a right descendant at level d, it must have a left child, and all its left descendants are either leaves or have two children, which means the bottom level fills strictly from left to right. Under that definition the last level ends up with an odd number of nodes, since it's filled left-first. So depth and node count are tied together: all the levels above are completely full, and the last level just holds the leftover nodes.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.9,
+    "topic": "Binary tree properties",
+    "subject": "dsa",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.985,
+        "similarity": 0.887
+      },
+      {
+        "entailment": 0.999,
+        "similarity": 0.885
+      },
+      {
+        "entailment": 0.996,
+        "similarity": 0.754
+      }
+    ],
+    "key_points": [
+      "A complete binary tree ensures that any node at level less than d-1 has two children.",
+      "For nodes with a right descendent at level d, they must have a left child and all left descendants are either leaves or have two children.",
+      "The last level of a complete binary tree has an odd number of nodes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.binary_tree_properties.hard2",
+    "style": "partial",
+    "answer": "In a complete binary tree, all the levels above the last one are completely full, so every node above level d minus 1 has two children. The last level is filled from left to right. That's why the depth is about log base 2 of n.",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.45,
+    "topic": "Binary tree properties",
+    "subject": "dsa",
+    "score": 0.383,
+    "predicted": [
+      "missing",
+      "partial",
+      "partial"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.015,
+        "similarity": 0.912
+      },
+      {
+        "entailment": 0.062,
+        "similarity": 0.735
+      },
+      {
+        "entailment": 0.359,
+        "similarity": 0.754
+      }
+    ],
+    "key_points": [
+      "A complete binary tree ensures that any node at level less than d-1 has two children.",
+      "For nodes with a right descendent at level d, they must have a left child and all left descendants are either leaves or have two children.",
+      "The last level of a complete binary tree has an odd number of nodes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.binary_tree_properties.hard2",
+    "style": "confident_wrong",
+    "answer": "In a complete binary tree every single level, including the last one, is completely full, so every internal node has exactly two children. That means the last level always has exactly 2 to the power d nodes, which is even, not odd. So the total number of nodes is always 2 to the d plus 1, minus 1.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1,
+    "topic": "Binary tree properties",
+    "subject": "dsa",
+    "score": 0.192,
+    "predicted": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.351,
+        "similarity": 0.767
+      },
+      {
+        "entailment": 0.006,
+        "similarity": 0.683
+      },
+      {
+        "entailment": 0.006,
+        "similarity": 0.843
+      }
+    ],
+    "key_points": [
+      "A complete binary tree ensures that any node at level less than d-1 has two children.",
+      "For nodes with a right descendent at level d, they must have a left child and all left descendants are either leaves or have two children.",
+      "The last level of a complete binary tree has an odd number of nodes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "dsa.binary_tree_properties.hard2",
+    "style": "vague",
+    "answer": "A complete binary tree has a very regular structure, which is why it has nice properties. The number of nodes and the depth are closely related, and the last level follows certain rules about how it's filled.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1,
+    "topic": "Binary tree properties",
+    "subject": "dsa",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.0,
+        "similarity": 0.619
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.514
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.711
+      }
+    ],
+    "key_points": [
+      "A complete binary tree ensures that any node at level less than d-1 has two children.",
+      "For nodes with a right descendent at level d, they must have a left child and all left descendants are either leaves or have two children.",
+      "The last level of a complete binary tree has an odd number of nodes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.is_a_vs_has_a_relationship.easy1",
+    "style": "good_paraphrase",
+    "answer": "Is-a is about type: a Dog is an Animal, so you model it with inheritance, Dog extends Animal. Has-a is about ownership: a Car has an Engine, so the Car class just holds an Engine object as a field, which is composition. In practice has-a is usually the more flexible choice, because you can swap in a different Engine or change it later without touching a whole class hierarchy.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "topic": "IS-A vs HAS-A relationship",
+    "subject": "ooad",
+    "score": 0.987,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.997,
+        "similarity": 0.659
+      },
+      {
+        "entailment": 0.995,
+        "similarity": 0.672
+      },
+      {
+        "entailment": 0.989,
+        "similarity": 0.602
+      }
+    ],
+    "key_points": [
+      "Inheritance is used to implement the 'is-a' relationship.",
+      "Composition is used to implement the 'has-a' relationship.",
+      "The 'has-a' relationship allows for more flexible design and easier modification."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.is_a_vs_has_a_relationship.easy1",
+    "style": "partial",
+    "answer": "An is-a relationship is inheritance, like a Dog is an Animal, so Dog extends Animal. A has-a relationship is when one class contains another as a member, like a Car has an Engine.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6,
+    "topic": "IS-A vs HAS-A relationship",
+    "subject": "ooad",
+    "score": 0.717,
+    "predicted": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.701
+      },
+      {
+        "entailment": 0.884,
+        "similarity": 0.701
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.649
+      }
+    ],
+    "key_points": [
+      "Inheritance is used to implement the 'is-a' relationship.",
+      "Composition is used to implement the 'has-a' relationship.",
+      "The 'has-a' relationship allows for more flexible design and easier modification."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.is_a_vs_has_a_relationship.easy1",
+    "style": "off_topic",
+    "answer": "Method overloading is when you have multiple methods with the same name but different parameters in the same class, and it's resolved at compile time. Overriding is when a subclass provides its own implementation of a parent's method, and that's resolved at runtime. That's how Java supports polymorphism.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0,
+    "topic": "IS-A vs HAS-A relationship",
+    "subject": "ooad",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.077,
+        "similarity": 0.48
+      },
+      {
+        "entailment": 0.054,
+        "similarity": 0.407
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.285
+      }
+    ],
+    "key_points": [
+      "Inheritance is used to implement the 'is-a' relationship.",
+      "Composition is used to implement the 'has-a' relationship.",
+      "The 'has-a' relationship allows for more flexible design and easier modification."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.is_a_vs_has_a_relationship.easy1",
+    "style": "hesitant",
+    "answer": "Um, is-a is, like, inheritance, so a Dog is-a Animal. Has-a is, uh, composition, where one object has another inside it, like a car has, um, an engine. And I think has-a is, you know, more flexible because you can change the parts more easily.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.75,
+    "topic": "IS-A vs HAS-A relationship",
+    "subject": "ooad",
+    "score": 0.992,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.995,
+        "similarity": 0.618
+      },
+      {
+        "entailment": 0.997,
+        "similarity": 0.707
+      },
+      {
+        "entailment": 0.995,
+        "similarity": 0.707
+      }
+    ],
+    "key_points": [
+      "Inheritance is used to implement the 'is-a' relationship.",
+      "Composition is used to implement the 'has-a' relationship.",
+      "The 'has-a' relationship allows for more flexible design and easier modification."
+    ],
+    "unclear": true
+  },
+  {
+    "question_id": "ooad.builder_pattern.medium2",
+    "style": "good",
+    "answer": "With the Builder pattern, the class that needs a complex object, the director, doesn't assemble it itself; it delegates the creation to a builder object. All the step-by-step construction logic is encapsulated in that separate builder, so the director only calls steps like buildWalls and buildRoof. Because the director only talks to the builder interface, you can plug in different concrete builders and get different representations of the same complex object, like a stone house versus a wooden house, from the same construction process.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0,
+    "topic": "Builder pattern",
+    "subject": "ooad",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.851
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.784
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.75
+      }
+    ],
+    "key_points": [
+      "The Builder pattern allows a class to delegate object creation to a builder.",
+      "The Builder pattern encapsulates the construction process in a separate object.",
+      "Using different builders allows for different representations of the same complex object."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.builder_pattern.medium2",
+    "style": "partial",
+    "answer": "The Builder pattern moves the object construction logic out of the class and into a separate builder object. That way the class doesn't have to deal with all the complicated steps of putting the object together.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55,
+    "topic": "Builder pattern",
+    "subject": "ooad",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.997,
+        "similarity": 0.845
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.893
+      },
+      {
+        "entailment": 0.962,
+        "similarity": 0.623
+      }
+    ],
+    "key_points": [
+      "The Builder pattern allows a class to delegate object creation to a builder.",
+      "The Builder pattern encapsulates the construction process in a separate object.",
+      "Using different builders allows for different representations of the same complex object."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.builder_pattern.medium2",
+    "style": "vague",
+    "answer": "The Builder pattern is a creational design pattern that makes it easier to create objects. It's useful when objects are complex, and it makes the code cleaner and more flexible overall.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1,
+    "topic": "Builder pattern",
+    "subject": "ooad",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.001,
+        "similarity": 0.86
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.89
+      },
+      {
+        "entailment": 0.002,
+        "similarity": 0.609
+      }
+    ],
+    "key_points": [
+      "The Builder pattern allows a class to delegate object creation to a builder.",
+      "The Builder pattern encapsulates the construction process in a separate object.",
+      "Using different builders allows for different representations of the same complex object."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.builder_pattern.medium2",
+    "style": "confident_wrong",
+    "answer": "The Builder pattern ensures only one instance of a complex object is ever created, by having the builder keep a static reference and return it every time. The class delegates creation to the builder so that no one can call the constructor directly. Different representations are handled by cloning that single instance and modifying the copy.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1,
+    "topic": "Builder pattern",
+    "subject": "ooad",
+    "score": 0.717,
+    "predicted": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.808
+      },
+      {
+        "entailment": 0.982,
+        "similarity": 0.811
+      },
+      {
+        "entailment": 0.002,
+        "similarity": 0.714
+      }
+    ],
+    "key_points": [
+      "The Builder pattern allows a class to delegate object creation to a builder.",
+      "The Builder pattern encapsulates the construction process in a separate object.",
+      "Using different builders allows for different representations of the same complex object."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.abstract_class_vs_interface.medium1",
+    "style": "good_paraphrase",
+    "answer": "An abstract class is like a half-finished class: it can have some methods fully written and some left abstract for subclasses to fill in, whereas an interface, at least before Java 8 added default methods, was purely a list of abstract methods. I think of an abstract class as saying what something is, like a Vehicle, and an interface as saying what it can do, like Drivable or Comparable. The practical difference is that in Java you can only extend one class but you can implement as many interfaces as you want, so interfaces are how you share behavior across unrelated classes.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "topic": "Abstract class vs interface",
+    "subject": "ooad",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.899
+      },
+      {
+        "entailment": 0.996,
+        "similarity": 0.719
+      },
+      {
+        "entailment": 0.922,
+        "similarity": 0.679
+      }
+    ],
+    "key_points": [
+      "Abstract classes can have both abstract and concrete methods, while interfaces (before Java 8) only had abstract methods.",
+      "An interface represents what an object can do, while a class represents what an object is.",
+      "A class can implement multiple interfaces, but cannot extend multiple classes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.abstract_class_vs_interface.medium1",
+    "style": "partial",
+    "answer": "An abstract class can have both abstract methods and normal implemented methods, while an interface traditionally only has abstract methods. So an abstract class gives partial abstraction and an interface gives full abstraction.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.45,
+    "topic": "Abstract class vs interface",
+    "subject": "ooad",
+    "score": 0.192,
+    "predicted": [
+      "missing",
+      "partial",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.0,
+        "similarity": 0.865
+      },
+      {
+        "entailment": 0.107,
+        "similarity": 0.714
+      },
+      {
+        "entailment": 0.013,
+        "similarity": 0.565
+      }
+    ],
+    "key_points": [
+      "Abstract classes can have both abstract and concrete methods, while interfaces (before Java 8) only had abstract methods.",
+      "An interface represents what an object can do, while a class represents what an object is.",
+      "A class can implement multiple interfaces, but cannot extend multiple classes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.abstract_class_vs_interface.medium1",
+    "style": "confident_wrong",
+    "answer": "An interface can have constructors and instance variables, but an abstract class can't, which is why abstract classes give full abstraction. Also a class can extend multiple abstract classes in Java, but it can only implement one interface. So you use abstract classes when you need multiple inheritance.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0,
+    "topic": "Abstract class vs interface",
+    "subject": "ooad",
+    "score": 0.717,
+    "predicted": [
+      "missing",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.001,
+        "similarity": 0.776
+      },
+      {
+        "entailment": 0.947,
+        "similarity": 0.655
+      },
+      {
+        "entailment": 0.894,
+        "similarity": 0.839
+      }
+    ],
+    "key_points": [
+      "Abstract classes can have both abstract and concrete methods, while interfaces (before Java 8) only had abstract methods.",
+      "An interface represents what an object can do, while a class represents what an object is.",
+      "A class can implement multiple interfaces, but cannot extend multiple classes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.abstract_class_vs_interface.medium1",
+    "style": "off_topic",
+    "answer": "Encapsulation means bundling data and the methods that operate on it into one class and hiding the internal state with private fields. You expose getters and setters so other classes can only access the data in controlled ways. That protects the object from being put into an invalid state.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0,
+    "topic": "Abstract class vs interface",
+    "subject": "ooad",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.0,
+        "similarity": 0.328
+      },
+      {
+        "entailment": 0.017,
+        "similarity": 0.368
+      },
+      {
+        "entailment": 0.008,
+        "similarity": 0.343
+      }
+    ],
+    "key_points": [
+      "Abstract classes can have both abstract and concrete methods, while interfaces (before Java 8) only had abstract methods.",
+      "An interface represents what an object can do, while a class represents what an object is.",
+      "A class can implement multiple interfaces, but cannot extend multiple classes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.model_view_controller.medium2",
+    "style": "good",
+    "answer": "MVC splits the application into three parts: the model holds the data and business logic, the view is what the user sees, and the controller handles user input. The controller sits between them as the intermediary, taking actions from the view, updating the model, and telling the view to refresh. Because of that, the graphical interface is fully decoupled from the code that handles user actions and data. The implication is that you can redesign the UI or add a mobile view without rewriting the business logic, and each part is easier to test and maintain.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0,
+    "topic": "Model-View-Controller",
+    "subject": "ooad",
+    "score": 0.771,
+    "predicted": [
+      "partial",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.438,
+        "similarity": 0.757
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.822
+      }
+    ],
+    "key_points": [
+      "The pattern ensures the graphical interface is decoupled from the code that manages user actions.",
+      "The controller acts as an intermediary between the model and the view."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.model_view_controller.medium2",
+    "style": "partial",
+    "answer": "MVC separates the app into the model, which is the data, the view, which is the UI, and the controller. Keeping the UI separate from the logic means you can change how things look without breaking the rest of the application.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.5,
+    "topic": "Model-View-Controller",
+    "subject": "ooad",
+    "score": 0.759,
+    "predicted": [
+      "covered",
+      "partial"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.994,
+        "similarity": 0.459
+      },
+      {
+        "entailment": 0.157,
+        "similarity": 0.697
+      }
+    ],
+    "key_points": [
+      "The pattern ensures the graphical interface is decoupled from the code that manages user actions.",
+      "The controller acts as an intermediary between the model and the view."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.model_view_controller.medium2",
+    "style": "hesitant",
+    "answer": "So MVC, um, it's model, view, controller. The view is, like, the UI, and it's, uh, decoupled from the code that handles what the user does. And the controller is, um, kind of in the middle between the model and the view, passing stuff back and forth. So you can change the UI without, you know, messing up the logic.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.75,
+    "topic": "Model-View-Controller",
+    "subject": "ooad",
+    "score": 0.985,
+    "predicted": [
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.989,
+        "similarity": 0.573
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.847
+      }
+    ],
+    "key_points": [
+      "The pattern ensures the graphical interface is decoupled from the code that manages user actions.",
+      "The controller acts as an intermediary between the model and the view."
+    ],
+    "unclear": true
+  },
+  {
+    "question_id": "ooad.model_view_controller.medium2",
+    "style": "vague",
+    "answer": "MVC is a very popular architecture that helps organize applications. It separates different concerns, which makes things cleaner and easier to work with. Lots of frameworks use it.",
+    "labels": [
+      "partial",
+      "missing"
+    ],
+    "overall": 0.15,
+    "topic": "Model-View-Controller",
+    "subject": "ooad",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.001,
+        "similarity": 0.512
+      },
+      {
+        "entailment": 0.003,
+        "similarity": 0.515
+      }
+    ],
+    "key_points": [
+      "The pattern ensures the graphical interface is decoupled from the code that manages user actions.",
+      "The controller acts as an intermediary between the model and the view."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.design_pattern_categories.hard2",
+    "style": "good_paraphrase",
+    "answer": "The three buckets basically correspond to three different questions you ask when designing. Creational patterns like Factory or Singleton are about how objects get created. Structural patterns like Adapter or Composite are about the static shape of the system, how classes and objects are composed into larger structures. Behavioral patterns like Observer or Strategy are about the dynamic side, how objects interact and split responsibilities at runtime. So the grouping pushes you to frame a design problem as a creation, structure or interaction problem and then pick from the right family.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "topic": "Design pattern categories",
+    "subject": "ooad",
+    "score": 0.991,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.8
+      },
+      {
+        "entailment": 0.981,
+        "similarity": 0.735
+      },
+      {
+        "entailment": 0.987,
+        "similarity": 0.767
+      }
+    ],
+    "key_points": [
+      "Creational patterns deal with the process of object creation.",
+      "Structural patterns deal primarily with the static composition and structure of classes and objects.",
+      "Behavioral patterns deal primarily with dynamic interaction among classes and objects."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.design_pattern_categories.hard2",
+    "style": "partial",
+    "answer": "Structural patterns are about how classes and objects are composed together into bigger structures, like Adapter or Decorator. Behavioral patterns are about how objects interact and communicate with each other at runtime, like Observer.",
+    "labels": [
+      "missing",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.55,
+    "topic": "Design pattern categories",
+    "subject": "ooad",
+    "score": 0.383,
+    "predicted": [
+      "missing",
+      "missing",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.0,
+        "similarity": 0.543
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.867
+      },
+      {
+        "entailment": 0.273,
+        "similarity": 0.821
+      }
+    ],
+    "key_points": [
+      "Creational patterns deal with the process of object creation.",
+      "Structural patterns deal primarily with the static composition and structure of classes and objects.",
+      "Behavioral patterns deal primarily with dynamic interaction among classes and objects."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.design_pattern_categories.hard2",
+    "style": "dont_know",
+    "answer": "I know there are three categories of design patterns, but I honestly don't know what the implications of the grouping would be. I'd have to look that up.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0,
+    "topic": "Design pattern categories",
+    "subject": "ooad",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.031,
+        "similarity": 0.495
+      },
+      {
+        "entailment": 0.021,
+        "similarity": 0.598
+      },
+      {
+        "entailment": 0.165,
+        "similarity": 0.54
+      }
+    ],
+    "key_points": [
+      "Creational patterns deal with the process of object creation.",
+      "Structural patterns deal primarily with the static composition and structure of classes and objects.",
+      "Behavioral patterns deal primarily with dynamic interaction among classes and objects."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "ooad.design_pattern_categories.hard2",
+    "style": "off_topic",
+    "answer": "The SOLID principles are five guidelines for object-oriented design. Single responsibility says a class should have one reason to change, open-closed says classes should be open for extension but closed for modification, and Liskov substitution says subclasses should be usable wherever the parent is. Then there's interface segregation and dependency inversion.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0,
+    "topic": "Design pattern categories",
+    "subject": "ooad",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.223,
+        "similarity": 0.384
+      },
+      {
+        "entailment": 0.003,
+        "similarity": 0.445
+      },
+      {
+        "entailment": 0.022,
+        "similarity": 0.356
+      }
+    ],
+    "key_points": [
+      "Creational patterns deal with the process of object creation.",
+      "Structural patterns deal primarily with the static composition and structure of classes and objects.",
+      "Behavioral patterns deal primarily with dynamic interaction among classes and objects."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.logical_vs_physical_address.easy1",
+    "style": "good",
+    "answer": "A logical address is the address the CPU generates when a program runs, and it's also called a virtual address. A physical address is the actual address seen by the memory unit, the one that goes out on the memory bus. With compile-time or load-time address binding, the logical and physical addresses are the same. They only differ with execution-time binding, where the MMU translates each logical address to a physical one at runtime.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0,
+    "topic": "Logical vs physical address",
+    "subject": "os",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.954
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.954
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.971
+      }
+    ],
+    "key_points": [
+      "Logical address is generated by the CPU and is also called a virtual address.",
+      "Physical address is the address seen by the memory unit.",
+      "Logical and physical addresses are the same in compile-time and load-time address-binding schemes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.logical_vs_physical_address.easy1",
+    "style": "partial",
+    "answer": "A logical address is what the CPU generates, also called a virtual address, and a physical address is the real location in RAM that the memory unit sees. The MMU maps logical addresses to physical ones.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6,
+    "topic": "Logical vs physical address",
+    "subject": "os",
+    "score": 0.717,
+    "predicted": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.916
+      },
+      {
+        "entailment": 0.997,
+        "similarity": 0.807
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.74
+      }
+    ],
+    "key_points": [
+      "Logical address is generated by the CPU and is also called a virtual address.",
+      "Physical address is the address seen by the memory unit.",
+      "Logical and physical addresses are the same in compile-time and load-time address-binding schemes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.logical_vs_physical_address.easy1",
+    "style": "confident_wrong",
+    "answer": "A physical address is what the CPU generates, and the logical address is what the memory unit actually sees after translation. They're always different in every binding scheme, because the MMU always has to translate them, even at compile time.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0,
+    "topic": "Logical vs physical address",
+    "subject": "os",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.003,
+        "similarity": 0.805
+      },
+      {
+        "entailment": 0.008,
+        "similarity": 0.846
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.76
+      }
+    ],
+    "key_points": [
+      "Logical address is generated by the CPU and is also called a virtual address.",
+      "Physical address is the address seen by the memory unit.",
+      "Logical and physical addresses are the same in compile-time and load-time address-binding schemes."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.logical_vs_physical_address.easy1",
+    "style": "hesitant",
+    "answer": "Um, so the logical address is, uh, the one the CPU generates, it's also called, like, a virtual address. The physical one is what the memory unit actually, um, sees. And I think in compile-time and, uh, load-time binding they're the same, but in execution-time they're, you know, different.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8,
+    "topic": "Logical vs physical address",
+    "subject": "os",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.951
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.844
+      },
+      {
+        "entailment": 0.987,
+        "similarity": 0.785
+      }
+    ],
+    "key_points": [
+      "Logical address is generated by the CPU and is also called a virtual address.",
+      "Physical address is the address seen by the memory unit.",
+      "Logical and physical addresses are the same in compile-time and load-time address-binding schemes."
+    ],
+    "unclear": true
+  },
+  {
+    "question_id": "os.deadlock_prevention.medium1",
+    "style": "good_paraphrase",
+    "answer": "You number every resource, say the printer is 1, the disk is 2, the tape drive is 3, and make a rule that a process can only request resources in increasing order of those numbers. So if you hold the disk, you can ask for the tape drive but never go back and ask for the printer. That means you can never get a loop where A waits on B and B waits on A, because waiting always points toward higher numbers. Since circular wait is one of the four necessary conditions for deadlock, breaking it guarantees deadlock can't happen.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "topic": "Deadlock prevention",
+    "subject": "os",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.992,
+        "similarity": 0.831
+      },
+      {
+        "entailment": 0.985,
+        "similarity": 0.671
+      }
+    ],
+    "key_points": [
+      "Processes must request resources in increasing order of their assigned numerical numbers.",
+      "This is one of the four conditions that must be violated to prevent deadlock."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.deadlock_prevention.medium1",
+    "style": "partial",
+    "answer": "You give each resource a number and require every process to request resources in increasing order of those numbers. That way a cycle of processes waiting on each other can't form.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6,
+    "topic": "Deadlock prevention",
+    "subject": "os",
+    "score": 0.514,
+    "predicted": [
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.995,
+        "similarity": 0.836
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.37
+      }
+    ],
+    "key_points": [
+      "Processes must request resources in increasing order of their assigned numerical numbers.",
+      "This is one of the four conditions that must be violated to prevent deadlock."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.deadlock_prevention.medium1",
+    "style": "vague",
+    "answer": "Circular wait can be prevented by managing resources carefully so that processes don't end up waiting on each other in a circle. The operating system has to be smart about how it hands out resources.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.1,
+    "topic": "Deadlock prevention",
+    "subject": "os",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.002,
+        "similarity": 0.469
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.347
+      }
+    ],
+    "key_points": [
+      "Processes must request resources in increasing order of their assigned numerical numbers.",
+      "This is one of the four conditions that must be violated to prevent deadlock."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.deadlock_prevention.medium1",
+    "style": "off_topic",
+    "answer": "Deadlock detection works by building a wait-for graph and periodically checking it for cycles. If a cycle is found, the OS recovers by aborting one of the processes in the cycle or preempting its resources. Which process to abort can depend on its priority or how much work it has done.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "topic": "Deadlock prevention",
+    "subject": "os",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.002,
+        "similarity": 0.374
+      },
+      {
+        "entailment": 0.002,
+        "similarity": 0.516
+      }
+    ],
+    "key_points": [
+      "Processes must request resources in increasing order of their assigned numerical numbers.",
+      "This is one of the four conditions that must be violated to prevent deadlock."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.context_switching.medium1",
+    "style": "good",
+    "answer": "In round-robin, every time a process's quantum expires you get a context switch, so the time quantum directly controls how many switches happen. If the quantum is tiny, you spend a big chunk of CPU time just saving and restoring state, and the overhead dominates. In modern systems the quantum is chosen so the context switch time is a small fraction of it, microseconds for the switch versus tens of milliseconds for the quantum. Switches get much more expensive if they involve swapping processes in and out of memory. But if the quantum is too large, round-robin degenerates into FCFS and response time suffers, so it's a trade-off.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0,
+    "topic": "Context switching",
+    "subject": "os",
+    "score": 1.0,
+    "predicted": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.998,
+        "similarity": 0.876
+      },
+      {
+        "entailment": 0.997,
+        "similarity": 0.913
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.665
+      }
+    ],
+    "key_points": [
+      "The time quantum directly influences the number of context switches.",
+      "Context switch time is a small fraction of the time quantum in modern systems.",
+      "Context switching can be costly if it involves swapping processes in and out of memory."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.context_switching.medium1",
+    "style": "partial",
+    "answer": "A smaller time quantum means more context switches, and each context switch is pure overhead, so performance goes down. A larger quantum reduces switches but makes the system less responsive, so you have to balance the two.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.5,
+    "topic": "Context switching",
+    "subject": "os",
+    "score": 0.383,
+    "predicted": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.973,
+        "similarity": 0.745
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.757
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.631
+      }
+    ],
+    "key_points": [
+      "The time quantum directly influences the number of context switches.",
+      "Context switch time is a small fraction of the time quantum in modern systems.",
+      "Context switching can be costly if it involves swapping processes in and out of memory."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.context_switching.medium1",
+    "style": "hesitant",
+    "answer": "Um, so the time quantum, like, decides how many context switches you get, smaller quantum means more switches. And, uh, usually the switch time is small compared to the quantum, like a tiny fraction. But if it's, um, swapping stuff in and out of memory then it gets, you know, really expensive.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.75,
+    "topic": "Context switching",
+    "subject": "os",
+    "score": 0.701,
+    "predicted": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.997,
+        "similarity": 0.898
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.808
+      },
+      {
+        "entailment": 0.998,
+        "similarity": 0.621
+      }
+    ],
+    "key_points": [
+      "The time quantum directly influences the number of context switches.",
+      "Context switch time is a small fraction of the time quantum in modern systems.",
+      "Context switching can be costly if it involves swapping processes in and out of memory."
+    ],
+    "unclear": true
+  },
+  {
+    "question_id": "os.context_switching.medium1",
+    "style": "confident_wrong",
+    "answer": "Context switching doesn't actually add any overhead in round-robin, because the CPU saves the registers in parallel with running the next process. So you should always choose the smallest possible time quantum, since that gives the best response time with no downside. The quantum only affects fairness, not performance.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0,
+    "topic": "Context switching",
+    "subject": "os",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.0,
+        "similarity": 0.528
+      },
+      {
+        "entailment": 0.0,
+        "similarity": 0.564
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.729
+      }
+    ],
+    "key_points": [
+      "The time quantum directly influences the number of context switches.",
+      "Context switch time is a small fraction of the time quantum in modern systems.",
+      "Context switching can be costly if it involves swapping processes in and out of memory."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.banker_s_algorithm.medium1",
+    "style": "good_paraphrase",
+    "answer": "Before granting a request, the Banker's algorithm pretends to grant it and then checks whether the system would still be safe. For the check, it keeps a Work vector that starts as the currently available resources, and a Finish flag for each process. It looks for any unfinished process whose remaining need fits within Work, pretends that process runs to completion and gives back everything it holds, so Work grows, and sets its Finish flag to true. If eventually every Finish entry is true, there's a safe sequence and the request is granted; otherwise the process has to wait.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "topic": "Banker's algorithm",
+    "subject": "os",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.048,
+        "similarity": 0.562
+      },
+      {
+        "entailment": 0.023,
+        "similarity": 0.659
+      }
+    ],
+    "key_points": [
+      "The algorithm uses the Work vector to represent the available resources after allocation.",
+      "The algorithm ensures that all processes can eventually complete by checking if all Finish[i] are true."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.banker_s_algorithm.medium1",
+    "style": "partial",
+    "answer": "The Banker's algorithm checks whether granting a request would leave the system in a safe state, meaning there's some order in which all processes can finish. If it would be safe, the request is granted, and if not, the process has to wait.",
+    "labels": [
+      "missing",
+      "partial"
+    ],
+    "overall": 0.45,
+    "topic": "Banker's algorithm",
+    "subject": "os",
+    "score": 0.575,
+    "predicted": [
+      "missing",
+      "covered"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.007,
+        "similarity": 0.326
+      },
+      {
+        "entailment": 0.925,
+        "similarity": 0.605
+      }
+    ],
+    "key_points": [
+      "The algorithm uses the Work vector to represent the available resources after allocation.",
+      "The algorithm ensures that all processes can eventually complete by checking if all Finish[i] are true."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.banker_s_algorithm.medium1",
+    "style": "dont_know",
+    "answer": "I don't really know how the Banker's algorithm works in detail. I remember the name and that it's about avoiding deadlock, but that's about it.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "topic": "Banker's algorithm",
+    "subject": "os",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.001,
+        "similarity": 0.422
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.416
+      }
+    ],
+    "key_points": [
+      "The algorithm uses the Work vector to represent the available resources after allocation.",
+      "The algorithm ensures that all processes can eventually complete by checking if all Finish[i] are true."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.banker_s_algorithm.medium1",
+    "style": "vague",
+    "answer": "The Banker's algorithm is used by the operating system to allocate resources carefully. It checks things before giving out resources so that the system stays safe and doesn't run into problems.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.15,
+    "topic": "Banker's algorithm",
+    "subject": "os",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.002,
+        "similarity": 0.607
+      },
+      {
+        "entailment": 0.001,
+        "similarity": 0.464
+      }
+    ],
+    "key_points": [
+      "The algorithm uses the Work vector to represent the available resources after allocation.",
+      "The algorithm ensures that all processes can eventually complete by checking if all Finish[i] are true."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.hardware_synchronization.hard2",
+    "style": "good",
+    "answer": "test_and_set is a hardware instruction that atomically reads a shared boolean and sets it to true in one indivisible step. It returns the original value, so a process spins on while test_and_set of lock, and if it gets back false, the lock was free and now it owns it. Because the operation is atomic, no other process can sneak in between the read and the write, so nobody else can grab the lock mid-operation. If two processes execute it at the same moment on different CPUs, the hardware serializes them, so only one gets false back and enters the critical section, while the other gets true and keeps spinning until the lock is released.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 1.0,
+    "topic": "Hardware synchronization",
+    "subject": "os",
+    "score": 0.383,
+    "predicted": [
+      "missing",
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.01,
+        "similarity": 0.81
+      },
+      {
+        "entailment": 0.822,
+        "similarity": 0.861
+      },
+      {
+        "entailment": 0.009,
+        "similarity": 0.701
+      }
+    ],
+    "key_points": [
+      "The test_and_set instruction ensures mutual exclusion by atomically reading and writing to a shared memory location.",
+      "The test_and_set instruction prevents other processes from acquiring the lock until the operation completes.",
+      "The test_and_set instruction returns the original value of the memory location before it is set to TRUE."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.hardware_synchronization.hard2",
+    "style": "partial",
+    "answer": "test_and_set atomically checks a lock variable and sets it to true, so it's done as one step that can't be interrupted. If two processes try at the same time, only one of them gets the lock and the other has to wait.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6,
+    "topic": "Hardware synchronization",
+    "subject": "os",
+    "score": 0.383,
+    "predicted": [
+      "missing",
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.009,
+        "similarity": 0.728
+      },
+      {
+        "entailment": 0.836,
+        "similarity": 0.873
+      },
+      {
+        "entailment": 0.003,
+        "similarity": 0.577
+      }
+    ],
+    "key_points": [
+      "The test_and_set instruction ensures mutual exclusion by atomically reading and writing to a shared memory location.",
+      "The test_and_set instruction prevents other processes from acquiring the lock until the operation completes.",
+      "The test_and_set instruction returns the original value of the memory location before it is set to TRUE."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.hardware_synchronization.hard2",
+    "style": "confident_wrong",
+    "answer": "test_and_set works by disabling interrupts on all processors while the process checks the lock. It returns the new value of the lock, which is always true, and the process then checks a separate flag to see if it got the lock. If two processes call it simultaneously, both can end up in the critical section, which is why you need a semaphore on top of it.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.0,
+    "topic": "Hardware synchronization",
+    "subject": "os",
+    "score": 0.0,
+    "predicted": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.004,
+        "similarity": 0.692
+      },
+      {
+        "entailment": 0.007,
+        "similarity": 0.876
+      },
+      {
+        "entailment": 0.002,
+        "similarity": 0.68
+      }
+    ],
+    "key_points": [
+      "The test_and_set instruction ensures mutual exclusion by atomically reading and writing to a shared memory location.",
+      "The test_and_set instruction prevents other processes from acquiring the lock until the operation completes.",
+      "The test_and_set instruction returns the original value of the memory location before it is set to TRUE."
+    ],
+    "unclear": false
+  },
+  {
+    "question_id": "os.hardware_synchronization.hard2",
+    "style": "hesitant",
+    "answer": "Um, so test_and_set, it, like, reads the lock and sets it to true, uh, atomically, all at once, so no one else can get in during that. And it returns the, um, old value, so if it was false you got the lock. If two processes do it at the same time, uh, the hardware kind of, you know, makes one go first, so the other one sees true and just keeps waiting.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.8,
+    "topic": "Hardware synchronization",
+    "subject": "os",
+    "score": 0.383,
+    "predicted": [
+      "missing",
+      "covered",
+      "missing"
+    ],
+    "point_scores": [
+      {
+        "entailment": 0.003,
+        "similarity": 0.745
+      },
+      {
+        "entailment": 0.973,
+        "similarity": 0.869
+      },
+      {
+        "entailment": 0.004,
+        "similarity": 0.62
+      }
+    ],
+    "key_points": [
+      "The test_and_set instruction ensures mutual exclusion by atomically reading and writing to a shared memory location.",
+      "The test_and_set instruction prevents other processes from acquiring the lock until the operation completes.",
+      "The test_and_set instruction returns the original value of the memory location before it is set to TRUE."
+    ],
+    "unclear": true
+  }
+]

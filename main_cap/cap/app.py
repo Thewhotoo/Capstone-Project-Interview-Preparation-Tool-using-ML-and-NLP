@@ -41,6 +41,12 @@ if not os.environ.get("GEMINI_API_KEY", "").strip():
 deployment_evaluator.bootstrap_production_evaluator()
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
+# Re-read templates from disk on each request instead of serving the copy Jinja
+# compiled at startup, so a front-end edit (e.g. the typewriter speed in
+# index.html) takes effect on the next page load without restarting the server.
+# Negligible cost (a file stat per request); worth it for a dev/demo workflow.
+app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.jinja_env.auto_reload = True
 
 # ── Accounts: SQLite database, login, profiles, resume storage ─────────────
 # (see account_routes.py). Applies pending migrations on startup.
@@ -211,7 +217,7 @@ def resume_discussion_v2_start():
         if not profile or owner is None or owner[0] != current_user.id:
             return jsonify({"error": "Candidate Profile not found. Upload a resume first."}), 404
 
-        result, status = conversation_engine.start_conversation(profile)
+        result, status = conversation_engine.start_conversation(profile, enable_adaptive_followups=True)
         if status == 200:
             # Saved to the user's session history from the first question on.
             session_history.begin_resume_discussion(

@@ -1,0 +1,29 @@
+{
+  "name": "Dani Martinez",
+  "email": "hello@reallygreatsite.com",
+  "phone": "+123-456-7890",
+  "domain": "Software Engineering",
+  "confidence": 0.5258,
+  "experience": {
+    "years": 0,
+    "months": 0,
+    "level": "Unknown"
+  },
+  "education": [
+    {
+      "institution": "30 Apr 2052 Fauget University Jun",
+      "degree": "Bachelor of Science in Information\nThynk Unlimited Technology\n01 Aug",
+      "major": null,
+      "graduation_year": 2050,
+      "gpa": null,
+      "high_school": [],
+      "raw": "Bachelor of Science in Information Thynk Unlimited Technology 01 Aug 2050 - 30 Apr 2052 Fauget University Jun 2050 Developed and deployed a real-time data processing pipeline using Rimberio to handle a 10 x increase in data volume."
+    }
+  ],
+  "skills": [
+    "Algorithms",
+    "Agile",
+    "Scrum"
+  ],
+  "projects_count": 0
+}

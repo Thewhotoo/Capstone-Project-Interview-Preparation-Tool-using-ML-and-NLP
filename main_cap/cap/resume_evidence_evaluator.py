@@ -452,6 +452,16 @@ def _cached_evidence(request: EvaluationRequest) -> EvidenceBreakdown:
     return ev
 
 
+def _correctness_text(ev: "EvidenceBreakdown", fact_check) -> str:
+    """Plain-language statement of how (or whether) technical correctness was judged."""
+    if ev.tech_correctness_status == "verified":
+        return "checked against an answer key"
+    if fact_check is not None and fact_check.status == "checked":
+        return (f"checked by an automated AI fact-checker ({fact_check.model}) running locally; "
+                "there is no answer key for this experiential question, and the checker can be wrong")
+    return "not independently verified (there is no answer key for this experiential question)"
+
+
 def _fact_check_note(fact_check) -> str:
     if fact_check is None:
         return ""
@@ -533,8 +543,7 @@ class ResumeEvidenceEvaluator:
 
         reasoning = (
             f"Evidence-based score (résumé-specific question). Technical correctness: "
-            f"{ev.tech_correctness_status.upper().replace('_', ' ')} — no answer key, so factual correctness of "
-            f"claims was NOT judged; this score reflects only available evidence. "
+            f"{_correctness_text(ev, fact_check)}. "
             f"relevance {ev.relevance:.0%}, résumé-consistency {ev.grounding:.0%}, "
             f"concreteness {ev.concreteness:.0%}, ownership-evidence {ev.ownership:.0%}, "
             f"explanation {ev.substance:.0%}"
@@ -562,9 +571,8 @@ class ResumeEvidenceEvaluator:
             overall_score=overall_score, grade=grade,
             confidence=confidence, confidence_source=_CONFIDENCE_SOURCE,
             confidence_rationale=(
-                "Reflects the strength of the available EVIDENCE (résumé grounding + concrete detail), not the "
-                f"answer's tone or length. Technical correctness is {ev.tech_correctness_status} "
-                "(no answer key for this experiential question)."
+                "Reflects the strength of the available evidence (résumé grounding and concrete detail), not the "
+                f"answer's tone or length. Technical correctness: {_correctness_text(ev, fact_check)}."
             ),
             reasoning=reasoning,
             strengths=strengths, weaknesses=weaknesses,

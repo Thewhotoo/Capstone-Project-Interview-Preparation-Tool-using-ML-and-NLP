@@ -125,3 +125,12 @@ class TestEndConversationCarriesFeedback(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestScopeNoteAfterFactCheck(unittest.TestCase):
+    def test_scope_note_mentions_the_ai_fact_check_only_when_it_ran(self):
+        from interview_feedback import SCOPE_NOTE_FACT_CHECKED
+        plain = {"overall_score": 0.7, "grade": "good", "dimensions": [], "reasoning": "Technical correctness: not independently verified"}
+        checked = dict(plain, reasoning="Technical correctness: checked by an automated AI fact-checker (qwen3:4b) running locally")
+        self.assertEqual(build_feedback([plain])["scope_note"], SCOPE_NOTE)
+        self.assertEqual(build_feedback([plain, checked])["scope_note"], SCOPE_NOTE_FACT_CHECKED)

@@ -4817,7 +4817,7 @@
             await sleep(60);
 
             setSystemLog("Composing question...");
-            await typeLine(rdQuestionTextEl, question.text, 0.7);   // Round 1 questions type ~30% faster
+            await typeLine(rdQuestionTextEl, question.text, 0.12, 80);   // Resume-interview questions: fast typewriter
             setSystemLog("Awaiting your response.");
             rdEnableInput();
         }
@@ -4879,6 +4879,7 @@
                 await typeLine(
                     rdQuestionTextEl,
                     "Let's talk through your background \u2014 I'll ask about your projects, experience, and technologies.",
+                    0.12, 80,
                 );
                 await sleep(700);
 
@@ -7413,30 +7414,43 @@
         // what halts its ENTIRE calling async chain (e.g. the rest of
         // rdStartSession) at the `await`, not just this one animation.
         // pace < 1 types faster (1 = the default pace used everywhere else).
-        function typeLine(el, text, pace = 1) {
+        function typeLine(el, text, pace = 1, endPause = 550) {
             const token = (el.__typeToken = (el.__typeToken || 0) + 1);
+            const msPerChar = 46 * pace;    // base speed; pace < 1 is faster
+            const punctDwell = 200 * pace;  // extra dwell after , . : ; ! ?
             return new Promise(resolve => {
                 el.textContent = "";
                 el.classList.add("type-caret");
-                let i = 0;
-                function tick() {
+                let shown = 0, last = performance.now(), budget = 0;
+                // Time-based requestAnimationFrame engine: each frame reveals as
+                // many characters as the elapsed wall-clock time allows, so the
+                // animation stays on schedule (catching up in a chunk) even when
+                // the main thread is busy -- e.g. webcam + gaze detection running
+                // every frame during the interview. The old one-setTimeout-per-
+                // character version stuttered badly under that load (and hit the
+                // browser's nested-timeout minimum-delay clamp), which is what
+                // made the question text crawl regardless of the configured pace.
+                function frame(now) {
                     if (el.__typeToken !== token) return; // superseded -- stop silently
-                    if (i < text.length) {
-                        const ch = text[i];
-                        el.textContent += ch;
-                        i++;
-                        let delay = (46 + (Math.random() * 26 - 13)) * pace; // ~100-120wpm feel at pace 1
-                        if (/[,.:;!?]/.test(ch)) delay += 200 * pace;
-                        setTimeout(tick, delay);
+                    budget += now - last;
+                    last = now;
+                    while (shown < text.length && budget >= msPerChar) {
+                        const ch = text[shown++];
+                        budget -= msPerChar;
+                        if (/[,.:;!?]/.test(ch)) budget -= punctDwell;
+                    }
+                    el.textContent = text.slice(0, shown);
+                    if (shown < text.length) {
+                        requestAnimationFrame(frame);
                     } else {
                         setTimeout(() => {
                             if (el.__typeToken !== token) return;
                             el.classList.remove("type-caret");
                             resolve();
-                        }, 550);
+                        }, endPause);
                     }
                 }
-                tick();
+                requestAnimationFrame(frame);
             });
         }
 

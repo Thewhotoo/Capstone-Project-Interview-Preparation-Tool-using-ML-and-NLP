@@ -40,6 +40,23 @@ class TestCheckAnswer(unittest.TestCase):
         for text in REAL:
             self.assertFalse(check_answer(text).gated, (text, check_answer(text).reason))
 
+    def test_deflection_questions_are_gated(self):
+        # A reply that is only a question thrown back ("What is X?") answers
+        # nothing and must not ride the grounding to a decent score.
+        for text in ["What is chart.js?", "What do you mean?", "Can you repeat the question?",
+                     "What is that supposed to mean?", "Which part specifically?"]:
+            verdict = check_answer(text)
+            self.assertTrue(verdict.gated, text)
+
+    def test_short_declaratives_are_not_mistaken_for_deflections(self):
+        # The deflection rule keys on every sentence being a question; a terse
+        # but real statement (even subject-dropped, or ending in a clarifying
+        # question after real content) is a genuine attempt and must pass.
+        for text in ["I built the API.", "We cached it in Redis.",
+                     "Was responsible for the auth module.", "Did the whole backend myself.",
+                     "I used Postgres for joins. Does that answer your question?"]:
+            self.assertFalse(check_answer(text).gated, (text, check_answer(text).reason))
+
     def test_long_answers_are_not_called_repetitive(self):
         long_answer = " ".join(
             ["I stored each interview session in the database and saved every answer as a turn."] * 1

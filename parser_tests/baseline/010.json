@@ -1,0 +1,54 @@
+{
+  "name": "SHUBHAM MOOKIM",
+  "email": "shubhammookim@gmail.com",
+  "phone": "+918296461220",
+  "domain": "Software Engineering",
+  "confidence": 0.3109,
+  "experience": {
+    "years": 2,
+    "months": 24,
+    "level": "Mid"
+  },
+  "education": [
+    {
+      "institution": null,
+      "degree": null,
+      "major": null,
+      "graduation_year": 2018,
+      "gpa": null,
+      "high_school": [],
+      "raw": "B.Tech Electronics&CommunicationsEngineering(Major)+ComputerScience(Minor) Bengaluru, India NationalCentreForExcellence 2018 2021 SecondaryEducation(CBSE 92.3%) Bengaluru, India"
+    }
+  ],
+  "skills": [
+    "LangChain",
+    "LangGraph",
+    "LlamaIndex",
+    "RAG",
+    "Python",
+    "FastAPI",
+    "Express.js",
+    "Node.js",
+    "Microservices",
+    "AWS",
+    "Docker",
+    "Kubernetes",
+    "MongoDB",
+    "Redis",
+    "PostgreSQL",
+    "SQL",
+    "DynamoDB",
+    "Next.js",
+    "React",
+    "Android",
+    "iOS",
+    "TypeScript",
+    "Firebase",
+    "JavaScript",
+    "Bash",
+    "C++",
+    "Algorithms",
+    "C"
+  ],
+  "projects_count": 9
+}

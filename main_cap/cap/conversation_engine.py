@@ -28,15 +28,11 @@ Evaluation Engine types (`Evaluator`, `EvaluationRequest`,
 test_evaluation_engine.py's import-graph assertions — so none of them ever
 become "aware" that evaluation exists.
 
-Scope boundary UNCHANGED from Phase 2 (Phase 3 does not implement the
-Adaptive Controller): a live session here still never probes or follows up
-automatically. Evaluation now genuinely happens on every turn, but its
-result is recorded to the Evaluation Ledger and otherwise NOT acted upon —
-`planner.advance(..., UnitStatus.COVERED)` remains unconditional, exactly
-as before. Follow-up infrastructure (`question_realizer.realize_followup`)
-still exists and is directly callable by a future phase; nothing in this
-module invokes it on its own, and nothing here lets an `EvaluationResult`
-change what happens next.
+Adaptive follow-ups (opt-in, `start_conversation(..., enable_adaptive_followups=True)`,
+which the live app uses): on a weak-but-real answer the session asks one deeper probe on
+the same topic (`question_realizer.realize_followup`) before moving on, throttled per
+project and per session. This is the only place an `EvaluationResult` changes what
+happens next. With it off, `planner.advance(..., UnitStatus.COVERED)` is unconditional.
 """
 
 from __future__ import annotations
@@ -44,6 +40,7 @@ from __future__ import annotations
 import concurrent.futures
 import logging
 import os
+import re
 import threading
 import time
 import uuid as _uuid
@@ -67,13 +64,16 @@ from topic_pool import ProfileLike
 # Live conversations are kept in the live store (live_store.py: this
 # process's memory, or Redis shared by every worker) as a small JSON record:
 #
-#     {"version", "profile", "evaluator": [name, version],
-#      "turns": [{"answer", "evaluation", "tech_consistency"}], "current_question", "ended"}
+#     {"version", "profile", "evaluator": [name, version], "adaptive_followups",
+#      "turns": [{"answer", "evaluation", "tech_consistency", "followup"}],
+#      "current_question", "ended"}
 #
 # The planner, memory and ledger are not stored: they are rebuilt by
 # replaying the record (`_rebuild`). That is exact because planning is
-# deterministic (no `random`, crc32 not `hash()`; checked across hash seeds)
-# and never depends on evaluation results. `_cache` keeps the rebuilt objects
+# deterministic (no `random`, crc32 not `hash()`; checked across hash seeds).
+# The one decision that depends on a score -- whether an answer triggered an
+# adaptive follow-up -- is stored per turn ("followup") and replayed as stored,
+# never recomputed. `_cache` keeps the rebuilt objects
 # per process, reused while the stored record's version is unchanged, so a
 # single-process server never replays.
 _cache = LocalCache()
@@ -87,6 +87,26 @@ _cache = LocalCache()
 # are ever scheduled -- lower-priority units are silently never asked, with
 # zero change to planning heuristics. Single constant, easy to retune.
 RESUME_DISCUSSION_QUESTION_BUDGET = 10
+
+# Adaptive follow-up probing. Opt-in via start_conversation(..., enable_adaptive_
+# followups=True) — default OFF preserves the original non-adaptive flow and every
+# existing test. Throttled at three levels so it never badgers the candidate:
+#   - at most ONE probe per project (source_id) — a project is never re-probed,
+#     which is what stops "it probed one project 3 times in a row";
+#   - at most this many probes over the whole session;
+#   - and only ever on a weak-but-REAL answer (non-answers score <= 0.1 via the
+#     evaluator's substance gate, so they fall below the probe band automatically).
+MAX_FOLLOWUPS_PER_PROJECT = 1
+MAX_FOLLOWUPS_PER_SESSION = 2
+
+
+def _answer_warrants_followup(result) -> bool:
+    """A follow-up ("can you go a bit deeper on X?") is worth asking only for a
+    WEAK-BUT-REAL answer — on-topic but shallow or incomplete. A strong answer
+    (>= 0.60) needs no probe, and a non-substantive answer (deflection / gibberish
+    / one-liner) is floored to <= 0.10 by the evaluator's substance gate and so
+    falls below this band; in both cases the interview simply moves on."""
+    return 0.15 < result.overall_score < 0.60
 
 logger = logging.getLogger(__name__)
 
@@ -306,6 +326,40 @@ def _plan_after_answer(planner: Planner, memory: ConversationMemory, last_catego
     ))
 
 
+def _wants_followup(session: dict, question: InterviewQuestion, memory: ConversationMemory, result) -> bool:
+    """Throttles: one probe per project, MAX_FOLLOWUPS_PER_SESSION per session, within
+    the question budget, and only on a weak-but-real answer."""
+    source_id = question.specification.source_id
+    return (session["record"].get("adaptive_followups", False)
+            and session["followups_by_source"].get(source_id, 0) < MAX_FOLLOWUPS_PER_PROJECT
+            and sum(session["followups_by_source"].values()) < MAX_FOLLOWUPS_PER_SESSION
+            and memory.turn_count() < RESUME_DISCUSSION_QUESTION_BUDGET
+            and _answer_warrants_followup(result))
+
+
+def _realize_followup(followups_by_source: dict, question: InterviewQuestion, memory: ConversationMemory):
+    """The deeper-probe follow-up on the SAME topic (the spec isn't advanced, so the next
+    answer is evaluated against it). Counts are tracked by source_id, NOT via the pool's
+    lifecycle: specs go unasked->covered and are never ACTIVE, so pool.mark_followup_used
+    would reject them. Shared by live answers and by replay."""
+    source_id = question.specification.source_id
+    used = followups_by_source.get(source_id, 0)
+    followups_by_source[source_id] = used + 1
+    # The probe template embeds this as a noun phrase ("What more can you tell
+    # me about {focus}?"), so it must be a short SUBJECT, never a full question
+    # or sentence -- passing a sentence seed here produced garbled probes like
+    # "...about Why did you use X in this project??". Use the project title's
+    # head (e.g. "LinkLens -- URL Shortener..." -> "LinkLens"); when there is no
+    # project reference, pass None and let realize_followup fall back to its own
+    # safe generic ("that part of your work") rather than risk a sentence seed.
+    ref = (question.project_reference or "").strip()
+    focus = re.split(r"\s[—–-]\s", ref)[0].strip().rstrip("?.:,").strip() or None
+    return question_realizer.realize_followup(
+        question.specification, memory, memory.turn_count() + 1,
+        followups_used_on_this_spec=used, angle="more_detail", focus_hint=focus,
+    )
+
+
 def _save(conversation_id: str, session: dict) -> None:
     record = session["record"]
     record["version"] += 1
@@ -332,6 +386,7 @@ def _rebuild(record: dict) -> dict | None:
     memory = ConversationMemory()
     ledger = EvaluationLedger()
     answer_history: dict[str, tuple[str, ...]] = {}
+    followups_by_source: dict[str, int] = {}
 
     spec, question, variant_idx = _first_question(planner, memory)
     for turn in record["turns"]:
@@ -341,6 +396,9 @@ def _rebuild(record: dict) -> dict | None:
         ledger.append(EvaluationResult.model_validate(turn["evaluation"]))
         answer_history[spec_id] = answer_history.get(spec_id, ()) + (turn["answer"],)
         memory.record_turn(question, variant_idx, answer_text=turn["answer"])
+        if turn.get("followup"):   # the stored decision, never recomputed from a score
+            question, variant_idx = _realize_followup(followups_by_source, question, memory)
+            continue
         planner.advance(spec_id, UnitStatus.COVERED)
         spec = _plan_after_answer(planner, memory, spec.category)
         if spec is not None:
@@ -359,6 +417,7 @@ def _rebuild(record: dict) -> dict | None:
         "evaluator": _pinned_evaluator(record["evaluator"][0]),
         "evaluation_ledger": ledger,
         "answer_history": answer_history,
+        "followups_by_source": followups_by_source,
         "record": record,
     }
 
@@ -379,10 +438,14 @@ def _load(conversation_id: str) -> dict | None:
     return session
 
 
-def start_conversation(profile: ProfileLike) -> tuple[dict, int]:
+def start_conversation(profile: ProfileLike, enable_adaptive_followups: bool = False) -> tuple[dict, int]:
     """Start a new Resume Discussion conversation from a Candidate Profile
     (the real Pydantic model or its `.model_dump()` dict form). Planning runs
-    on the dict form, the same form a replay starts from."""
+    on the dict form, the same form a replay starts from.
+
+    `enable_adaptive_followups` (default False) turns on deeper-probe follow-ups
+    on weak-but-real answers. Default off keeps the original flow and all
+    existing behavior unchanged; the live app opts in."""
     profile = _profile_dict(profile)
     planner = Planner(profile)
     memory = ConversationMemory()
@@ -403,10 +466,12 @@ def start_conversation(profile: ProfileLike) -> tuple[dict, int]:
         "evaluator": session_evaluator,
         "evaluation_ledger": EvaluationLedger(),
         "answer_history": {},  # spec_id -> tuple[str, ...] of raw answers given (Phase 3)
+        "followups_by_source": {},  # source_id (project) -> adaptive follow-ups asked
         "record": {
             "version": 0,
             "profile": profile,
             "evaluator": [session_evaluator.name, session_evaluator.version],
+            "adaptive_followups": enable_adaptive_followups,
             "turns": [],
             "current_question": _question_payload(question),
             "ended": False,
@@ -486,12 +551,14 @@ def _advance(conversation_id: str, session: dict, answer: str) -> tuple[dict, in
     tech_consistency = check_tech_consistency(request)
 
     memory.record_turn(current_question, variant_idx, answer_text=answer)
-    planner.advance(spec_id, UnitStatus.COVERED)
     record = session["record"]
+    # ADAPTIVE FOLLOW-UP (opt-in): on a weak-but-real answer, probe deeper on the SAME
+    # topic before covering it. The decision is stored with the turn so a replay takes
+    # the same path. Default off -> never taken, and the flow below is unchanged.
+    followup = _wants_followup(session, current_question, memory, result)
     record["turns"].append({"answer": answer, "evaluation": result.model_dump(mode="json"),
-                            "tech_consistency": tech_consistency})
+                            "tech_consistency": tech_consistency, "followup": followup})
 
-    next_spec = _plan_after_answer(planner, memory, session["last_category"])
     # Improved Answer / Coaching Note are derived here, at the one site
     # where the EvaluationResult, the InterviewQuestion (its grounding) AND
     # the raw candidate `answer` are all in scope. `_result_payload` stays a
@@ -519,6 +586,25 @@ def _advance(conversation_id: str, session: dict, answer: str) -> tuple[dict, in
     # non-null turns.
     turn_evaluation["concept_coverage_pct"] = concept_coverage_percent(result)
     turn_evaluation["tech_consistency"] = tech_consistency
+
+    if followup:
+        followup_q, followup_variant = _realize_followup(session["followups_by_source"], current_question, memory)
+        session["current_question"] = followup_q
+        session["current_variant_idx"] = followup_variant
+        # same topic -> last_category unchanged; spec not advanced (probed again)
+        record["current_question"] = _question_payload(followup_q)
+        _save(conversation_id, session)
+        return {
+            "status": "success",
+            "next_question": _question_payload(followup_q),
+            "is_completed": False,
+            "turn_number": memory.turn_count() + 1,
+            "evaluation": turn_evaluation,
+        }, 200
+
+    # Move on: cover this topic and select the next one (original behavior).
+    planner.advance(spec_id, UnitStatus.COVERED)
+    next_spec = _plan_after_answer(planner, memory, session["last_category"])
 
     if next_spec is None:
         session["ended"] = record["ended"] = True

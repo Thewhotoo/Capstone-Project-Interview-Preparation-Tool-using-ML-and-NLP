@@ -151,10 +151,17 @@ def evaluate(evaluator: Evaluator, request: EvaluationRequest) -> EvaluationResu
 
     Every result then passes the non-answer gate (`answer_gate.gate`): "idk",
     two-word replies, keyword dumps, gibberish and pasted code are capped at a
-    poor score whichever evaluator is active; real answers pass unchanged."""
+    poor score whichever evaluator is active; real answers pass unchanged.
+
+    It then passes the answer-engagement attenuator (`answer_engagement.
+    apply_engagement`), a downward-only factor that pulls down a reply which
+    merely restates the question (echo/parrot) -- a smooth-middle case the
+    answer_gate does not catch and the DeBERTa term over-scores. Real answers
+    (multiplier ~1.0) and already-poor results pass unchanged."""
+    from answer_engagement import apply_engagement
     from answer_gate import gate
 
-    return gate(request, evaluator.evaluate(request))
+    return apply_engagement(request, gate(request, evaluator.evaluate(request)))
 
 
 class EvaluationLedger:

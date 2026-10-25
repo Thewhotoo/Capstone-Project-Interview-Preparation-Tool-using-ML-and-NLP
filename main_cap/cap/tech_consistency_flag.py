@@ -94,6 +94,21 @@ def _engages_with_project(answer_text: str, project: ProjectGrounding) -> bool:
     return sim >= PROJECT_RELEVANCE_FLOOR
 
 
+def _names_unlisted_technology(answer: str, project) -> bool:
+    """A "the technologies you described don't match your résumé" warning needs the answer to
+    actually NAME a technology the résumé doesn't list for this project (alias-aware: Postgres =
+    PostgreSQL, Kafka = Apache Kafka). Found in a visual check of the report: an answer about
+    Chronos's leases that only mentioned Postgres was flagged, because the NLI contradiction score
+    against bare technology names is noisy when the answer simply doesn't discuss most of them."""
+    try:
+        from resume_evidence_evaluator import _unlisted_technology
+    except Exception:
+        return True   # can't check: fall back to the NLI gates alone (previous behaviour)
+    terms = tuple(project.technologies) + tuple(project.concepts)
+    grounding = f"{project.title} {project.summary}".lower()
+    return _unlisted_technology(answer.lower(), terms, grounding) is not None
+
+
 def check_tech_consistency(request: EvaluationRequest) -> Optional[str]:
     """Returns POSSIBLE_MISMATCH, NOT_INDEPENDENTLY_VERIFIED, or None
     (not applicable: not a project question, no technologies listed on the
@@ -121,6 +136,7 @@ def check_tech_consistency(request: EvaluationRequest) -> Optional[str]:
         return None
 
     if (result["contradiction"] >= CONTRADICTION_FLAG_THRESHOLD and result["support"] <= SUPPORT_CEILING_FOR_FLAG
+            and _names_unlisted_technology(request.answer_text, project)
             and _engages_with_project(request.answer_text, project)):
         return POSSIBLE_MISMATCH
     return NOT_INDEPENDENTLY_VERIFIED

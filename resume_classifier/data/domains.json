@@ -1,0 +1,12 @@
+{
+  "Software Engineering": "Builds software applications and systems using programming languages like Python, Java, C++, C#, and JavaScript. Works with web frameworks (React, FastAPI, Flask, Django, Express.js), databases (MongoDB, MySQL, PostgreSQL), cloud and DevOps (Docker, Kubernetes, CI/CD, AWS), APIs and microservices. Develops full-stack applications, integrates AI/ML models into software products, and applies software engineering best practices including OOP, DSA, system design, and version control.",
+  "Data Science": "Focuses on statistical analysis, predictive modeling, and building machine learning pipelines. Works primarily with data processing libraries (pandas, NumPy, scikit-learn), trains and evaluates ML/DL models (TensorFlow, PyTorch, Keras), builds data visualization dashboards (Tableau, Matplotlib), and performs experimental analysis on structured datasets. Primary role is analyzing data, not building software products.",
+  "Finance": "Works in banking, investment, accounting, financial analysis, portfolio management, risk assessment, auditing, and financial modeling using Excel and Bloomberg.",
+  "Healthcare": "Works in medicine, nursing, clinical research, pharmacy, medical devices, patient care, health informatics, or public health.",
+  "Marketing": "Manages brand strategy, digital marketing, SEO, social media, content creation, campaign analytics, CRM, and growth marketing.",
+  "Law": "Practices legal work including litigation, contracts, compliance, intellectual property, corporate law, and legal research.",
+  "Education": "Works in teaching, curriculum development, academic research, instructional design, e-learning, or educational administration.",
+  "Mechanical Engineering": "Designs and manufactures mechanical systems, works with CAD tools, thermodynamics, materials science, robotics, and manufacturing processes.",
+  "Cybersecurity": "Handles network security, penetration testing, threat analysis, SIEM tools, vulnerability assessment, and security compliance.",
+  "Product Management": "Defines product roadmaps, works with cross-functional teams, conducts user research, manages sprints, and drives product strategy."
+}

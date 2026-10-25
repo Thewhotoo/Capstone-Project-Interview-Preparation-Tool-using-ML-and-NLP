@@ -14,7 +14,7 @@ Several of these processes can serve the same users only with shared state:
 PostgreSQL (`CAP_DATABASE_URL`), Redis for live interviews
 (`CAP_LIVE_STORE=redis`, `CAP_REDIS_URL`), the same `CAP_SECRET_KEY` (login
 cookies) and the same upload folder (`CAP_UPLOAD_DIR`). See
-PRODUCTION_INFRA_PROGRESS.md.
+PROJECT_DOCUMENTATION.md (production server, live store).
 """
 
 import logging

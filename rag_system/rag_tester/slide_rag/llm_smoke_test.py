@@ -1,6 +1,6 @@
 """Smoke test: can Qwen3-8B (4-bit) run on this machine, how fast, and does it follow the format?
 
-Not the question-bank generator (see mcq_tobedone.md) -- just the feasibility check:
+Not the question-bank generator -- just the feasibility check:
 load in 4-bit, report VRAM / RAM / load time, generate one open question and one MCQ
 for a topic from its retrieved slide sections, and report tokens per second.
 

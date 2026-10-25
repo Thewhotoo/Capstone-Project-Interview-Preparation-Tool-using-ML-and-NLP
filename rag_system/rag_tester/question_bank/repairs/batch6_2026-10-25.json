@@ -1,0 +1,880 @@
+{
+ "about": "Repair batch 6 (2026-10-25): the 78 active questions the 2026-09-30 review scored 1-6 (not served, but used when CAP_CURATED_ONLY=0). Each was either fixed to the batch 1-5 standard (short points, one claim, naming the mechanism, reference states every point, no text the candidate never sees) and scored 8, or switched off ('active': false) with its score and a note. Fixed: false key points (TCP 'guarantees minimum throughput'), false or trick premises reworded (GROUP BY columns must be in SELECT, 2PL 'prevents deadlock', disjoint sets 'track elements in multiple sets', ARP with an unknown target IP), questions built on unseen examples or code made self-contained (FCFS, SRP, LSP, DIP, iterative traversals, counting sort, University database), circular or definition-free points replaced (safe state, heap sort stages, critical-section requirements, topological sort's reverse finishing order). Switched off: false premises with nothing to save (complete binary tree), slide-analogy and textbook-wording trivia, vague questions, niche library calls and near-duplicates of served questions. Remaining point-quote links below 0.35 are genuine but terse lines (code, 0.29-0.35): GROUP BY KP0, iterative postorder KP0, counting sort KP1, Peterson KP2, selection sort KP2.",
+ "questions": {
+  "cn.tcp_vs_udp.medium2": {
+   "quality_score": 8,
+   "quality_note": "false point 'TCP guarantees minimum throughput' removed; neither protocol guarantees throughput (repair 6)",
+   "reference_answer": "TCP has congestion control: when the network is overloaded, TCP throttles the sender, lowering its rate when segments are lost and raising it again as ACKs arrive, so TCP flows share the network and avoid congestion collapse. UDP has no congestion control: the sender can transmit as fast as it likes whatever the network state, and packets that are dropped are simply lost. Neither protocol guarantees any minimum throughput or timing; TCP only adapts its rate. This is why bulk transfers use TCP, while real-time apps that prefer speed to reliability often use UDP.",
+   "key_points": [
+    {
+     "point": "TCP has congestion control: it throttles the sender when the network is overloaded."
+    },
+    {
+     "point": "UDP has no congestion control, so the sender can send as fast as it likes.",
+     "quote": "does not provide: timing, security, or connection minimum throughput guarantee, setup.",
+     "followup": "Does TCP guarantee a minimum throughput?",
+     "followup_answer": "No. TCP only adapts its rate to the network; neither TCP nor UDP guarantees throughput or timing."
+    }
+   ]
+  },
+  "dsa.binary_search.hard2": {
+   "active": false,
+   "quality_score": 2,
+   "quality_note": "textbook-jargon trivia; binary search already has a served question. Switched off (repair 6)"
+  },
+  "ooad.liskov_substitution_principle.medium1": {
+   "quality_score": 8,
+   "quality_note": "referred to a DeliveryService example the candidate never sees; made self-contained (repair 6)",
+   "question": "Explain the Liskov Substitution Principle, and how using a common interface instead of forcing inheritance helps you follow it.",
+   "reference_answer": "The Liskov Substitution Principle says derived types must be completely substitutable for their base types: any code written for the parent class must keep working, unchanged, when given an object of a child class. So a child class should never change the characteristics of its parent, for example by throwing an exception from an inherited method or ignoring it. A common violation is forcing inheritance where a subclass cannot honour everything the parent promises, such as a DroneDelivery class inheriting assignVehicle() from DeliveryPerson. Using a common interface instead, for example a DeliveryService interface with just deliverOrder(), lets each class implement only what it can really do, so every implementation can be substituted safely.",
+   "key_points": [
+    {
+     "point": "Derived types must be completely substitutable for their base types."
+    },
+    {
+     "point": "A child class should never change the behaviour its parent promises."
+    },
+    {
+     "point": "A common interface avoids forcing subclasses to inherit methods they cannot support."
+    }
+   ]
+  },
+  "os.fcfs_scheduling.medium2": {
+   "quality_score": 8,
+   "quality_note": "referred to an example the candidate never sees; the example is now in the question (repair 6)",
+   "question": "Three processes arrive in the order P1, P2, P3 with CPU bursts of 24, 3 and 3 ms. Under FCFS scheduling, what is the average waiting time, and what happens to it if they arrive in the order P2, P3, P1?",
+   "reference_answer": "Under FCFS the processes run in arrival order. In the order P1, P2, P3, P1 waits 0 ms, P2 waits 24 ms and P3 waits 27 ms, so the average waiting time is (0 + 24 + 27)/3 = 17 ms. In the order P2, P3, P1, P2 waits 0, P3 waits 3 and P1 waits 6 ms, so the average drops to (6 + 0 + 3)/3 = 3 ms. The difference is the convoy effect: short processes stuck behind a long one wait a long time, so FCFS's average waiting time depends heavily on arrival order.",
+   "key_points": [
+    {
+     "point": "In the order P1, P2, P3 the average waiting time is (0 + 24 + 27)/3 = 17 ms.",
+     "quote": "Average waiting time: (0 + 24 + 27)/3 = 17",
+     "followup": "Why does P3 wait 27 ms?",
+     "followup_answer": "It has to wait for P1 (24 ms) and P2 (3 ms) to finish first."
+    },
+    {
+     "point": "In the order P2, P3, P1 the average drops to (6 + 0 + 3)/3 = 3 ms.",
+     "quote": "Average waiting time: (6 + 0 + 3)/3 = 3",
+     "followup": "Which scheduling algorithm always gives the minimum average waiting time?",
+     "followup_answer": "Shortest-Job-First (SJF)."
+    },
+    {
+     "point": "Short processes waiting behind a long one is called the convoy effect.",
+     "quote": "Convoy effect - short process behind long process",
+     "followup": "Why is FCFS bad for interactive systems?",
+     "followup_answer": "It is non-preemptive, so one long process can make every short, interactive one wait."
+    }
+   ]
+  },
+  "cn.arp.hard2": {
+   "quality_score": 8,
+   "difficulty": "medium",
+   "quality_note": "contradictory premise (no knowledge of the target IP) and garbled text; reworded, one overlapping point dropped (repair 6)",
+   "question": "Host A wants to send a packet to host B on the same LAN. A knows B's IP address, but B is not in A's ARP table. What happens?",
+   "reference_answer": "A broadcasts an ARP query containing B's IP address to the broadcast MAC address FF-FF-FF-FF-FF-FF, so every host on the LAN receives it. Only B recognises its own IP address and replies to A with an ARP response containing B's MAC address. A stores the IP-to-MAC mapping in its ARP table with a TTL, so it can reuse it for later packets until the entry expires, and then sends the frame to B's MAC address.",
+   "key_points": [
+    {
+     "point": "A broadcasts an ARP query with B's IP address to all hosts on the LAN."
+    },
+    {
+     "point": "B replies to A with its MAC address.",
+     "quote": "B replies to A with ARP response",
+     "followup": "Why does only B reply?",
+     "followup_answer": "Every host receives the broadcast, but only B recognises its own IP address in the query."
+    },
+    {
+     "point": "A caches the IP-to-MAC mapping in its ARP table with a TTL.",
+     "quote": "ARP table: each IP node (host, router) - IP/MAC address mappings for some < IP address; MAC address; TTL>",
+     "followup": "Why do ARP table entries have a TTL?",
+     "followup_answer": "So stale mappings are removed, for example when a host leaves or its card is replaced."
+    }
+   ]
+  },
+  "dbms.aggregate_functions_and_group_by.medium2": {
+   "quality_score": 8,
+   "quality_note": "false premise (grouping columns must be in SELECT) reworded; follow-up answer fixed (repair 6)",
+   "question": "Explain how the GROUP BY clause works with aggregate functions, and which columns may appear in the SELECT clause of a grouped query.",
+   "reference_answer": "GROUP BY partitions the rows into groups that have the same values of the grouping attributes, for example one group per department number. Aggregate functions such as COUNT, SUM and AVG are then applied to each group independently, giving one result row per group. Because each output row stands for a whole group, the SELECT clause may contain only grouping attributes and aggregate functions applied to each group; a non-grouped column has many values per group, so it cannot be shown. The grouping attributes do not have to be selected, but they usually are, so the output shows which group each result belongs to.",
+   "key_points": [
+    {
+     "point": "GROUP BY splits the rows into groups with the same grouping values."
+    },
+    {
+     "point": "Aggregate functions are computed separately for each group."
+    },
+    {
+     "point": "SELECT may contain only grouping attributes and aggregate functions.",
+     "followup": "Must a grouping attribute appear in SELECT?",
+     "followup_answer": "No, the query still works, but then the output does not show which group each row belongs to."
+    }
+   ]
+  },
+  "ooad.single_responsibility_principle.medium1": {
+   "quality_score": 8,
+   "quality_note": "referred to an Order class example the candidate never sees; example now in the question (repair 6)",
+   "question": "Explain the Single Responsibility Principle and how it improves software design. What would you do with an Order class that also processes payments and sends email notifications?",
+   "reference_answer": "The Single Responsibility Principle says a class should have one, and only one, reason to change: each class only does one thing. An Order class that also processes payments and sends emails has three reasons to change, so a change to the payment gateway or the email format risks breaking order handling. Split it into Order, PaymentProcessor and NotificationService, each with one responsibility. Code becomes easier to test and maintain, classes can be reused separately, and future changes have fewer unexpected side effects.",
+   "key_points": [
+    {
+     "point": "A class should have one, and only one, reason to change."
+    },
+    {
+     "point": "Each class only does one thing, so the Order class is split into separate classes.",
+     "followup_answer": "It keeps each class small and predictable, so a change to one concern cannot break another."
+    },
+    {
+     "point": "Code becomes easier to test and maintain."
+    }
+   ]
+  },
+  "os.critical_section_problem.medium1": {
+   "quality_score": 8,
+   "quality_note": "points confused progress with bounded waiting; now the three requirements (repair 6)",
+   "question": "What three requirements must a solution to the critical-section problem satisfy?",
+   "reference_answer": "Mutual exclusion: if one process is executing in its critical section, no other process can be in its critical section. Progress: if no process is in its critical section and some want to enter, only the processes that want to enter take part in choosing the next one, and the choice cannot be postponed indefinitely. Bounded waiting: after a process asks to enter, there is a limit on how many times other processes can enter before it does, so no process starves. Processes are assumed to run at nonzero speed, with no assumption about their relative speeds.",
+   "key_points": [
+    {
+     "point": "Mutual exclusion: only one process at a time can be in its critical section.",
+     "quote": "1. Mutual Exclusion - If process Pi is executing in its critical section, then no other processes can be executing in their critical sections",
+     "followup": "What can go wrong without mutual exclusion?",
+     "followup_answer": "A race condition: two processes update shared data at once and the result depends on timing."
+    },
+    {
+     "point": "Progress: if the section is free, choosing who enters next cannot be postponed forever.",
+     "quote": "2. Progress - If no process is executing in its critical section and there exist some processes that wish to enter their critical section, then the selection of the processes that will enter the critical section next cannot be postponed indefinitely",
+     "followup": "Which processes may take part in deciding who enters next?",
+     "followup_answer": "Only those that are not executing in their remainder section, i.e. those that want to enter."
+    },
+    {
+     "point": "Bounded waiting: a waiting process is let in after a limited number of others enter.",
+     "quote": "3. Bounded Waiting - A bound must exist on the number of times that other processes are allowed to enter their critical sections after a process has made a request to enter its critical section and before that request is granted",
+     "followup": "Which problem does bounded waiting prevent?",
+     "followup_answer": "Starvation of a process that keeps being overtaken."
+    }
+   ]
+  },
+  "cn.ipv4_addressing.medium2": {
+   "quality_score": 8,
+   "quality_note": "points never gave the mask; now the 24/8 split and 255.255.255.0 (repair 6)",
+   "reference_answer": "In classful addressing the network part of an address is 8, 16 or 24 bits long for classes A, B and C. A class C address therefore uses its first 24 bits for the network ID and the last 8 bits for the host ID. The default mask has a 1 for every network bit and a 0 for every host bit: 24 ones followed by 8 zeros, i.e. 255.255.255.0 (/24). It tells a host which part of an address is the network, so it can tell whether a destination is on its own network, and a class C network can have 254 usable hosts.",
+   "key_points": [
+    {
+     "point": "A class C address uses 24 bits for the network and 8 bits for the host.",
+     "quote": "Network portion - 8, 16, or 24 bits in length – known as Class A, B and C networks respectively."
+    },
+    {
+     "point": "So the default mask is 24 ones then 8 zeros: 255.255.255.0.",
+     "followup": "How many usable hosts does a class C network have?",
+     "followup_answer": "254: 2^8 = 256 addresses minus the network and broadcast addresses."
+    }
+   ]
+  },
+  "dsa.heap_sort.easy1": {
+   "quality_score": 8,
+   "quality_note": "points never named the two stages (repair 6)",
+   "reference_answer": "Heap sort works in two stages. Stage 1 (heap construction) builds a max-heap from the array, so the largest element is at the root. Stage 2 (maximum deletions) repeatedly removes the root: it swaps the root with the last element of the heap, shrinks the heap by one and restores the heap property; this is done n - 1 times. Each removed maximum lands at the end of the array, so the result is the array sorted in increasing order, in O(n log n) time and in place.",
+   "key_points": [
+    {
+     "point": "Stage 1 builds a heap from the array.",
+     "followup_answer": "It puts the largest element at the root, ready to be removed."
+    },
+    {
+     "point": "Stage 2 repeatedly removes the root (maximum) and places it at the end of the array.",
+     "quote": "Stage 1 (heap construction): Construct a heap for a given array. Stage 2 (maximum deletions): Apply the root-deletion operation n − 1 times to the remaining heap.",
+     "followup": "What is the time complexity of heap sort?",
+     "followup_answer": "O(n log n) in every case."
+    }
+   ]
+  },
+  "ooad.dependency_inversion_principle.medium1": {
+   "quality_score": 8,
+   "quality_note": "referred to 'the given example'; made general, follow-ups no longer assume the example (repair 6)",
+   "question": "Explain the Dependency Inversion Principle and how it reduces coupling between high-level and low-level modules.",
+   "reference_answer": "The Dependency Inversion Principle says high-level modules should not depend on low-level modules; both should depend upon abstractions. Abstractions should not depend upon details; details should depend upon abstractions. For example, an OrderService should use a Database interface, and MySQLDatabase and MongoDBDatabase implement it. The goal is to avoid tightly coupled code, which easily breaks the application: the low-level implementation can be changed or swapped without changing the high-level module, and the high-level module can be tested with a fake implementation.",
+   "key_points": [
+    {
+     "followup": "What has to change in the high-level module when you switch to a different low-level implementation?",
+     "followup_answer": "Nothing, as long as the new implementation follows the same abstraction (interface)."
+    },
+    {
+     "followup": "In the principle, who depends on the interface: the high-level class, the low-level class, or both?",
+     "followup_answer": "Both: the high-level class uses the interface and the low-level class implements it."
+    },
+    {
+     "followup": "How does depending on an interface make testing easier?",
+     "followup_answer": "You can pass a fake or mock implementation of the interface instead of the real one."
+    }
+   ]
+  },
+  "ooad.is_a_vs_has_a_relationship.medium2": {
+   "quality_score": 8,
+   "quality_note": "vague question; now aggregation vs composition lifetime, which the slides state (repair 6)",
+   "question": "Aggregation and composition are both 'has-a' relationships. How do they differ in terms of the lifetime of the part objects?",
+   "reference_answer": "Both model a whole that contains parts. In aggregation the part can exist independently of the whole: if a department is deleted, its professors still exist. It is drawn with a hollow diamond. In composition the part cannot exist without the whole and is created and destroyed with it: if a house is destroyed, its rooms go too. It is drawn with a filled diamond. So the difference is whether the part's lifetime is tied to the whole's.",
+   "key_points": [
+    {
+     "point": "In aggregation the part can exist independently of the whole.",
+     "quote": "An aggregation specifies a whole-part relationship between an aggregate (a whole) and a constituent part, where the part can exist independently from the aggregate.",
+     "followup": "How is aggregation drawn in UML?",
+     "followup_answer": "With a hollow diamond at the whole's end."
+    },
+    {
+     "point": "In composition the part cannot exist without the whole and is destroyed with it.",
+     "quote": "The Composition between two entities is done when an object contains a composed object, and the composed object cannot exist without another entity.",
+     "followup": "Give an example of composition.",
+     "followup_answer": "A house and its rooms: when the house is destroyed, its rooms no longer exist."
+    }
+   ]
+  },
+  "os.deadlock_avoidance.easy1": {
+   "quality_score": 8,
+   "quality_note": "circular points replaced by the safe-sequence definition (repair 6)",
+   "reference_answer": "A system is in a safe state if there is a safe sequence: an order of all processes in which each process's remaining maximum requests can be met by the currently available resources plus the resources held by the processes before it. Then every process can finish in turn, so a safe state cannot lead to deadlock. An unsafe state is not necessarily deadlocked, but it may lead to deadlock. Deadlock avoidance, for example the banker's algorithm, grants a request only if the system stays in a safe state afterwards.",
+   "key_points": [
+    {
+     "point": "A state is safe if there is an order in which every process can get its resources and finish.",
+     "quote": "A sequence of processes <P1, P2, ..., Pn> is a safe sequence for the current allocation state if, for each Pi , the resource requests that Pi can still make can be satisfied by the currently available resources plus the resources held by all Pj, with j < i.",
+     "followup": "Is every unsafe state a deadlock?",
+     "followup_answer": "No; an unsafe state may lead to deadlock, but is not necessarily deadlocked."
+    },
+    {
+     "point": "A safe state cannot lead to deadlock."
+    },
+    {
+     "point": "Avoidance grants a request only if the system stays in a safe state.",
+     "quote": "As long as the state is safe, the OS can avoid unsafe states.",
+     "followup": "Name an algorithm that does this.",
+     "followup_answer": "The banker's algorithm."
+    }
+   ]
+  },
+  "dsa.binary_tree_properties.hard2": {
+   "active": false,
+   "quality_score": 1,
+   "quality_note": "false premise: the last level of a complete binary tree is not always odd. Switched off (repair 6)"
+  },
+  "cn.csma_cd_and_csma_ca.medium2": {
+   "active": false,
+   "quality_score": 2,
+   "quality_note": "slide-analogy trivia. Switched off (repair 6)"
+  },
+  "dsa.iterative_tree_traversals.easy1": {
+   "quality_score": 8,
+   "quality_note": "referred to code the candidate never sees (repair 6)",
+   "question": "Explain how preorder traversal of a binary tree can be done iteratively using a stack.",
+   "reference_answer": "Push the root onto an empty stack. While the stack is not empty, pop a node and visit it, then push its right child and then its left child (if they exist). Because the left child is pushed last, it is popped first, so the node is visited before its left subtree, and the left subtree before the right one: exactly the preorder order. The explicit stack replaces the recursion's call stack.",
+   "key_points": [
+    {
+     "point": "Start by pushing the root onto a stack."
+    },
+    {
+     "point": "Pop and visit a node, then push its right child before its left so the left is visited first."
+    }
+   ]
+  },
+  "dsa.iterative_tree_traversals.medium2": {
+   "quality_score": 8,
+   "quality_note": "referred to code the candidate never sees (repair 6)",
+   "question": "Explain how postorder traversal of a binary tree can be done iteratively using two stacks.",
+   "reference_answer": "Use two stacks. Push the root onto stack 1. While stack 1 is not empty, pop a node from it, push that node onto stack 2, and push its left child and then its right child onto stack 1. Stack 2 ends up holding the nodes in root-right-left order, so popping everything from stack 2 prints them in reverse: left, right, root, which is postorder.",
+   "key_points": [
+    {
+     "point": "Two stacks are used."
+    },
+    {
+     "point": "Each node popped from stack 1 is pushed onto stack 2, and its left and right children onto stack 1.",
+     "quote": "current = pop(s1) push(s2,current)"
+    },
+    {
+     "point": "Popping stack 2 at the end gives the postorder sequence.",
+     "quote": "while(!isEmpty(s2)) { //Print all the elements of stack2 print current->info }",
+     "followup": "In what order does stack 2 receive the nodes?",
+     "followup_answer": "Root, right, left; reversing that gives left, right, root."
+    }
+   ]
+  },
+  "dsa.sorting_by_counting.easy1": {
+   "quality_score": 8,
+   "quality_note": "'based on the information provided' referred to unseen text (repair 6)",
+   "question": "Explain how distribution counting sort works.",
+   "reference_answer": "Distribution counting sort works when the values come from a small known range. First count how many times each value occurs in the list. Then compute the accumulated (running) sums of these frequencies: the accumulated count of a value is the number of elements less than or equal to it, which gives its final position in the sorted array. Finally place each element at the position given by the accumulated count of its value, decreasing the count each time. It runs in linear time, O(n + range), without comparing elements.",
+   "key_points": [
+    {
+     "point": "Count how many times each value occurs."
+    },
+    {
+     "point": "Accumulated counts give each value's final position in the sorted array."
+    }
+   ]
+  },
+  "cn.collision_and_broadcast_domains.medium2": {
+   "quality_score": 8,
+   "quality_note": "diagram-specific point (A-to-A') dropped (repair 6)",
+   "key_points": [
+    {
+     "point": "Each switch port and its link is its own collision domain."
+    },
+    {
+     "point": "Links run Ethernet in full duplex, so each side can send while receiving."
+    }
+   ]
+  },
+  "cn.transport_layer_services.medium2": {
+   "quality_score": 8,
+   "quality_note": "missed port numbers and demultiplexing; door analogy dropped (repair 6)",
+   "reference_answer": "Each process that communicates over the network has a socket, identified by a port number. When a segment arrives, the transport layer reads the destination port number (and, for TCP, the source address and port too) from the segment header and delivers the data to the matching socket. This is called demultiplexing; the reverse, collecting data from many sockets and adding headers, is multiplexing. For example, several segments sent to the same host and port 80 can be delivered to different sockets of the web server.",
+   "key_points": [
+    {
+     "point": "Each process's socket is identified by a port number.",
+     "quote": "receiver extracts sender IP address and port# from received",
+     "followup_answer": "The data would reach the wrong process, or none if no socket uses that port."
+    },
+    {
+     "point": "The transport layer uses the destination port in the segment header to pick the socket.",
+     "quote": "Three segments, all destined to IP address: B, dest port: 80 are demultiplexed to different sockets",
+     "followup": "What is this delivery step called?",
+     "followup_answer": "Demultiplexing."
+    }
+   ]
+  },
+  "dbms.data_independence.medium2": {
+   "quality_score": 8,
+   "quality_note": "tied to the textbook's University example; made general (repair 6)",
+   "question": "What is logical data independence, and why is it useful?",
+   "reference_answer": "Logical data independence is the ability to change the logical (conceptual) schema without changing the external schemas or the application programs. For example, adding a column or splitting a table can be hidden behind views, so applications and user views keep working. This lets the database grow to meet new requirements without rewriting applications. It is harder to achieve than physical data independence, which hides changes to storage structures.",
+   "key_points": [
+    {
+     "point": "The logical schema can change without changing the external schema."
+    },
+    {
+     "point": "So applications need not be rewritten when the logical schema changes.",
+     "quote": "It refers to the characteristic of being able to modify the logical schema without affecting the external schema or application program.",
+     "followup": "How does it differ from physical data independence?",
+     "followup_answer": "Physical data independence hides changes to storage structures from the logical schema."
+    }
+   ]
+  },
+  "dbms.schema_vs_instance.medium2": {
+   "quality_score": 8,
+   "quality_note": "analogy question made direct; analogy kept in the reference (repair 6)",
+   "question": "What is the difference between a database schema and a database instance?",
+   "reference_answer": "The schema is the design of the database: its tables, columns, types and constraints. It is specified when the database is designed and rarely changes, like the variable declarations in a program. The instance (database state) is the actual data stored at a particular moment, like the values of the variables at a point in time; it changes every time data is inserted, updated or deleted.",
+   "key_points": [
+    {
+     "point": "The schema is the structure of the database and rarely changes."
+    },
+    {
+     "point": "The instance is the data stored at a particular moment and changes often."
+    }
+   ]
+  },
+  "os.disk_scheduling.easy1": {
+   "quality_score": 8,
+   "quality_note": "vague question; now why requests are reordered (repair 6)",
+   "question": "Why does an operating system schedule disk I/O requests instead of serving them in arrival order?",
+   "reference_answer": "On a hard disk most of the access time is seek time, the time to move the head to the right track, and it grows with the seek distance. Serving requests in arrival order (FCFS) can make the head jump back and forth across the disk. Reordering the pending requests by position, as SSTF, SCAN or C-SCAN do, cuts the total head movement, so more requests are served per second. Algorithms like SCAN also keep waiting times fair and avoid starvation under heavy load.",
+   "key_points": [
+    {
+     "point": "Reordering requests reduces seek time (head movement).",
+     "quote": "Minimize seek time",
+     "followup": "What makes up the time to access a disk block?",
+     "followup_answer": "Seek time plus rotational latency plus transfer time."
+    },
+    {
+     "point": "Algorithms like SCAN also avoid starvation under heavy load.",
+     "quote": "SCAN and C-SCAN perform better for systems that place a heavy load on the disk - Less starvation.",
+     "followup": "Why can SSTF starve a request?",
+     "followup_answer": "If new requests keep arriving near the head, a far-away request may never be the closest."
+    }
+   ]
+  },
+  "os.process_creation_and_termination.easy1": {
+   "active": false,
+   "quality_score": 4,
+   "quality_note": "niche library call (popen). Switched off (repair 6)"
+  },
+  "cn.firewalls.medium1": {
+   "active": false,
+   "quality_score": 5,
+   "quality_note": "vague; the slides do not say what each layer inspects, so no point can be quoted. Switched off (repair 6)"
+  },
+  "dbms.transaction_states.medium2": {
+   "quality_score": 8,
+   "quality_note": "state-diagram detail turned into restart vs kill (repair 6)",
+   "question": "When a transaction fails and is rolled back, what two things can the system do with it, and when is each appropriate?",
+   "reference_answer": "After a failed transaction is rolled back, the system can either restart it or kill it. It restarts the transaction, as a brand new transaction, only if it was aborted by a hardware or software error that was not caused by the transaction's own logic, for example a deadlock or a crash. It kills the transaction if the failure comes from an internal logical error that can only be fixed by rewriting the program, or from bad input, or because the data it needs was not found; restarting it would just fail again.",
+   "key_points": [
+    {
+     "point": "It is killed if the failure comes from its own logic or input."
+    },
+    {
+     "point": "It is restarted if it failed for an external reason such as a hardware or software error."
+    }
+   ]
+  },
+  "dbms.weak_entity_sets.medium1": {
+   "quality_score": 8,
+   "quality_note": "diagram-notation trivia replaced by why a weak entity needs an owner (repair 6)",
+   "question": "What is a weak entity set, and why must it have total participation in its identifying relationship?",
+   "reference_answer": "A weak entity set has no primary key of its own. Each weak entity is identified by the primary key of its identifying (owner) entity set together with its own discriminator attributes; for example, a section is identified by its course plus its section number. Since the weak entity's key and its existence depend on the owner, every weak entity must be related to an owner, so its participation in the identifying relationship must be total. In an ER diagram it is drawn as a double rectangle with the discriminator underlined with a dashed line.",
+   "key_points": [
+    {
+     "point": "A weak entity is identified by its owner's primary key plus its own discriminator.",
+     "quote": "Instead of associating a primary key with a weak entity, we use the primary key of the identifying entity, along with extra attributes, called discriminator attributes to uniquely identify a weak entity.",
+     "followup": "How is a weak entity set drawn in an ER diagram?",
+     "followup_answer": "As a double rectangle, with the discriminator underlined with a dashed line."
+    },
+    {
+     "point": "It cannot exist or be identified without its owner, so every weak entity must have one.",
+     "quote": "Every weak entity must be associated with an identifying entity; that is, the weak entity set is said to be existence dependent on the identifying entity set."
+    },
+    {}
+   ]
+  },
+  "dsa.binary_tree_properties.medium1": {
+   "quality_score": 8,
+   "difficulty": "easy",
+   "quality_note": "'full = all leaves on one level' is definition-dependent; question narrowed to n0 = n2 + 1 (repair 6)",
+   "question": "In any non-empty binary tree, how is the number of leaves related to the number of nodes with two children?",
+   "reference_answer": "In any non-empty binary tree, the number of leaves n0 is one more than the number of nodes with two children n2: n0 = n2 + 1. Proof: with n nodes there are n - 1 edges; each node with one child contributes one edge and each node with two children contributes two, so n - 1 = n1 + 2*n2. Since n = n0 + n1 + n2, substituting gives n0 = n2 + 1. For example, a tree with 5 nodes of degree 2 has 6 leaves.",
+   "key_points": [
+    {
+     "point": "The number of leaves is one more than the number of degree-2 nodes: n0 = n2 + 1.",
+     "followup": "A binary tree has 6 leaves. How many nodes have two children?",
+     "followup_answer": "5, because n0 = n2 + 1."
+    }
+   ]
+  },
+  "dsa.circular_queue.medium2": {
+   "active": false,
+   "quality_score": 5,
+   "quality_note": "duplicate of the circular-queue and simple-queue questions. Switched off (repair 6)"
+  },
+  "dsa.disjoint_sets_and_union_find.medium1": {
+   "quality_score": 8,
+   "quality_note": "premise 'elements in multiple sets' contradicted 'disjoint'; circular point replaced by Kruskal (repair 6)",
+   "question": "What do the union and find operations do in a disjoint-set (union-find) structure, and where is it used?",
+   "reference_answer": "A disjoint-set structure keeps a collection of elements split into non-overlapping subsets, each with a representative element. Find returns the representative of the set an element belongs to, so two elements are in the same set exactly when find gives the same representative. Union merges the two sets containing two elements into one. A typical use is Kruskal's minimum spanning tree algorithm, which uses union-find to check whether an edge would join two vertices that are already connected, i.e. form a cycle.",
+   "key_points": [
+    {
+     "point": "Union merges two disjoint sets into one."
+    },
+    {
+     "point": "Find returns the representative of an element's set."
+    },
+    {
+     "point": "Kruskal's algorithm uses it to check whether an edge would form a cycle.",
+     "quote": "Kruskal’s uses Disjoint Set (Union-Find) to check cycles",
+     "followup": "How does Kruskal's use find to detect a cycle?",
+     "followup_answer": "If both endpoints of an edge have the same representative, they are already connected, so the edge would form a cycle."
+    }
+   ]
+  },
+  "dsa.topological_sorting.medium2": {
+   "quality_score": 8,
+   "quality_note": "points missed the reverse-finishing-order idea (repair 6)",
+   "reference_answer": "Run a DFS of the whole graph and note the order in which vertices finish, i.e. are popped off the traversal stack once all their descendants are done. Listing the vertices in reverse finishing order gives a topological order. It is valid because for every edge u -> v in a DAG, v finishes before u, so u comes before v in the reversed list. This only works for a directed acyclic graph: a back edge found during the DFS means there is a cycle, and then no topological order exists.",
+   "key_points": [
+    {
+     "point": "Vertices are listed in reverse order of when DFS finishes them."
+    },
+    {
+     "point": "It works only for a DAG; a back edge means a cycle."
+    }
+   ]
+  },
+  "dsa.tree_terminology.easy1": {
+   "active": false,
+   "quality_score": 5,
+   "quality_note": "trivial definition with a filler point. Switched off (repair 6)"
+  },
+  "os.deadlock_detection_and_recovery.medium2": {
+   "quality_score": 8,
+   "quality_note": "odd premise reworded; n-squared trivia point dropped (repair 6)",
+   "question": "How is a wait-for graph obtained from a resource-allocation graph, and how is it used to detect deadlock?",
+   "reference_answer": "When every resource type has a single instance, the wait-for graph is obtained from the resource-allocation graph by removing the resource nodes and collapsing the edges: Pi -> Pj means Pi is waiting for a resource that Pj holds. A deadlock exists if and only if the wait-for graph contains a cycle, so the system maintains the graph and periodically runs a cycle-detection algorithm on it.",
+   "key_points": [
+    {
+     "followup": "What does an edge Pi -> Pj in a wait-for graph mean?",
+     "followup_answer": "Pi is waiting for a resource that Pj currently holds."
+    },
+    {}
+   ]
+  },
+  "os.peterson_s_solution.medium2": {
+   "quality_score": 8,
+   "quality_note": "narrow question with three copies of one quote; now how flag and turn work together (repair 6)",
+   "question": "Explain how Peterson's solution uses the flag and turn variables to protect a critical section shared by two processes.",
+   "reference_answer": "Peterson's solution uses two shared variables. flag[i] = true means process i is ready to enter its critical section, and turn says whose turn it is to enter. Before entering, process i sets flag[i] = true and then gives the turn to the other process (turn = j). It then waits while flag[j] is true and turn == j, i.e. only while the other process also wants to enter and it is the other's turn. On leaving it sets flag[i] = false.",
+   "key_points": [
+    {
+     "point": "flag[i] = true means process i is ready to enter its critical section.",
+     "quote": "The flag array is used to indicate if a process is ready to enter the critical section. flag[i] = true implies that process Pi is ready!",
+     "followup_answer": "So that if both want to enter at once, exactly one of them gets in; without it they could wait for each other forever or both enter.",
+     "followup": "Why does a process set turn to the other process before waiting?"
+    },
+    {
+     "point": "Before waiting, a process gives the turn to the other process."
+    },
+    {
+     "point": "A process waits only while the other is ready and it is the other's turn.",
+     "quote": "while (flag[j] && turn = = j);",
+     "followup": "Which three requirements does Peterson's solution satisfy?",
+     "followup_answer": "Mutual exclusion, progress and bounded waiting."
+    }
+   ]
+  },
+  "os.swapping.medium1": {
+   "quality_score": 8,
+   "quality_note": "odd transfer-time point moved to the reference (repair 6)",
+   "reference_answer": "Swapping temporarily moves a whole process out of memory to a backing store and later brings it back to continue. In the roll out, roll in variant used with priority scheduling, a lower-priority process is swapped out so that a higher-priority process can be loaded and run, then swapped back in when the higher-priority one finishes. For memory management this means the total memory of all processes can exceed physical memory. The cost is time: most of the swap time is transfer time, proportional to the amount of memory swapped.",
+   "key_points": [
+    {
+     "point": "In roll out, roll in, a lower-priority process is swapped out so a higher-priority one can run."
+    },
+    {
+     "point": "Swapping lets the total memory of processes exceed physical memory."
+    }
+   ]
+  },
+  "cn.csma_cd_and_csma_ca.easy1": {
+   "quality_score": 8,
+   "quality_note": "asked for a difference the points did not cover; question narrowed to what the slides state (repair 6)",
+   "question": "How does CSMA/CD handle collisions, and why is it used on wired rather than wireless networks?",
+   "reference_answer": "With CSMA/CD a station listens before sending, and keeps listening while it transmits. If it detects a collision, it stops transmitting at once, so the channel is not wasted on a damaged frame, then waits a random backoff time before trying again. Collision detection is easy on a wired link, where a station can compare what it sends with what is on the wire, but difficult with wireless, where a station's own signal drowns out others and hidden stations may not hear each other. So wireless LANs use CSMA/CA, which tries to avoid collisions instead of detecting them.",
+   "key_points": [
+    {
+     "point": "CSMA/CD stops transmitting as soon as it detects a collision."
+    },
+    {
+     "point": "Collision detection is easy on wired links but hard on wireless ones."
+    }
+   ]
+  },
+  "cn.ethernet.medium1": {
+   "active": false,
+   "quality_score": 6,
+   "quality_note": "vague question; kept off rather than rebuilt (repair 6)"
+  },
+  "cn.link_state_routing.easy1": {
+   "quality_score": 8,
+   "quality_note": "textbook word 'centralized' replaced by what it means (repair 6)",
+   "reference_answer": "In a link-state routing algorithm every router learns the full network topology and the cost of every link, by flooding link-state information to all routers. Each router then runs Dijkstra's algorithm on this complete map to compute the least-cost paths from itself to all other nodes. This differs from distance-vector routing, where a router only knows the distances its neighbours report and the paths are worked out iteratively by exchanging those vectors.",
+   "key_points": [
+    {
+     "point": "Every router knows the full topology and all link costs."
+    },
+    {
+     "point": "Each router computes least-cost paths to all other nodes itself."
+    }
+   ]
+  },
+  "cn.tcp_connection_termination.medium1": {
+   "active": false,
+   "quality_score": 6,
+   "quality_note": "niche case (simultaneous FIN). Switched off (repair 6)"
+  },
+  "cn.transport_layer_services.easy1": {
+   "quality_score": 8,
+   "quality_note": "door-analogy point replaced (repair 6)",
+   "key_points": [
+    {},
+    {
+     "point": "The sending process passes data to its socket and the transport layer delivers it to the receiving socket.",
+     "followup": "How does the receiving host know which socket gets the data?",
+     "followup_answer": "From the port numbers in the segment header (demultiplexing)."
+    },
+    {}
+   ]
+  },
+  "dbms.deadlocks_in_dbms.medium2": {
+   "quality_score": 8,
+   "quality_note": "trick premise (2PL prevents deadlock) reworded; follow-up fixed (repair 6)",
+   "question": "Does two-phase locking (2PL) prevent deadlocks? Explain its two phases and how deadlocks are handled.",
+   "key_points": [
+    {
+     "point": "2PL has a growing phase that only acquires locks, then a shrinking phase that only releases them.",
+     "followup": "What does following 2PL guarantee?",
+     "followup_answer": "Conflict-serializable schedules."
+    },
+    {
+     "point": "2PL does not prevent deadlocks."
+    },
+    {
+     "point": "Deadlocks are handled separately, for example by detecting them and rolling back a transaction."
+    }
+   ],
+   "reference_answer": "No. Two-phase locking has a growing phase that only acquires locks, then a shrinking phase that only releases them: once a transaction releases any lock it may not acquire another. This guarantees conflict-serializable schedules, but 2PL does not prevent deadlocks: two transactions can each hold a lock the other needs while still in their growing phase, and wait for each other forever. Deadlocks are handled separately, for example by detecting them and rolling back a transaction (MySQL picks a victim and rolls it back), or by prevention schemes such as timeouts or wait-die."
+  },
+  "dbms.transaction_states.easy1": {
+   "active": false,
+   "quality_score": 6,
+   "quality_note": "textbook state detail, low value. Switched off (repair 6)"
+  },
+  "dsa.brute_force_sorting.hard2": {
+   "quality_score": 8,
+   "difficulty": "medium",
+   "quality_note": "point restated the question; not hard (repair 6)",
+   "key_points": [
+    {
+     "point": "After pass i, the first i + 1 positions hold the smallest elements in their final order."
+    },
+    {
+     "point": "Each pass finds the smallest unsorted element and swaps it into the next position."
+    },
+    {
+     "point": "Placed elements never move again, so the sorted part grows from the left."
+    }
+   ],
+   "reference_answer": "On each pass i, selection sort finds the smallest element in the unsorted part A[i..n-1] and swaps it into position i. So after pass i, the first i + 1 positions hold the smallest elements in their final order. Placed elements never move again, so the sorted part grows from the left by one element per pass. This means it always makes about n^2/2 comparisons whatever the input, but at most n - 1 swaps, and the algorithm can be stopped early with the smallest elements already in place."
+  },
+  "dsa.double_ended_queue.medium1": {
+   "active": false,
+   "quality_score": 6,
+   "quality_note": "code-level detail. Switched off (repair 6)"
+  },
+  "dsa.heap_construction.medium1": {
+   "quality_score": 8,
+   "quality_note": "circular point replaced by where it starts and the sift-down (repair 6)",
+   "reference_answer": "Bottom-up heap construction starts from the last parent node, at position floor(n/2), and works backwards to the root; the leaves already satisfy the heap property. At each parent, the key is compared with its larger child, and if it is smaller they are swapped, and this sift-down continues until the key is at least as large as its children or reaches a leaf. Because each node is processed only after both of its subtrees are already heaps, when the root is finished the whole array is a valid max-heap. It takes O(n) time.",
+   "key_points": [
+    {
+     "point": "A parent smaller than its larger child is swapped down until it is larger than its children."
+    },
+    {
+     "point": "It starts at the last parent node and moves backwards to the root.",
+     "quote": "a) The parental node keys will be in the first ⌊n/2⌋ positions of the array, while the leaf keys will occupy the last ⌈n/2⌉ positions",
+     "followup": "What is the time complexity of bottom-up heap construction?",
+     "followup_answer": "O(n)."
+    }
+   ]
+  },
+  "dsa.stacks_and_recursion.medium2": {
+   "active": false,
+   "quality_score": 5,
+   "quality_note": "overlaps the easy stack/recursion question. Switched off (repair 6)"
+  },
+  "ooad.association.medium2": {
+   "quality_score": 8,
+   "quality_note": "point restating the question made specific (repair 6)",
+   "key_points": [
+    {},
+    {
+     "point": "One object can be linked to many objects of the other class, e.g. through a collection field."
+    },
+    {}
+   ],
+   "reference_answer": "An association models a link between classes. One object can be linked to many objects of the other class, for example through a collection field: a Person who owns books can be modelled by an owns field holding several Book objects. Multiplicity, written at the end of the association line, gives the number of possible instances of the class associated with a single instance of the other end. Multiplicity can be represented as a single number or a range of numbers, such as 1, 0..1, 1..* or *."
+  },
+  "ooad.builder_pattern.medium2": {
+   "quality_score": 8,
+   "quality_note": "points restated the question (repair 6)",
+   "question": "What problem does the Builder pattern solve, and how does it work?",
+   "reference_answer": "The Builder pattern deals with constructing complex objects. Instead of one huge constructor, the steps for creating and assembling the parts are put in a separate Builder object, so the class that needs the object delegates its construction to the builder. The same construction process can then use different builders to create different representations of the complex object. This keeps the construction logic out of the main class and makes complex objects easier to create step by step.",
+   "key_points": [
+    {
+     "point": "The construction of a complex object is moved into a separate Builder object.",
+     "quote": "When the complexity of creating object increases, the Builder pattern can separate out the instantiation process by using another object (a builder) to construct the object."
+    },
+    {
+     "point": "The same construction process can use different builders to create different representations."
+    }
+   ]
+  },
+  "ooad.command_pattern.easy1": {
+   "quality_score": 8,
+   "quality_note": "odd phrasing and 'data-driven' point fixed (repair 6)",
+   "question": "Explain the Command pattern and how it works.",
+   "reference_answer": "The Command pattern is a behavioral pattern that wraps a request in an object. The command object contains all the information needed to perform the action: the receiver object, the method to call and its arguments. An invoker, such as a button or a menu item, stores the command and asks it to carry out the request by calling execute(), without knowing what the action does. Because requests are objects, they can be queued, logged or undone.",
+   "key_points": [
+    {
+     "point": "The Command pattern wraps a request in an object."
+    },
+    {
+     "point": "An invoker asks the command to carry out the request without knowing what it does.",
+     "quote": "Invoker: Asks the Command to carry out a request.",
+     "followup": "What extra features does turning requests into objects make easy?",
+     "followup_answer": "Queuing, logging and undoing requests."
+    },
+    {}
+   ]
+  },
+  "os.logical_vs_physical_address.medium2": {
+   "quality_score": 8,
+   "quality_note": "fine; re-reviewed (repair 6)"
+  },
+  "os.page_faults.hard2": {
+   "quality_score": 8,
+   "quality_note": "oddly worded point fixed (repair 6)",
+   "key_points": [
+    {
+     "point": "The OS sets an acceptable range for each process's page-fault rate."
+    },
+    {},
+    {}
+   ]
+  },
+  "os.scheduling_criteria.medium2": {
+   "active": false,
+   "quality_score": 5,
+   "quality_note": "premise that lower waiting time maximizes throughput is dubious. Switched off (repair 6)"
+  },
+  "dsa.graph_connectivity_and_path_finding.hard2": {
+   "active": false,
+   "quality_score": 2,
+   "quality_note": "muddled question and points. Switched off (repair 6)"
+  },
+  "ooad.low_level_design_approach.medium2": {
+   "active": false,
+   "quality_score": 3,
+   "quality_note": "vague. Switched off (repair 6)"
+  },
+  "ooad.object_memory_allocation.easy1": {
+   "active": false,
+   "quality_score": 3,
+   "quality_note": "vague question and points. Switched off (repair 6)"
+  },
+  "dbms.grant_and_revoke_privileges.medium2": {
+   "active": false,
+   "quality_score": 4,
+   "quality_note": "near-duplicate of the easy REVOKE question. Switched off (repair 6)"
+  },
+  "dbms.relational_model.medium1": {
+   "active": false,
+   "quality_score": 4,
+   "quality_note": "vague points. Switched off (repair 6)"
+  },
+  "dsa.n_ary_tree_to_binary_tree_conversion.medium2": {
+   "active": false,
+   "quality_score": 4,
+   "quality_note": "textbook-specific detail. Switched off (repair 6)"
+  },
+  "ooad.creator_grasp.medium2": {
+   "active": false,
+   "quality_score": 4,
+   "quality_note": "vague. Switched off (repair 6)"
+  },
+  "ooad.low_level_design_approach.easy1": {
+   "active": false,
+   "quality_score": 5,
+   "quality_note": "vague. Switched off (repair 6)"
+  },
+  "os.operating_system_functions.medium2": {
+   "active": false,
+   "quality_score": 4,
+   "quality_note": "vague. Switched off (repair 6)"
+  },
+  "cn.network_edge_and_access_networks.medium2": {
+   "active": false,
+   "quality_score": 5,
+   "quality_note": "vague question. Switched off (repair 6)"
+  },
+  "dsa.graph_terminology.medium1": {
+   "active": false,
+   "quality_score": 5,
+   "quality_note": "convoluted question. Switched off (repair 6)"
+  },
+  "ooad.anti_patterns.medium2": {
+   "active": false,
+   "quality_score": 5,
+   "quality_note": "one textbook's wording. Switched off (repair 6)"
+  },
+  "ooad.creator_grasp.easy1": {
+   "quality_score": 8,
+   "quality_note": "point misstated Creator; now who the creator usually is (repair 6)",
+   "reference_answer": "The Creator pattern in GRASP decides which class should create instances of another class: assign that responsibility to the class that has the most knowledge about when and how to create them. Usually that is a class that contains, aggregates, records or closely uses the created objects; for example, a Sale contains SalesLineItem objects, so Sale creates them. This keeps creation logic encapsulated in a natural place and avoids adding extra dependencies between classes, which supports low coupling.",
+   "key_points": [
+    {},
+    {
+     "point": "Usually the creator is a class that contains or closely uses the created objects.",
+     "quote": "Since a Sale contains SalesLineItem objects, it should be responsible according to the Creator pattern",
+     "followup": "In a point-of-sale system, which class should create SalesLineItem objects?",
+     "followup_answer": "Sale, because a Sale contains its SalesLineItems."
+    },
+    {}
+   ]
+  },
+  "os.pthreads.medium1": {
+   "active": false,
+   "quality_score": 5,
+   "quality_note": "standards trivia. Switched off (repair 6)"
+  },
+  "dbms.equivalence_of_sets_of_fds.easy1": {
+   "quality_score": 8,
+   "quality_note": "fine; points shortened (repair 6)",
+   "key_points": [
+    {
+     "point": "Two sets of dependencies are equivalent if each one covers the other."
+    },
+    {
+     "point": "F covers E if, for each X -> Y in E, the closure of X under F contains Y."
+    }
+   ],
+   "reference_answer": "Two sets of dependencies E and F are equivalent if each one covers the other: every dependency in E can be inferred from F, and every dependency in F can be inferred from E, so E+ = F+. F covers E if, for each X -> Y in E, the closure of X under F contains Y. To test equivalence, check that F covers E and that E covers F by computing these attribute closures."
+  },
+  "dbms.grant_and_revoke_privileges.easy1": {
+   "active": false,
+   "quality_score": 6,
+   "quality_note": "low value; second and third points are syntax. Switched off (repair 6)"
+  },
+  "dbms.graph_databases_and_neo4j.easy1": {
+   "quality_score": 8,
+   "quality_note": "fine; re-reviewed (repair 6)"
+  },
+  "dbms.graph_databases_and_neo4j.medium2": {
+   "quality_score": 8,
+   "quality_note": "fine; re-reviewed (repair 6)"
+  },
+  "dsa.horspool_and_boyer_moore_string_matching.medium1": {
+   "active": false,
+   "quality_score": 6,
+   "quality_note": "niche, and overlaps the served Horspool/Boyer-Moore question. Switched off (repair 6)"
+  },
+  "dsa.skip_lists.easy1": {
+   "quality_score": 8,
+   "quality_note": "fine; re-reviewed (repair 6)"
+  },
+  "ooad.indirection_and_pure_fabrication.easy1": {
+   "quality_score": 8,
+   "quality_note": "fine; re-reviewed (repair 6)"
+  },
+  "ooad.indirection_and_pure_fabrication.medium2": {
+   "active": false,
+   "quality_score": 6,
+   "quality_note": "asks about indirection but no point covers it; overlaps the easy question. Switched off (repair 6)"
+  },
+  "os.bash_shell_and_cron.medium1": {
+   "quality_score": 8,
+   "quality_note": "point restating the question dropped (repair 6)",
+   "key_points": [
+    {
+     "point": "Cron is a daemon that runs in the background and wakes up to run scheduled jobs."
+    },
+    {
+     "point": "It reads the crontab, which lists each job and when it should run."
+    }
+   ]
+  },
+  "os.file_system_concepts.hard2": {
+   "quality_score": 8,
+   "difficulty": "medium",
+   "quality_note": "vague third point dropped; not hard (repair 6)",
+   "key_points": [
+    {
+     "point": "The FCB stores a file's metadata, such as its owner and permissions."
+    },
+    {
+     "point": "The FCB records where the file's contents are on disk."
+    }
+   ],
+   "reference_answer": "A file control block (FCB) is the storage structure that holds a file's information. The FCB stores a file's metadata, such as its owner and permissions, and also dates and size. The FCB records where the file's contents are on disk. With it the file system can check access rights and find a file's data without searching the disk, so files can be managed efficiently; the directory entry points to the FCB."
+  },
+  "os.file_system_concepts.medium1": {
+   "quality_score": 8,
+   "quality_note": "fine; re-reviewed (repair 6)"
+  },
+  "os.free_space_management.medium1": {
+   "quality_score": 8,
+   "quality_note": "fine; re-reviewed (repair 6)"
+  }
+ }
+}

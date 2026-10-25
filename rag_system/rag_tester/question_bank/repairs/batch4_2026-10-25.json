@@ -1,0 +1,598 @@
+{
+ "about": "Key-point repair batch 4 (2026-10-25): the 45 active questions scored 7 that were not served (none is on a most-asked topic, so 7 never qualified them). Same rule as batches 1-3: key points short, one claim each, plain words, naming the mechanism, no lists of examples; the reference answer states every key point; no point asks for more than the question does. Fixed: points the question's own reference answer failed (8 questions), vague or duplicate points, wrong follow-up answers (IN parameters 'read-only', finalize 'not properly referenced', insertion sort 'the array grows', MLFQ 'preempted process moved down'), a wrong reference (MLFQ demotion on preemption), a reference to an example the candidate never sees (copy constructor), missing creational patterns in a reference, and three difficulty labels. Raised to 8 after the fix; seven correct, unchanged questions re-scored 8 (FTP, DSL, GRASP controller, user vs kernel threads, contiguous allocation, deadlock prevention, SMP vs AMP). Kept at 7: dbms.weak_entity_sets.hard2 (odd scenario, untouched) and dbms.minimal_cover_of_fds.medium1 (fixed, but a near-duplicate of dbms.functional_dependency.hard2).",
+ "questions": {
+  "cn.ftp.easy1": {
+   "quality_score": 8,
+   "quality_note": "fine; re-reviewed, correct and clear (repair 4)"
+  },
+  "cn.error_detection.medium1": {
+   "quality_score": 8,
+   "quality_note": "points reworded so a correct answer matches them; reference states every point (repair 4)",
+   "reference_answer": "With CRC, the sender and receiver agree on an (r+1)-bit generator polynomial G. The sender appends r CRC bits to the data D, chosen so that the whole bit string <D,R> is exactly divisible by G using mod-2 (XOR) arithmetic. The receiver divides the received bits by the same generator G; a non-zero remainder means an error was detected. A CRC with r check bits detects all burst errors of up to r bits (less than r+1 bits), and most longer bursts too. This matters because noise on real links usually corrupts several bits in a row, which simple parity checks can miss.",
+   "key_points": [
+    {
+     "point": "A CRC with r check bits detects all burst errors of up to r bits."
+    },
+    {
+     "point": "The sender appends CRC bits so the data divides exactly by the generator.",
+     "quote": "- After division, the remainder so obtained is called as CRC."
+    },
+    {
+     "point": "The receiver divides by the same generator; a non-zero remainder means an error."
+    }
+   ]
+  },
+  "cn.udp.medium1": {
+   "quality_score": 8,
+   "quality_note": "out-of-order point (not a reason UDP suits streaming) replaced by no congestion control and loss tolerance (repair 4)",
+   "reference_answer": "UDP has no connection establishment, so there is no handshake delay before the media starts flowing. It also has no retransmissions and no congestion control, so the sender can keep sending at the rate the stream needs instead of being slowed down; a late or lost packet is simply skipped. Streaming media is loss tolerant but rate sensitive: losing a few packets causes a small glitch, while waiting for retransmissions would make the stream stall. UDP's header is also small (8 bytes against 20 for TCP). If some reliability is needed, the application adds it itself.",
+   "key_points": [
+    {
+     "point": "UDP needs no connection setup, so there is no handshake delay."
+    },
+    {
+     "point": "UDP has no congestion control, so the sender can keep sending at the rate it needs.",
+     "quote": "no congestion control",
+     "followup": "Why is it acceptable for a video stream to lose some packets?",
+     "followup_answer": "Media is loss tolerant: a few lost packets only cause a small glitch, while waiting for retransmissions would make the stream stall."
+    },
+    {
+     "point": "Streaming media tolerates some packet loss but needs a steady rate.",
+     "quote": "streaming multimedia apps (loss tolerant, rate sensitive)",
+     "followup": "If a streaming app needs some reliability over UDP, where is it added?",
+     "followup_answer": "In the application layer: the application adds the reliability or congestion control it needs itself, as HTTP/3 does."
+    }
+   ]
+  },
+  "cn.network_edge_and_access_networks.easy1": {
+   "quality_score": 8,
+   "quality_note": "fine; re-reviewed, correct and clear (repair 4)"
+  },
+  "dbms.entities_and_attributes.easy1": {
+   "quality_score": 8,
+   "quality_note": "duplicate points merged; candidate-key point added (repair 4)",
+   "reference_answer": "A primary key is a set of attributes whose values uniquely identify each entity in an entity set, so no two entities share the same primary-key value. It is chosen from the candidate keys, which are minimal superkeys: sets of attributes that uniquely identify an entity with nothing extra. For example, ID identifies each student. When a strong entity set is turned into a table, its primary key becomes the primary key of that table.",
+   "key_points": [
+    {
+     "point": "A primary key is a set of attributes that uniquely identifies each entity in an entity set.",
+     "followup": "Give an example of a primary key in a university database.",
+     "followup_answer": "The ID attribute of the student entity set, because no two students share the same ID."
+    },
+    {
+     "point": "The primary key is the candidate key chosen to identify the entities.",
+     "quote": "Concepts of superkey, candidate key, and primary key apply to entity sets.",
+     "followup": "What is the difference between a superkey and a candidate key?",
+     "followup_answer": "A superkey is any set of attributes that uniquely identifies an entity; a candidate key is a minimal superkey, with no extra attributes."
+    }
+   ]
+  },
+  "dbms.stored_procedures_and_functions.medium2": {
+   "quality_score": 8,
+   "quality_note": "wrong follow-up answer fixed (IN parameters are not read-only) (repair 4)",
+   "key_points": [
+    {
+     "point": "IN parameters pass a value from the calling program into the procedure.",
+     "followup_answer": "It can be changed inside the procedure like a local variable, but the change is not passed back to the calling program."
+    },
+    {
+     "point": "OUT parameters return a value from the procedure to the calling program."
+    },
+    {
+     "point": "INOUT parameters pass a value in and return the changed value back."
+    }
+   ]
+  },
+  "dbms.key_value_stores_and_redis.medium1": {
+   "quality_score": 8,
+   "quality_note": "points the reference answer failed reworded; colon-namespace trivia moved to the follow-up (repair 4)",
+   "reference_answer": "Redis is an open-source key-value store that keeps its whole database in memory (RAM) and uses the disk only for persistence, so reads and writes are very fast. Every value is stored and fetched by a unique key, and keys often use colons to show a hierarchy, for example user:42:name. Values are not limited to plain strings: Redis supports richer data types such as hashes, lists and sets. This suits caching, session storage, counters and other workloads that need very fast access to data by key rather than complex queries.",
+   "key_points": [
+    {
+     "point": "Redis keeps all its data in memory (RAM), so access is very fast."
+    },
+    {
+     "point": "Each value is stored and fetched by a unique key.",
+     "quote": "2. NOSQL key-value stores: These systems have a simple data model based on fast access by the key to the value associated with the key; the value can be a record or an object or a document or even have a more complex data structure."
+    },
+    {
+     "point": "Values can be richer data types, not only plain strings."
+    }
+   ]
+  },
+  "dbms.null_handling_in_sql.medium2": {
+   "quality_score": 8,
+   "quality_note": "thin question widened to comparisons; generic point replaced by UNKNOWN (repair 4)",
+   "question": "How does SQL treat NULL values in arithmetic operations and in comparisons?",
+   "reference_answer": "In SQL, NULL stands for an unknown or missing value. The result of an arithmetic operation (+, -, *, /) is NULL if any of its inputs is NULL, because arithmetic with an unknown value gives an unknown result. Comparisons work the same way: any comparison involving NULL, such as 1 < NULL, evaluates to a third logical value, UNKNOWN, instead of TRUE or FALSE. A WHERE clause keeps only rows where the condition is TRUE, so tests for NULL must use IS NULL or IS NOT NULL.",
+   "key_points": [
+    {
+     "point": "Arithmetic involving NULL gives NULL."
+    },
+    {
+     "point": "NULL represents an unknown or missing value."
+    },
+    {
+     "point": "A comparison with NULL gives UNKNOWN, not TRUE or FALSE.",
+     "quote": "In other words, any comparison operation involving NULL values would result in an UNKNOWN.",
+     "followup": "Why does WHERE salary = NULL return no rows, and what should you write instead?",
+     "followup_answer": "salary = NULL is UNKNOWN for every row and WHERE keeps only TRUE rows; write salary IS NULL instead."
+    }
+   ]
+  },
+  "dbms.participation_constraints.easy1": {
+   "quality_score": 8,
+   "quality_note": "double-line point the reference failed reworded; partial participation as a follow-up (repair 4)",
+   "reference_answer": "Total participation means every entity in an entity set must take part in at least one relationship in the relationship set. For example, if every student must have an advisor, the participation of student in the advisor relationship is total. In an ER diagram, total participation is drawn as a double line between the entity set and the relationship. If some entities need not take part, the participation is partial; for example, an instructor need not advise any student.",
+   "key_points": [
+    {
+     "point": "Total participation means every entity must take part in at least one relationship."
+    },
+    {
+     "point": "Total participation is drawn as a double line between the entity set and the relationship.",
+     "followup": "What is the opposite of total participation? Give an example.",
+     "followup_answer": "Partial participation: some entities need not take part, for example an instructor need not advise any student."
+    }
+   ]
+  },
+  "dbms.functional_dependency.hard2": {
+   "quality_score": 8,
+   "quality_note": "points shortened; follow-up answer said 'extraneous' for a redundant FD (repair 4)",
+   "reference_answer": "The closure F+ of a set of functional dependencies F is every dependency that can be derived from F. Two sets are equivalent when they have the same closure. A set is minimal when nothing can be removed without changing the closure: no dependency is redundant (derivable from the others) and no attribute is extraneous. An attribute is extraneous if removing it from a dependency leaves the closure unchanged. So to test minimality, remove each dependency, or each attribute of a dependency, in turn and check with closures whether the closure stays the same; if it does, the set was not minimal.",
+   "key_points": [
+    {
+     "point": "The closure F+ is every dependency that can be derived from F.",
+     "followup_answer": "That dependency is redundant, because the others imply it, so it can be removed."
+    },
+    {
+     "point": "An attribute is extraneous if removing it leaves the closure unchanged."
+    },
+    {
+     "point": "A set is minimal when no dependency or attribute can be removed without changing the closure."
+    }
+   ]
+  },
+  "dbms.nested_and_correlated_subqueries.hard2": {
+   "quality_score": 8,
+   "quality_note": "long verbatim points shortened; per-row evaluation and NOT EXISTS points (repair 4)",
+   "reference_answer": "EXISTS checks whether a nested query returns any rows: it is TRUE if the subquery returns at least one row and FALSE if it returns none. With a correlated subquery, the WHERE clause of the subquery refers to the current row of the outer query, so the subquery is evaluated again for each row of the outer query, and EXISTS decides row by row whether that outer row is kept. NOT EXISTS keeps an outer row only when the subquery returns no rows, which is useful for questions like 'employees with no dependents'. The subquery can stop as soon as it finds one matching row, which avoids unnecessary work.",
+   "key_points": [
+    {
+     "point": "EXISTS is true if the nested query returns at least one row, false if it returns none."
+    },
+    {
+     "point": "A correlated subquery is evaluated again for each row of the outer query.",
+     "quote": "A correlated nested query can be defined as a nested query in which the WHERE clause references attributes of a relation declared in the outer query."
+    },
+    {
+     "point": "NOT EXISTS keeps an outer row only when the subquery returns no rows."
+    }
+   ]
+  },
+  "dbms.lock_based_concurrency_control.medium2": {
+   "quality_score": 8,
+   "quality_note": "clumsy point rewritten (repair 4)",
+   "reference_answer": "The lock-compatibility matrix says, for each pair of lock modes, whether they can be held on the same data item by different transactions at the same time. When transaction Ti requests a lock on item Q, it is granted only if the requested mode is compatible with every lock other transactions already hold on Q; otherwise Ti waits until those locks are released. Shared mode is compatible with shared mode, so several transactions can read Q together, but an exclusive lock is compatible with no other lock, so a writer needs the item to itself.",
+   "key_points": [
+    {
+     "point": "A lock is granted only if it is compatible with the locks others already hold."
+    },
+    {
+     "point": "Shared locks are compatible with each other, but an exclusive lock is compatible with no other lock."
+    }
+   ]
+  },
+  "dbms.lossless_decomposition.medium1": {
+   "quality_score": 8,
+   "quality_note": "circular question reworded; points from repair 1 kept (repair 4)",
+   "question": "What is a lossless decomposition, and how can you check that splitting a relation R into R1 and R2 is lossless?"
+  },
+  "dbms.query_processing_and_join_algorithms.easy1": {
+   "quality_score": 8,
+   "quality_note": "redundant 'it is faster' point dropped; relabelled medium (repair 4)",
+   "difficulty": "medium",
+   "key_points": [
+    {
+     "point": "An index-based nested-loop join uses an index on the inner relation's join attribute."
+    },
+    {
+     "point": "The index finds matching rows directly instead of scanning the whole inner table."
+    }
+   ]
+  },
+  "dbms.relational_algebra_joins_and_division.easy1": {
+   "quality_score": 8,
+   "quality_note": "follow-ups fixed (same name but different type was guessed) (repair 4)",
+   "reference_answer": "A natural join combines two relations on all the attributes they have in common, that is, columns with the same name (and data type). No join condition is written: it implicitly creates an equality condition for each pair of attributes with the same name, and keeps only the rows where they are equal. Each common column appears only once in the result, unlike an equi-join, which keeps both copies. A natural join can be applied to more than two tables.",
+   "key_points": [
+    {
+     "point": "A natural join matches rows on the columns with the same name in both tables.",
+     "followup": "What does a natural join return if the two tables have no column names in common?",
+     "followup_answer": "With no common columns there is no join condition, so it returns the Cartesian product of the two tables."
+    },
+    {
+     "point": "No join condition is written; it is implied by the common columns."
+    },
+    {
+     "point": "Each common column appears only once in the result.",
+     "followup": "How is a natural join different from an equi-join?",
+     "followup_answer": "An equi-join keeps both copies of the matching columns, while a natural join keeps only one copy."
+    }
+   ]
+  },
+  "dbms.minimal_cover_of_fds.medium1": {
+   "quality_score": 7,
+   "quality_note": "points the reference failed reworded; kept at 7 as a near-duplicate of dbms.functional_dependency.hard2 (repair 4)",
+   "reference_answer": "A functional dependency in a set F is redundant if it can be derived from the other dependencies in F, so removing it does not change the closure of F. To test it, remove the dependency X -> A and compute X+ using the remaining ones; if X+ still contains A, it was redundant. In the same way, an attribute is extraneous if removing it from a dependency leaves the closure unchanged. A minimal cover is a set of dependencies equivalent to F (same closure) with no redundant dependencies and no extraneous attributes, each with a single attribute on the right-hand side. Finding it means removing every redundant dependency and extraneous attribute.",
+   "key_points": [
+    {
+     "point": "A dependency is redundant if it can be derived from the other dependencies."
+    },
+    {
+     "point": "An attribute is extraneous if removing it leaves the closure unchanged."
+    },
+    {
+     "point": "A minimal cover is an equivalent set with no redundant dependencies or extraneous attributes."
+    }
+   ]
+  },
+  "dbms.full_text_search.medium1": {
+   "quality_score": 8,
+   "quality_note": "both points failed the reference; reworded and reference rewritten (repair 4)",
+   "reference_answer": "LIKE and REGEXP only check whether a string pattern occurs, and with a leading wildcard they cannot use a normal index, so MySQL has to scan every row. Full-text search instead uses a special full-text index of the words in the column, so searching large text is much faster than LIKE. It also gives each matching row a relevance score based on how closely it matches the query, so the best matches can come first, and it supports natural-language and boolean modes. This makes it better for searching large text such as product descriptions or articles.",
+   "key_points": [
+    {
+     "point": "Full-text search uses a full-text index instead of scanning every row like LIKE."
+    },
+    {
+     "point": "Full-text search ranks matching rows by relevance."
+    }
+   ]
+  },
+  "dsa.insertion_sort.medium1": {
+   "quality_score": 8,
+   "quality_note": "wrong follow-up answer fixed ('the array grows') (repair 4)",
+   "key_points": [
+    {
+     "point": "Insertion sort grows a sorted part of the array one element at a time.",
+     "followup_answer": "The sorted part at the start of the array grows by one element each step until it covers the whole array; the array itself does not change size."
+    },
+    {},
+    {
+     "point": "Each new element is inserted into its correct place in the sorted part."
+    }
+   ]
+  },
+  "dsa.insertion_sort.hard2": {
+   "quality_score": 8,
+   "quality_note": "fine; relabelled medium (not hard) (repair 4)",
+   "difficulty": "medium"
+  },
+  "dsa.exhaustive_search.easy1": {
+   "quality_score": 8,
+   "quality_note": "unsupported 'discrete and finite' point replaced; points split (repair 4)",
+   "reference_answer": "Exhaustive search tries every possible candidate solution, checks each one, and keeps the best valid one. For the Travelling Salesman Problem it generates every ordering (permutation) of the cities and picks the shortest tour; for the knapsack problem it generates every subset of items, keeps those that fit, and picks the most valuable. Because it checks everything, it always finds the optimal solution. But the number of candidates grows very fast with the input size (n! permutations or 2^n subsets), so it is impractical for all but small instances.",
+   "key_points": [
+    {
+     "point": "Exhaustive search tries every possible solution and keeps the best one."
+    },
+    {
+     "point": "It always finds the optimal solution.",
+     "quote": "A brute-force search is simple to implement, and will always find a solution if it exists",
+     "followup": "How many candidates does exhaustive search check for knapsack with n items?",
+     "followup_answer": "All 2^n subsets of the items."
+    },
+    {
+     "point": "It is impractical for large inputs because the number of candidates grows very fast.",
+     "quote": "But, its cost is proportional to the number of candidate solutions – which in many practical problems tends to grow very quickly as the size of the problem increases"
+    }
+   ]
+  },
+  "dsa.n_ary_tree_to_binary_tree_conversion.easy1": {
+   "quality_score": 8,
+   "quality_note": "sibling point was imprecise ('next sibling of the left child'); follow-up answer fixed (repair 4)",
+   "reference_answer": "In the left-child right-sibling representation, each node keeps only two pointers. Its left pointer points to its first (leftmost, oldest) child, and its right pointer points to its next sibling, the node immediately to its right at the same level. To convert, keep for each node only the link to its leftmost child, delete the links to its other children, and link each child to its next sibling instead. The result is a binary tree that represents the same n-ary tree.",
+   "key_points": [
+    {
+     "point": "Each node's left pointer points to its first (leftmost) child.",
+     "followup": "A node has three children. Which of them does it point to directly?",
+     "followup_answer": "Only the first (leftmost) child, through its left pointer; the other two are reached through the right (sibling) pointers."
+    },
+    {
+     "point": "Each node's right pointer points to its next sibling."
+    },
+    {
+     "point": "All links to children except the leftmost one are deleted."
+    }
+   ]
+  },
+  "dsa.suffix_tries_and_suffix_trees.medium1": {
+   "quality_score": 8,
+   "quality_note": "points made specific (repair 4)",
+   "reference_answer": "A suffix trie stores every suffix of a text as a path from the root, one character per edge, so it has many chains of nodes with only one child. A suffix tree is the compressed version: each chain of single-child nodes is merged into one edge labelled with a substring. This saves a lot of space while storing the same suffixes. Because every substring of the text is a prefix of some suffix, a pattern can be found by walking down from the root, in time proportional to the pattern length, which makes many string operations such as pattern matching fast.",
+   "key_points": [
+    {
+     "point": "A suffix tree merges chains of single-child nodes of the suffix trie, saving space."
+    },
+    {
+     "point": "Suffix trees make string operations such as pattern matching fast."
+    }
+   ]
+  },
+  "ooad.association.easy1": {
+   "quality_score": 8,
+   "quality_note": "wrong follow-up answer replaced (multiplicity claim) (repair 4)",
+   "key_points": [
+    {},
+    {
+     "followup": "How is a unidirectional association drawn in a class diagram?",
+     "followup_answer": "As a solid line with an open arrowhead pointing to the class that is known."
+    },
+    {}
+   ]
+  },
+  "ooad.facade_and_proxy_patterns.medium2": {
+   "quality_score": 8,
+   "quality_note": "points shortened (repair 4)",
+   "key_points": [
+    {
+     "point": "New proxies can be added without changing the service or the clients."
+    },
+    {
+     "point": "The extra layer between the client and the real object adds code complexity."
+    },
+    {
+     "point": "Forwarding requests through the proxy can delay responses."
+    }
+   ]
+  },
+  "ooad.destructors_and_garbage_collection.medium2": {
+   "quality_score": 8,
+   "quality_note": "wrong follow-up answer fixed (repair 4)",
+   "key_points": [
+    {
+     "point": "The garbage collector finds objects no longer referenced by any part of the program."
+    },
+    {},
+    {
+     "followup_answer": "Garbage collection may never run for that object, for example if memory never runs low or the program exits first, so finalize() is never called."
+    }
+   ]
+  },
+  "ooad.design_pattern_categories.hard2": {
+   "quality_score": 8,
+   "quality_note": "reference answer left out creational patterns; long verbatim points shortened (repair 4)",
+   "reference_answer": "The three categories group patterns by the kind of design problem they solve. Creational patterns deal with how objects are created, for example making sure a class has only one instance. Structural patterns deal with how classes and objects are composed into larger structures, the static structure of the design. Behavioral patterns deal with how objects interact and communicate at run time and how responsibilities are shared among them. This grouping makes us think about a design as three separate questions: how objects are created, how they are composed, and how they interact, which helps choose the right pattern for a problem.",
+   "key_points": [
+    {
+     "point": "Creational patterns deal with how objects are created."
+    },
+    {
+     "point": "Structural patterns deal with how classes and objects are composed."
+    },
+    {
+     "point": "Behavioral patterns deal with how objects interact and communicate."
+    }
+   ]
+  },
+  "ooad.abstract_classes.hard2": {
+   "quality_score": 8,
+   "quality_note": "vague 'contract' point made specific (repair 4)",
+   "key_points": [
+    {},
+    {
+     "point": "A subclass must implement every abstract method or be declared abstract itself."
+    },
+    {
+     "point": "An abstract class can have both abstract and concrete methods."
+    }
+   ]
+  },
+  "ooad.copy_constructor.medium1": {
+   "quality_score": 8,
+   "quality_note": "reference referred to an example the candidate never sees; circular point replaced by the deep-copy mechanism (repair 4)",
+   "reference_answer": "A copy constructor takes an object of the same class as its argument and builds a new object with the same data. To prevent unwanted reference sharing, it creates new copies of mutable fields instead of copying their references (a deep copy), for example this.name = new String(s.name). This matters because otherwise both objects would share the same inner objects, so changing one would silently change the other and cause bugs that are hard to trace.",
+   "key_points": [
+    {},
+    {
+     "point": "It copies mutable fields into new objects instead of sharing their references.",
+     "quote": "// Copy constructor Student(Student s) { this.id = s.id; this.name = new String(s.name);//reference not shared }"
+    }
+   ]
+  },
+  "ooad.model_view_controller.medium2": {
+   "quality_score": 8,
+   "quality_note": "controller point failed the reference; quote replaced (repair 4)",
+   "reference_answer": "MVC divides the application into three parts: the model holds the data and business logic, the view displays the model's data, and the controller turns the user's interactions with the view into actions that the model performs. This neatly separates the graphical interface shown to the user from the code that handles user actions and the data. As a result, the interface can be changed without touching the business logic, the same model can be reused with several views, and each part can be developed and tested separately; the cost is more classes and more indirection.",
+   "key_points": [
+    {
+     "point": "MVC separates the user interface from the code that handles user actions and data."
+    },
+    {
+     "point": "The controller turns user input into actions on the model.",
+     "quote": "Controller: The controller translates the user's interactions with the view into actions that the model will perform."
+    }
+   ]
+  },
+  "ooad.controller_grasp.medium1": {
+   "quality_score": 8,
+   "quality_note": "fine; re-reviewed, correct and clear (repair 4)"
+  },
+  "os.schedulers.easy1": {
+   "quality_score": 8,
+   "quality_note": "queue-ordering and PCB trivia dropped; dispatcher as a follow-up (repair 4)",
+   "reference_answer": "The short-term scheduler (CPU scheduler) selects one of the processes in the ready queue and allocates the CPU to it, deciding which process runs next. The ready queue can be ordered in different ways, for example FIFO or by priority, and holds the PCBs of the processes. The dispatcher then gives the CPU to the selected process. Because it runs very often, every few milliseconds, the short-term scheduler must be fast.",
+   "key_points": [
+    {
+     "point": "The short-term scheduler selects a process from the ready queue."
+    },
+    {
+     "point": "It allocates the CPU to the selected process.",
+     "quote": "Short-term scheduler selects from among the processes in ready queue, and allocates the CPU to one of them",
+     "followup": "Which module actually hands the CPU to the chosen process?",
+     "followup_answer": "The dispatcher: it switches context, switches to user mode and jumps to the right place in the program."
+    }
+   ]
+  },
+  "os.user_level_vs_kernel_level_threads.easy1": {
+   "quality_score": 8,
+   "quality_note": "fine; re-reviewed, correct and clear (repair 4)"
+  },
+  "os.file_allocation_methods.easy1": {
+   "quality_score": 8,
+   "quality_note": "fine; re-reviewed, correct and clear (repair 4)"
+  },
+  "os.dining_philosophers_problem.easy1": {
+   "quality_score": 8,
+   "quality_note": "reference and follow-up now name the deadlock (repair 4)",
+   "reference_answer": "Five philosophers sit at a round table and alternate between thinking and eating. There is one chopstick between each pair of neighbours, and a philosopher needs both adjacent chopsticks to eat, then releases both. The chopsticks are shared resources that only one philosopher can hold at a time, so their use must be coordinated. If every philosopher picks up the left chopstick at the same time, each waits forever for the right one: a deadlock. The problem is to design a protocol that avoids deadlock and starvation.",
+   "key_points": [
+    {},
+    {},
+    {
+     "followup": "What goes wrong if every philosopher picks up the left chopstick at the same time?",
+     "followup_answer": "Each holds one chopstick and waits forever for the other one: a deadlock."
+    }
+   ]
+  },
+  "os.resource_allocation_graph.medium2": {
+   "quality_score": 8,
+   "quality_note": "n-squared trivia point replaced by the single-instance rule (repair 4)",
+   "reference_answer": "With a single instance of each resource type, deadlock detection uses the resource-allocation graph, often reduced to a wait-for graph between processes. The system periodically runs an algorithm that searches the graph for a cycle. A cycle means a set of processes in which each is waiting for a resource held by the next one in the cycle, so none can proceed. With only one instance per resource type, a cycle always means deadlock; with several instances, a cycle means the system may or may not be deadlocked.",
+   "key_points": [
+    {
+     "point": "Deadlock is detected by searching the graph for a cycle."
+    },
+    {
+     "point": "A cycle means each process waits for a resource held by the next one."
+    },
+    {
+     "point": "With one instance per resource type, a cycle always means deadlock.",
+     "quote": "if only one instance per resource type, then deadlock",
+     "followup": "With several instances of each resource type, does a cycle always mean deadlock?",
+     "followup_answer": "No; the system may or may not be deadlocked."
+    }
+   ]
+  },
+  "os.translation_lookaside_buffer.medium2": {
+   "quality_score": 8,
+   "quality_note": "points shortened (repair 4)",
+   "reference_answer": "An ASID (address-space identifier) is stored in each TLB entry and identifies the process the entry belongs to. On a lookup, an entry is used only if its ASID matches the running process, so the TLB can hold entries of several processes at once. Without ASIDs the TLB would have to be flushed at every context switch, and the new process would start with many TLB misses; with ASIDs it need not be flushed, which makes context switches cheaper. The trade-off is extra bits in every TLB entry and extra matching logic, which makes the TLB larger and more complex.",
+   "key_points": [
+    {
+     "point": "Each TLB entry is tagged with the ASID of the process it belongs to."
+    },
+    {
+     "point": "So the TLB need not be flushed at every context switch."
+    },
+    {
+     "point": "The cost is extra bits and logic in every TLB entry."
+    }
+   ]
+  },
+  "os.multilevel_queue_scheduling.medium2": {
+   "quality_score": 8,
+   "quality_note": "reference and follow-up wrongly said a preempted process is moved down; demotion point made specific (repair 4)",
+   "reference_answer": "In a multilevel feedback queue, each queue has absolute priority over the lower-priority queues: the scheduler runs processes from the highest non-empty queue and runs a lower queue only when all higher queues are empty. A process arriving in a higher-priority queue preempts a process running from a lower queue; the preempted process waits in its own queue and is not demoted for being preempted. Processes move between queues based on their behaviour: a new job enters the top queue with a short quantum (for example 8 ms), and if it uses its whole quantum without finishing it is moved down to the next queue. CPU-bound jobs therefore sink to lower queues while short interactive jobs stay at high priority.",
+   "key_points": [
+    {
+     "point": "Higher-priority queues run before lower-priority ones.",
+     "followup_answer": "It is preempted: the higher-priority process gets the CPU and the interrupted process waits in its own queue."
+    },
+    {
+     "point": "A process arriving in a higher queue preempts a process from a lower queue."
+    },
+    {
+     "point": "A job that uses up its whole time quantum is moved down to a lower queue.",
+     "followup_answer": "Its CPU use: a job that uses up its whole quantum without finishing is moved down, so CPU-bound jobs sink and short interactive jobs stay high."
+    }
+   ]
+  },
+  "os.system_calls.medium2": {
+   "quality_score": 8,
+   "quality_note": "generic point replaced by the switch to kernel mode (repair 4)",
+   "reference_answer": "System calls are the interface to the services an operating system provides: a user program cannot touch hardware or the file system directly, so it asks the OS through a system call. The call switches the CPU from user mode to kernel mode, the OS does the work, and returning from the call switches back to user mode. File manipulation is one of the major categories of system calls, with calls such as open, read, write and close; for example, copying a file is a sequence of such calls.",
+   "key_points": [
+    {
+     "point": "System calls are the interface between user programs and OS services."
+    },
+    {
+     "point": "File manipulation is one of the main categories of system calls."
+    },
+    {
+     "point": "A system call switches the CPU from user mode to kernel mode.",
+     "quote": "System call changes mode to kernel, return from call resets it to user",
+     "followup": "Why can't a user program just read the disk directly?",
+     "followup_answer": "Hardware access is privileged and allowed only in kernel mode, so the program has to ask the OS through a system call."
+    }
+   ]
+  },
+  "os.dining_philosophers_problem.medium2": {
+   "quality_score": 8,
+   "quality_note": "reference said 'reduces the chance' of circular wait; it prevents it. Point added (repair 4)",
+   "reference_answer": "In the asymmetric solution, an odd-numbered philosopher picks up the left chopstick first and then the right one, while an even-numbered philosopher picks up the right chopstick first and then the left one. Deadlock needs a circular wait in which every philosopher holds one chopstick and waits for the next. Because neighbours now compete for the same first chopstick, at least one philosopher can always get both chopsticks, so a circular wait cannot form and deadlock cannot occur.",
+   "key_points": [
+    {
+     "point": "Odd-numbered philosophers pick up the left chopstick first."
+    },
+    {
+     "point": "Even-numbered philosophers pick up the right chopstick first."
+    },
+    {
+     "point": "This prevents a circular wait, so deadlock cannot occur.",
+     "quote": "If these protocols are used then circular wait will not exist.",
+     "followup": "Name another way to prevent deadlock in this problem.",
+     "followup_answer": "Allow at most four philosophers at the table at once, or let a philosopher pick up chopsticks only if both are available."
+    }
+   ]
+  },
+  "os.deadlock_prevention.hard2": {
+   "quality_score": 8,
+   "quality_note": "correct after repair 1; re-reviewed (repair 4)"
+  },
+  "os.linux_and_windows_scheduling.easy1": {
+   "quality_score": 8,
+   "quality_note": "good; relabelled medium (repair 4)",
+   "difficulty": "medium"
+  },
+  "os.signals.medium2": {
+   "quality_score": 8,
+   "quality_note": "SIGALRM is set by the process, not 'system-initiated'; vague point replaced by handlers (repair 4)",
+   "reference_answer": "A signal is a software interrupt that tells a process about an asynchronous event. SIGINT is sent when the user presses Control-C at the terminal, and by default it terminates the program. SIGALRM is sent when a timer that the process set with the alarm() function expires, so it is used for timeouts and periodic work. They differ in where they come from: the user at the terminal versus the process's own timer. Every signal has a default handler that the kernel runs, but a process can override the default action of either signal with its own user-defined handler.",
+   "key_points": [
+    {
+     "point": "SIGINT is sent when the user presses Control-C and normally ends the program.",
+     "followup_answer": "Pressing Control-C no longer stops it; the program keeps running."
+    },
+    {
+     "point": "SIGALRM is sent when a timer set with alarm() expires."
+    },
+    {
+     "point": "A process can replace either signal's default action with its own handler.",
+     "quote": "This default action can be overridden by a user-defined signal handler that is called to handle the signal.",
+     "followup": "Why might a program catch SIGINT instead of letting it end the program?",
+     "followup_answer": "To clean up first, for example save data or close files, before exiting."
+    }
+   ]
+  },
+  "os.multiprocessor_scheduling.medium1": {
+   "quality_score": 8,
+   "quality_note": "fine; re-reviewed, correct and clear (repair 4)"
+  },
+  "os.free_space_management.hard2": {
+   "quality_score": 8,
+   "quality_note": "three overlapping memory points made distinct (repair 4)",
+   "reference_answer": "A bit vector uses one bit per disk block to mark it free or used, so its size grows with the disk: a 1-TB disk with 4-KB blocks needs a 32-MB bit map. Finding free blocks is fast only if the whole vector is kept in main memory. That is possible for smaller disks, but for large disks the map takes too much memory, and keeping part of it on disk makes every allocation slower. These limits push designs towards larger blocks or clusters, which shrink the map, and towards other free-space methods such as a linked free list, grouping or counting.",
+   "key_points": [
+    {
+     "point": "A bit vector is fast only if the whole map is kept in main memory."
+    },
+    {
+     "point": "For large disks the map is too big to keep in memory."
+    },
+    {
+     "point": "The map needs one bit per block, so it grows with the disk size."
+    }
+   ]
+  }
+ }
+}

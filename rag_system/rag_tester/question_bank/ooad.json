@@ -4450,64 +4450,43 @@
   "unit": "Design principles",
   "priority": "high",
   "topic_coverage": "good",
-  "question": "Explain how the Dependency Inversion Principle helps reduce coupling between high-level and low-level modules in the given example.",
+  "question": "Explain the Dependency Inversion Principle and how it reduces coupling between high-level and low-level modules.",
   "difficulty": "medium",
-  "reference_answer": "The Dependency Inversion Principle helps reduce coupling by having high-level modules depend on abstractions rather than concrete implementations. In the example, the OrderService depends on the Database interface, not on specific databases like MySQL or MongoDB. This allows the OrderService to remain decoupled from the specific database implementation, making it easier to switch or extend the system without changing the high-level logic.",
+  "reference_answer": "The Dependency Inversion Principle says high-level modules should not depend on low-level modules; both should depend upon abstractions. Abstractions should not depend upon details; details should depend upon abstractions. For example, an OrderService should use a Database interface, and MySQLDatabase and MongoDBDatabase implement it. The goal is to avoid tightly coupled code, which easily breaks the application: the low-level implementation can be changed or swapped without changing the high-level module, and the high-level module can be tested with a fake implementation.",
   "key_points": [
    {
     "point": "High-level modules should not depend on low-level modules, both should depend upon abstractions.",
     "quote": "High level modules should not depend on low level modules, both should depend upon abstractions.",
-    "followup": "Why would changing the database require changes to the OrderService if it's using an abstraction?",
-    "followup_answer": "If the OrderService directly depended on MySQLDatabase, changing to MongoDB would require modifying the OrderService to use MongoDB, which violates the principle of depending on abstractions.",
+    "followup": "What has to change in the high-level module when you switch to a different low-level implementation?",
+    "followup_answer": "Nothing, as long as the new implementation follows the same abstraction (interface).",
     "variants": [
      "high-level modules depend on abstractions, not concrete classes",
      "you don't let high-level code rely on specific database types",
      "dependency inversion says high-level should depend on interfaces",
      "abstractions act as a middle layer between high and low-level code"
-    ],
-    "followup_replies": [
-     "yes",
-     "it would break",
-     "you'd have to rewrite the service",
-     "it would require a lot of changes",
-     "the service would need to be completely rewritten"
     ]
    },
    {
     "point": "Abstractions should not depend upon details, details should depend upon abstractions.",
     "quote": "Abstractions should not depend upon details , details should depend upon abstractions.",
-    "followup": "How does the Database interface ensure that details like MySQL or MongoDB depend on abstractions?",
-    "followup_answer": "The Database interface is an abstraction, and both MySQLDatabase and MongoDBDatabase implement it. This means the concrete classes depend on the abstraction, not the other way around.",
+    "followup": "In the principle, who depends on the interface: the high-level class, the low-level class, or both?",
+    "followup_answer": "Both: the high-level class uses the interface and the low-level class implements it.",
     "variants": [
      "the interface is what the concrete classes implement",
      "details rely on the interface, not on each other"
-    ],
-    "followup_replies": [
-     "they both implement the database interface",
-     "they depend on the same abstraction",
-     "they follow the same interface",
-     "they use the same contract",
-     "they share the same abstraction"
     ]
    },
    {
     "point": "The goal is to avoid tightly coupled code, as it easily breaks the application.",
     "quote": "The goal is to avoid tightly coupled code, as it easily breaks the application.",
-    "followup": "What would happen if the OrderService was tightly coupled to MySQLDatabase?",
-    "followup_answer": "If the OrderService was tightly coupled to MySQLDatabase, switching to MongoDB would require significant changes to the OrderService, increasing the risk of breaking the application.",
+    "followup": "How does depending on an interface make testing easier?",
+    "followup_answer": "You can pass a fake or mock implementation of the interface instead of the real one.",
     "variants": [
      "tight coupling makes the system fragile and hard to change",
      "if the code is tightly coupled, changes break things",
      "coupling makes it hard to switch between implementations",
      "tight coupling leads to more bugs and harder maintenance",
      "the system becomes hard to maintain if it's tightly coupled"
-    ],
-    "followup_replies": [
-     "it would break",
-     "it would need a lot of changes",
-     "it would require rewriting",
-     "it would break the service",
-     "it would be hard to maintain"
     ]
    }
   ],
@@ -4543,10 +4522,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.997
   },
-  "quality_score": 4,
-  "quality_note": "refers to 'the given example'",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 8,
+  "quality_note": "referred to 'the given example'; made general, follow-ups no longer assume the example (repair 6)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.is_a_vs_has_a_relationship.medium2",
@@ -4556,46 +4538,21 @@
   "unit": "Object relationships",
   "priority": "high",
   "topic_coverage": "good",
-  "question": "How does the 'has-a' relationship affect the lifecycle of objects in a system?",
+  "question": "Aggregation and composition are both 'has-a' relationships. How do they differ in terms of the lifetime of the part objects?",
   "difficulty": "medium",
-  "reference_answer": "The 'has-a' relationship implies that the composed object cannot exist independently of the container object. When the container object is deleted, the composed object should also be deleted. This ensures that the lifecycle of the composed object is tied to the lifecycle of the container object, maintaining data integrity and consistency in the system.",
+  "reference_answer": "Both model a whole that contains parts. In aggregation the part can exist independently of the whole: if a department is deleted, its professors still exist. It is drawn with a hollow diamond. In composition the part cannot exist without the whole and is created and destroyed with it: if a house is destroyed, its rooms go too. It is drawn with a filled diamond. So the difference is whether the part's lifetime is tied to the whole's.",
   "key_points": [
    {
-    "point": "The 'has-a' relationship enforces a dependency between objects.",
-    "quote": "The Composition between two entities is done when an object contains a composed object, and the composed object cannot exist without another entity.",
-    "followup": "Why is it important for the composed object to depend on the container object?",
-    "followup_answer": "It ensures that the composed object is properly managed and does not exist in isolation, which maintains the integrity of the system.",
-    "variants": [
-     "the has-a relationship means the composed object depends on the container",
-     "the has-a relationship ties the lifecycle of the composed object to the container",
-     "the composed object is managed by the container, so it doesn't exist alone"
-    ],
-    "followup_replies": [
-     "to keep data consistent",
-     "so it doesn't exist in isolation",
-     "maintains system integrity",
-     "avoids orphaned objects",
-     "prevents data corruption"
-    ]
+    "point": "In aggregation the part can exist independently of the whole.",
+    "quote": "An aggregation specifies a whole-part relationship between an aggregate (a whole) and a constituent part, where the part can exist independently from the aggregate.",
+    "followup": "How is aggregation drawn in UML?",
+    "followup_answer": "With a hollow diamond at the whole's end."
    },
    {
-    "point": "The 'has-a' relationship supports code reuse and flexibility.",
-    "quote": "The Composition allows us to reuse the code.",
-    "followup": "How does the 'has-a' relationship support code reuse?",
-    "followup_answer": "By allowing an object to contain another object, it can reuse the functionality of the composed object without needing to inherit its structure.",
-    "variants": [
-     "the has-a relationship lets objects share functionality without inheritance",
-     "you can reuse code by having one object contain another",
-     "code reuse is possible because objects can contain other objects",
-     "the has-a relationship enables flexible code reuse"
-    ],
-    "followup_replies": [
-     "by reusing existing functionality",
-     "it avoids code duplication",
-     "through composition",
-     "without inheritance",
-     "by containing another object"
-    ]
+    "point": "In composition the part cannot exist without the whole and is destroyed with it.",
+    "quote": "The Composition between two entities is done when an object contains a composed object, and the composed object cannot exist without another entity.",
+    "followup": "Give an example of composition.",
+    "followup_answer": "A house and its rooms: when the house is destroyed, its rooms no longer exist."
    }
   ],
   "source_pages": [
@@ -4634,10 +4591,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.995
   },
-  "quality_score": 4,
-  "quality_note": "vague",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 8,
+  "quality_note": "vague question; now aggregation vs composition lifetime, which the slides state (repair 6)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.single_responsibility_principle.medium1",
@@ -4647,9 +4607,9 @@
   "unit": "Design principles",
   "priority": "high",
   "topic_coverage": "good",
-  "question": "Explain how the Single Responsibility Principle improves software design, using the example of the Order class and its responsibilities.",
+  "question": "Explain the Single Responsibility Principle and how it improves software design. What would you do with an Order class that also processes payments and sends email notifications?",
   "difficulty": "medium",
-  "reference_answer": "The Single Responsibility Principle improves software design by ensuring that each class has only one reason to change. In the example, the Order class was responsible for managing order details, processing payments, and sending notifications, which made it hard to maintain. By splitting these into separate classes like PaymentProcessor and NotificationService, the system becomes more modular, easier to test, and less coupled. This aligns with the principle that each class should have responsibility for only one part of the software’s functionality.",
+  "reference_answer": "The Single Responsibility Principle says a class should have one, and only one, reason to change: each class only does one thing. An Order class that also processes payments and sends emails has three reasons to change, so a change to the payment gateway or the email format risks breaking order handling. Split it into Order, PaymentProcessor and NotificationService, each with one responsibility. Code becomes easier to test and maintain, classes can be reused separately, and future changes have fewer unexpected side effects.",
   "key_points": [
    {
     "point": "A class should have one, and only one, reason to change.",
@@ -4673,16 +4633,10 @@
     ]
    },
    {
-    "point": "Each class only does one thing.",
+    "point": "Each class only does one thing, so the Order class is split into separate classes.",
     "quote": "Each class only does one thing.",
     "followup": "Why is it important for a class to do only one thing?",
-    "followup_answer": "It makes the code more predictable, easier to understand, and reduces the risk of unintended side effects when changes are made.",
-    "variants": [
-     "a class should do only one thing",
-     "each class handles one specific task",
-     "classes should focus on one responsibility",
-     "one thing per class is better for clarity"
-    ],
+    "followup_answer": "It keeps each class small and predictable, so a change to one concern cannot break another.",
     "followup_replies": [
      "it makes code easier to understand",
      "reduces side effects",
@@ -4745,10 +4699,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.992
   },
-  "quality_score": 3,
-  "quality_note": "refers to an 'Order class' example the candidate never sees",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 8,
+  "quality_note": "referred to an Order class example the candidate never sees; example now in the question (repair 6)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.liskov_substitution_principle.medium1",
@@ -4758,9 +4715,9 @@
   "unit": "Design principles",
   "priority": "high",
   "topic_coverage": "good",
-  "question": "Explain how the Liskov Substitution Principle applies to the `DeliveryService` interface and its implementations in the example provided.",
+  "question": "Explain the Liskov Substitution Principle, and how using a common interface instead of forcing inheritance helps you follow it.",
   "difficulty": "medium",
-  "reference_answer": "The Liskov Substitution Principle ensures that a subclass like `DroneDelivery` should be able to replace its superclass `DeliveryPerson` without altering the correctness of the program. In the example, `DroneDelivery` implements the `DeliveryService` interface, which defines the `deliverOrder()` method. This avoids forcing `DroneDelivery` to inherit unnecessary methods like `assignVehicle()`, which it does not need. By using a common interface, the principle is upheld because both classes can be used interchangeably in any context that expects a `DeliveryService`.",
+  "reference_answer": "The Liskov Substitution Principle says derived types must be completely substitutable for their base types: any code written for the parent class must keep working, unchanged, when given an object of a child class. So a child class should never change the characteristics of its parent, for example by throwing an exception from an inherited method or ignoring it. A common violation is forcing inheritance where a subclass cannot honour everything the parent promises, such as a DroneDelivery class inheriting assignVehicle() from DeliveryPerson. Using a common interface instead, for example a DeliveryService interface with just deliverOrder(), lets each class implement only what it can really do, so every implementation can be substituted safely.",
   "key_points": [
    {
     "point": "Derived types must be completely substitutable for their base types.",
@@ -4780,16 +4737,10 @@
     ]
    },
    {
-    "point": "A child class should never change the characteristics of its parent class.",
+    "point": "A child class should never change the behaviour its parent promises.",
     "quote": "A child class should never change the characteristics of its parent class",
     "followup": "What would happen if a subclass changed the behavior of a method from its parent class?",
     "followup_answer": "It would violate the Liskov Substitution Principle, as the subclass would not behave as expected in contexts that rely on the parent class's behavior.",
-    "variants": [
-     "a subclass can't change how its parent's methods work",
-     "the child class must match the parent's method behavior",
-     "the parent's method behavior must stay the same",
-     "subclasses shouldn't alter method functionality"
-    ],
     "followup_replies": [
      "it breaks the substitution principle",
      "unexpected behavior in calling code",
@@ -4799,18 +4750,10 @@
     ]
    },
    {
-    "point": "Using a common interface avoids forcing inheritance.",
+    "point": "A common interface avoids forcing subclasses to inherit methods they cannot support.",
     "quote": "Use a common interface instead of forcing inheritance.",
     "followup": "Why is using a common interface better than forcing inheritance in this case?",
     "followup_answer": "It allows for substitutability without requiring subclasses to inherit and implement unnecessary methods, which could lead to incorrect behavior.",
-    "variants": [
-     "using an interface avoids forcing inheritance",
-     "interfaces let you substitute without inheritance",
-     "common interface prevents unnecessary method inheritance",
-     "you can use a common interface instead of inheritance",
-     "interfaces allow substitutability without inheritance",
-     "interfaces help avoid forced method implementation"
-    ],
     "followup_replies": [
      "it prevents unnecessary method implementation",
      "keeps code clean and flexible",
@@ -4853,10 +4796,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.973
   },
-  "quality_score": 2,
-  "quality_note": "refers to a 'DeliveryService' example the candidate never sees",
-  "curated": false,
-  "interview_priority": 3
+  "quality_score": 8,
+  "quality_note": "referred to a DeliveryService example the candidate never sees; made self-contained (repair 6)",
+  "curated": true,
+  "interview_priority": 3,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.association.easy1",
@@ -4894,8 +4840,8 @@
    {
     "point": "In a unidirectional association, only one class 'knows' about the relationship.",
     "quote": "In a unidirectional association, two classes are related, but only one class 'knows' that the relationship exists.",
-    "followup": "Can a unidirectional association have a multiplicity defined for both classes?",
-    "followup_answer": "No, multiplicity is only defined for the known class in a unidirectional association.",
+    "followup": "How is a unidirectional association drawn in a class diagram?",
+    "followup_answer": "As a solid line with an open arrowhead pointing to the class that is known.",
     "variants": [
      "only one class knows about the unidirectional association",
      "in a unidirectional link, one class is aware of the other",
@@ -4903,13 +4849,6 @@
      "the association is one-way, so only one class is aware",
      "one class is the one that knows the association",
      "the unidirectional association is known by one class only"
-    ],
-    "followup_replies": [
-     "no",
-     "only the known class",
-     "only one class",
-     "no, only the known class",
-     "only the class that knows"
     ]
    },
    {
@@ -4975,10 +4914,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.981
   },
-  "quality_score": 7,
-  "quality_note": "fine",
-  "curated": false,
-  "interview_priority": 2
+  "quality_score": 8,
+  "quality_note": "wrong follow-up answer replaced (multiplicity claim) (repair 4)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch4_2026-10-25"
+  ]
  },
  {
   "id": "ooad.facade_and_proxy_patterns.medium2",
@@ -4993,18 +4935,10 @@
   "reference_answer": "The Proxy Design Pattern supports the Open/Closed Principle by allowing new proxies to be introduced without modifying existing service objects or clients. This means the system remains open for extension but closed for modification. However, it introduces a trade-off by adding an extra layer of indirection between the client and the real subject, which increases code complexity and may delay responses due to additional request forwarding.",
   "key_points": [
    {
-    "point": "The Proxy Design Pattern supports the Open/Closed Principle by allowing new proxies to be introduced without changing the service or clients.",
+    "point": "New proxies can be added without changing the service or the clients.",
     "quote": "A few of the advantages of the Proxy Design Pattern are as follows: The proxy works even if the service object isn’t ready or is not available. Open/Closed Principle - new proxies can be introduced without changing the service or clients.",
     "followup": "What happens if you need to add a new type of access control without changing existing code?",
     "followup_answer": "You can introduce a new protection proxy that implements the same interface, allowing you to extend the system without modifying existing classes.",
-    "variants": [
-     "the proxy lets you add new proxies without changing the existing code",
-     "you can extend the system with new proxies without modifying the service",
-     "the proxy pattern allows adding new access layers without altering the real object",
-     "the open/closed principle is supported by not changing existing classes when adding proxies",
-     "introducing new proxies keeps the system open for extension",
-     "the proxy pattern lets you add new functionality without changing the existing code"
-    ],
     "followup_replies": [
      "introduce a new protection proxy",
      "add a new access control proxy",
@@ -5014,18 +4948,10 @@
     ]
    },
    {
-    "point": "The Proxy Design and its additional layer between client and real subject increases code complexity.",
+    "point": "The extra layer between the client and the real object adds code complexity.",
     "quote": "The Proxy Design Pattern introduces an additional layer between the client and the Real Subject, this contributes to the code complexity.",
     "followup": "How might this additional layer affect the maintainability of the system?",
     "followup_answer": "It may make the system harder to understand and maintain, as the client interacts with a proxy rather than the real object directly.",
-    "variants": [
-     "the proxy adds an extra layer that makes the code more complex",
-     "the proxy introduces more steps, which increases complexity",
-     "the proxy pattern makes the system harder to follow",
-     "the extra layer between client and object adds complexity",
-     "the proxy increases the code's complexity",
-     "the proxy adds indirection, making the code more complex"
-    ],
     "followup_replies": [
      "harder to understand",
      "more steps to track",
@@ -5035,18 +4961,10 @@
     ]
    },
    {
-    "point": "The Proxy Pattern may delay responses due to the additional request forwarding between client and real subject.",
+    "point": "Forwarding requests through the proxy can delay responses.",
     "quote": "The response from the service might get delayed. Additional request forwarding is introduced between the client and the Real Subject.",
     "followup": "In what scenarios might this delay be considered a drawback?",
     "followup_answer": "In performance-critical systems, the added overhead of proxy calls could be a drawback, especially if the proxy is not optimized.",
-    "variants": [
-     "the proxy delays the response because it forwards the request",
-     "the extra layer adds overhead, which delays the response",
-     "the proxy introduces a delay due to extra request forwarding",
-     "the proxy causes a delay because of the extra steps",
-     "the proxy adds a delay in the request flow",
-     "the proxy pattern can slow down the response"
-    ],
     "followup_replies": [
      "performance-critical systems",
      "when speed is important",
@@ -5093,10 +5011,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.055
   },
-  "quality_score": 7,
-  "quality_note": "fine",
-  "curated": false,
-  "interview_priority": 2
+  "quality_score": 8,
+  "quality_note": "points shortened (repair 4)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch4_2026-10-25"
+  ]
  },
  {
   "id": "ooad.destructors_and_garbage_collection.medium2",
@@ -5111,18 +5032,10 @@
   "reference_answer": "The Java garbage collector identifies unreferenced objects by tracing references from active objects in memory. The `finalize()` method is called just prior to garbage collection, allowing for cleanup tasks before an object is destroyed. However, it is not guaranteed to execute, and its use is deprecated in Java 9 due to its unreliable behavior.",
   "key_points": [
    {
-    "point": "The garbage collector identifies unreferenced objects by tracing references from active objects.",
+    "point": "The garbage collector finds objects no longer referenced by any part of the program.",
     "quote": "Garbage Collector is the program running in the background that looks into all the objects in the memory and find out objects that are not referenced by any part of the program.",
     "followup": "What happens to an object that is no longer referenced by any part of the program?",
     "followup_answer": "It is identified as unreferenced and is eligible for garbage collection, meaning it may be deleted and its memory reclaimed.",
-    "variants": [
-     "the garbage collector finds objects that are no longer referenced by tracing from live objects.",
-     "it traces references from active objects to find those that are no longer needed.",
-     "gc uses reference tracing to identify objects that are no longer reachable.",
-     "the gc looks for objects that are not reachable by following references from active objects.",
-     "gc determines which objects are no longer needed by tracing from active objects.",
-     "the garbage collector finds unreferenced objects by following references from live objects."
-    ],
     "followup_replies": [
      "it's eligible for collection.",
      "it may be deleted.",
@@ -5156,7 +5069,7 @@
     "point": "The `finalize()` method is not guaranteed to execute.",
     "quote": "Execution is not guaranteed.",
     "followup": "What could cause the `finalize()` method to not be called?",
-    "followup_answer": "If the garbage collector does not run, or if the object is not properly referenced, the `finalize()` method may not be invoked.",
+    "followup_answer": "Garbage collection may never run for that object, for example if memory never runs low or the program exits first, so finalize() is never called.",
     "variants": [
      "the finalize method might not be called at all.",
      "finalize is not guaranteed to run.",
@@ -5208,10 +5121,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.998
   },
-  "quality_score": 7,
-  "quality_note": "fine",
-  "curated": false,
-  "interview_priority": 2
+  "quality_score": 8,
+  "quality_note": "wrong follow-up answer fixed (repair 4)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch4_2026-10-25"
+  ]
  },
  {
   "id": "ooad.design_pattern_categories.hard2",
@@ -5223,21 +5139,13 @@
   "topic_coverage": "good",
   "question": "What are the implications of grouping design patterns into the three categories—creational, structural, and behavioral—and how does this grouping affect the way we think about object-oriented design?",
   "difficulty": "hard",
-  "reference_answer": "Grouping design patterns into these three categories helps us understand the primary focus of each pattern. Structural patterns deal primarily with the static composition and structure of classes and objects. Behavioral patterns deal primarily with dynamic interaction among classes and objects. This categorization allows us to think about design problems in terms of creation, structure, and interaction, which are core aspects of object-oriented design.",
+  "reference_answer": "The three categories group patterns by the kind of design problem they solve. Creational patterns decide how and which objects get created, hiding the creation logic from the code that uses the objects, for example making sure a class has only one instance. Structural patterns combine classes and objects into larger structures, the static structure of the design. Behavioral patterns deal with how objects interact and communicate at run time and how responsibilities are shared among them. This grouping makes us think about a design as three separate questions: how objects are created, how they are composed, and how they interact, which helps choose the right pattern for a problem.",
   "key_points": [
    {
-    "point": "Creational patterns deal with the process of object creation.",
+    "point": "Creational patterns decide how and which objects get created, hiding the creation logic.",
     "quote": "Creational patterns deal with the process of object creation",
     "followup": "What kind of problems would you use a creational pattern to solve?",
     "followup_answer": "A creational pattern would be used to solve problems related to object creation, such as managing object instantiation or ensuring that a class has only one instance.",
-    "variants": [
-     "creational patterns focus on how objects are created",
-     "they handle object creation processes",
-     "these patterns manage how classes are instantiated",
-     "you use them when you need to control object creation",
-     "they deal with the creation of objects in a system",
-     "they help with object instantiation and management"
-    ],
     "followup_replies": [
      "object creation issues",
      "instantiation problems",
@@ -5247,17 +5155,10 @@
     ]
    },
    {
-    "point": "Structural patterns deal primarily with the static composition and structure of classes and objects.",
+    "point": "Structural patterns combine classes and objects into larger structures.",
     "quote": "Structural patterns, deal primarily with the static composition and structure of classes and objects",
     "followup": "How might a structural pattern help in organizing a system?",
     "followup_answer": "A structural pattern helps in organizing a system by defining how classes and objects are composed to form larger structures, which can improve flexibility and reusability.",
-    "variants": [
-     "they focus on the static structure of objects",
-     "these patterns help with how objects are composed",
-     "they define how classes and objects are connected",
-     "they organize the system's structure",
-     "they manage the composition of classes and objects"
-    ],
     "followup_replies": [
      "organizing how parts fit together",
      "defining how components are connected",
@@ -5267,18 +5168,10 @@
     ]
    },
    {
-    "point": "Behavioral patterns deal primarily with dynamic interaction among classes and objects.",
+    "point": "Behavioral patterns deal with how objects interact and communicate.",
     "quote": "Behavioral patterns, which deal primarily with dynamic interaction among classes and objects",
     "followup": "What kind of behavior would a behavioral pattern address?",
     "followup_answer": "A behavioral pattern would address behaviors such as communication between objects, responsibility assignment, and interaction patterns that govern how objects collaborate.",
-    "variants": [
-     "behavioral patterns deal with how objects interact",
-     "they focus on the dynamic behavior between objects",
-     "these patterns handle communication between classes",
-     "they define how objects collaborate",
-     "they manage the interaction logic in a system",
-     "they address how objects communicate and work together"
-    ],
     "followup_replies": [
      "communication between objects",
      "how objects talk to each other",
@@ -5318,10 +5211,14 @@
    "review": "unreviewed",
    "stated_by_bank": 0.094
   },
-  "quality_score": 7,
-  "quality_note": "fine",
-  "curated": false,
-  "interview_priority": 2
+  "quality_score": 8,
+  "quality_note": "reference answer left out creational patterns; points shortened (repair 4); creational and structural points made specific: an answer about constructors matched them (repair 5)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch4_2026-10-25",
+   "batch5_2026-10-25"
+  ]
  },
  {
   "id": "ooad.abstract_classes.hard2",
@@ -5357,17 +5254,10 @@
     ]
    },
    {
-    "point": "An abstract class enforces a contract for subclasses.",
+    "point": "A subclass must implement every abstract method or be declared abstract itself.",
     "quote": "If a class extends abstract class then either it has to provide implementation of all abstract methods or declare this class as abstract class.",
     "followup": "What happens if a subclass does not implement all abstract methods?",
     "followup_answer": "The subclass must also be declared abstract, which means it cannot be instantiated and must be further extended by another subclass.",
-    "variants": [
-     "subclasses must implement all abstract methods or they become abstract too.",
-     "if a subclass doesn't implement all abstract methods, it must also be abstract.",
-     "abstract classes enforce that subclasses provide their own implementation.",
-     "the contract is enforced by requiring subclasses to implement all abstract methods.",
-     "abstract classes ensure subclasses follow the required interface."
-    ],
     "followup_replies": [
      "it must be declared abstract",
      "it can't be instantiated",
@@ -5377,18 +5267,10 @@
     ]
    },
    {
-    "point": "An abstract class allows for partial implementation.",
+    "point": "An abstract class can have both abstract and concrete methods.",
     "quote": "An abstract class can have both abstract methods (methods without body) as well as nonabstract methods or concrete methods (methods with the body).",
     "followup": "How does this help in designing an inheritance hierarchy?",
     "followup_answer": "It allows the superclass to define common behavior while leaving specific details to be implemented by subclasses, promoting code reuse and reducing duplication.",
-    "variants": [
-     "abstract classes can have both abstract and concrete methods, so they're not fully implemented.",
-     "partial implementation in an abstract class helps reduce code duplication.",
-     "abstract classes allow for shared behavior while leaving specifics to subclasses.",
-     "having some implemented methods in an abstract class makes it more flexible.",
-     "abstract classes provide a common framework for subclasses to build upon.",
-     "abstract classes let you define some behavior and leave others to subclasses."
-    ],
     "followup_replies": [
      "it promotes code reuse",
      "it reduces duplication",
@@ -5437,10 +5319,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.948
   },
-  "quality_score": 7,
-  "quality_note": "fine",
-  "curated": false,
-  "interview_priority": 2
+  "quality_score": 8,
+  "quality_note": "vague 'contract' point made specific (repair 4)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch4_2026-10-25"
+  ]
  },
  {
   "id": "ooad.copy_constructor.medium1",
@@ -5452,7 +5337,7 @@
   "topic_coverage": "good",
   "question": "Explain how a copy constructor prevents unwanted reference sharing and why it's important in object-oriented design.",
   "difficulty": "medium",
-  "reference_answer": "A copy constructor prevents unwanted reference sharing by creating a new object with the same data as the original, but without sharing references to mutable objects. This is important in object-oriented design because it ensures that changes to one object do not unintentionally affect another. In the example, the `name` field is copied using `new String(s.name)`, which avoids sharing the same reference.",
+  "reference_answer": "A copy constructor takes an object of the same class as its argument and builds a new object with the same data. To prevent unwanted reference sharing, it creates new copies of mutable fields instead of copying their references (a deep copy), for example this.name = new String(s.name). This matters because otherwise both objects would share the same inner objects, so changing one would silently change the other and cause bugs that are hard to trace.",
   "key_points": [
    {
     "point": "A copy constructor takes an object of the same class as an argument.",
@@ -5476,15 +5361,10 @@
     ]
    },
    {
-    "point": "A copy constructor prevents unwanted reference sharing.",
-    "quote": "Prevents unwanted reference sharing",
+    "point": "It copies mutable fields into new objects instead of sharing their references.",
+    "quote": "// Copy constructor Student(Student s) { this.id = s.id; this.name = new String(s.name);//reference not shared }",
     "followup": "What could happen if reference sharing was not prevented in a copy constructor?",
     "followup_answer": "Changes made to one object could unintentionally affect another, leading to bugs that are hard to trace.",
-    "variants": [
-     "it prevents objects from having the same reference to data.",
-     "without it, objects might share the same reference.",
-     "it stops objects from sharing mutable references."
-    ],
     "followup_replies": [
      "bugs and unintended changes",
      "data corruption",
@@ -5525,10 +5405,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.001
   },
-  "quality_score": 7,
-  "quality_note": "fine",
-  "curated": false,
-  "interview_priority": 2
+  "quality_score": 8,
+  "quality_note": "reference referred to an example the candidate never sees; circular point replaced by the deep-copy mechanism (repair 4)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch4_2026-10-25"
+  ]
  },
  {
   "id": "ooad.model_view_controller.medium2",
@@ -5540,16 +5423,13 @@
   "topic_coverage": "good",
   "question": "How does the Model-View-Controller pattern help in separating the user interface from the application logic, and what are the implications of this separation?",
   "difficulty": "medium",
-  "reference_answer": "The Model-View-Controller pattern helps in separating the user interface from the application logic by dividing the application into three distinct components: model, view, and controller. This separation ensures that the graphical interface displayed to the user is completely decoupled from the code that manages user actions. As a result, changes in the user interface do not directly affect the business logic or data handling, making the system more maintainable and scalable.",
+  "reference_answer": "MVC divides the application into three parts: the model holds the data and business logic, the view displays the model's data, and the controller turns the user's interactions with the view into actions that the model performs. This neatly separates the graphical interface shown to the user from the code that handles user actions and the data. As a result, the interface can be changed without touching the business logic, the same model can be reused with several views, and each part can be developed and tested separately; the cost is more classes and more indirection.",
   "key_points": [
    {
-    "point": "The pattern ensures the graphical interface is decoupled from the code that manages user actions.",
+    "point": "MVC separates the user interface from the code that handles user actions and data.",
     "quote": "It neatly separates the graphical interface displayed to the user from the code that manages the user actions.",
     "followup": "What happens if the user interface changes but the business logic remains the same?",
     "followup_answer": "The controller and model remain unaffected, allowing for easier maintenance and updates to the view without altering the underlying logic.",
-    "variants": [
-     "the controller makes sure the ui and logic don't interfere"
-    ],
     "followup_replies": [
      "controller and model stay the same",
      "no changes needed in the backend",
@@ -5559,17 +5439,10 @@
     ]
    },
    {
-    "point": "The controller acts as an intermediary between the model and the view.",
-    "quote": "A design pattern for computer software considered to distinguish between the data model, processing control and the user interface.",
+    "point": "The controller turns user input into actions on the model.",
+    "quote": "Controller: The controller translates the user's interactions with the view into actions that the model will perform.",
     "followup": "What role does the controller play in this separation?",
     "followup_answer": "The controller processes user input and updates the model or view accordingly, maintaining the separation between the user interface and the application logic.",
-    "variants": [
-     "the controller connects the view and the model",
-     "the controller handles input and updates the model or view",
-     "the controller acts as a middleman between the view and model",
-     "the controller manages the flow between the view and model",
-     "the controller mediates between the view and the model"
-    ],
     "followup_replies": [
      "it handles user input and updates the model or view",
      "it processes input and updates the model or view",
@@ -5610,10 +5483,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.006
   },
-  "quality_score": 7,
-  "quality_note": "fine",
-  "curated": false,
-  "interview_priority": 2
+  "quality_score": 8,
+  "quality_note": "controller point failed the reference; quote replaced (repair 4)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch4_2026-10-25"
+  ]
  },
  {
   "id": "ooad.command_pattern.easy1",
@@ -5623,22 +5499,15 @@
   "unit": "Design patterns",
   "priority": "high",
   "topic_coverage": "good",
-  "question": "Can you explain what the Command pattern is and how it works, based on what you've learned?",
+  "question": "Explain the Command pattern and how it works.",
   "difficulty": "easy",
-  "reference_answer": "The Command pattern wraps a request into an object, allowing the request to be passed around and executed independently. This pattern is data-driven and falls under behavioral patterns. The invoker object is responsible for finding the appropriate command object to handle the request and execute it. The command object contains all the information needed to perform the action, such as the method name, owner, and arguments.",
+  "reference_answer": "The Command pattern is a behavioral pattern that wraps a request in an object. The command object contains all the information needed to perform the action: the receiver object, the method to call and its arguments. An invoker, such as a button or a menu item, stores the command and asks it to carry out the request by calling execute(), without knowing what the action does. Because requests are objects, they can be queued, logged or undone.",
   "key_points": [
    {
-    "point": "The Command pattern wraps a request into an object.",
+    "point": "The Command pattern wraps a request in an object.",
     "quote": "A request is wrapped under an object as command and passed to an invoker object.",
     "followup": "What is the purpose of wrapping a request into an object?",
     "followup_answer": "Wrapping a request into an object allows the request to be passed around and executed independently, which supports flexibility and decoupling in the system.",
-    "variants": [
-     "the command pattern turns a request into an object so it can be handled later",
-     "you make a request an object so you can pass it around and run it when needed",
-     "by wrapping a request in an object, you can store and execute it independently",
-     "the command pattern lets you treat requests as objects for more flexibility",
-     "the command pattern makes requests into objects to allow decoupling"
-    ],
     "followup_replies": [
      "to pass and execute independently",
      "so it can be stored and run later",
@@ -5648,23 +5517,10 @@
     ]
    },
    {
-    "point": "The Command pattern is data-driven and falls under behavioral patterns.",
-    "quote": "Command pattern is a data-driven design pattern and falls under behavioral patterns.",
-    "followup": "Why is the Command pattern considered data-driven?",
-    "followup_answer": "The Command pattern is data-driven because it encapsulates the request as an object, making the data (the command) the central part of the interaction.",
-    "variants": [
-     "the command pattern is data-driven because it uses objects to represent actions",
-     "since commands are objects, the data is the main part of the interaction",
-     "the command pattern is data-driven because the command object holds the action",
-     "the command pattern is data-driven because the command is the main data structure"
-    ],
-    "followup_replies": [
-     "because it encapsulates the request as an object",
-     "the command is the central part of the interaction",
-     "it makes the data the focus of the interaction",
-     "the command object is the main data structure",
-     "the request is represented as an object"
-    ]
+    "point": "An invoker asks the command to carry out the request without knowing what it does.",
+    "quote": "Invoker: Asks the Command to carry out a request.",
+    "followup": "What extra features does turning requests into objects make easy?",
+    "followup_answer": "Queuing, logging and undoing requests."
    },
    {
     "point": "The command object contains all the information needed to perform the action.",
@@ -5719,10 +5575,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.001
   },
-  "quality_score": 6,
-  "quality_note": "odd phrasing; 'data-driven' key point",
-  "curated": false,
-  "interview_priority": 2
+  "quality_score": 8,
+  "quality_note": "odd phrasing and 'data-driven' point fixed (repair 6)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.association.medium2",
@@ -5734,7 +5593,7 @@
   "topic_coverage": "good",
   "question": "How can an association be used to model a relationship where one class has multiple instances of another class, and what role does multiplicity play in this?",
   "difficulty": "medium",
-  "reference_answer": "An association can model a relationship where one class has multiple instances of another class by using multiplicity adornments on the association line. For example, a Student can have one or more Instructors, which is represented as '1..*'. Multiplicity indicates the number of possible instances of the class associated with a single instance of the other end, allowing the model to express how many objects of one class can be linked to a single object of another class.",
+  "reference_answer": "An association models a link between classes. One object can be linked to many objects of the other class, for example through a collection field: a Person who owns books can be modelled by an owns field holding several Book objects. Multiplicity, written at the end of the association line, gives the number of possible instances of the class associated with a single instance of the other end. Multiplicity can be represented as a single number or a range of numbers, such as 1, 0..1, 1..* or *.",
   "key_points": [
    {
     "point": "Multiplicity indicates the number of possible instances of the class associated with a single instance of the other end.",
@@ -5757,11 +5616,10 @@
     ]
    },
    {
-    "point": "An association can be used to model a relationship where one class has multiple instances of another class.",
+    "point": "One object can be linked to many objects of the other class, e.g. through a collection field.",
     "quote": "An object might store another object in a field. For example, people own books, which might be modeled by an owns field in Person objects.",
     "followup": "How does this differ from a one-to-one relationship?",
     "followup_answer": "In a one-to-one relationship, a single instance of one class is associated with exactly one instance of another class, whereas in this case, a single instance can be associated with multiple instances.",
-    "variants": [],
     "followup_replies": [
      "exactly one",
      "1..1",
@@ -5832,10 +5690,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.997
   },
-  "quality_score": 6,
-  "quality_note": "ok",
-  "curated": false,
-  "interview_priority": 2
+  "quality_score": 8,
+  "quality_note": "point restating the question made specific (repair 6)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.builder_pattern.medium2",
@@ -5845,18 +5706,15 @@
   "unit": "Design patterns",
   "priority": "high",
   "topic_coverage": "good",
-  "question": "Explain how the Builder pattern allows a class to delegate object creation to a builder, and why this is useful for creating different representations of a complex object.",
+  "question": "What problem does the Builder pattern solve, and how does it work?",
   "difficulty": "medium",
-  "reference_answer": "The Builder pattern allows a class to delegate object creation to a builder by encapsulating the construction process in a separate object. This means the class does not need to handle the complex logic of assembling parts. Instead, it can use different builders to create different representations of the same complex object, which simplifies the class and enhances flexibility.",
+  "reference_answer": "The Builder pattern deals with constructing complex objects. Instead of one huge constructor, the steps for creating and assembling the parts are put in a separate Builder object, so the class that needs the object delegates its construction to the builder. The same construction process can then use different builders to create different representations of the complex object. This keeps the construction logic out of the main class and makes complex objects easier to create step by step.",
   "key_points": [
    {
-    "point": "The Builder pattern allows a class to delegate object creation to a builder.",
-    "quote": "A class (the same construction process) can delegate to different Builder objects to create different representations of a complex object.",
+    "point": "The construction of a complex object is moved into a separate Builder object.",
+    "quote": "When the complexity of creating object increases, the Builder pattern can separate out the instantiation process by using another object (a builder) to construct the object.",
     "followup": "What would happen if the class handled the construction of the object directly?",
     "followup_answer": "The class would need to manage the complex logic of assembling parts, which could make it difficult to maintain and extend.",
-    "variants": [
-     "the class delegates building to a separate builder"
-    ],
     "followup_replies": [
      "it gets complicated",
      "it's harder to change",
@@ -5866,37 +5724,16 @@
     ]
    },
    {
-    "point": "The Builder pattern encapsulates the construction process in a separate object.",
+    "point": "The same construction process can use different builders to create different representations.",
     "quote": "The Builder design pattern describes how to solve such problems: ❑Encapsulate creating and assembling the parts of a complex object in a separate Builder object.",
     "followup": "Why is encapsulating the construction process in a separate object beneficial?",
     "followup_answer": "It separates the construction logic from the main class, making the system more modular and easier to maintain.",
-    "variants": [
-     "the construction is handled by a separate object",
-     "the builder holds the building logic",
-     "the builder object handles the construction"
-    ],
     "followup_replies": [
      "it keeps the code organized",
      "it makes it easier to change",
      "it improves modularity",
      "it makes the code cleaner",
      "it separates concerns"
-    ]
-   },
-   {
-    "point": "Using different builders allows for different representations of the same complex object.",
-    "quote": "A class (the same construction process) can delegate to different Builder objects to create different representations of a complex object.",
-    "followup": "How does the Builder pattern support the creation of different representations?",
-    "followup_answer": "By allowing different builders to implement the same interface, the same class can produce various representations of the object without changing its structure.",
-    "variants": [
-     "different builders can create different versions"
-    ],
-    "followup_replies": [
-     "because they share the same interface",
-     "they use the same builder interface",
-     "they implement the same builder",
-     "they follow the same builder contract",
-     "they use a common builder API"
     ]
    }
   ],
@@ -5927,10 +5764,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.993
   },
-  "quality_score": 6,
-  "quality_note": "key points restate the question",
-  "curated": false,
-  "interview_priority": 2
+  "quality_score": 8,
+  "quality_note": "points restated the question (repair 6)",
+  "curated": true,
+  "interview_priority": 2,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.controller_grasp.medium1",
@@ -6040,10 +5880,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.003
   },
-  "quality_score": 7,
-  "quality_note": "fine",
-  "curated": false,
-  "interview_priority": 1
+  "quality_score": 8,
+  "quality_note": "fine; re-reviewed, correct and clear (repair 4)",
+  "curated": true,
+  "interview_priority": 1,
+  "repairs": [
+   "batch4_2026-10-25"
+  ]
  },
  {
   "id": "ooad.indirection_and_pure_fabrication.easy1",
@@ -6157,10 +6000,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.003
   },
-  "quality_score": 6,
-  "quality_note": "ok",
-  "curated": false,
-  "interview_priority": 1
+  "quality_score": 8,
+  "quality_note": "fine; re-reviewed (repair 6)",
+  "curated": true,
+  "interview_priority": 1,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.indirection_and_pure_fabrication.medium2",
@@ -6241,7 +6087,7 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": true,
+  "active": false,
   "core_point": {
    "point": "Pure fabrication enables low coupling by isolating implementation details through indirection, allowing cohesive interfaces to remain independent of specific implementations.",
    "variants": [
@@ -6255,9 +6101,12 @@
    "stated_by_bank": 0.892
   },
   "quality_score": 6,
-  "quality_note": "ok",
+  "quality_note": "asks about indirection but no point covers it; overlaps the easy question. Switched off (repair 6)",
   "curated": false,
-  "interview_priority": 1
+  "interview_priority": 1,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.creator_grasp.easy1",
@@ -6269,7 +6118,7 @@
   "topic_coverage": "good",
   "question": "Explain the Creator pattern in GRASP and why it is important for object design.",
   "difficulty": "easy",
-  "reference_answer": "The Creator pattern in GRASP assigns the responsibility of creating instances of a class to the class that has the most knowledge about when and how to create them. This ensures that object creation is encapsulated and promotes loose coupling. By delegating object creation to the appropriate class, we avoid tight coupling between classes and make the system more maintainable and flexible.",
+  "reference_answer": "The Creator pattern in GRASP decides which class should create instances of another class: assign that responsibility to the class that has the most knowledge about when and how to create them. Usually that is a class that contains, aggregates, records or closely uses the created objects; for example, a Sale contains SalesLineItem objects, so Sale creates them. This keeps creation logic encapsulated in a natural place and avoids adding extra dependencies between classes, which supports low coupling.",
   "key_points": [
    {
     "point": "The Creator pattern assigns the responsibility of creating instances of a class to the class that has the most knowledge about when and how to create them.",
@@ -6293,25 +6142,10 @@
     ]
    },
    {
-    "point": "The Creator pattern promotes loose coupling by decoupling object creation logic from the classes that use the created objects.",
-    "quote": "Promote Loose Coupling: Aim to minimize dependencies between classes by decoupping object creation logic from the classes that use the created objects.",
-    "followup": "How does decoupling object creation logic help in object design?",
-    "followup_answer": "It reduces dependencies between classes, making the system more modular and easier to maintain and extend.",
-    "variants": [
-     "the creator pattern keeps the creation logic separate from the users of the object.",
-     "by separating creation from usage, the system becomes more loosely coupled.",
-     "the creator pattern decouples how objects are made from how they are used.",
-     "object creation is handled in a different place than object usage.",
-     "the creator pattern avoids tight coupling between classes.",
-     "the creator pattern ensures creation logic is not tightly bound to the class that uses it."
-    ],
-    "followup_replies": [
-     "it makes the system more modular",
-     "it reduces dependencies",
-     "it makes the system easier to maintain",
-     "it allows for easier changes",
-     "it improves flexibility"
-    ]
+    "point": "Usually the creator is a class that contains or closely uses the created objects.",
+    "quote": "Since a Sale contains SalesLineItem objects, it should be responsible according to the Creator pattern",
+    "followup": "In a point-of-sale system, which class should create SalesLineItem objects?",
+    "followup_answer": "Sale, because a Sale contains its SalesLineItems."
    },
    {
     "point": "The Creator pattern ensures that object creation is encapsulated within the responsible class.",
@@ -6372,10 +6206,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.944
   },
-  "quality_score": 5,
-  "quality_note": "a key point misstates Creator",
-  "curated": false,
-  "interview_priority": 1
+  "quality_score": 8,
+  "quality_note": "point misstated Creator; now who the creator usually is (repair 6)",
+  "curated": true,
+  "interview_priority": 1,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.anti_patterns.medium2",
@@ -6460,7 +6297,7 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": true,
+  "active": false,
   "core_point": {
    "point": "Vendor Lock-In is an AntiPattern where a system's design depends on a single vendor's proprietary technologies, limiting flexibility and increasing dependency.",
    "variants": [
@@ -6474,9 +6311,12 @@
    "stated_by_bank": 0.009
   },
   "quality_score": 5,
-  "quality_note": "key points are one textbook's specific wording",
+  "quality_note": "one textbook's wording. Switched off (repair 6)",
   "curated": false,
-  "interview_priority": 1
+  "interview_priority": 1,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.low_level_design_approach.easy1",
@@ -6578,7 +6418,7 @@
    "grounding": 0.75,
    "coverage": 0.85
   },
-  "active": true,
+  "active": false,
   "core_point": {
    "point": "Low-level design approach in object-oriented analysis and design specifies the detailed structure and behavior of classes and objects to implement the system's functionality.",
    "variants": [
@@ -6591,10 +6431,13 @@
    "review": "unreviewed",
    "stated_by_bank": 0.965
   },
-  "quality_score": 4,
-  "quality_note": "vague",
+  "quality_score": 5,
+  "quality_note": "vague. Switched off (repair 6)",
   "curated": false,
-  "interview_priority": 1
+  "interview_priority": 1,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.creator_grasp.medium2",
@@ -6696,7 +6539,7 @@
    "grounding": 0.75,
    "coverage": 1.0
   },
-  "active": true,
+  "active": false,
   "core_point": {
    "point": "The Creator pattern centralizes object creation to control instantiation and ensure compatibility with system interactions.",
    "variants": [
@@ -6708,9 +6551,12 @@
    "stated_by_bank": 0.987
   },
   "quality_score": 4,
-  "quality_note": "vague",
+  "quality_note": "vague. Switched off (repair 6)",
   "curated": false,
-  "interview_priority": 1
+  "interview_priority": 1,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.object_memory_allocation.easy1",
@@ -6803,7 +6649,7 @@
    "grounding": 0.75,
    "coverage": 0.85
   },
-  "active": true,
+  "active": false,
   "core_point": {
    "point": "An object in Java has its own memory when it possesses an instance of a class that contains its own data members.",
    "variants": [
@@ -6817,9 +6663,12 @@
    "stated_by_bank": 0.002
   },
   "quality_score": 3,
-  "quality_note": "vague question and key points",
+  "quality_note": "vague question and points. Switched off (repair 6)",
   "curated": false,
-  "interview_priority": 1
+  "interview_priority": 1,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.low_level_design_approach.medium2",
@@ -6918,7 +6767,7 @@
    "grounding": 0.75,
    "coverage": 0.85
   },
-  "active": true,
+  "active": false,
   "core_point": {
    "point": "low-level design ensures flexibility and extensible systems through abstraction and interface definition, with the analysis model providing the foundational structure for these design decisions.",
    "variants": [
@@ -6932,9 +6781,12 @@
    "stated_by_bank": 0.269
   },
   "quality_score": 3,
-  "quality_note": "vague",
+  "quality_note": "vague. Switched off (repair 6)",
   "curated": false,
-  "interview_priority": 1
+  "interview_priority": 1,
+  "repairs": [
+   "batch6_2026-10-25"
+  ]
  },
  {
   "id": "ooad.classes_and_objects.medium1",
@@ -6946,19 +6798,25 @@
   "topic_coverage": "good",
   "question": "Explain how a class and an object are related in Java, and why the Object class is important in this relationship.",
   "difficulty": "medium",
-  "reference_answer": "A class is a blueprint that defines the structure and behavior of objects, while an object is an instance of a class that occupies memory and has specific state and behavior. The Object class is the root of the class hierarchy in Java, meaning every class implicitly inherits from it, providing common methods like equals(), hashCode(), and toString() that are essential for object manipulation.",
+  "reference_answer": "A class is a blueprint: it declares the attributes and methods that its objects will have, but it is only a description. Objects are created from it with new, and each object is an instance of the class. Each object has its own values for the class's attributes (its own state) and shares the behaviour defined by the methods. Every Java class implicitly inherits from Object, the root of the class hierarchy, so every object has common methods such as toString(), equals() and hashCode(), and any object can be referred to by a variable of type Object.",
   "key_points": [
    {
-    "point": "A class is a blueprint that defines the structure and behavior of objects.",
+    "point": "A class is a blueprint; objects are created from it with new.",
     "quote": "A class is a description of a set of objects that share the same attributes, operations, relationships and semantics.",
     "followup": "What happens if you try to create an object without a class?",
     "followup_answer": "You cannot create an object without a class because a class provides the blueprint needed to instantiate an object."
    },
    {
-    "point": "An object is an instance of a class that occupies memory and has specific state and behavior.",
+    "point": "Each object has its own values for the class's attributes (its own state).",
     "quote": "Object: An instance of a class that contains state (attributes) and behavior (methods).",
     "followup": "How would you access the behavior of an object?",
     "followup_answer": "You would access the behavior of an object using the dot (.) operator to call its methods."
+   },
+   {
+    "point": "Every Java class implicitly inherits from Object, the root of the hierarchy.",
+    "quote": "Class Object is the root of the class hierarchy. Every class has Object as a superclass.",
+    "followup": "Name a method every Java object gets from Object.",
+    "followup_answer": "For example toString(), equals() or hashCode()."
    }
   ],
   "source_pages": [
@@ -6986,9 +6844,14 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 3
+  "active": true,
+  "curated": true,
+  "interview_priority": 3,
+  "quality_score": 8,
+  "quality_note": "question asks about the Object class but no point did (repair 5)",
+  "repairs": [
+   "batch5_2026-10-25"
+  ]
  },
  {
   "id": "ooad.dependency_inversion_principle.hard2",
@@ -6998,18 +6861,18 @@
   "unit": "Design principles",
   "priority": "high",
   "topic_coverage": "good",
-  "question": "What happens if the OrderService class directly used MongoDBDatabase instead of the Database abstraction, and how does this relate to the Dependency Inversion Principle?",
+  "question": "An OrderService class saves orders through a Database interface. What goes wrong if it used a concrete MongoDBDatabase class directly instead, and how does this relate to the Dependency Inversion Principle?",
   "difficulty": "hard",
-  "reference_answer": "If the OrderService directly used MongoDBDatabase, it would create a tight coupling between the high-level OrderService and the low-level MongoDBDatabase. This violates the Dependency Inversion Principle, which states that high-level modules should not depend on low-level modules. Instead, both should depend on abstractions. This tight coupling would make the system less flexible and harder to maintain, as changing the database would require modifying the OrderService class.",
+  "reference_answer": "If OrderService used MongoDBDatabase directly, the high-level business class would depend on a low-level concrete class: they would be tightly coupled, and switching to another database, or testing OrderService with a fake one, would mean changing OrderService. The Dependency Inversion Principle says high-level and low-level modules should both depend on abstractions. Depending on the abstraction instead of the concrete class lets the database be swapped without changing OrderService: MongoDBDatabase and MySQLDatabase both implement the Database interface, and the right one is passed in.",
   "key_points": [
    {
-    "point": "Dependency Inversion Principle requires both modules to depend on abstractions.",
+    "point": "High-level and low-level modules should both depend on abstractions.",
     "quote": "High level modules should not depend on low level modules, both should depend upon abstractions.",
     "followup": "Why is it important for both modules to depend on abstractions?",
     "followup_answer": "Because it ensures that changes in the implementation of low-level modules do not affect the high-level modules, improving maintainability and flexibility."
    },
    {
-    "point": "Using abstractions allows for easier substitution of implementations.",
+    "point": "Depending on the abstraction instead of the concrete class lets the database be swapped without changing OrderService.",
     "quote": "Depend on abstractions instead of concrete classes.",
     "followup": "How does using abstractions help when switching from MySQL to MongoDB?",
     "followup_answer": "By using the Database abstraction, the OrderService can work with any implementation of the interface, making it easier to switch databases without changing its code."
@@ -7037,9 +6900,14 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 3
+  "active": true,
+  "curated": true,
+  "interview_priority": 3,
+  "quality_score": 8,
+  "quality_note": "question named classes the candidate never saw; now self-contained (repair 5)",
+  "repairs": [
+   "batch5_2026-10-25"
+  ]
  },
  {
   "id": "ooad.java_object_class.hard2",
@@ -7050,20 +6918,20 @@
   "priority": "high",
   "topic_coverage": "good",
   "question": "Explain how the `toString()` method in the `Object` class is used in Java, and why it's important for developers to override it in their own classes.",
-  "difficulty": "hard",
+  "difficulty": "medium",
   "reference_answer": "The `toString()` method in the `Object` class returns a string representation of an object, typically in the format `ClassName@hashCode`. This default behavior is not very informative for human readers. Developers are encouraged to override this method in their own classes to provide a more meaningful and readable string representation of the object's state, which is especially useful for debugging and logging.",
   "key_points": [
    {
-    "point": "The `toString()` method returns a string in the format `ClassName@hashCode` by default.",
+    "point": "By default toString() returns the class name, '@' and the hash code.",
     "quote": "The toString method for class Object returns a string consisting of the name of the class of which the object is an instance, the at-sign character `@`, and the unsigned hexadecimal representation of the hash code of the object.",
     "followup": "What is the default string representation of an object if you don't override `toString()`?",
     "followup_answer": "It is `ClassName@hashCode`, where `ClassName` is the name of the class and `hashCode` is the object's hash code."
    },
    {
-    "point": "The `toString()` method is part of the `Object` class, which is the root of the class hierarchy.",
-    "quote": "Class Object is the root of the class hierarchy. Every class has Object as a superclass.",
-    "followup": "Why is it important that `toString()` is defined in the `Object` class?",
-    "followup_answer": "Because it ensures that all objects in Java have a default string representation, and it allows subclasses to override this behavior while maintaining consistency across the class hierarchy."
+    "point": "Override it so it returns a readable text representation of the object.",
+    "quote": "In general, the toString method returns a string that \"textually represents\" this object. The result should be a concise but informative representation that is easy for a person to read.",
+    "followup": "Where is an overridden toString() especially useful?",
+    "followup_answer": "In logging, debugging and printing objects, for example System.out.println(obj)."
    }
   ],
   "source_pages": [
@@ -7091,9 +6959,14 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 3
+  "active": true,
+  "curated": true,
+  "interview_priority": 3,
+  "quality_score": 8,
+  "quality_note": "second point (Object is the root) did not answer why to override; not hard (repair 5)",
+  "repairs": [
+   "batch5_2026-10-25"
+  ]
  },
  {
   "id": "ooad.encapsulation.hard2",
@@ -7347,9 +7220,14 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 2
+  "active": true,
+  "curated": true,
+  "interview_priority": 2,
+  "quality_score": 8,
+  "quality_note": "good (repair 5)",
+  "repairs": [
+   "batch5_2026-10-25"
+  ]
  },
  {
   "id": "ooad.destructors_and_garbage_collection.easy1",
@@ -7373,7 +7251,7 @@
     "point": "The execution of the `finalize()` method is not guaranteed.",
     "quote": "Execution is not guaranteed.",
     "followup": "Why might the `finalize()` method not be called even if an object is no longer referenced?",
-    "followup_answer": "Because the garbage collector may decide to reclaim the object's memory at any time, and the `finalize()` method is not guaranteed to be called before that happens."
+    "followup_answer": "Garbage collection may never run for that object, for example if memory never runs low or the program exits first, so finalize() is never called."
    }
   ],
   "source_pages": [
@@ -7397,9 +7275,14 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 2
+  "active": true,
+  "curated": true,
+  "interview_priority": 2,
+  "quality_score": 8,
+  "quality_note": "follow-up answer fixed (repair 5)",
+  "repairs": [
+   "batch5_2026-10-25"
+  ]
  },
  {
   "id": "ooad.abstract_classes.medium1",
@@ -7411,7 +7294,7 @@
   "topic_coverage": "good",
   "question": "Explain how abstract classes support the concept of abstraction in object-oriented design, and why they are useful in an inheritance hierarchy.",
   "difficulty": "medium",
-  "reference_answer": "Abstract classes support abstraction by defining a generalized form that subclasses must implement, while hiding the implementation details from users. They allow for partial implementation, which reduces code duplication and increases reusability. In an inheritance hierarchy, abstract classes serve as a template for common methods, ensuring that subclasses provide specific details while adhering to a shared structure.",
+  "reference_answer": "An abstract class supports abstraction by defining what its subclasses have in common while leaving some details to them. Abstract classes cannot be instantiated, which reinforces their role in abstraction: they describe a general concept rather than a concrete thing. They provide a template for common methods that subclasses must implement, and can also contain concrete methods shared by all subclasses, which reduces duplicated code. In an inheritance hierarchy this gives every subclass the same structure while each fills in its own specific behaviour.",
   "key_points": [
    {
     "point": "Abstract classes provide a template for common methods that subclasses must implement.",
@@ -7454,9 +7337,14 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 2
+  "active": true,
+  "curated": true,
+  "interview_priority": 2,
+  "quality_score": 8,
+  "quality_note": "good (repair 5)",
+  "repairs": [
+   "batch5_2026-10-25"
+  ]
  },
  {
   "id": "ooad.coupling_and_cohesion.medium2",
@@ -7468,19 +7356,25 @@
   "topic_coverage": "good",
   "question": "Explain how low coupling contributes to system maintainability and why it is important to balance it with high cohesion.",
   "difficulty": "medium",
-  "reference_answer": "Low coupling reduces the impact of changes in one class on others, making the system more maintainable. It allows classes to interact through well-defined interfaces, minimizing dependencies. However, it must be balanced with high cohesion to ensure that classes are focused and manageable. A class with low coupling but low cohesion may be hard to understand and reuse. High cohesion ensures that a class has a single, focused responsibility, which complements low coupling by making the system both flexible and maintainable.",
+  "reference_answer": "Low coupling means classes depend little on the details of other classes, so a change in one class has little impact on the others; they interact through well-defined interfaces or abstractions. This makes the system easier to maintain and change. It must be balanced with high cohesion: each class should keep closely related, focused responsibilities. Pushing coupling down by merging everything into a few big classes would give low cohesion, and such classes are hard to understand, reuse and maintain. Together, low coupling and high cohesion keep a design flexible and maintainable.",
   "key_points": [
    {
-    "point": "Low coupling reduces the impact of changes in one class on others.",
+    "point": "Low coupling limits how much a change in one class affects others.",
     "quote": "Low coupling – How can we reduce the impact of change in depended elements on dependent elements? Assign responsibilities so that coupling remains low.",
     "followup": "What happens if two classes are tightly coupled and one changes?",
     "followup_answer": "Changes in one class may require changes in the other, increasing the risk of errors and making the system harder to maintain."
    },
    {
-    "point": "Low coupling allows classes to interact through well-defined interfaces.",
+    "point": "Classes interact through interfaces instead of each other's details.",
     "quote": "Loose coupling occurs when classes are less dependent on the specifics of other classes. This can be achieved by using interfaces, abstract classes, or dependency injection, allowing classes to interact without knowing the implementation details of each other.",
     "followup": "How does using an interface help with low coupling?",
     "followup_answer": "An interface defines a contract that classes can implement without knowing the specific implementation details, reducing direct dependency between classes."
+   },
+   {
+    "point": "High cohesion keeps each class focused on closely related responsibilities.",
+    "quote": "Cohesion - A measure of how strongly related and focused the responsibilities of an element (class, subsystem, etc.)",
+    "followup": "What goes wrong with a class that has low cohesion?",
+    "followup_answer": "It does many unrelated things, so it is hard to understand, reuse and maintain, and is easily affected by change."
    }
   ],
   "source_pages": [
@@ -7508,9 +7402,14 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 2
+  "active": true,
+  "curated": true,
+  "interview_priority": 2,
+  "quality_score": 8,
+  "quality_note": "cohesion half of the question had no point (repair 5)",
+  "repairs": [
+   "batch5_2026-10-25"
+  ]
  },
  {
   "id": "ooad.java_collections_and_list_interface.medium2",
@@ -7559,7 +7458,12 @@
   },
   "active": false,
   "curated": false,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "quality_score": 3,
+  "quality_note": "false premise: the List interface does not make insertion or deletion efficient (ArrayList inserts are O(n)). Kept held back (repair 5)",
+  "repairs": [
+   "batch5_2026-10-25"
+  ]
  },
  {
   "id": "ooad.design_pattern_categories.medium1",
@@ -7606,7 +7510,12 @@
   },
   "active": false,
   "curated": false,
-  "interview_priority": 2
+  "interview_priority": 2,
+  "quality_score": 5,
+  "quality_note": "vague points ('helps understanding/applying'); near-duplicate of the served design_pattern_categories.hard2. Kept held back (repair 5)",
+  "repairs": [
+   "batch5_2026-10-25"
+  ]
  },
  {
   "id": "ooad.this_and_super_keywords.hard2",
@@ -7616,21 +7525,21 @@
   "unit": "Class members and lifecycle",
   "priority": "high",
   "topic_coverage": "good",
-  "question": "What happens if a subclass constructor does not explicitly call a superclass constructor, and how does this relate to the use of the 'this' keyword?",
-  "difficulty": "hard",
-  "reference_answer": "When a subclass constructor does not explicitly call a superclass constructor, the default constructor of the superclass is invoked by default. This is because the object is constructed top-down in inheritance. The 'this' keyword refers to the current instance of the class, and it is used to differentiate between instance variables and parameters with the same name. However, 'this' cannot be used in a constructor to call another constructor of the same class unless it is the first statement.",
+  "question": "What happens if a subclass constructor does not call a superclass constructor explicitly, and when must it call super(...) itself?",
+  "difficulty": "medium",
+  "reference_answer": "Objects are built from the top of the hierarchy down, so a superclass constructor always runs first. If a subclass constructor does not call one explicitly, the compiler inserts super() as its first statement, which calls the superclass's no-argument constructor. If the superclass has no no-argument constructor (for example it only has Shape(int width, int height)), that implicit call fails to compile, so the subclass constructor must call super(...) with the right arguments itself, as its first statement.",
   "key_points": [
    {
-    "point": "The default constructor of the superclass is invoked if not explicitly called.",
+    "point": "The superclass's no-argument constructor is called automatically.",
     "quote": "When the object of subclass is created, constructor of sub class by default invokes the default constructor of super class.",
     "followup": "What happens if the superclass does not have a default constructor?",
     "followup_answer": "In that case, the subclass constructor must explicitly call a constructor of the superclass using the 'super' keyword."
    },
    {
-    "point": "The 'this' keyword cannot be used to call a superclass constructor.",
-    "quote": "The 'super' keyword refers to the superclass, immediately above of the calling class in the hierarchy.",
-    "followup": "Why can't you use 'this' to call a superclass constructor?",
-    "followup_answer": "Because 'this' refers to the current instance, not the superclass, and calling a superclass constructor requires the 'super' keyword."
+    "point": "If the superclass has no no-argument constructor, the subclass must call super(...) explicitly.",
+    "quote": "When the object of subclass is created, constructor of sub class by default invokes the default constructor of super class . Hence, in inheritance the objects are constructed top-down.",
+    "followup": "Where must the super(...) call appear?",
+    "followup_answer": "As the first statement of the subclass constructor."
    }
   ],
   "source_pages": [
@@ -7651,9 +7560,14 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 2
+  "active": true,
+  "curated": true,
+  "interview_priority": 2,
+  "quality_score": 8,
+  "quality_note": "unrelated 'this' half replaced by when super(...) is required (repair 5)",
+  "repairs": [
+   "batch5_2026-10-25"
+  ]
  },
  {
   "id": "ooad.iterator_pattern.hard2",
@@ -7879,13 +7793,13 @@
   "reference_answer": "Protected variation helps manage instability by identifying points of likely change and creating stable interfaces around them. This ensures that changes in one part of the system do not negatively impact other parts. By doing so, it supports the Open-Closed Principle and reduces coupling between components.",
   "key_points": [
    {
-    "point": "Protected variation identifies points of likely change.",
+    "point": "Identify the points in the design that are likely to change.",
     "quote": "Identify points of likely change (variation points) and create a stable interface around them so that changes don’t affect the rest of the system.",
     "followup": "What happens if you don’t identify variation points in your design?",
     "followup_answer": "You risk having changes in one part of the system ripple through and destabilize other parts, increasing complexity and maintenance costs."
    },
    {
-    "point": "Protected variation creates stable interfaces around change points.",
+    "point": "Wrap them behind a stable interface so changes do not spread.",
     "quote": "Identify points of likely change (variation points) and create a stable interface around them so that changes don’t affect the rest of the system.",
     "followup": "Why is creating a stable interface important for system design?",
     "followup_answer": "A stable interface ensures that changes to one part of the system do not require changes to other parts, maintaining consistency and reducing coupling."
@@ -7914,9 +7828,14 @@
    "grounding": 0.5,
    "coverage": 1.0
   },
-  "active": false,
-  "curated": false,
-  "interview_priority": 1
+  "active": true,
+  "curated": true,
+  "interview_priority": 1,
+  "quality_score": 8,
+  "quality_note": "points split into the two steps (repair 5)",
+  "repairs": [
+   "batch5_2026-10-25"
+  ]
  },
  {
   "id": "ooad.object_memory_allocation.medium2",

@@ -1,0 +1,58 @@
+# Runs every test suite on each push and pull request (free on public repositories).
+# Mirrors the Docker image's install: CPU-only torch, the app's part of
+# Requirements_Global.txt pinned by docker/constraints.txt, models pre-downloaded.
+# The Round 1 weights (git LFS) are not checked out; the app falls back to the
+# heuristic evaluator, exactly as the tests expect without them. No Ollama:
+# conftest.py keeps both LLM re-grades off.
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      CAP_FACT_CHECK: "0"
+      CAP_TECH_LLM_GRADE: "0"
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            Requirements_Global.txt
+            docker/constraints.txt
+
+      - name: Install packages
+        run: |
+          pip install torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+          sed '/Slide pipeline and question-bank rebuild/,$d' Requirements_Global.txt > requirements-app.txt
+          pip install -r requirements-app.txt -c docker/constraints.txt
+          pip install pytest faiss-cpu rank-bm25
+
+      - name: Cache models
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ hashFiles('docker/download_models.py') }}
+
+      - name: Download models
+        run: python docker/download_models.py
+
+      - name: App and resume-engine tests
+        working-directory: main_cap/cap
+        run: python -m pytest -q -p no:warnings
+
+      - name: Slide pipeline tests
+        working-directory: rag_system/rag_tester
+        run: python -m pytest -q -p no:warnings slide_rag/tests
+
+      - name: Frontend tests
+        working-directory: main_cap/cap
+        run: for f in test_*.js; do echo "$f"; node "$f" > /dev/null || exit 1; done

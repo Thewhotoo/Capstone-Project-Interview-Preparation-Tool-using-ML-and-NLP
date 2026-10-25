@@ -21,6 +21,9 @@ question never sits in both. Tune thresholds on `team_tune`; report `team_test`.
 Authors in FRESH_AUTHORS are reported as their own `fresh` set and never mixed into tune/test:
 answers added after a round of grader/bank changes, so nothing was ever tuned on them.
 
+Answers on questions whose text or key points changed since they were labelled (label_basis.json)
+are skipped and counted in the "stale" column.
+
 Exit code 1 if any tracked metric is worse than baseline.json by more than its tolerance.
 """
 from __future__ import annotations
@@ -80,6 +83,7 @@ class CachedJudge:
         return self.cache[key]
 
 BASELINE = HERE / "baseline.json"
+LABEL_BASIS = HERE / "label_basis.json"   # the questions as they were when the older sets were labelled
 GOOD_STYLES = {"good", "good_paraphrase", "good_own_words"}
 WRONG_STYLES = {"confident_wrong"}
 # metric -> (higher_is_better, tolerance before the benchmark fails)
@@ -141,12 +145,23 @@ def load_sets() -> dict[str, list[dict]]:
     return sets
 
 
-def evaluate(rows: list[dict], bank: dict, judge=None) -> tuple[dict, list[dict]]:
-    graded, kp_total, kp_exact = [], 0, 0
+def _stale(question_id: str, q, basis: dict) -> bool:
+    """True when the question or its key points changed since the answer was labelled
+    (the labels no longer describe this question). Sets labelled later (human) aren't in
+    the basis and are never stale."""
+    b = basis.get(question_id)
+    return b is not None and (b["question"] != q.text or b["key_points"] != [k.point for k in q.key_points])
+
+
+def evaluate(rows: list[dict], bank: dict, judge=None, basis: dict | None = None) -> tuple[dict, list[dict]]:
+    graded, kp_total, kp_exact, stale = [], 0, 0, 0
     fu_n = fu_ok = wrong_fu_n = wrong_fu_accepted = 0
     for x in rows:
         q = bank.get(x["question_id"])
         if q is None:
+            continue
+        if basis and _stale(x["question_id"], q, basis):
+            stale += 1
             continue
         g = grade_answer(q, x["answer"])
         if judge is not None:   # the end-of-interview score: fast grade blended with the LLM re-grade
@@ -196,6 +211,7 @@ def evaluate(rows: list[dict], bank: dict, judge=None) -> tuple[dict, list[dict]
 
     m = {
         "answers": len(graded),
+        "stale_skipped": stale,
         "keypoint_agreement": round(kp_exact / kp_total, 3) if kp_total else None,
         "decision_agreement": round(float(np.mean((s >= GOOD_SCORE) == (h >= GOOD_SCORE))), 3),
         "pearson_r": round(float(np.corrcoef(s, h)[0, 1]), 3),
@@ -238,15 +254,16 @@ def main() -> int:
 
     bank = {q.id: q for q in load_bank(curated=False)}
     judge = CachedJudge() if args.llm else None
+    basis = json.loads(LABEL_BASIS.read_text(encoding="utf-8"))["questions"] if LABEL_BASIS.exists() else {}
     baseline_file = HERE / "baseline_llm.json" if args.llm else BASELINE
     results, details = {}, {}
     for name, rows in load_sets().items():
         if rows:
-            results[name], details[name] = evaluate(rows, bank, judge)
+            results[name], details[name] = evaluate(rows, bank, judge, basis)
 
-    cols = ["answers", "keypoint_agreement", "decision_agreement", "pearson_r", "mean_abs_diff", "human_avg",
+    cols = ["answers", "stale_skipped", "keypoint_agreement", "decision_agreement", "pearson_r", "mean_abs_diff", "human_avg",
             "grader_avg", "pair_order", "good_avg", "confident_wrong_avg", "followup_accuracy", "wrong_followups_accepted"]
-    short = ["n", "kp_agree", "decision", "r", "|diff|", "human", "grader", "pair_ord", "good", "conf_wrong", "fu_acc", "fu_wrong_ok"]
+    short = ["n", "stale", "kp_agree", "decision", "r", "|diff|", "human", "grader", "pair_ord", "good", "conf_wrong", "fu_acc", "fu_wrong_ok"]
     print("\n" + "set".ljust(11) + "".join(c.rjust(11) for c in short))
     for name, m in results.items():
         print(name.ljust(11) + "".join(("-" if m.get(c) is None else str(m[c])).rjust(11) for c in cols))

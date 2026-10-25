@@ -12,9 +12,9 @@ Everything a new machine needs, beyond `git clone`. The short version is in [`RE
 |---|---|
 | **OS** | Tested on Windows 11. Nothing is Windows-specific, so Linux and macOS should work but haven't been tested. |
 | **Python 3.12** (64-bit) | Tested on 3.12.10. Tick "Add python.exe to PATH" when installing on Windows. |
-| **RAM** | The server uses about **2.8 GB** once all models are loaded (measured). 8 GB minimum; 16 GB is comfortable with a browser open. |
+| **RAM** | The server uses about **2.8 GB** once all models are loaded (measured), plus up to ~1 GB for the local LLM when it doesn't fit in GPU memory. 8 GB minimum (close the browser's other tabs); 16 GB is comfortable. |
 | **Disk** | About **5 GB** free: Python packages (0.5 GB with CPU-only PyTorch, about 2.5 GB with the CUDA build), models downloaded on first run (about 1.8 GB, see below) and the evaluator weights (735 MB). |
-| **GPU** | **Not needed.** Everything the app does at interview time runs on the CPU. |
+| **GPU** | **Recommended** for the local LLM: an NVIDIA GPU with ~3 GB free memory runs `qwen3:4b` (tested on an RTX 3050 4 GB laptop, ~3.5 s per call). Without a GPU, Ollama runs it on the CPU, much more slowly. Everything else runs on the CPU. |
 | **Internet** | Needed on the **first run** (model downloads) and **whenever the page loads**: the browser fetches MediaPipe (face tracking) from `cdn.jsdelivr.net` and fonts from Google Fonts. |
 
 ### Python packages
@@ -25,6 +25,17 @@ pip install torch --index-url https://download.pytorch.org/whl/cpu
 
 pip install -r Requirements_Global.txt
 ```
+
+### Local LLM (required): Ollama
+
+The résumé interview re-grades answers in the background with a small local LLM. **`python app.py` refuses to start without it** and prints what to install.
+
+| Need | Details |
+|---|---|
+| **Ollama** | [ollama.com](https://ollama.com) (Windows: `winget install Ollama.Ollama`), tested with 0.40. The app starts the Ollama server itself if it's installed but not running. |
+| **A model** | `ollama pull qwen3:4b` (about 2.5 GB; grades best) or `ollama pull qwen2.5:3b` (about 1.9 GB; lighter). The first one installed is used. |
+
+Not installable with pip: it's a separate program, like a database. `CAP_ALLOW_NO_LLM=1` starts the app without it (not recommended).
 
 ### Git LFS, for the Round 1 evaluator weights
 

@@ -36,7 +36,19 @@ pip install -r main_cap/cap/requirements.txt
 ```
 (See the torch note in `requirements.txt` if you're on a CPU-only machine.)
 
-## 4. Run
+## 4. Install the local LLM (required)
+Résumé-interview answers are re-graded in the background by a small local LLM served by
+[Ollama](https://ollama.com); it measurably improves grading (see
+`main_cap/cap/benchmarks/README.md`). **The app will not start without it.**
+```bash
+# Windows: winget install Ollama.Ollama   (macOS/Linux: https://ollama.com/download)
+ollama pull qwen3:4b        # ~2.5 GB, grades best; or: ollama pull qwen2.5:3b (~1.9 GB, lighter)
+```
+You don't need to start Ollama yourself: if it's installed but not running, the app starts it
+(the first start can take ~20 s). If something is missing, `python app.py` stops with a message
+saying exactly what to install or run.
+
+## 5. Run
 ```bash
 cd main_cap/cap
 python app.py
@@ -54,17 +66,10 @@ python app.py
   it's absent.)
 - CPU-only is fine; expect a few seconds per evaluated answer.
 
-## Optional: sharper résumé-interview grading with a local LLM
-If [Ollama](https://ollama.com) is running with `qwen3:4b` (preferred) or `qwen2.5:3b`, the Resume
-Discussion automatically re-grades each answer in the background with it (a
-technical fact check plus a rubric grade), and the end-of-session report uses those
-grades. qwen3:4b grades noticeably better; qwen2.5:3b is lighter (~2 GB vs ~3 GB of GPU memory):
-```bash
-# Windows: winget install Ollama.Ollama   (macOS/Linux: see ollama.com)
-ollama pull qwen3:4b        # or: ollama pull qwen2.5:3b
-```
-Without Ollama nothing changes: answers keep the fast built-in score. Set
-`CAP_FACT_CHECK=0` to turn it off even when Ollama is running, or `1` to force it.
+## Running without the LLM (not recommended)
+Set `CAP_ALLOW_NO_LLM=1` to start anyway; résumé answers then get only the fast evidence
+score (noticeably weaker on technically wrong answers). If Ollama crashes during an
+interview, the session carries on with the fast score instead of failing.
 
 ## What you'll see (current behavior)
 - Upload a résumé → personalized, résumé-grounded interview → per-answer scores
@@ -72,8 +77,8 @@ Without Ollama nothing changes: answers keep the fast built-in score. Set
 - Non-answers ("idk"), gibberish, keyword-dumps, markup/code, and off-topic
   answers correctly score **poor**; concrete, grounded answers score well.
 - The report's narrative is generated from the actual per-turn signals (no fixed
-  templates) and is honest that it does **not** independently verify the factual
-  correctness of technical claims.
+  templates). Technical claims are checked by the local LLM fact-checker, and the
+  report says so, describing it as a second opinion that can be wrong.
 
 ## Tests
 ```bash

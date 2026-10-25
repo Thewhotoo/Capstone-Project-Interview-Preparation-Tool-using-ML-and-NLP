@@ -11,8 +11,10 @@
 Answer sets (all labelled per key point covered/partial/missing + an `overall` 0..1):
   llm400   output_questions.json        400 LLM-written answers, 8 styles (round 2 eval)
   mine40   my_answers.json              40 answers typed by a team member (+ follow-up replies)
-  team     real_set/*_answers.json      team answers written to the ANSWER_PROMPT.md brief
-                                        (human-sounding styles + follow-up replies), checked by each member
+  team     real_set/*_answers.json      LLM-written answers in human-sounding styles (ANSWER_PROMPT.md),
+                                        LLM-drafted labels corrected by each member
+  human    human_set/gold.json          real answers typed by people, each labelled blind by two
+                                        others (human_eval.py); the set to report as human-graded
 
 The team set is split by question id (crc32 parity) into "tune" and "test" halves, so the same
 question never sits in both. Tune thresholds on `team_tune`; report `team_test`.
@@ -129,6 +131,9 @@ def load_sets() -> dict[str, list[dict]]:
             continue
         author = path.stem.split("_")[0]
         team += [{**x, "author": author} for x in items if x.get("answer", "").strip()]
+    gold = HERE / "human_set" / "gold.json"   # real answers, blind human labels (human_eval.py)
+    if gold.exists():
+        sets["human"] = json.loads(gold.read_text(encoding="utf-8"))
     sets["fresh"] = [x for x in team if x["author"] in FRESH_AUTHORS]
     team = [x for x in team if x["author"] not in FRESH_AUTHORS]
     sets["team_tune"] = [x for x in team if zlib.crc32(x["question_id"].encode()) % 2 == 0]

@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import logging
 import re
+from dataclasses import dataclass
 
 from resume_engine.concept_gazetteer import CONCEPTS
 from resume_engine.confidence import Confidence
@@ -218,6 +219,58 @@ def _extract_technologies(title_line: str, body_lines: list[str]) -> tuple[list[
     return found, had_labeled_line
 
 
+# "• PowerBI: Built a dashboard ..." -- a projects section written as bullets,
+# each naming its project before a colon, with no separate title lines.
+_COLON_BULLET = re.compile(r"^\s*[•◦▪●\-–*]\s*([A-Z0-9][^:]{0,60}?)\s*:\s+(\S.*)$")
+# Labels that appear as "Label: value" lines INSIDE a normal project entry --
+# never project titles.
+_NOT_A_PROJECT_TITLE = {
+    "tech", "technologies", "technology", "tech stack", "stack", "tools", "tools used", "built with",
+    "skills", "languages", "github", "link", "links", "demo", "role", "duration", "team", "team size",
+    "tools & technologies used", "tools and technologies used", "result", "results", "impact", "outcome",
+}
+
+
+@dataclass
+class _TextEntry:
+    """Text-level stand-in for `_entry_clustering.Entry` (same attributes the parse loop reads)."""
+    header_text: str
+    body_lines: list[str]
+    header_is_corroborated: bool = False
+
+
+def _colon_title(line: str) -> tuple[str, str] | None:
+    match = _COLON_BULLET.match(line)
+    if not match:
+        return None
+    title = match.group(1).strip()
+    if title.lower() in _NOT_A_PROJECT_TITLE or len(title.split()) > 6:
+        return None
+    return title, match.group(2).strip()
+
+
+def _split_colon_bullet_entries(entries) -> list:
+    """Splits an entry with no title line whose body is a list of
+    "• Name: description" bullets into one entry per bullet (continuation
+    lines stay with their bullet). Needs 2+ such bullets, so a normal project
+    with one "• Result: ..." line is left alone."""
+    out = []
+    for entry in entries:
+        lines = entry.body_lines
+        titled = [_colon_title(line) for line in lines]
+        if entry.header_text.strip() or sum(t is not None for t in titled) < 2 or titled[0] is None:
+            out.append(entry)
+            continue
+        current = None
+        for line, titled_line in zip(lines, titled):
+            if titled_line is not None:
+                current = _TextEntry(header_text=titled_line[0], body_lines=[titled_line[1]])
+                out.append(current)
+            else:
+                current.body_lines.append(line)
+    return out
+
+
 def _extract_concepts(text: str) -> list[str]:
     """KeyBERT proposes candidate keyphrases; only phrases matching
     `concept_gazetteer.py` are kept -- bounded, deterministic given fixed
@@ -252,7 +305,7 @@ class ProjectParser:
             return ParserResult(entities=[], confidences=[], observations=[])
 
         entry_spans = strip_section_header_line(section.spans, section.raw_header_text)
-        entries = cluster_entries(entry_spans, doc.body_font_size)
+        entries = _split_colon_bullet_entries(cluster_entries(entry_spans, doc.body_font_size))
         if not entries:
             return ParserResult(
                 entities=[],

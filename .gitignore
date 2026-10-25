@@ -89,3 +89,7 @@ integration_checks/data/overall_v5_1088/
 # --- exception: the deployed Round 1 evaluator weights ARE in the repo, via Git LFS
 # (see .gitattributes; clone with Git LFS installed or you get a small pointer file) ---
 !main_cap/cap/deployed_model_overall_single_v5_1088/best_checkpoint_weights.pt
+
+# --- benchmark gold built from real people's resumes (PII) ---
+main_cap/cap/benchmarks/**/private/
+main_cap/cap/benchmarks/external/data/

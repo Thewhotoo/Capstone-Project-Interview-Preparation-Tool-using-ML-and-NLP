@@ -250,6 +250,31 @@ def record_resume_discussion_turn(conversation_id: str, answer: str, reply: dict
         live.current_question = reply["next_question"]
 
 
+# Fields of a turn's evaluation that a background LLM re-grade replaces; everything
+# else saved with the turn (improved_answer, coaching_note, tech_consistency, ...)
+# was derived from the answer itself and is kept.
+_REGRADE_FIELDS = ("overall_score", "grade", "confidence", "confidence_rationale", "reasoning")
+
+
+def _apply_regrades(session: InterviewSession, evaluations: list) -> None:
+    """Overwrite each saved turn's score with the end-of-session evaluation
+    (which includes finished background LLM re-grades). Turns and evaluations
+    line up one-to-one, in order -- one evaluation per answered turn."""
+    turns = sorted(session.turns, key=lambda t: t.turn_number or 0)
+    if len(turns) != len(evaluations):
+        logger.warning("re-grade not saved: %d turns vs %d evaluations", len(turns), len(evaluations))
+        return
+    for turn, evaluation in zip(turns, evaluations):
+        if evaluation.get("overall_score") == turn.overall_score:
+            continue
+        updated = dict(turn.evaluation or {})  # new dict, so the JSON column is marked dirty
+        updated.update({k: evaluation.get(k) for k in _REGRADE_FIELDS if k in evaluation})
+        updated["llm_regraded"] = True
+        turn.evaluation = updated
+        turn.overall_score = evaluation.get("overall_score")
+        turn.grade = evaluation.get("grade")
+
+
 def finish_resume_discussion(conversation_id: str, end_payload: dict, attention_metrics: Any) -> None:
     """`end_payload` is conversation_engine.end_conversation's summary."""
     live = _live.pop(conversation_id, None)
@@ -259,6 +284,8 @@ def finish_resume_discussion(conversation_id: str, end_payload: dict, attention_
     if session is None:
         return
     integrity = end_payload.get("integrity") or {"terminated": False}
+    if end_payload.get("regraded_turns"):
+        _apply_regrades(session, end_payload.get("evaluations") or [])
     # Per-turn evaluations already live in session_turns; keep the rest.
     summary = {k: v for k, v in end_payload.items() if k != "evaluations"}
     _finish(session, SESSION_TERMINATED if integrity.get("terminated") else SESSION_COMPLETED,

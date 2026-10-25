@@ -331,3 +331,46 @@ def test_contamination_from_a_different_section_still_leaks_into_company_field(
     # Honest documentation of the remaining contamination, not a false claim
     # that this resume's exact reproduction is fully resolved.
     assert result.entities[0]["company"] == "Data Analysis Crystal Hues Limited"
+
+
+# ── Two-line headers: title and company on separate lines ─────────────────────
+
+def _two_line_entry(make_section, make_text_span, make_document_model, header, label, body):
+    spans = [
+        make_text_span(text=header, bbox=(72.0, 72.0, 300.0, 82.0), is_bold=True),
+        make_text_span(text=label, bbox=(72.0, 86.0, 300.0, 96.0)),
+        make_text_span(text=body, bbox=(72.0, 100.0, 400.0, 110.0)),
+    ]
+    section = make_section(label="experience", raw_header_text="", spans=spans, header_confidence=0.9)
+    doc = make_document_model(spans=spans, body_font_size=10.0)
+    return ExperienceParser().parse({"experience": section}, doc).entities[0]
+
+
+def test_company_on_the_line_under_a_title_header(make_section, make_text_span, make_document_model):
+    e = _two_line_entry(make_section, make_text_span, make_document_model,
+                        "Software Developer March 2022 - March 2025", "Gravity Tech - 123 Anywhere St., Any City",
+                        "Developed and maintained digital applications.")
+    assert (e["role"], e["company"]) == ("Software Developer", "Gravity Tech")
+    assert e["summary"] == "Developed and maintained digital applications."
+
+
+def test_title_on_the_line_under_a_company_header(make_section, make_text_span, make_document_model):
+    e = _two_line_entry(make_section, make_text_span, make_document_model,
+                        "ForGood.ai [ ] January 2025 - Present", "Software Developer Bengaluru, India",
+                        "Architected a multi-agent copilot.")
+    assert (e["role"], e["company"]) == ("Software Developer", "ForGood.ai")
+
+
+def test_title_under_company_marker_header_keeps_last_title_word(make_section, make_text_span, make_document_model):
+    e = _two_line_entry(make_section, make_text_span, make_document_model,
+                        "Hindustan Aeronautics Limited 2024 - 2024", "Mobile Development Intern Bengaluru, India",
+                        "Focus on research of rotary wing aircraft.")
+    assert (e["role"], e["company"]) == ("Mobile Development Intern", "Hindustan Aeronautics Limited")
+
+
+def test_description_line_under_header_is_not_taken_as_company(make_section, make_text_span, make_document_model):
+    e = _two_line_entry(make_section, make_text_span, make_document_model,
+                        "Software Developer 2022 - 2025", "Developed internal tools for the sales team",
+                        "Maintained the CI pipeline.")
+    assert e["company"] == ""
+    assert e["role"] == "Software Developer"

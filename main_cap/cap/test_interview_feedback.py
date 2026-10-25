@@ -7,7 +7,8 @@ import unittest
 
 import conversation_engine
 from candidate_profile_generator import CandidateProfile, ProjectEntry
-from interview_feedback import DEPTH, GROUNDING, RELEVANCE, SCOPE_NOTE, build_feedback
+from interview_feedback import DEPTH, GROUNDING, RELEVANCE, SCOPE_NOTE, TECH_MISMATCH, build_feedback
+from tech_consistency_flag import NOT_INDEPENDENTLY_VERIFIED, POSSIBLE_MISMATCH
 
 
 def _ev(overall, depth=None, completeness=None, ownership=None, grounding=None):
@@ -55,6 +56,47 @@ class TestBuildFeedback(unittest.TestCase):
         self.assertEqual(build_feedback([])["stats"]["questions"], 0)
 
 
+class TestTechConsistencyInFeedback(unittest.TestCase):
+    """build_feedback never calls the NLI model itself -- it only reads the
+    already-computed per-turn flags, so these are plain unit tests."""
+
+    def _timeline(self, *project_refs):
+        return [{"turn_number": i + 1, "project_reference": ref} for i, ref in enumerate(project_refs)]
+
+    def test_no_flags_means_no_extra_focus_area(self):
+        fb = build_feedback(
+            [_ev(0.8, depth=0.9, ownership=0.8, grounding=0.6)],
+            self._timeline("Project A"),
+            [NOT_INDEPENDENTLY_VERIFIED],
+        )
+        self.assertFalse(any(f["dimension"] == TECH_MISMATCH for f in fb["focus_areas"]))
+        self.assertFalse(fb["stats"]["tech_mismatch_flagged"])
+
+    def test_mismatch_adds_a_named_focus_area_first(self):
+        fb = build_feedback(
+            [_ev(0.8, depth=0.9, ownership=0.8, grounding=0.6), _ev(0.2, depth=0.1)],
+            self._timeline("Project A", "Project A"),
+            [POSSIBLE_MISMATCH, POSSIBLE_MISMATCH],
+        )
+        self.assertEqual(fb["focus_areas"][0]["dimension"], TECH_MISMATCH)
+        self.assertIn("Project A", fb["focus_areas"][0]["tip"])
+        self.assertTrue(fb["stats"]["tech_mismatch_flagged"])
+
+    def test_mismatch_names_multiple_distinct_projects(self):
+        fb = build_feedback(
+            [_ev(0.8, depth=0.9), _ev(0.7, depth=0.8)],
+            self._timeline("Project A", "Project B"),
+            [POSSIBLE_MISMATCH, POSSIBLE_MISMATCH],
+        )
+        tip = fb["focus_areas"][0]["tip"]
+        self.assertIn("Project A", tip)
+        self.assertIn("Project B", tip)
+
+    def test_missing_flags_list_does_not_break_feedback(self):
+        fb = build_feedback([_ev(0.8, depth=0.9, ownership=0.8, grounding=0.6)])
+        self.assertFalse(any(f["dimension"] == TECH_MISMATCH for f in fb["focus_areas"]))
+
+
 class TestEndConversationCarriesFeedback(unittest.TestCase):
     def setUp(self):
         # don't depend on whatever evaluator an earlier test left active
@@ -83,3 +125,12 @@ class TestEndConversationCarriesFeedback(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestScopeNoteAfterFactCheck(unittest.TestCase):
+    def test_scope_note_mentions_the_ai_fact_check_only_when_it_ran(self):
+        from interview_feedback import SCOPE_NOTE_FACT_CHECKED
+        plain = {"overall_score": 0.7, "grade": "good", "dimensions": [], "reasoning": "Technical correctness: not independently verified"}
+        checked = dict(plain, reasoning="Technical correctness: checked by an automated AI fact-checker (qwen3:4b) running locally")
+        self.assertEqual(build_feedback([plain])["scope_note"], SCOPE_NOTE)
+        self.assertEqual(build_feedback([plain, checked])["scope_note"], SCOPE_NOTE_FACT_CHECKED)

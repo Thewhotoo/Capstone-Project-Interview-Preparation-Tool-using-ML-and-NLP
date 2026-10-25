@@ -1,0 +1,21 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Ignore massive trained model weights!
+model/saved_models/
+
+# (Optional) Ignore IDE folders
+.vscode/
+.idea/

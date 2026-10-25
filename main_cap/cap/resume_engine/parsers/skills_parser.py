@@ -65,6 +65,80 @@ def _spans_to_text(spans) -> str:
     return "\n".join(line.text for line in lines if line.text)
 
 
+# Words that make up skill-CATEGORY labels ("Core CS", "Cloud/DevOps", "Frameworks & Libraries").
+# Used only to find where a second "Label:" starts on a line holding two label groups
+# side by side ("Languages: Python, Java, C, SQL Core CS: DSA, OOP") -- the label is the
+# longest run of these words right before the colon; the words before it are the
+# previous group's last value ("SQL").
+_LABEL_WORDS = frozenset(
+    "core cs computer science backend frontend front end back full stack fullstack web mobile "
+    "messaging tools tool databases database db cloud devops ai ml ai/ml cloud/devops data "
+    "languages language programming frameworks framework libraries library developer platforms "
+    "platform technologies technology technical skills concepts testing other misc design "
+    "infrastructure observability security & and / - genai llm nlp apis api ui ux version control "
+    "operating systems os scripting analytics visualization bi software engineering".split())
+_LABEL_COLON = re.compile(r":")
+_PAREN_GROUP = re.compile(r"([^,;|()]+?)\s*\(([^()]*)\)")
+_DASH_QUALIFIER = re.compile(r"\s+[–—-]\s+\w+$")      # "MySQL/PostgreSQL – coursework" -> drop "– coursework"
+
+
+def _logical_lines(text: str) -> list[str]:
+    """Rejoins a visual line that wrapped mid-list: a line that doesn't end with a
+    separator continues on the next one unless that next line starts a new labelled
+    group ("React\\nQuery" -> "React Query"; "Data\\nStructures & Algorithms")."""
+    out: list[str] = []
+    for raw in text.split("\n"):
+        line = raw.strip()
+        if not line:
+            continue
+        starts_group = bool(re.match(r"^[•·▪●\-*]", line)) or (
+            ":" in line and len(line.split(":", 1)[0].split()) <= _MAX_LABEL_WORDS)
+        # only a comma-LIST line can wrap; a line with no separator at all is a
+        # one-skill-per-line list ("Software Development" / "System Design")
+        if (out and not starts_group and re.search(r"[,;|]", out[-1])
+                and not re.search(r"[,;|:]\s*$", out[-1])):
+            out[-1] = f"{out[-1]} {line}"
+        else:
+            out.append(line)
+    return out
+
+
+def _label_segments(line: str) -> list[tuple[str | None, str]]:
+    """Splits one logical line into (label, values) groups, handling several
+    "Label:" groups on the same line. A line without a short label is (None, line)."""
+    parts = line.split(":")
+    if len(parts) == 1:
+        return [(None, line)]
+    segments: list[tuple[str | None, str]] = []
+    label = parts[0]
+    for i in range(1, len(parts)):
+        chunk = parts[i]
+        if i < len(parts) - 1:
+            # the next label sits at the end of this chunk, after its last value
+            head, _, tail = chunk.rpartition(",")
+            words = tail.split()
+            n = 0
+            while n < len(words) and words[len(words) - 1 - n].strip("•").lower() in _LABEL_WORDS:
+                n += 1
+            if n == 0:            # not a label -- e.g. a URL or "Note: ..." inside the values
+                parts[i + 1] = chunk + ":" + parts[i + 1]
+                continue
+            value_part = ",".join([head] + ([" ".join(words[: len(words) - n])] if len(words) > n else []))
+            segments.append((label, value_part))
+            label = " ".join(words[len(words) - n:])
+        else:
+            segments.append((label, chunk))
+    return segments
+
+
+def _expand_parentheticals(segment: str) -> str:
+    """"Python (FastAPI, Celery)" -> "Python, FastAPI, Celery"."""
+    def expand(match: re.Match) -> str:
+        inner = ", ".join(_DASH_QUALIFIER.sub("", p.strip()) for p in re.split(r"[,/]", match.group(2)) if p.strip())
+        return f"{match.group(1).strip()}, {inner}"
+    return _PAREN_GROUP.sub(expand, segment)
+
+
 def _split_tokens(text: str) -> list[str]:
     """Turns a Skills section's text (visual lines joined by '\\n') into a
     deduped skill list. Processed one line at a time with a small state
@@ -91,31 +165,34 @@ def _split_tokens(text: str) -> list[str]:
     seen: set[str] = set()
     accept_continuation = True  # a plain comma-list before any label is kept
 
-    for line in text.split("\n"):
-        stripped = line.strip()
-        if not stripped:
-            continue
-
-        segment = stripped
-        if ":" in stripped:
-            # Normalize internal whitespace before matching -- PDF word
-            # spans reconstruct with multiple spaces ("Soft   Skills"), which
-            # would otherwise never equal a single-spaced category name.
-            label = " ".join(stripped.split(":", 1)[0].split())
-            if label and len(label.split()) <= _MAX_LABEL_WORDS:
-                if label.lower() in _NON_SKILL_CATEGORIES:
-                    accept_continuation = False
+    groups: list[str] = []
+    for stripped in _logical_lines(text):
+        for raw_label, values in _label_segments(stripped):
+            if raw_label is not None:
+                # Normalize internal whitespace before matching -- PDF word
+                # spans reconstruct with multiple spaces ("Soft   Skills"), which
+                # would otherwise never equal a single-spaced category name.
+                label = " ".join(raw_label.replace("•", " ").split())
+                if label and len(label.split()) <= _MAX_LABEL_WORDS:
+                    if label.lower() in _NON_SKILL_CATEGORIES:
+                        accept_continuation = False
+                        continue
+                    accept_continuation = True
+                    groups.append(values)
                     continue
-                accept_continuation = True
-                segment = stripped.split(":", 1)[1]
-        elif not accept_continuation:
-            continue
+                values = f"{raw_label}:{values}"          # a long "label" is prose: keep the text
+            if accept_continuation:
+                groups.append(values)
 
+    for segment in groups:
+        segment = _expand_parentheticals(segment)
         for raw in _SPLIT_PATTERN.split(segment):
             token = raw.strip(" \t.")
             if ":" in token:
                 token = token.rsplit(":", 1)[-1].strip(" \t.")
             if not token or len(token.split()) > _MAX_SKILL_WORDS:
+                continue
+            if "//" in token or token.lower().startswith(("http", "www.")):   # a link, not a skill
                 continue
             key = token.lower()
             if key not in seen:

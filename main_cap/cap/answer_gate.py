@@ -102,6 +102,18 @@ def _is_non_answer(raw: str, n_tokens: int) -> bool:
     return content < MIN_CONTENT_WORDS
 
 
+def _is_deflection(raw: str) -> bool:
+    """The whole reply is a question thrown back at the interviewer, with no
+    declarative statement of what the candidate did or knows -- "What is
+    Chart.js?", "Can you repeat the question?". True only when EVERY sentence
+    ends with "?"; a reply with any declarative sentence, even a short one
+    ("I built the API.", "Was responsible for auth."), is a real attempt and is
+    never a deflection -- so this never zeroes a terse genuine answer, only a
+    pure counter-question."""
+    sentences = [s for s in re.split(r"(?<=[.!?])\s+", raw) if s.strip()] or [raw]
+    return all(s.strip().endswith("?") for s in sentences)
+
+
 def check_answer(text: str) -> GateVerdict:
     raw = (text or "").strip()
     toks = _tokens(raw)
@@ -110,6 +122,8 @@ def check_answer(text: str) -> GateVerdict:
         return GateVerdict(True, "too_short", "The answer was too short to show any understanding.")
     if _is_non_answer(raw, n):
         return GateVerdict(True, "non_answer", "The question wasn't answered (the reply says you don't know or skips it).")
+    if _is_deflection(raw):
+        return GateVerdict(True, "deflection", "The reply asks a question back instead of answering it.")
     if any(ord(c) < 32 and c not in "\t\n\r" for c in raw):
         return GateVerdict(True, "control_characters", "The reply isn't readable text.")
     fwr = sum(t in FUNCTION_WORDS for t in toks) / n

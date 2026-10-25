@@ -1,0 +1,25 @@
+{
+  "name": "Gabriel Shelby",
+  "email": "hello@reallygreatsite.com",
+  "phone": "123-456-7890",
+  "domain": "Software Engineering",
+  "confidence": 0.4105,
+  "experience": {
+    "years": 13,
+    "months": 156,
+    "level": "Senior"
+  },
+  "education": [
+    {
+      "institution": "Bachelor of Science Computer Science University of Rimberio September",
+      "degree": "Bachelor of Science\nComputer Science\nUniversity of Rimberio\nSeptember",
+      "major": null,
+      "graduation_year": 2009,
+      "gpa": null,
+      "high_school": [],
+      "raw": "Bachelor of Science Computer Science University of Rimberio September 2009 April 2013 Software Engineer Intern, at Borcelle Company April 2012 - March 2013 Contact Partner with developers to implement new programs, 123-456-7890 I build a unit test infrastructure for client hello@reallygreatsite.com "
+    }
+  ],
+  "skills": [],
+  "projects_count": 0
+}

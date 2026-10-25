@@ -69,6 +69,7 @@ SECTION_ALIASES: dict[str, list[str]] = {
         "Skills and Abilities",
         "Areas of Expertise",
         "Competencies",
+        "Core Competencies",
     ],
     "certifications": [
         "Certifications",

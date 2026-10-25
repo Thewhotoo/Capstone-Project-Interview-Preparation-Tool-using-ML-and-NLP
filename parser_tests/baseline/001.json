@@ -1,0 +1,81 @@
+{
+  "name": "Mayuran Ravi Pillai",
+  "email": "mayuranrp@gmail.com",
+  "phone": "+91 9972425152",
+  "domain": "Software Engineering",
+  "confidence": 0.3554,
+  "experience": {
+    "years": 0,
+    "months": 0,
+    "level": "Unknown"
+  },
+  "education": [
+    {
+      "institution": "10 National Centre for Excellence",
+      "degree": "B.Tech in Computer Science and Engineering",
+      "major": "Computer Science",
+      "graduation_year": null,
+      "gpa": "7.81/10",
+      "high_school": [
+        {
+          "class": "XII",
+          "score": "84%"
+        },
+        {
+          "class": "X",
+          "score": "94%"
+        }
+      ],
+      "raw": "B.Tech in Computer Science and Engineering CGPA: 7.81/10 National Centre for Excellence Class XII: 84% , Class X: 94%"
+    }
+  ],
+  "skills": [
+    "Python",
+    "Java",
+    "C++",
+    "C",
+    "JavaScript",
+    "TypeScript",
+    "SQL",
+    "C#",
+    "React",
+    "HTML",
+    "CSS",
+    "Tailwind CSS",
+    "FastAPI",
+    "Flask",
+    "Express.js",
+    "REST API",
+    "NLP",
+    "LangGraph",
+    "LangChain",
+    "TensorFlow",
+    "Keras",
+    "Hugging Face",
+    "Scikit-learn",
+    "Gemini API",
+    "RAG",
+    "MongoDB",
+    "MySQL",
+    "Docker",
+    "Kubernetes",
+    "Jenkins",
+    "Git",
+    "GitHub",
+    "Render",
+    "Vercel",
+    "Unity",
+    "Blender",
+    "VS Code",
+    "Postman",
+    "DSA",
+    "OOP",
+    "DBMS",
+    "Operating Systems",
+    "Computer Networks",
+    "Software Engineering",
+    "Gemini",
+    "Linux"
+  ],
+  "projects_count": 3
+}

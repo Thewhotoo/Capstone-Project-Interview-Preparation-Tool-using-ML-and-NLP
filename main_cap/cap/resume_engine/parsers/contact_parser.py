@@ -349,7 +349,29 @@ class ContactParser:
         phone = _extract_phone(full_text)
         linkedin = _extract_linkedin_from_text(full_text) or _extract_linkedin_from_hyperlinks(doc.hyperlinks)
         location, location_score = _extract_location(lines)
-        candidate_name = _infer_candidate_name(list(lines_with_font_size.items()))
+
+        # Name-inference candidates: "contact" section lines plus any
+        # "unknown" section's lines. A multi-column header (e.g. a photo +
+        # "CONTACT"/"SKILLS" sidebar on one side, a large bold name banner
+        # at the top of the OTHER column) places the name banner physically
+        # beside "EXPERIENCE", not beside "CONTACT" -- by the time section
+        # detection reaches it, a real section is already open, so it lands
+        # in its own "unknown" section (unrecognized header-like line) and
+        # was previously invisible to this parser entirely, silently
+        # dropping the candidate's name. Only used for NAME inference,
+        # which already carries its own strict name-likeness scoring
+        # (`_infer_candidate_name`); email/phone/location stay scoped to the
+        # real "contact" section's text, unaffected.
+        unknown_section = sections.get("unknown")
+        name_candidate_lines = dict(lines_with_font_size)
+        if unknown_section is not None and unknown_section.spans:
+            unknown_groups = _group_spans_into_lines(unknown_section.spans)
+            for group in unknown_groups:
+                line = _line_text(group)
+                name_candidate_lines[line] = max(
+                    name_candidate_lines.get(line, 0.0), max(s.font_size for s in group)
+                )
+        candidate_name = _infer_candidate_name(list(name_candidate_lines.items()))
 
         reasons = []
         hits = 0

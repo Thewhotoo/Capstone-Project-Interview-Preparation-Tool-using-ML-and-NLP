@@ -1,0 +1,40 @@
+{
+  "name": "Karen Le",
+  "email": "hello@reallygreatsite.com",
+  "phone": "+123-456-7890",
+  "domain": "Software Engineering",
+  "confidence": 0.562,
+  "experience": {
+    "years": 5,
+    "months": 60,
+    "level": "Senior"
+  },
+  "education": [
+    {
+      "institution": null,
+      "degree": null,
+      "major": null,
+      "graduation_year": null,
+      "gpa": null,
+      "high_school": [],
+      "raw": "ments."
+    }
+  ],
+  "skills": [
+    "Next.js",
+    "Python",
+    "PostgreSQL",
+    "JavaScript",
+    "Node.js",
+    "React",
+    "GitHub",
+    "Express.js",
+    "MongoDB",
+    "AWS",
+    "Azure",
+    "GCP",
+    "HTML",
+    "CSS"
+  ],
+  "projects_count": 0
+}

@@ -25,8 +25,10 @@ from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
+import conversation_engine
 import insights
 import session_history
+from tech_interview import llm_judge
 from tech_interview.bank import load_bank
 from tech_interview.selector import select_questions
 from tech_interview.session import TechInterview
@@ -152,6 +154,8 @@ def answer_tech_interview(session_id: int):
         result = interview.submit(answer[:MAX_ANSWER_CHARS])
         if result["record"] is not None:
             session_history.record_tech_interview_turn(session, result["record"])
+            index = len(interview.records) - 1   # background LLM re-grade (tech_interview/llm_judge.py)
+            llm_judge.queue(session.id, index, interview.questions[index], result["record"])
         session_history.save_tech_interview(session.id, interview)
     return jsonify({"prompt": result["prompt"], "finished": result["finished"],
                     "questions_answered": len(interview.records)}), 200
@@ -167,6 +171,8 @@ def end_tech_interview(session_id: int):
         if live is None:
             return jsonify({"error": "Interview not found or already finished."}), 404
         session, interview = live
+        regrades = llm_judge.collect(session.id, len(interview.records), conversation_engine.REGRADE_WAIT_SECONDS)
+        session_history.apply_tech_regrades(session, interview, regrades)
         session_history.finish_tech_interview(session, interview.summary(),
                                               data.get("attention_metrics"), data.get("integrity"))
     return jsonify(_report(session, interview)), 200

@@ -447,6 +447,26 @@ def record_tech_interview_turn(session: InterviewSession, record: dict) -> None:
     ))
 
 
+def apply_tech_regrades(session: InterviewSession, interview: Any, regrades: dict[int, dict]) -> None:
+    """Swap finished background LLM re-grades (tech_interview/llm_judge.py) into the
+    interview's records (report + summary) and the saved turns. `regrades` maps the
+    question index to llm_judge.blended(...)."""
+    if not regrades:
+        return
+    turns = sorted(session.turns, key=lambda t: t.turn_number or 0)
+    for index, regrade in regrades.items():
+        if not 0 <= index < len(interview.records):
+            continue
+        record = interview.records[index]
+        record["score"] = regrade["score"]
+        record["llm_grade"] = regrade
+        if index < len(turns) and (turns[index].evaluation or {}).get("question_id") == record["question_id"]:
+            turns[index].evaluation = dict(record)   # new dict, so the JSON column is marked dirty
+            turns[index].overall_score = record["score"]
+            turns[index].grade = session_grade(record["score"])
+    db.session.commit()
+
+
 def finish_tech_interview(session: InterviewSession, summary: dict, attention_metrics: Any,
                           integrity: Any = None) -> None:
     clean = conversation_engine.sanitize_integrity(integrity)

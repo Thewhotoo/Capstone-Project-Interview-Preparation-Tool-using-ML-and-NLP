@@ -114,7 +114,8 @@ All optional; set as environment variables.
 | `CAP_TRAINED_EVALUATOR` | on | `0` forces the heuristic Round 1 evaluator |
 | `CAP_FACT_CHECK` | `auto` | Background re-grade of Round 1 answers with a local LLM (fact check + rubric grade): `auto` runs it only when Ollama is up with a model pulled, `1` always, `0` never |
 | `CAP_OLLAMA_URL` / `CAP_FACT_CHECK_MODEL` | `http://localhost:11434` (Docker: the host machine) / first of `qwen3:4b`, `qwen2.5:3b` that Ollama has | Ollama server and model for the re-grade |
-| `CAP_REGRADE_WAIT_SECONDS` | `30` | How long ending a Round 1 interview waits for unfinished re-grades; unfinished ones keep the live score |
+| `CAP_REGRADE_WAIT_SECONDS` | `30` | How long ending an interview waits for unfinished re-grades; unfinished ones keep the live score |
+| `CAP_TECH_LLM_GRADE` / `CAP_TECH_JUDGE_MODEL` | `auto` / `qwen3:8b` | Background re-grade of Round 2 answers with a local LLM (per-key-point verdicts, blended 50/50 with the fast grade): `auto` runs it only when Ollama has the model, `1` always, `0` never |
 | `CAP_CURATED_ONLY` | `1` | Technical interviews use the hand-reviewed top tier of the bank; `0` widens to every active question |
 | `CAP_GRADER_ENRICHMENT` | `replies` | How much of the offline bank enrichment the technical grader uses (`off` / `replies` / `all`) |
 | `CAP_QUESTION_BANK_DIR` | `rag_system/rag_tester/question_bank` | Where the question bank is read from |

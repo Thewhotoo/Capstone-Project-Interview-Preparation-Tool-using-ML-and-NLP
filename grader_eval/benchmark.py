@@ -3,6 +3,10 @@
     python grader_eval/benchmark.py                  run, print, compare with baseline.json
     python grader_eval/benchmark.py --save-baseline  run and store the current numbers as the baseline
     python grader_eval/benchmark.py --show-worst     also print the worst disagreements per set
+    python grader_eval/benchmark.py --llm            score with the background LLM re-grade blended in
+                                                     (tech_interview/llm_judge.py; needs Ollama; verdicts
+                                                     cached in llm_judge_cache.jsonl). Compared with
+                                                     baseline_llm.json instead of baseline.json.
 
 Answer sets (all labelled per key point covered/partial/missing + an `overall` 0..1):
   llm400   output_questions.json        400 LLM-written answers, 8 styles (round 2 eval)
@@ -35,6 +39,35 @@ sys.path.insert(0, str(HERE.parent / "main_cap" / "cap"))
 from tech_interview.bank import load_bank          # noqa: E402
 from tech_interview.followup import GOOD_SCORE      # noqa: E402
 from tech_interview.grader import followup_covers, grade_answer   # noqa: E402
+from tech_interview import llm_judge                 # noqa: E402
+
+LLM_CACHE = HERE / "llm_judge_cache.jsonl"
+
+
+def _judge_key(model, q, answer) -> str:
+    """Changes when the model, the question's key points or the answer change."""
+    return f"{model}|{q.id}|{zlib.crc32('|'.join(k.point for k in q.key_points).encode())}|{zlib.crc32(answer.encode())}"
+
+
+class CachedJudge:
+    """llm_judge.OllamaJudge with its verdicts cached per (model, question, answer)."""
+    def __init__(self):
+        self.judge_ = llm_judge.OllamaJudge()
+        if not self.judge_.available():
+            raise SystemExit("--llm needs Ollama running with " + self.judge_.model)
+        self.cache = {}
+        if LLM_CACHE.exists():
+            for line in LLM_CACHE.read_text(encoding="utf-8").splitlines():
+                r = json.loads(line)
+                self.cache[r["key"]] = r["out"]
+
+    def judge(self, q, answer):
+        key = _judge_key(self.judge_.model, q, answer)
+        if key not in self.cache:
+            self.cache[key] = self.judge_.judge(q, answer)
+            with LLM_CACHE.open("a", encoding="utf-8") as f:
+                f.write(json.dumps({"key": key, "out": self.cache[key]}) + "\n")
+        return self.cache[key]
 
 BASELINE = HERE / "baseline.json"
 GOOD_STYLES = {"good", "good_paraphrase", "good_own_words"}
@@ -95,7 +128,7 @@ def load_sets() -> dict[str, list[dict]]:
     return sets
 
 
-def evaluate(rows: list[dict], bank: dict) -> tuple[dict, list[dict]]:
+def evaluate(rows: list[dict], bank: dict, judge=None) -> tuple[dict, list[dict]]:
     graded, kp_total, kp_exact = [], 0, 0
     fu_n = fu_ok = wrong_fu_n = wrong_fu_accepted = 0
     for x in rows:
@@ -103,6 +136,10 @@ def evaluate(rows: list[dict], bank: dict) -> tuple[dict, list[dict]]:
         if q is None:
             continue
         g = grade_answer(q, x["answer"])
+        if judge is not None:   # the end-of-interview score: fast grade blended with the LLM re-grade
+            record = {"answer": x["answer"], "score": g.score, "exchanges": [], "final_grade": g.to_dict(),
+                      "key_points": [{"point": k.point} for k in q.key_points]}
+            g.score = llm_judge.blended(record, judge.judge(q, x["answer"]))["score"]
         predicted = ["covered" if k.point in g.covered else "partial" if k.point in g.partial else "missing"
                      for k in q.key_points]
         labels = x.get("labels") or []
@@ -178,13 +215,16 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--save-baseline", action="store_true")
     ap.add_argument("--show-worst", action="store_true")
+    ap.add_argument("--llm", action="store_true")
     args = ap.parse_args()
 
     bank = {q.id: q for q in load_bank(curated=False)}
+    judge = CachedJudge() if args.llm else None
+    baseline_file = HERE / "baseline_llm.json" if args.llm else BASELINE
     results, details = {}, {}
     for name, rows in load_sets().items():
         if rows:
-            results[name], details[name] = evaluate(rows, bank)
+            results[name], details[name] = evaluate(rows, bank, judge)
 
     cols = ["answers", "keypoint_agreement", "decision_agreement", "pearson_r", "mean_abs_diff", "human_avg",
             "grader_avg", "pair_order", "good_avg", "confident_wrong_avg", "followup_accuracy", "wrong_followups_accepted"]
@@ -200,11 +240,11 @@ def main() -> int:
                 print(f"  [{r['style']}] human {r['human']:.2f} grader {r['grader']:.2f} | {r['id']} | {r['answer'][:110]}")
 
     if args.save_baseline:
-        BASELINE.write_text(json.dumps(results, indent=1), encoding="utf-8")
-        print(f"\nbaseline saved to {BASELINE.name}")
+        baseline_file.write_text(json.dumps(results, indent=1), encoding="utf-8")
+        print(f"\nbaseline saved to {baseline_file.name}")
         return 0
-    if BASELINE.exists():
-        failures = compare(results, json.loads(BASELINE.read_text(encoding="utf-8")))
+    if baseline_file.exists():
+        failures = compare(results, json.loads(baseline_file.read_text(encoding="utf-8")))
         print("\nREGRESSIONS:\n  " + "\n  ".join(failures) if failures else "\nno regressions vs baseline")
         return 1 if failures else 0
     print("\n(no baseline yet: run with --save-baseline)")

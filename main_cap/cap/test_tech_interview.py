@@ -7,6 +7,7 @@ The grader tests load the real MiniLM and NLI models (cached locally);
 set CAP_SKIP_MODEL_TESTS=1 to skip them. Every other test uses a fake grader.
 """
 
+import concurrent.futures
 import os
 
 import numpy as np
@@ -18,6 +19,7 @@ from unittest import mock
 from _app_test_setup import signed_up_client
 from database import db
 from models import SESSION_COMPLETED, SESSION_TERMINATED, InterviewSession
+from tech_interview import llm_judge
 from tech_interview import session as session_module
 from tech_interview.bank import KeyPoint, Question, load_bank
 from tech_interview.followup import GOOD_SCORE, MAX_FOLLOWUPS, decide
@@ -338,6 +340,69 @@ class TestTechInterviewRoutes(unittest.TestCase):
         self.assertEqual(self.client.post(f"/api/tech-interview/{sid}/answer", json={"answer": "x"}).status_code, 404)
         with self.client.application.app_context():
             self.assertEqual(db.session.get(InterviewSession, sid).status, "abandoned")
+
+
+class TestLLMRegrade(unittest.TestCase):
+    """tech_interview/llm_judge.py with a fake judge (no Ollama needed)."""
+
+    def record(self, score=0.4, exchanges=(), **final):
+        return {"question_id": "q1", "answer": "main answer", "score": score, "exchanges": list(exchanges),
+                "key_points": [{"point": p} for p in POINTS],
+                "final_grade": {"reference_similarity": 0.5, "core": "", "covered": [], "clarity": {}, **final}}
+
+    def test_blend_is_half_fast_half_llm(self):
+        out = llm_judge.blended(self.record(0.4), {"verdicts": ["covered"] * 3, "wrong": False})
+        llm = 0.85 * 1.0 + 0.15 * 0.5
+        self.assertAlmostEqual(out["llm_score"], round(llm, 3))
+        self.assertAlmostEqual(out["score"], 0.5 * llm + 0.5 * 0.4, places=2)
+        self.assertEqual(out["fast_score"], 0.4)
+
+    def test_wrong_answer_is_capped(self):
+        out = llm_judge.blended(self.record(0.9), {"verdicts": ["covered"] * 3, "wrong": True})
+        self.assertEqual(out["score"], llm_judge.WRONG_CAP)
+
+    def test_contradicted_answer_stays_capped(self):
+        out = llm_judge.blended(self.record(0.2, contradicts_reference=True),
+                                {"verdicts": ["covered"] * 3, "wrong": False})
+        self.assertEqual(out["score"], llm_judge.WRONG_CAP)
+
+    def test_followup_recovery_counts_at_reduced_credit(self):
+        ex = [{"kind": "followup", "key_point": "P2 point", "verdict": "covered", "answer": "x"}]
+        out = llm_judge.blended(self.record(0.5, ex), {"verdicts": ["covered", "missing", "missing"], "wrong": False})
+        kp = (1 + RECOVERED_CREDIT) / 3
+        self.assertAlmostEqual(out["llm_score"], 0.85 * kp + 0.15 * 0.5 * min(1, kp / 0.5), places=2)
+
+    def test_clarification_is_part_of_the_judged_answer(self):
+        rec = self.record(exchanges=[{"kind": "clarify", "answer": "more detail"},
+                                     {"kind": "followup", "answer": "not this"}])
+        self.assertEqual(llm_judge.answer_text(rec), "main answer more detail")
+
+
+class TestLLMRegradeRoutes(unittest.TestCase):
+    def setUp(self):
+        if not load_bank():
+            self.skipTest("question bank not available")
+        self.client, _ = signed_up_client()
+
+    def test_end_report_and_saved_turns_use_finished_regrades(self):
+        fake = mock.Mock()
+        fake.judge.side_effect = lambda q, a: {"verdicts": ["missing"] * len(q.key_points), "wrong": True}
+        with mock.patch.dict(os.environ, {"CAP_TECH_LLM_GRADE": "1"}),                 mock.patch.object(llm_judge, "_get_judge", return_value=fake),                 mock.patch.object(llm_judge, "_pool", concurrent.futures.ThreadPoolExecutor(max_workers=1)):
+            body = self.client.post("/api/tech-interview/start", json={"mode": "round2"}).get_json()
+            sid = body["session"]["id"]
+            for _ in range(2):
+                self.client.post(f"/api/tech-interview/{sid}/answer", json={"answer": "I don't know"})
+            report = self.client.post(f"/api/tech-interview/{sid}/end", json={}).get_json()
+        self.assertEqual(fake.judge.call_count, 2)
+        self.assertTrue(all(q["score"] <= llm_judge.WRONG_CAP for q in report["questions"]))
+        turns = self.client.get(f"/api/sessions/{sid}").get_json()["session"]["turns"]
+        self.assertTrue(all(t["evaluation"]["llm_grade"]["llm_wrong"] for t in turns))
+
+    def test_without_ollama_nothing_is_queued(self):
+        with mock.patch.dict(os.environ, {"CAP_TECH_LLM_GRADE": "0"}),                 mock.patch.object(llm_judge, "_get_judge") as get:
+            body = self.client.post("/api/tech-interview/start", json={"mode": "round2"}).get_json()
+            self.client.post(f"/api/tech-interview/{body['session']['id']}/answer", json={"answer": "I don't know"})
+        get.assert_not_called()
 
 
 if __name__ == "__main__":

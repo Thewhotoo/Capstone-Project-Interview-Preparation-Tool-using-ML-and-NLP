@@ -1,0 +1,787 @@
+[
+  {
+    "question_id": "dbms.deadlocks_in_dbms.easy1",
+    "style": "good",
+    "answer": "a deadlock happens when two or more transactions are waiting for each other to release locks, so they form a cycle and none of them can move forward. usually you resolve it by rolling back one of the transactions so the other one can continue.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "What is the implication of having to roll back a transaction in a deadlock?",
+      "answer": "some of the work done by that transaction is lost, but it breaks the deadlock and lets the other transactions continue.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.switching_and_vlans.easy1",
+    "style": "dont_know",
+    "answer": "uh i dont really remember how the switch learns the addresses, something about storing the mac addresses in a table i think",
+    "labels": [
+      "partial",
+      "missing"
+    ],
+    "overall": 0.2,
+    "followup": {
+      "question": "What happens if the destination MAC address is not in the switch's table?",
+      "answer": "i think it gets sent out through the other ports, but im not sure exactly why.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.polymorphism.medium2",
+    "style": "partial",
+    "answer": "polymorphism lets a parent reference work with objects of different child classes, so the same interface can be used for different types. i dont remember the runtime dispatch part exactly.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.65,
+    "followup": {
+      "question": "How does dynamic method dispatch differ from static method binding?",
+      "answer": "dynamic dispatch chooses based on the actual object at runtime, while static binding is decided during compile time.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.chain_of_responsibility_pattern.medium1",
+    "style": "confident_wrong",
+    "answer": "chain of responsibility means one main handler receives the request and then directly chooses the next handler in a fixed order. the sender basically knows that first handler, and the chain is mostly decided when the classes are designed. it helps because all the handlers are tightly connected and know what the previous one did.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.3,
+    "followup": {
+      "question": "How does giving multiple objects an opportunity to handle the request contribute to loose coupling?",
+      "answer": "the sender doesnt have to know the exact handler, so that reduces dependency. i think the chain order is still fixed though.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.primary_key.hard2",
+    "style": "short_casual",
+    "answer": "the weak entity's key uses the identifying entity's key plus its discriminator, so together they identify it.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.9,
+    "followup": {
+      "question": "Can a weak entity have a primary key that doesn't include the identifying entity's primary key?",
+      "answer": "no, because its identity depends on the identifying entity and the key has to include that key.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.user_mode_vs_kernel_mode.medium1",
+    "style": "good",
+    "answer": "the hardware keeps a mode bit to tell whether the cpu is running user code or kernel code. user programs run in user mode, so they cant execute privileged instructions directly. when they need something from the OS they make a system call, which enters kernel mode, does the operation, and then returns back to user mode.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "What would happen if a system call didn't switch to kernel mode?",
+      "answer": "then the user program could execute privileged operations directly and access protected resources, which could compromise the OS.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.foreign_key.medium2",
+    "style": "partial",
+    "answer": "ON DELETE CASCADE removes the related child rows when the parent row is deleted. i dont remember the update one exactly.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55,
+    "followup": {
+      "question": "Can `ON UPDATE CASCADE` be used to automatically update the child table when the primary key of the parent table changes?",
+      "answer": "yeah, it can update the matching child rows too, but i dont remember the exact behavior.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.constructors.medium2",
+    "style": "partial",
+    "answer": "a parameterized constructor lets you pass values when the object is created. im not fully sure what happens to the default constructor though.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.4,
+    "followup": {
+      "question": "Why would you choose a parameterized constructor over a default constructor in a real-world scenario?",
+      "answer": "not sure, maybe when you already know the values the object should start with.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.priority_scheduling.medium1",
+    "style": "short_casual",
+    "answer": "yeah, a low priority process can keep waiting if higher priority processes keep getting scheduled. aging is the usual fix, where its priority is slowly increased while it waits.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "How can we prevent low-priority processes from being starved?",
+      "answer": "by using aging, so a process waiting for a long time gradually gets higher priority.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.go_back_n_and_selective_repeat.medium2",
+    "style": "partial",
+    "answer": "in selective repeat, the sender only resends packets that werent acknowledged, instead of resending the whole window. the receiver can acknowledge packets individually.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.7,
+    "followup": {
+      "question": "How does this differ from Go-Back-N's window advancement?",
+      "answer": "go back n can move its window based on acknowledgements, while selective repeat waits for the oldest unacknowledged packet.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.deadlock_avoidance.medium2",
+    "style": "partial",
+    "answer": "the system checks whether granting a request would leave it in a safe state. if it would be unsafe, the request has to wait.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.7,
+    "followup": {
+      "question": "How does the behavior of processes affect the system's ability to avoid deadlocks?",
+      "answer": "if the processes keep requesting resources in a bad order, the system can still avoid deadlock because the safety check handles it automatically.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dsa.postfix_expression_evaluation.medium2",
+    "style": "short_casual",
+    "answer": "you use a stack: pop the top two values, do the operation, then push the result back.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.9,
+    "followup": {
+      "question": "Why is it necessary to push the result back onto the stack after performing an operation?",
+      "answer": "not sure, i just know it goes back on the stack.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dsa.breadth_first_search.easy1",
+    "style": "good_own_words",
+    "answer": "bfs explores a graph level by level. so starting from one node, it visits all the nodes directly connected to it first, then their neighbours, and so on. because of that, a node is reached in increasing order of its distance from the start, which is why bfs is useful for shortest paths in an unweighted graph.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "How does this property affect the algorithm's use in real-world applications?",
+      "answer": "it makes bfs useful for shortest paths when every edge has the same cost, like finding the fewest hops between two computers or people.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.integrity_constraints.medium1",
+    "style": "short_casual",
+    "answer": "it makes sure foreign keys point to valid rows, so the tables dont have broken relationships.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.7,
+    "followup": {
+      "question": "What is the purpose of the CASCADE option in referential integrity?",
+      "answer": "it automatically deletes related child rows when the parent is deleted. im not sure about the other actions.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "cn.network_devices.hard2",
+    "style": "partial",
+    "answer": "a repeater regenerates a weak signal to extend the network. a switch uses MAC addresses to send the frame toward the right device.",
+    "labels": [
+      "covered",
+      "missing",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6,
+    "followup": {
+      "question": "How does this compare to the behavior of a Repeater?",
+      "answer": "the repeater sends the signal to everyone, while the switch uses the mac address and sends it to the intended port.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.composition_over_inheritance.medium1",
+    "style": "good_own_words",
+    "answer": "composition is more like a has-a relationship. for example, a Car can have an Engine object instead of inheriting from Engine. because the object is held inside it, you can replace that component at runtime, and it is also easier to test the pieces separately compared with a deep inheritance setup.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "Why might test-ability be an important factor in choosing composition over inheritance?",
+      "answer": "with composition you can replace or mock the individual component and test it separately, so debugging and testing becomes easier.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.outer_joins.medium1",
+    "style": "good_own_words",
+    "answer": "a full outer join keeps everything from both tables. if a row has no matching row on the other side, the missing columns become null. thats useful when you want to see the complete data from both sides instead of losing unmatched rows. mysql doesnt directly support full outer join, so you can combine a left join and right join with union.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "What is a common workaround for implementing Full Outer Join in MySQL?",
+      "answer": "you can combine a left join and right join with UNION, but im not sure if that handles every duplicate case.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "cn.tcp_flow_control.medium1",
+    "style": "short_casual",
+    "answer": "the receiver tells the sender how much buffer space it has using the rwnd value in the tcp header. the sender then limits the amount of unacknowledged data it sends based on that, so the receiver buffer doesnt get overloaded.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "How does the sender know how much data it can send at any time?",
+      "answer": "i dont remember exactly, i think it uses some window value from the receiver.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.deadlock_prevention.medium1",
+    "style": "hesitant",
+    "answer": "um, circular wait can be prevented by, like, giving the resources some order and making processes request them in increasing order. so a process cant request resource 2 and then go back and request resource 1. thats one of the deadlock conditions you have to break.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.9,
+    "followup": {
+      "question": "What would happen if all four conditions were satisfied?",
+      "answer": "uh, if all four are satisfied then maybe the system can still keep running normally depending on the scheduler.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.stored_procedures_and_functions.easy1",
+    "style": "confident_wrong",
+    "answer": "a stored procedure is basically sql code the application sends to the database whenever it needs it. the main benefit is that the client does more processing and the server has less work, so it makes the app faster.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "In what situations might stored procedures reduce communication costs?",
+      "answer": "when the operation is complex, the client can just send one procedure call instead of sending every sql statement separately, so less data travels back and forth.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.tcp_vs_udp.easy1",
+    "style": "good_own_words",
+    "answer": "tcp first sets up a connection and gives you reliable, ordered delivery. udp just sends datagrams without doing that connection setup and it doesnt guarantee the packets will arrive. so udp is lighter when the application can tolerate some loss.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "Why would an application choose UDP over TCP?",
+      "answer": "because it has less overhead and can be faster, which is useful for things like live streaming where waiting for every lost packet isnt ideal.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.stacks_and_recursion.easy1",
+    "style": "good_own_words",
+    "answer": "every time a recursive function calls itself, a new call record is put on the stack. that record keeps things like local variables and where the function has to return. since the stack is lifo, the latest recursive call finishes first and gets popped, then control goes back to the previous call.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "What happens to the return address when a function call is made?",
+      "answer": "the return address is stored in that call's stack record so after the function finishes the program knows where to continue.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.stack_operations.easy1",
+    "style": "confident_wrong",
+    "answer": "with a linked-list stack, push usually adds at the end, and pop removes from the front, so you dont need to worry about keeping a top pointer.",
+    "labels": [
+      "covered",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.25,
+    "followup": {
+      "question": "What is the effect of popping an element from a linked list-based stack?",
+      "answer": "it removes the top node, then the next node becomes the new top.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.fifo_page_replacement.easy1",
+    "style": "good_own_words",
+    "answer": "fifo keeps the pages in the order they entered memory, basically like a queue. when a page fault happens and there is no free frame, the page that has been there the longest is removed and the new page is loaded. one weird thing with fifo is belady's anomaly, where adding more frames can sometimes actually cause more page faults.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "What is an example of a situation where FIFO might cause more page faults with more memory?",
+      "answer": "yeah, Belady's anomaly is when more frames can sometimes give more page faults, but i think its mainly a cache issue.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "cn.tcp_connection_establishment.medium2",
+    "style": "good_own_words",
+    "answer": "tcp uses three messages so both sides can agree that the connection is actually established. the client sends syn, the server replies with syn-ack, and then the client sends ack. with only two messages, the other side wouldnt get the same level of confirmation that the request and response were both received.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "What is the risk of using a two-way handshake in a network with packet loss?",
+      "answer": "two messages should be enough because once the server sends the ack, both sides basically know the connection is ready.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "cn.ipv6.medium1",
+    "style": "good_own_words",
+    "answer": "if some routers only understand ipv4, an ipv6 packet can be put inside an ipv4 packet and tunneled across that part of the network. once it reaches an ipv6-capable router, the outer packet is removed and the ipv6 packet continues normally. this lets networks migrate gradually instead of upgrading every router at the same time.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "What would happen if all routers were upgraded at once?",
+      "answer": "you could do a complete switch in one go, but that would basically be a flag day and could require a coordinated shutdown or disruption during the transition.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.topological_sorting.easy1",
+    "style": "short_casual",
+    "answer": "topological sorting puts a directed graph's vertices in an order where each node comes before the nodes it points to. its mainly used when there are prerequisites.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.85,
+    "followup": {
+      "question": "What kind of real-world problems can be modeled using topological sorting?",
+      "answer": "course prerequisites are one example, and maybe task scheduling too. i dont remember the graph restriction exactly.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "cn.tcp_connection_establishment.easy1",
+    "style": "confident_wrong",
+    "answer": "tcp starts with a syn, then the server sends an ack and data can start right away. the sequence numbers are mainly decided later when the actual data is sent.",
+    "labels": [
+      "partial",
+      "missing"
+    ],
+    "overall": 0.2,
+    "followup": {
+      "question": "Why is it important to agree on starting sequence numbers during connection establishment?",
+      "answer": "because otherwise the receiver wouldnt know which data packet comes first, so the sequence numbers help keep the data in order and acknowledged correctly.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.https_and_tls.easy1",
+    "style": "hesitant",
+    "answer": "so https is basically http over tls, um, and tls encrypts the traffic between the browser and server. it also uses public and private keys during the secure setup, so other people cant just read the communication.",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.9,
+    "followup": {
+      "question": "How does the server prove it is who it says it is?",
+      "answer": "it sends a certificate from a trusted certificate authority, and the browser checks that certificate before trusting the server.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.page_faults.medium1",
+    "style": "partial",
+    "answer": "when a page fault happens, the OS brings the needed page into a free frame, or replaces another page if needed. it can also change the number of frames given to a process based on how often it faults.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.7,
+    "followup": {
+      "question": "What is thrashing and how does page-fault frequency help avoid it?",
+      "answer": "thrashing is basically when the cpu gets overloaded, and page-fault frequency avoids it by reducing page faults.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.method_overloading.medium1",
+    "style": "partial",
+    "answer": "method overloading means you can use the same method name with different parameter lists. the compiler decides which one to call from the arguments, but i dont remember the exact reason its called static polymorphism.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.65,
+    "followup": {
+      "question": "What does 'early binding' mean in this context?",
+      "answer": "it means the compiler decides which overloaded method will be called before the program runs.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.dijkstra_s_algorithm.easy1",
+    "style": "partial",
+    "answer": "dijkstra keeps tentative distances and repeatedly picks the vertex with the smallest current distance. then it looks at the neighbouring vertices, but im not fully sure how the update is done.",
+    "labels": [
+      "covered",
+      "partial"
+    ],
+    "overall": 0.55,
+    "followup": {
+      "question": "How does the algorithm use the weight of an edge to update distances?",
+      "answer": "it adds the edge weight to the current shortest distance and compares that total with the neighbour's existing distance.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.expression_trees.easy1",
+    "style": "short_casual",
+    "answer": "an expression tree has operators as internal nodes and operands as leaves.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.65,
+    "followup": {
+      "question": "How does an operator node relate to its operands in the tree?",
+      "answer": "not sure, the operator is connected to the operands below it.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.window_functions.medium2",
+    "style": "vague",
+    "answer": "rank and dense rank both give a position to rows, and row number gives each row a number. the exact difference with ties is a little fuzzy to me.",
+    "labels": [
+      "partial",
+      "partial",
+      "covered"
+    ],
+    "overall": 0.4,
+    "followup": {
+      "question": "What is the rank of the next row if two rows have the same value and are using ROW_NUMBER()?",
+      "answer": "it would get the next unique number, so if the first two rows are numbered 1 and 2, the next is 3.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.throughput_and_bottleneck_link.medium1",
+    "style": "confident_wrong",
+    "answer": "the bottleneck link usually doesnt limit each pair separately because every pair has its own path. the shared link just adds some extra delay, and the throughput mainly depends on the fastest link in each pair. if there are more pairs they can actually get more total capacity because the link is being used more efficiently.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "How does the number of pairs affect the shared link capacity available to each pair?",
+      "answer": "more pairs means the shared link's capacity is divided among more connections, so each pair gets less.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.network_delays.medium2",
+    "style": "partial",
+    "answer": "with store and forward, the router gets the whole packet before sending it on, so the transmission part happens at each hop. i dont remember the propagation part exactly.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55,
+    "followup": {
+      "question": "How does the physical distance of a link affect the end-to-end delay?",
+      "answer": "a longer link means the signal takes longer to propagate, so propagation delay increases the total delay.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.persistent_vs_non_persistent_http.medium1",
+    "style": "vague",
+    "answer": "persistent http keeps the connection around for more objects, while non-persistent has extra connection overhead. so basically persistent is more efficient.",
+    "labels": [
+      "partial",
+      "missing"
+    ],
+    "overall": 0.4,
+    "followup": {
+      "question": "Why does non-persistent HTTP have two RTTs per object?",
+      "answer": "one round trip is needed to make the tcp connection and another is needed for the http request and the first response.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.preemptive_vs_non_preemptive_scheduling.medium1",
+    "style": "good_own_words",
+    "answer": "in preemptive scheduling the os can interrupt a process while its running and give the cpu to another process, usually because of a timer or higher priority task. in non-preemptive scheduling, once a process gets the cpu it keeps it until it finishes or blocks. preemption is more responsive, but because processes can be interrupted while sharing data, you may need locks or mutexes to avoid race conditions.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "What is a potential downside of preemptive scheduling?",
+      "answer": "not sure, maybe the main downside is just that it can interrupt processes more often.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.inter_process_communication.medium1",
+    "style": "partial",
+    "answer": "message passing is basically using send and receive operations so one process can communicate with another. i dont remember the shared-memory difference exactly.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.55,
+    "followup": {
+      "question": "Why would a system prefer message passing over shared memory?",
+      "answer": "it avoids having to manage shared variables and locks as much, and its also useful when the processes are on different machines.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.parameter_passing_in_java.medium1",
+    "style": "hesitant",
+    "answer": "um in java everything is passed by value. for a primitive its the actual value that gets copied, so changing the parameter doesnt change the caller's variable. for an object, whats copied is the reference, not the object itself, so both can point to the same object and its state can be changed.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "Can a method that receives an object as a parameter change the reference that the caller holds?",
+      "answer": "no, it only gets a copy of the reference. it can change the object's contents, but assigning the parameter to a new object wont change the caller's reference.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.method_overloading.hard2",
+    "style": "short_casual",
+    "answer": "if the methods have the same name and same parameters but only different return types, thats not valid overloading. return type isnt used to distinguish overloaded methods, the parameter list has to be different.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "Why is the return type not considered when resolving overloaded methods?",
+      "answer": "because the compiler resolves the call from the method name and parameters, and the return type isnt part of that signature.",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.binary_search.medium1",
+    "style": "partial",
+    "answer": "binary search cuts the search space by a constant factor, usually half, each step.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "Can binary search be implemented iteratively? Why or why not?",
+      "answer": "i dont remember exactly, maybe because each step cuts the search in half.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.first_normal_form_1nf.medium1",
+    "style": "confident_wrong",
+    "answer": "1nf mainly means every row should have the same number of columns and you should avoid duplicate rows. composite attributes are actually okay as long as they are stored in one column, and 1nf isnt really required before using the higher normal forms.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "Why is 1NF considered a foundational normal form?",
+      "answer": "because i think higher normal forms can still be applied even if the table isnt in 1nf, so it isnt strictly necessary.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dsa.circular_queue.easy1",
+    "style": "hesitant",
+    "answer": "so um, a circular queue basically connects the end back to the beginning. when the rear reaches the last array position it can wrap around and use the earlier empty positions, like after elements have been removed. so you dont waste those slots.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "How does a circular queue behave differently from a simple queue?",
+      "answer": "uh, if all four conditions are there, i think the system can still avoid deadlock if the scheduler is careful.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.fragmentation.medium2",
+    "style": "short_casual",
+    "answer": "external fragmentation is when free memory is split up, and compaction joins it together. i dont remember the I/O limitation properly.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.65,
+    "followup": {
+      "question": "How does I/O affect the ability to compact memory?",
+      "answer": "not sure, i remember compaction is related to it but i dont remember the I/O issue.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.aggregate_functions_and_group_by.easy1",
+    "style": "partial",
+    "answer": "aggregate functions like COUNT, SUM and AVG combine values to give a summary. with GROUP BY, you can calculate those for each group, like each department.",
+    "labels": [
+      "covered",
+      "partial",
+      "covered"
+    ],
+    "overall": 0.7,
+    "followup": {
+      "question": "What happens if you include a non-aggregated attribute in the SELECT clause with GROUP BY?",
+      "answer": "i think you can put another column in SELECT and it might just show one value from the group.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.peterson_s_solution.easy1",
+    "style": "confident_wrong",
+    "answer": "peterson's solution uses a flag to say that a process is inside the critical section, and the turn variable tells which process is currently running. so if process 0 sets its flag, it enters and process 1 has to wait until the flag is cleared.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.25,
+    "followup": {
+      "question": "Why is the turn variable necessary for mutual exclusion?",
+      "answer": "the turn variable is mainly there to say which process is running, but the flags should already be enough.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.open_closed_principle.easy1",
+    "style": "partial",
+    "answer": "the open-closed principle says you should extend existing code rather than keep modifying it. interfaces or inheritance can help with that.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.65,
+    "followup": {
+      "question": "Why is it risky to modify existing code?",
+      "answer": "it means you can add new behavior without changing old code. im not fully sure how interfaces help with that.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.abstraction.medium1",
+    "style": "partial",
+    "answer": "abstraction hides the complicated implementation details so the user doesnt have to deal with them. i dont remember exactly how the interface part fits in.",
+    "labels": [
+      "covered",
+      "missing"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "What is the role of an interface in abstraction?",
+      "answer": "i dont remember exactly, something about giving a simpler interface instead of showing all the implementation.",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.denormalization.easy1",
+    "style": "confident_wrong",
+    "answer": "denormalization is basically removing redundant data from tables so the database is cleaner and updates are easier. its mainly used when you have lots of writes and want to avoid updating the same information in multiple places. the queries can become a bit more complicated because the data is split up.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "How does denormalization affect query complexity?",
+      "answer": "it can make queries simpler because related data can be stored together and you need fewer joins.",
+      "correct": true
+    }
+  }
+]

@@ -1,8 +1,7 @@
 # slide_rag — retrieval over faculty lecture slides
 
-Replaces the page-per-chunk ingestion (`dynamic_ingestor.py` → `knowledge_base/`)
-with a slide-aware pipeline that writes to `knowledge_base_v2/`. The old index is
-left untouched as the evaluation baseline.
+Replaced the old page-per-chunk ingestion (since removed)
+with a slide-aware pipeline that writes to `knowledge_base_v2/`.
 
 ```
 sources/<subject>/*.pdf          input (git-ignored)
@@ -33,7 +32,7 @@ Not built yet (need an LLM): Stage 3 vision recovery (slides listed under
 ```
 python -m slide_rag.build                      # all subjects in sources/
 python -m slide_rag.build --subject dbms
-python -m slide_rag.retrieval_eval             # gold + probe sets, vs the old index
+python -m slide_rag.retrieval_eval             # gold + probe sets
 python -m slide_rag.retrieval_eval --subject ooad --show-misses
 python -m pytest slide_rag/tests -q
 ```

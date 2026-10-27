@@ -2034,6 +2034,16 @@
             background: rgba(239, 68, 68, 0.1) !important;
         }
 
+        /* Waiting for the microphone, or turning the recording into text. */
+        .mic-busy {
+            cursor: progress;
+            animation: mic-busy-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes mic-busy-pulse {
+            50% { opacity: 0.4; }
+        }
+
         /* --- DASHBOARD UI --- */
         #dashboard-container {
             display: none;
@@ -4170,7 +4180,8 @@
         // permission prompt has settled -- proctorArm waits for it: browser
         // permission prompts can steal focus or drop full screen, and must
         // not count against the candidate. The voice-input mic prompt is handled the same way
-        // (proctorSuspendBlur / rdMicSettled).
+        // (proctorSuspendBlur in createVoiceInput); the app also asks for the
+        // microphone up front (requestMediaPermissions) so it rarely appears.
         const PROCTOR_BLUR_GRACE_MS = 1500;
         const PROCTOR_VIOLATION_LABELS = {
             tab_switch: "Switched to another tab",
@@ -4476,7 +4487,7 @@
         }
 
         // The record sent when a round ends (/api/resume-discussion-v2/end,
-        // /api/technical-sessions/<id>/end).
+        // /api/tech-interview/<id>/end).
         function proctorIntegrityPayload() {
             return proctorState.terminated
                 ? Object.assign({ terminated: true }, proctorState.violation)
@@ -4486,7 +4497,6 @@
         function proctorReset() {
             proctorDisarm({ exitFullscreen: true });
             proctorState = proctorFreshState();
-            rdMicSuspending = false;
             rdEnding = false;
             proctorHideOverlay();
         }
@@ -4568,75 +4578,189 @@
             }
         }
 
-        // ─── Voice input — a dedicated recognizer for the composer, kept
-        // separate from the Adaptive Interview's `recognition`/`micBtn` so
-        // the two flows never fight over the same handlers. Same Web
-        // Speech API, same "listening" concept, just scoped to #rd-container. ───
-        let rdRecognition = null;
+        // ─── VOICE INPUT (speech-to-text) — shared by both answer boxes ───
+        // One click starts recording, the next click stops it; the recording
+        // is turned into text on our server (POST /api/transcribe, Whisper --
+        // speech_to_text.py) and added to the answer box after anything already
+        // typed there. Recording (MediaRecorder) works in every current browser;
+        // the browser's own speech recognition only works in Chrome and Edge
+        // (Brave, Firefox and others fail), so it isn't used.
+        const VOICE_MAX_SECONDS = 300;
+        const VOICE_ERRORS = {
+            blocked: "Microphone blocked. Allow it from the \u{1F512} icon in the address bar, then try again.",
+            missing: "No microphone found. Plug one in and try again.",
+            failed: "Couldn't turn the recording into text. Please try again or type your answer.",
+        };
+
+        function _voiceJoin(a, b) {
+            if (!a || !b || /\s$/.test(a) || /^\s/.test(b)) return a + b;
+            return a + " " + b;
+        }
+
+        function _voiceMimeType() {
+            const types = ["audio/webm;codecs=opus", "audio/ogg;codecs=opus", "audio/mp4", "audio/webm"];
+            return types.find((t) => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || "";
+        }
+
+        // onStateChange(state, seconds): state is "off" | "starting" | "recording" | "transcribing".
+        function createVoiceInput({ button, input, onStateChange, onTextChange }) {
+            if (!window.MediaRecorder || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                if (button) button.style.display = "none";
+                return null;
+            }
+            let state = "off";
+            let recorder = null, stream = null, chunks = [], timer = null, startedAt = 0;
+            let generation = 0;      // bumped to drop a recording / transcription still in flight
+            let afterIdle = null;    // run once the box is idle again (send pressed while busy)
+
+            function setState(next, seconds = 0) {
+                state = next;
+                button.classList.toggle("mic-active", next === "recording");
+                button.classList.toggle("mic-busy", next === "starting" || next === "transcribing");
+                button.setAttribute("aria-pressed", next === "recording" ? "true" : "false");
+                button.title = next === "recording" ? "Stop recording" : next === "transcribing" ? "Turning speech into text..." : "Voice input";
+                if (onStateChange) onStateChange(next, seconds);
+                if (next === "off" && afterIdle) { const run = afterIdle; afterIdle = null; run(); }
+            }
+            function release() {
+                clearInterval(timer);
+                timer = null;
+                if (stream) stream.getTracks().forEach((t) => t.stop());
+                stream = null;
+            }
+
+            async function start() {
+                if (state !== "off") return;
+                const gen = ++generation;
+                setState("starting");
+                // In case the browser still has to ask for the microphone: its prompt
+                // can take focus, which must not count as leaving the interview.
+                proctorSuspendBlur();
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+                } catch (e) {
+                    proctorResumeBlur();
+                    if (gen === generation) {
+                        setState("off");
+                        showToast(e && e.name === "NotFoundError" ? VOICE_ERRORS.missing : VOICE_ERRORS.blocked, "error", 7000);
+                    }
+                    return;
+                }
+                proctorResumeBlur();
+                if (gen !== generation) { release(); return; }   // stopped while waiting for the mic
+                const mimeType = _voiceMimeType();
+                chunks = [];
+                recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+                recorder.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+                recorder.onstop = () => finish(gen, recorder.mimeType || mimeType);
+                recorder.start(1000);
+                startedAt = Date.now();
+                setState("recording", 0);
+                timer = setInterval(() => {
+                    const seconds = Math.floor((Date.now() - startedAt) / 1000);
+                    if (seconds >= VOICE_MAX_SECONDS) {
+                        showToast("Voice answers are limited to 5 minutes, so recording stopped.", "info", 6000);
+                        stop();
+                    } else if (onStateChange) {
+                        onStateChange("recording", seconds);
+                    }
+                }, 1000);
+            }
+
+            async function finish(gen, mimeType) {
+                release();
+                const blob = new Blob(chunks, { type: mimeType || "audio/webm" });
+                chunks = [];
+                if (gen !== generation) return;          // discarded
+                if (!blob.size) { setState("off"); return; }
+                setState("transcribing");
+                try {
+                    const form = new FormData();
+                    form.append("audio", blob, "answer");
+                    const response = await fetch("/api/transcribe", { method: "POST", body: form });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) throw new Error(data.error || VOICE_ERRORS.failed);
+                    if (gen !== generation) return;
+                    const text = (data.text || "").trim();
+                    if (text) {
+                        input.value = _voiceJoin(input.value, text);
+                        if (onTextChange) onTextChange(input.value);
+                    } else {
+                        showToast("No speech was heard in that recording.", "info", 4000);
+                    }
+                } catch (e) {
+                    if (gen === generation) showToast((e && e.message) || VOICE_ERRORS.failed, "error", 7000);
+                } finally {
+                    if (gen === generation) setState("off");
+                }
+            }
+
+            // discard: the answer was sent or the box is being disabled, so a
+            // recording or transcription still in flight must not land in it.
+            function stop({ discard = false } = {}) {
+                if (discard) {
+                    generation++;
+                    afterIdle = null;
+                    if (recorder && recorder.state !== "inactive") recorder.stop(); else release();
+                    if (state !== "off") setState("off");
+                } else if (state === "recording") {
+                    clearInterval(timer);
+                    recorder.stop();                     // -> finish -> transcribe
+                } else if (state === "starting") {
+                    generation++;
+                    setState("off");
+                }
+            }
+
+            return {
+                toggle() {
+                    if (state === "off") start();
+                    else if (state === "recording" || state === "starting") stop();
+                    // transcribing: wait for the text
+                },
+                stop,
+                isOn: () => state === "recording" || state === "starting",
+                busy: () => state !== "off",
+                state: () => state,
+                // Send pressed while recording or transcribing: finish, add the text, then send.
+                whenIdle(fn) {
+                    if (state === "off") { fn(); return; }
+                    if (afterIdle) return;               // already waiting to send
+                    afterIdle = fn;
+                    if (state === "recording" || state === "starting") stop();
+                },
+            };
+        }
+
+        function _voiceClock(seconds) {
+            return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+        }
+
+        // Round 1 composer.
         let rdIsRecording = false;
-        // True from rdToggleMic's start() until recognition starts or fails:
-        // the first use may show a mic permission prompt, which can steal
-        // focus and must not count as a session-integrity violation.
-        let rdMicSuspending = false;
-
-        function rdMicSettled() {
-            if (!rdMicSuspending) return;
-            rdMicSuspending = false;
-            proctorResumeBlur();
-        }
-
-        if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            rdRecognition = new SR();
-            rdRecognition.continuous = false;
-            rdRecognition.interimResults = true;
-
-            rdRecognition.onstart = () => {
-                rdMicSettled();
-                rdIsRecording = true;
-                rdMicBtn.classList.add("mic-active");
-                setSystemLog("Listening...");
-            };
-            rdRecognition.onresult = (event) => {
-                let transcript = "";
-                for (let i = 0; i < event.results.length; i++) transcript += event.results[i][0].transcript;
-                rdInput.value = transcript;
-                rdSendBtn.classList.toggle("ready", transcript.trim().length > 0);
-            };
-            rdRecognition.onerror = () => { rdMicSettled(); rdStopMic(); };
-            rdRecognition.onend = () => { rdMicSettled(); rdStopMic(); };
-        } else if (rdMicBtn) {
-            rdMicBtn.style.display = "none";
-        }
+        const rdVoice = rdMicBtn ? createVoiceInput({
+            button: rdMicBtn,
+            input: rdInput,
+            onStateChange: (state, seconds) => {
+                rdIsRecording = state === "recording";
+                if (state === "recording") setSystemLog(`Recording ${_voiceClock(seconds)} \u2014 click the mic again to stop.`);
+                else if (state === "transcribing") setSystemLog("Turning your answer into text...");
+                else if (state === "off" && !rdInput.disabled) { setSystemLog("Awaiting your response."); rdInput.focus(); }
+            },
+            onTextChange: (text) => rdSendBtn.classList.toggle("ready", text.trim().length > 0),
+        }) : null;
 
         function rdToggleMic() {
-            if (!rdRecognition || rdInput.disabled) return;
-            if (rdIsRecording) {
-                rdRecognition.stop();
-                return;
-            }
-            if (!rdMicSuspending) {
-                rdMicSuspending = true;
-                proctorSuspendBlur();
-            }
-            try {
-                rdRecognition.start();
-            } catch (err) {
-                rdMicSettled();
-            }
+            if (!rdVoice || rdInput.disabled) return;
+            rdVoice.toggle();
         }
 
-        function rdStopMic() {
-            if (!rdRecognition || !rdIsRecording) return;
-            rdIsRecording = false;
-            rdMicBtn.classList.remove("mic-active");
-            if (!rdInput.disabled) {
-                setSystemLog("Awaiting your response.");
-                rdInput.focus();
-            }
+        function rdStopMic({ discard = false } = {}) {
+            if (rdVoice) rdVoice.stop({ discard });
         }
 
         function rdDisableInput() {
+            rdStopMic({ discard: true });
             rdInput.disabled = true;
             rdSendBtn.disabled = true;
             if (rdMicBtn) rdMicBtn.disabled = true;
@@ -4653,9 +4777,11 @@
 
         function rdHandleSubmission() {
             if (rdInput.disabled) return;
+            // Still recording / transcribing: add that text first, then send.
+            if (rdVoice && rdVoice.busy()) { rdVoice.whenIdle(rdHandleSubmission); return; }
             const text = rdInput.value.trim();
             if (!text) return;
-            if (rdIsRecording) rdStopMic();
+            rdStopMic({ discard: true });
             rdInput.value = "";
             rdSendBtn.classList.remove("ready");
             rdHandleReply(text);
@@ -4834,8 +4960,21 @@
                 }
 
             } catch (err) {
+                // Network failure (the server never answered): not a dead end. The
+                // question stays on screen and the answer goes back into the box so
+                // the candidate can simply send it again.
                 console.error("Discussion reply error:", err);
-                rdShowStageError("Something went wrong processing that answer. Please try again.");
+                if (proctorState.terminated || rdEnding) return;
+                if (answeredTurn) {
+                    answeredTurn.answer = null;
+                    if (rdHistoryList.lastElementChild) rdHistoryList.lastElementChild.remove();
+                    rdHistoryCount.textContent = String(rdHistoryList.children.length);
+                }
+                showToast("Your answer wasn't sent (connection problem). Check your connection and send it again.", "error", 6000);
+                setSystemLog("Answer not sent. Send it again.");
+                rdEnableInput();
+                rdInput.value = answer;
+                rdInput.dispatchEvent(new Event("input"));   // re-light the send button
             }
         }
 
@@ -4977,8 +5116,8 @@
         }
 
         function interviewStopMic() {
-            if (rdIsRecording && rdRecognition) rdRecognition.stop();
-            stopMic();
+            rdStopMic({ discard: true });
+            stopMic({ discard: true });
         }
 
         function interviewTerminate() {
@@ -5899,60 +6038,28 @@
             showCameraSetup(() => showInterviewRules("technical"));
         }
 
-        // --- SPEECH RECOGNITION LOGIC ---
-        let recognition;
+        // --- SPEECH RECOGNITION (technical composer; see VOICE INPUT) ---
         let isRecording = false;
-
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = true;
-
-            recognition.onstart = function () {
-                rdMicSettled();
-                isRecording = true;
-                micBtn.classList.add("mic-active");
-                inputField.placeholder = "Listening...";
-            };
-
-            recognition.onresult = function (event) {
-                let transcript = "";
-                for (let i = 0; i < event.results.length; i++) {
-                    transcript += event.results[i][0].transcript;
-                }
-                inputField.value = transcript;
-            };
-
-            recognition.onerror = function (event) { rdMicSettled(); stopMic(); };
-            recognition.onend = function () { rdMicSettled(); stopMic(); };
-        } else {
-            micBtn.style.display = "none";
-        }
+        const techVoice = createVoiceInput({
+            button: micBtn,
+            input: inputField,
+            onStateChange: (state, seconds) => {
+                isRecording = state === "recording";
+                if (inputField.disabled) return;
+                inputField.placeholder =
+                    state === "recording" ? `Recording ${_voiceClock(seconds)} \u2014 click the mic again to stop.`
+                    : state === "transcribing" ? "Turning your answer into text..."
+                    : "Enter response... (Shift+Enter for a new line)";
+            },
+        });
 
         function toggleMic() {
-            if (isRecording) { stopMic(); return; }
-            if (!recognition) return;
-            // The first use may show a mic permission prompt, which can steal
-            // focus -- not a session-integrity violation (same as rdToggleMic).
-            if (!rdMicSuspending) {
-                rdMicSuspending = true;
-                proctorSuspendBlur();
-            }
-            try {
-                recognition.start();
-            } catch (err) {
-                rdMicSettled();
-            }
+            if (!techVoice || inputField.disabled) return;
+            techVoice.toggle();
         }
 
-        function stopMic() {
-            if (recognition && isRecording) {
-                recognition.stop();
-                isRecording = false;
-                micBtn.classList.remove("mic-active");
-                inputField.placeholder = "Enter response... (Shift+Enter for a new line)";
-            }
+        function stopMic({ discard = false } = {}) {
+            if (techVoice) techVoice.stop({ discard });
         }
 
         function showGazeWarning(msg) {
@@ -7657,7 +7764,41 @@
             }
         }
 
+        // Ask for the camera and the microphone together when the app opens, so
+        // the browser doesn't have to ask in the middle of a full-screen
+        // interview (its prompt drops full screen). Nothing is recorded: the
+        // tracks stop at once; the browser remembers the answer for this site.
+        // Asked again by the camera check (before full screen) if still pending.
+        let _micNoticeShown = false;
+
+        async function _permissionState(name) {
+            try { return (await navigator.permissions.query({ name })).state; }
+            catch (e) { return "prompt"; }   // browsers that can't query: just ask
+        }
+
+        async function requestMediaPermissions() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+            const [camera, mic] = await Promise.all([_permissionState("camera"), _permissionState("microphone")]);
+            if (camera === "granted" && mic === "granted") return;
+            let micOk = mic === "granted";
+            if (mic !== "denied") {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: camera !== "denied", audio: true });
+                    stream.getTracks().forEach((t) => t.stop());
+                    micOk = true;
+                } catch (e) {
+                    micOk = (await _permissionState("microphone")) === "granted";
+                }
+            }
+            if (!micOk && !_micNoticeShown) {
+                _micNoticeShown = true;
+                showToast("Microphone not allowed, so voice answers are off (you can still type). To turn them on, " +
+                          "click the \u{1F512} icon in the address bar \u2192 Microphone \u2192 Allow.", "info", 9000);
+            }
+        }
+
         function enterApp(account) {
+            requestMediaPermissions();
             currentAccount = account;
             homeGreetingTyped = false;
             renderProfileMenu();
@@ -8717,7 +8858,7 @@
         }
 
         function disableInput() {
-            stopMic();
+            stopMic({ discard: true });
             inputField.disabled = true;
             sendBtn.disabled = true;
             micBtn.disabled = true;
@@ -8988,6 +9129,8 @@
 
         async function handleSubmission() {
             if (inputField.disabled || interviewFlow.phase !== "technical" || techSessionId === null) return;
+            // Still recording / transcribing: add that text first, then send.
+            if (techVoice && techVoice.busy()) { techVoice.whenIdle(handleSubmission); return; }
             const text = inputField.value.trim();
             if (!text) return;
 
@@ -9218,6 +9361,10 @@
             document.getElementById('cs-continue-btn').onclick = _csOnContinue;
             document.getElementById('cs-retry-btn').onclick = _csOnRetry;
             overlay.classList.add('visible');
+
+            // The microphone too, now and not mid-interview (no-op once both are granted).
+            await requestMediaPermissions();
+            if (session !== _csSession) return;
 
             // ── Camera (BLOCKING if unavailable) ──
             let stream = webcamStream;

@@ -1,0 +1,35 @@
+# Exact versions for the Docker image: the ones the project is tested with
+# (the comments in Requirements_Global.txt). Requirements_Global.txt keeps
+# lower bounds; this file only pins what the image installs.
+flask==3.1.3
+flask-sqlalchemy==3.1.1
+flask-migrate==4.1.0
+flask-login==0.6.3
+sqlalchemy==2.0.54
+python-dotenv==1.2.3
+pydantic==2.13.5
+Pillow==12.3.0
+psycopg==3.3.6
+psycopg-binary==3.3.6
+redis==8.1.0
+waitress==3.0.2
+PyMuPDF==1.28.2
+pdfplumber==0.11.10
+pdfminer.six==20260107
+python-docx==1.2.0
+lxml==6.1.3
+rapidfuzz==3.14.6
+python-dateutil==2.9.0.post0
+torch==2.13.0
+transformers==5.16.1
+sentence-transformers==6.0.0
+huggingface-hub==1.29.0
+sentencepiece==0.2.2
+protobuf==7.36.2
+tiktoken==0.14.0
+keybert==0.9.0
+numpy==2.5.2
+scikit-learn==1.9.0
+faster-whisper==1.2.1
+ctranslate2==4.8.3
+av==19.0.1

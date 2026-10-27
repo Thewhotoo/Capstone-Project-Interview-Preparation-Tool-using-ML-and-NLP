@@ -1,0 +1,844 @@
+[
+ {
+  "question_id": "ooad.adapter_pattern.medium1",
+  "subject": "OOAD",
+  "topic": "Adapter pattern",
+  "difficulty": "medium",
+  "question": "Explain how the Adapter pattern enables incompatible classes to work together, and why it is considered a structural design pattern.",
+  "key_points": [
+   "The Adapter pattern allows two or more previously incompatible objects to interact.",
+   "The Adapter pattern is a structural design pattern.",
+   "The Adapter pattern provides the interface according to client requirements."
+  ],
+  "reference_answer": "The Adapter pattern enables incompatible classes to work together by converting the interface of a class into another interface that a client wants. This is achieved by implementing the target interface and wrapping the adaptee's functionality. It is considered a structural design pattern because it focuses on how classes and objects are composed to form larger structures, rather than on algorithms or data flow.",
+  "followup_question": "How does the Adapter pattern ensure that the client's needs are met?",
+  "followup_expected": "The Adapter pattern ensures that the client's needs are met by converting the interface of a class into one that matches the client's expected interface.",
+  "target_style": "partial",
+  "target_followup": "wrong"
+ },
+ {
+  "question_id": "cn.tcp_connection_establishment.medium2",
+  "subject": "CN",
+  "topic": "TCP connection establishment",
+  "difficulty": "medium",
+  "question": "Why does TCP use a three-way handshake to establish a connection, rather than a two-way handshake?",
+  "key_points": [
+   "TCP uses a three-way handshake to ensure both parties agree to establish the connection.",
+   "A two-way handshake would not guarantee mutual acknowledgment of the connection request."
+  ],
+  "reference_answer": "TCP uses a three-way handshake to ensure both the sender and receiver agree to establish the connection and to synchronize their initial sequence numbers. A two-way handshake would not guarantee that both parties are ready to communicate, which could lead to lost data or failed connections. The three-way handshake allows each side to confirm the other's willingness to connect and to exchange initial sequence numbers, ensuring reliable communication.",
+  "followup_question": "What is the risk of using a two-way handshake in a network with packet loss?",
+  "followup_expected": "The receiving side might not receive the connection request, leading to a failed connection and potential retransmission issues.",
+  "target_style": "partial",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "ooad.coupling_and_cohesion.easy1",
+  "subject": "OOAD",
+  "topic": "Coupling and cohesion",
+  "difficulty": "easy",
+  "question": "Explain what high cohesion means and why it is important in software design.",
+  "key_points": [
+   "High cohesion means that the responsibilities of a class are strongly related and focused.",
+   "High cohesion makes the class easier to understand, maintain, and reuse.",
+   "High cohesion reduces complexity and improves the overall design of the system."
+  ],
+  "reference_answer": "High cohesion means that the responsibilities of a class are strongly related and focused. This makes the class easier to understand, maintain, and reuse. When a class has high cohesion, it performs a single, well-defined task, which reduces complexity and improves the overall design of the system.",
+  "followup_question": "How does high cohesion affect the overall design of a system?",
+  "followup_expected": "It leads to a more modular, maintainable, and understandable system structure.",
+  "target_style": "good",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "dsa.time_and_space_complexity.easy1",
+  "subject": "DSA",
+  "topic": "Time and space complexity",
+  "difficulty": "easy",
+  "question": "Explain what time complexity and space complexity mean in the context of algorithm performance.",
+  "key_points": [
+   "Time complexity measures the time required for an algorithm to run as a function of input size.",
+   "Space complexity measures the memory required for an algorithm to execute.",
+   "Time and space complexity are key criteria for evaluating algorithm performance."
+  ],
+  "reference_answer": "Time complexity refers to the time required for an algorithm to run as a function of input size, while space complexity refers to the memory required. These are key criteria for evaluating algorithm performance. Time efficiency is analyzed by counting the number of repetitions of the basic operation, and space efficiency is about the memory needed for the algorithm to execute.",
+  "followup_question": "Why are time and space complexity important when choosing an algorithm?",
+  "followup_expected": "They help determine how efficient an algorithm is in terms of both time and memory usage, which affects its practicality and scalability.",
+  "target_style": "confident_wrong",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "ooad.this_and_super_keywords.medium1",
+  "subject": "OOAD",
+  "topic": "this and super keywords",
+  "difficulty": "medium",
+  "question": "Explain how the 'super' keyword is used in constructors and why it must be the first statement in a constructor.",
+  "key_points": [
+   "The 'super' keyword is used to explicitly call the superclass constructor.",
+   "'super' must be the first statement in a constructor because the superclass must be initialized first.",
+   "The 'super' keyword refers to the superclass immediately above the calling class in the hierarchy."
+  ],
+  "reference_answer": "The 'super' keyword is used to explicitly call the constructor of the superclass. It must be the first statement in a constructor because the superclass must be fully initialized before the subclass can proceed with its own construction. When the object of a subclass is created, the constructor of the subclass by default invokes the default constructor of the superclass, but this can be explicitly called using 'super'.",
+  "followup_question": "What would happen if a subclass had two superclasses and you called 'super' in its constructor?",
+  "followup_expected": "It would call the constructor of the immediate superclass, which is the one directly above the subclass in the inheritance hierarchy.",
+  "target_style": "short_casual",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dsa.dijkstra_s_algorithm.easy1",
+  "subject": "DSA",
+  "topic": "Dijkstra's algorithm",
+  "difficulty": "easy",
+  "question": "Explain how Dijkstra’s algorithm finds the shortest paths in a weighted graph.",
+  "key_points": [
+   "Dijkstra’s algorithm selects the vertex with the smallest tentative distance.",
+   "The algorithm updates the shortest path to neighboring vertices using outgoing edges."
+  ],
+  "reference_answer": "Dijkstra’s algorithm finds the shortest paths by iteratively selecting the vertex with the smallest tentative distance. It uses a tree of vertices that have already been processed, and for each of these, it considers their outgoing edges to update the shortest path to neighboring vertices. The algorithm ensures that once a vertex is added to the tree, its shortest path is finalized.",
+  "followup_question": "How does the algorithm use the weight of an edge to update distances?",
+  "followup_expected": "The weight of an edge is added to the shortest path to v to compute a potential new shortest path to u.",
+  "target_style": "confident_wrong",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "dsa.merge_sort.easy1",
+  "subject": "DSA",
+  "topic": "Merge sort",
+  "difficulty": "easy",
+  "question": "Explain how merge sort works in terms of splitting and merging arrays.",
+  "key_points": [
+   "Merge sort splits an array into two halves and sorts each half recursively.",
+   "The merge step combines two sorted arrays into one sorted array."
+  ],
+  "reference_answer": "Merge sort works by splitting an array into two halves, sorting each half recursively, and then merging the sorted halves back into a single sorted array. The splitting process continues until the subarrays are of size one, which are inherently sorted. The merging process combines two sorted arrays into one by comparing the front elements of each and placing the smaller one into the result array.",
+  "followup_question": "How does the merge process ensure the final array is sorted?",
+  "followup_expected": "The merge process compares the front elements of each subarray and places the smaller one into the result array, maintaining the sorted order.",
+  "target_style": "good",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "cn.tcp_flow_control.medium1",
+  "subject": "CN",
+  "topic": "TCP flow control",
+  "difficulty": "medium",
+  "question": "Explain how TCP flow control prevents the sender from overwhelming the receiver's buffer.",
+  "key_points": [
+   "The receiver advertises its available buffer space through the rwnd field in the TCP header.",
+   "TCP flow control guarantees the receiver's buffer will not overflow."
+  ],
+  "reference_answer": "TCP flow control ensures the sender does not overwhelm the receiver's buffer by having the receiver advertise its available buffer space through the rwnd field in the TCP header. The sender limits the amount of unACKed data it can transmit based on this advertised window size. This mechanism guarantees that the receiver's buffer will not overflow, even if the network layer delivers data faster than the application layer can process it.",
+  "followup_question": "How does the sender know how much data it can send at any time?",
+  "followup_expected": "The sender uses the receiver's advertised window size in the TCP header to determine the maximum amount of data it can send without overwhelming the receiver.",
+  "target_style": "good_own_words",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "cn.throughput_and_bottleneck_link.medium1",
+  "subject": "CN",
+  "topic": "Throughput and bottleneck link",
+  "difficulty": "medium",
+  "question": "In a network with multiple client-server pairs sharing a common middle link, how does the bottleneck link affect the end-to-end throughput for each pair?",
+  "key_points": [
+   "The bottleneck link limits the maximum end-to-end throughput for each client-server pair.",
+   "The shared link capacity is divided among all pairs when it is fairly shared.",
+   "The throughput for each pair is constrained by the minimum of the server link, client link, and shared link capacity divided by the number of pairs."
+  ],
+  "reference_answer": "The bottleneck link limits the maximum end-to-end throughput for each client-server pair because it is the link with the smallest capacity in the path. When the middle link is fairly shared, its capacity is divided among all pairs, reducing the effective capacity available to each. This means the throughput for each pair is constrained by the minimum of the server link capacity, the client link capacity, and the shared link capacity divided by the number of pairs.",
+  "followup_question": "How does the number of pairs affect the shared link capacity available to each pair?",
+  "followup_expected": "The number of pairs reduces the effective capacity of the shared link for each pair, as the capacity is divided equally among them.",
+  "target_style": "short_casual",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "os.peterson_s_solution.easy1",
+  "subject": "OS",
+  "topic": "Peterson's solution",
+  "difficulty": "easy",
+  "question": "Explain how Peterson’s solution ensures mutual exclusion between two processes.",
+  "key_points": [
+   "Peterson’s solution uses a flag array to indicate if a process is ready to enter the critical section.",
+   "The turn variable is used to determine which process can enter the critical section next."
+  ],
+  "reference_answer": "Peterson’s solution ensures mutual exclusion by using a combination of a flag array and a turn variable. The flag array indicates whether a process is ready to enter the critical section, and the turn variable determines which process can enter next. Mutual exclusion is achieved because a process will only enter the critical section if the other process is not ready or it is not its turn.",
+  "followup_question": "Why is the turn variable necessary for mutual exclusion?",
+  "followup_expected": "The turn variable ensures that only one process can enter the critical section at a time, even if both flags are set to true.",
+  "target_style": "short_casual",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "dbms.denormalization.easy1",
+  "subject": "DBMS",
+  "topic": "Denormalization",
+  "difficulty": "easy",
+  "question": "Explain what denormalization is and why it might be used in a database.",
+  "key_points": [
+   "Denormalization is a database optimization technique where redundant data is added to one or more tables.",
+   "Denormalization is used when retrieving data is prioritized over update efficiency.",
+   "Denormalization allows for simpler queries and faster data retrieval."
+  ],
+  "reference_answer": "Denormalization is a database optimization technique where redundant data is added to one or more tables to avoid costly joins. It is used when retrieving data is prioritized over update efficiency, and when the cost of joins becomes a performance bottleneck. This approach allows for simpler queries and faster data retrieval, but at the expense of increased storage and potential data inconsistency.",
+  "followup_question": "How does denormalization affect query complexity?",
+  "followup_expected": "Denormalization reduces query complexity by requiring fewer tables to be joined, making queries simpler and less error-prone.",
+  "target_style": "short_casual",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "ooad.static_members.easy1",
+  "subject": "OOAD",
+  "topic": "Static members",
+  "difficulty": "easy",
+  "question": "Explain what a static block is and when it is executed in Java.",
+  "key_points": [
+   "A static block is used to initialize static data members.",
+   "A static block is executed before the main method.",
+   "A static block is executed exactly once."
+  ],
+  "reference_answer": "A static block in Java is used to initialize static data members. It is executed before the main method at the time of class loading. The static block runs exactly once when the class is first loaded, ensuring that static initialization happens early in the program lifecycle.",
+  "followup_question": "What would happen if you create multiple instances of the class?",
+  "followup_expected": "The static block would still execute only once, regardless of how many instances are created.",
+  "target_style": "partial",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "os.semaphores.hard2",
+  "subject": "OS",
+  "topic": "Semaphores",
+  "difficulty": "hard",
+  "question": "Explain how the implementation of semaphores without busy waiting can lead to priority inversion, and why the use of the priority-inheritance protocol is necessary.",
+  "key_points": [
+   "The implementation of semaphores without busy waiting uses a waiting queue to block processes when the semaphore value is zero.",
+   "Priority inversion occurs when a lower-priority process holds a lock needed by a higher-priority process.",
+   "The priority-inheritance protocol is necessary to resolve priority inversion."
+  ],
+  "reference_answer": "The implementation of semaphores without busy waiting uses a waiting queue to block processes when the semaphore value is zero. Priority inversion occurs when a lower-priority process holds a lock needed by a higher-priority process. The priority-inheritance protocol is necessary to resolve this by temporarily raising the priority of the lower-priority process until it releases the lock, ensuring the higher-priority process can proceed.",
+  "followup_question": "Why would a priority-inheritance protocol help in the case of semaphores?",
+  "followup_expected": "It temporarily raises the priority of the lower-priority process to ensure it can release the lock and allow the higher-priority process to proceed.",
+  "target_style": "hesitant",
+  "target_followup": "wrong"
+ },
+ {
+  "question_id": "dbms.integrity_constraints.medium1",
+  "subject": "DBMS",
+  "topic": "Integrity constraints",
+  "difficulty": "medium",
+  "question": "Explain how referential integrity constraints work in SQL and why they are important for maintaining data consistency.",
+  "key_points": [
+   "Referential integrity constraints ensure that foreign key values must match existing primary key values or be null.",
+   "Referential integrity constraints help maintain logical relationships between tables.",
+   "Referential integrity constraints can be modified with referential triggered actions like CASCADE, SET NULL, or SET DEFAULT."
+  ],
+  "reference_answer": "Referential integrity constraints ensure that foreign key values in a table must match existing primary key values in another table, or be null. This prevents orphaned records and maintains consistency between related tables. These constraints are important because they enforce logical relationships between tables, ensuring that data remains accurate and consistent across the database.",
+  "followup_question": "What is the purpose of the CASCADE option in referential integrity?",
+  "followup_expected": "The CASCADE option automatically updates or deletes related records in other tables when a record is updated or deleted in the referenced table.",
+  "target_style": "good_own_words",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "dbms.common_table_expressions_cte.medium1",
+  "subject": "DBMS",
+  "topic": "Common table expressions (CTE)",
+  "difficulty": "medium",
+  "question": "Explain how a recursive CTE works and why it is useful for hierarchical data.",
+  "key_points": [
+   "A recursive CTE combines an anchor member and a recursive member.",
+   "The recursive member repeatedly references the CTE itself.",
+   "Recursive CTEs are useful for hierarchical data."
+  ],
+  "reference_answer": "A recursive CTE works by combining an anchor member and a recursive member. The anchor member provides the initial result set, and the recursive member repeatedly references the CTE itself to build upon the results. This process continues until no more rows are returned. Recursive CTEs are useful for hierarchical data because they allow you to traverse relationships, such as employee-supervisor chains, by iteratively expanding the result set.",
+  "followup_question": "Why is a recursive CTE suitable for hierarchical data?",
+  "followup_expected": "A recursive CTE is suitable for hierarchical data because it can traverse relationships, such as employee-supervisor chains, by iteratively expanding the result set.",
+  "target_style": "confident_wrong",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "dsa.priority_queue.easy1",
+  "subject": "DSA",
+  "topic": "Priority queue",
+  "difficulty": "easy",
+  "question": "Explain what a priority queue is and how it differs between ascending and descending types.",
+  "key_points": [
+   "A priority queue is a data structure where the intrinsic ordering of elements determines the results of its basic operations.",
+   "An ascending priority queue removes the smallest item.",
+   "A descending priority queue removes the largest item."
+  ],
+  "reference_answer": "A priority queue is a data structure where the intrinsic ordering of elements determines the results of its basic operations. An ascending priority queue removes the smallest item, while a descending priority queue removes the largest item. This distinction is important because it defines the behavior of the queue in different applications.",
+  "followup_question": "How would you implement a descending priority queue using an array?",
+  "followup_expected": "You would use a heap structure where the largest item is always at the root, and you would use siftup and adjustheap operations to maintain the heap property.",
+  "target_style": "good_own_words",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "dsa.stacks_and_recursion.easy1",
+  "subject": "DSA",
+  "topic": "Stacks and recursion",
+  "difficulty": "easy",
+  "question": "Explain how a stack is used in the execution of recursive functions.",
+  "key_points": [
+   "Each recursive function call creates an activation record that is pushed onto the stack.",
+   "The stack ensures that the most recent function call is executed first, and the most recent call is removed first.",
+   "The stack stores the return address so that the program can resume execution after the function call completes."
+  ],
+  "reference_answer": "A stack is used in the execution of recursive functions because each function call creates an activation record that is pushed onto the stack. This activation record contains the function's local variables and return address. The last-in, first-out (LIFO) property of the stack ensures that when a recursive function completes, the most recent call is removed from the stack, allowing control to return to the previous call in the call chain.",
+  "followup_question": "What happens to the return address when a function call is made?",
+  "followup_expected": "The return address is stored in the activation record on the stack so that the program can resume execution at the correct location after the function call completes.",
+  "target_style": "partial",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "dbms.cap_theorem.medium2",
+  "subject": "DBMS",
+  "topic": "CAP theorem",
+  "difficulty": "medium",
+  "question": "How does the CAP theorem influence the design trade-offs in distributed systems, particularly in the context of SQL versus NoSQL databases?",
+  "key_points": [
+   "The CAP theorem forces a trade-off between consistency, availability, and partition tolerance.",
+   "SQL databases prioritize consistency through ACID properties.",
+   "NoSQL systems often prioritize availability and partition tolerance over strict consistency."
+  ],
+  "reference_answer": "The CAP theorem influences design trade-offs by forcing system designers to prioritize two out of the three properties—consistency, availability, and partition tolerance. In traditional SQL databases, consistency is prioritized through ACID properties, ensuring strong consistency. In contrast, NoSQL systems often prioritize availability and partition tolerance, accepting weaker consistency levels such as eventual consistency. This reflects a fundamental design choice between strict consistency and system availability in the face of network partitions.",
+  "followup_question": "What kind of consistency do NoSQL systems typically use?",
+  "followup_expected": "NoSQL systems often use eventual consistency, which allows for weaker consistency levels in exchange for higher availability and partition tolerance.",
+  "target_style": "good_own_words",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "cn.network_devices.hard2",
+  "subject": "CN",
+  "topic": "Network devices",
+  "difficulty": "hard",
+  "question": "Consider a scenario where a network administrator is deciding between using a Repeater and a Switch to connect two segments of a network. What are the key differences in their operation and how might these differences affect network performance?",
+  "key_points": [
+   "A Repeater regenerates signals to extend the reach of a network.",
+   "A Repeater broadcasts all data to all connected devices.",
+   "A Switch uses MAC addresses to forward data directly to the intended device.",
+   "A Switch reduces collisions by only forwarding data to the intended recipient."
+  ],
+  "reference_answer": "A Repeater operates at the Physical Layer and regenerates signals to extend the reach of a network, while a Switch operates at the Data Link Layer and uses MAC addresses to forward data directly to the intended device. The Repeater broadcasts all data to all connected devices, which can lead to increased collisions and reduced network efficiency. In contrast, a Switch reduces collisions by only forwarding data to the intended recipient, improving overall network performance. These differences mean that a Repeater is suitable for extending a single segment, whereas a Switch is better for managing multiple devices in a more intelligent and efficient manner.",
+  "followup_question": "How does this compare to the behavior of a Repeater?",
+  "followup_expected": "A Repeater broadcasts all data, leading to more collisions, while a Switch forwards data only to the intended recipient, minimizing collisions.",
+  "target_style": "confident_wrong",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "ooad.is_a_vs_has_a_relationship.easy1",
+  "subject": "OOAD",
+  "topic": "IS-A vs HAS-A relationship",
+  "difficulty": "easy",
+  "question": "What is the difference between an 'is-a' relationship and a 'has-a' relationship in object-oriented design?",
+  "key_points": [
+   "Inheritance is used to implement the 'is-a' relationship.",
+   "Composition is used to implement the 'has-a' relationship.",
+   "The 'has-a' relationship allows for more flexible design and easier modification."
+  ],
+  "reference_answer": "An 'is-a' relationship is implemented using inheritance and represents a type-of relationship, such as a 'Dog' being a type of 'Animal'. A 'has-a' relationship is implemented using composition and represents a part-of relationship, such as a 'University' having a 'College'. The 'is-a' relationship defines a hierarchy, while the 'has-a' relationship defines containment and dependency.",
+  "followup_question": "Why might a developer prefer composition over inheritance?",
+  "followup_expected": "Because composition allows for more flexible and dynamic behavior, and it avoids the complexities and potential issues of deep inheritance hierarchies.",
+  "target_style": "good_own_words",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "os.preemptive_vs_non_preemptive_scheduling.medium1",
+  "subject": "OS",
+  "topic": "Preemptive vs non-preemptive scheduling",
+  "difficulty": "medium",
+  "question": "Explain how preemptive scheduling differs from non-preemptive scheduling in terms of when scheduling decisions occur and the implications for system behavior.",
+  "key_points": [
+   "Preemptive scheduling allows the operating system to interrupt a running process.",
+   "Non-preemptive scheduling decisions only occur when a process transitions to waiting or terminates.",
+   "Preemptive scheduling may require mechanisms like mutex locks to prevent race conditions."
+  ],
+  "reference_answer": "Preemptive scheduling allows the operating system to interrupt a running process and switch to another process, which can occur during transitions such as running to waiting, running to ready, or waiting to ready. Non-preemptive scheduling does not allow such interruptions, and scheduling decisions only happen when a process transitions to the waiting or terminated state. This difference impacts system responsiveness and the potential for race conditions, as preemptive scheduling may require mechanisms like mutex locks to protect shared data.",
+  "followup_question": "What is a potential downside of preemptive scheduling?",
+  "followup_expected": "Preemptive scheduling can lead to race conditions if shared data is accessed without proper synchronization, requiring additional mechanisms like mutex locks to ensure data consistency.",
+  "target_style": "partial",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "cn.go_back_n_and_selective_repeat.medium2",
+  "subject": "CN",
+  "topic": "Go-Back-N and Selective Repeat",
+  "difficulty": "medium",
+  "question": "Explain how the sender and receiver manage retransmissions and window advancement in Selective Repeat, and why this approach is more efficient than Go-Back-N in certain scenarios.",
+  "key_points": [
+   "The sender retransmits only the unacknowledged packets individually.",
+   "The receiver acknowledges each correctly received packet individually.",
+   "The sender advances the window base only when the smallest unacknowledged packet is acknowledged."
+  ],
+  "reference_answer": "In Selective Repeat, the sender retransmits only the unacknowledged packets individually, while the receiver acknowledges each correctly received packet individually. This allows the sender to advance the window base only when the smallest unacknowledged packet is acknowledged, which improves efficiency in cases of partial packet loss. The receiver buffers out-of-order packets and delivers them in order once the sequence is complete, which reduces the need for retransmitting multiple packets in case of a single lost packet.",
+  "followup_question": "How does this differ from Go-Back-N's window advancement?",
+  "followup_expected": "In Go-Back-N, the window advances when any packet in the window is acknowledged, whereas in Selective Repeat, it only advances when the smallest unacknowledged packet is acknowledged.",
+  "target_style": "confident_wrong",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "os.priority_scheduling.medium1",
+  "subject": "OS",
+  "topic": "Priority scheduling",
+  "difficulty": "medium",
+  "question": "Explain how priority scheduling can lead to starvation and what is a common solution to this problem.",
+  "key_points": [
+   "Priority scheduling can lead to starvation.",
+   "Starvation is a problem in priority scheduling.",
+   "Aging is a common solution to starvation in priority scheduling."
+  ],
+  "reference_answer": "Priority scheduling can lead to starvation because low-priority processes may never execute if higher-priority processes keep arriving. A common solution to this problem is aging, which gradually increases the priority of processes over time to ensure they eventually get executed.",
+  "followup_question": "How can we prevent low-priority processes from being starved?",
+  "followup_expected": "By using aging, which increases the priority of waiting processes over time.",
+  "target_style": "good_own_words",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "dsa.expression_trees.easy1",
+  "subject": "DSA",
+  "topic": "Expression trees",
+  "difficulty": "easy",
+  "question": "Explain what an expression tree is and how it represents an arithmetic expression.",
+  "key_points": [
+   "An expression tree is a data structure that represents an arithmetic expression in a hierarchical form.",
+   "The tree is constructed such that operands are leaves and operators are internal nodes.",
+   "Each operator connects to its operands as children."
+  ],
+  "reference_answer": "An expression tree is a data structure that represents an arithmetic expression in a hierarchical form. It is built to translate code as data and then analyze and evaluate expressions. The tree is constructed such that operands are leaves and operators are internal nodes, with each operator connecting to its operands as children.",
+  "followup_question": "How does an operator node relate to its operands in the tree?",
+  "followup_expected": "An operator node connects to its operands as its left and right children.",
+  "target_style": "good_own_words",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "ooad.method_overriding.easy1",
+  "subject": "OOAD",
+  "topic": "Method overriding",
+  "difficulty": "easy",
+  "question": "Can you explain what method overriding is and why it's useful in object-oriented programming?",
+  "key_points": [
+   "Method overriding is when a subclass provides a specific implementation of a method that is already declared in its parent class.",
+   "Method overriding is used for runtime polymorphism.",
+   "Method overriding requires an IS-A relationship (inheritance)."
+  ],
+  "reference_answer": "Method overriding is when a subclass provides a specific implementation of a method that is already declared in its parent class. This allows the subclass to redefine the behavior of the method, which is useful for runtime polymorphism. It enables objects of different classes to be treated as objects of a common superclass, while still allowing for specialized behavior.",
+  "followup_question": "Can a class override a method from a class it does not inherit from?",
+  "followup_expected": "No, method overriding can only occur between a superclass and a subclass, which requires an inheritance relationship.",
+  "target_style": "confident_wrong",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dbms.denormalization.medium2",
+  "subject": "DBMS",
+  "topic": "Denormalization",
+  "difficulty": "medium",
+  "question": "How does denormalization affect the balance between query performance and data consistency in a database?",
+  "key_points": [
+   "Denormalization improves query performance by reducing the need for joins.",
+   "Denormalization introduces the risk of data inconsistency.",
+   "Denormalization requires careful management to avoid data redundancy and inaccuracies."
+  ],
+  "reference_answer": "Denormalization improves query performance by reducing the need for joins, which allows for faster data retrieval and simpler queries. However, it introduces the risk of data inconsistency because redundant data may not be updated across all relevant tables simultaneously. This trade-off means that while denormalization can speed up read operations, it requires careful management to avoid data redundancy and potential inaccuracies.",
+  "followup_question": "What challenge does denormalization introduce for data updates?",
+  "followup_expected": "It makes update and insert code more complex, increasing the risk of errors and data inconsistency.",
+  "target_style": "confident_wrong",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "os.mutex_locks.easy1",
+  "subject": "OS",
+  "topic": "Mutex locks",
+  "difficulty": "easy",
+  "question": "Explain what a mutex lock is and how it helps solve the critical section problem.",
+  "key_points": [
+   "Mutex locks are a software solution for the critical section problem.",
+   "Mutex locks require a process to acquire and release the lock to enter and exit the critical section.",
+   "Mutex locks use a Boolean variable to indicate lock availability."
+  ],
+  "reference_answer": "A mutex lock is a software tool used by OS designers to solve the critical section problem. It protects a critical section by requiring a process to first acquire() the lock before entering the section and then release() it afterward. This ensures mutual exclusion, as only one process can hold the lock at a time. The lock is typically implemented using a Boolean variable indicating whether the lock is available or not.",
+  "followup_question": "How is the state of a mutex lock represented in memory?",
+  "followup_expected": "The state is represented by a Boolean variable that indicates whether the lock is available (false) or held (true).",
+  "target_style": "confident_wrong",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "os.deadlock_conditions.hard2",
+  "subject": "OS",
+  "topic": "Deadlock conditions",
+  "difficulty": "hard",
+  "question": "Consider a scenario where a system allows preemption of resources. How does this affect the possibility of deadlock, and what condition is no longer a necessary requirement for deadlock to occur?",
+  "key_points": [
+   "Preemption can eliminate the necessity of the 'no preemption' condition for deadlock to occur.",
+   "Preemption can break the cycle of resource allocation that leads to deadlock.",
+   "Preemption introduces the possibility of resource starvation."
+  ],
+  "reference_answer": "Preemption allows a resource to be forcibly taken from a process, which breaks the 'no preemption' condition. This means that even if the other three conditions—mutual exclusion, hold and wait, and circular wait—are met, preemption can prevent deadlock by allowing resources to be reallocated. Therefore, preemption can eliminate the necessity of the 'no preemption' condition for deadlock to occur.",
+  "followup_question": "What is a potential downside of allowing preemption in a system?",
+  "followup_expected": "Preemption can lead to resource starvation, where a process is repeatedly preempted and never gets to complete its execution.",
+  "target_style": "hesitant",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "dbms.outer_joins.medium1",
+  "subject": "DBMS",
+  "topic": "Outer joins",
+  "difficulty": "medium",
+  "question": "Explain how a Full Outer Join differs from a Left or Right Outer Join, and why it might be useful in a database query.",
+  "key_points": [
+   "A Full Outer Join returns all records from both tables, including unmatched rows, which are padded with NULL values.",
+   "Full Outer Join is useful when you need to combine data from both tables regardless of whether there is a match.",
+   "Full Outer Join cannot be directly implemented in MySQL and requires combining LEFT and RIGHT Outer Joins with UNION."
+  ],
+  "reference_answer": "A Full Outer Join returns all records from both tables, including unmatched rows, which are padded with NULL values. This is different from a Left or Right Outer Join, which only returns all records from one table (left or right) and unmatched rows from the other. Full Outer Join is useful when you need to combine data from both tables regardless of whether there is a match, ensuring no data is lost.",
+  "followup_question": "What is a common workaround for implementing Full Outer Join in MySQL?",
+  "followup_expected": "Using a combination of LEFT OUTER JOIN and RIGHT OUTER JOIN with the UNION operator to merge their results.",
+  "target_style": "partial",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dbms.data_independence.easy1",
+  "subject": "DBMS",
+  "topic": "Data independence",
+  "difficulty": "easy",
+  "question": "Explain what physical data independence means in the context of a database system.",
+  "key_points": [
+   "Physical data independence allows changes to the physical schema without affecting the logical or conceptual schema.",
+   "Physical data independence supports easier maintenance and upgrades of the database system."
+  ],
+  "reference_answer": "Physical data independence refers to the characteristic of being able to modify the physical schema without any alterations to the conceptual or logical schema, done for optimization purposes. This allows database administrators to make changes to the storage structure, such as switching from sequential to random access files, without affecting the logical structure or the applications that use the database. This ensures that changes in storage systems do not disrupt the functionality of the database or the applications relying on it.",
+  "followup_question": "How does physical data independence help in the long-term management of a database?",
+  "followup_expected": "Physical data independence allows for easier maintenance and upgrades of the storage system without requiring changes to the logical or application layers, reducing the risk of disruptions and increasing system flexibility.",
+  "target_style": "partial",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "cn.network_devices.medium1",
+  "subject": "CN",
+  "topic": "Network devices",
+  "difficulty": "medium",
+  "question": "Explain how a Switch differs from a Hub in terms of network communication and device intelligence.",
+  "key_points": [
+   "Switches operate at the Data Link Layer and use MAC addresses for data forwarding.",
+   "Switches support full-duplex communication, while Hubs only support half-duplex.",
+   "Switches store MAC addresses, allowing them to route data only to the intended destination."
+  ],
+  "reference_answer": "A Switch operates at the Data Link Layer and uses MAC addresses to forward data packets to the appropriate destination ports, whereas a Hub operates at the Physical Layer and broadcasts data to all connected devices. Switches can operate in full-duplex mode, enabling simultaneous data transmission and reception, while Hubs only support half-duplex communication. Switches store MAC addresses of connected devices, allowing them to route communication only to the intended destination, reducing collisions, whereas Hubs cannot store MAC addresses and transmit all data to all connected devices without filtering.",
+  "followup_question": "How does a Switch handle a device that it has not learned the MAC address for?",
+  "followup_expected": "The Switch will forward the data to all ports until it learns the MAC address, at which point it will direct the data only to the appropriate port.",
+  "target_style": "good_own_words",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "ooad.open_closed_principle.medium2",
+  "subject": "OOAD",
+  "topic": "Open-closed principle",
+  "difficulty": "medium",
+  "question": "How does the Open-Closed Principle help in minimizing the risk of failure when adding new features to existing code?",
+  "key_points": [
+   "Modifying existing code can lead to unexpected behavior.",
+   "New features should be added through extension, not modification.",
+   "OOP features like inheritance and interfaces support the principle."
+  ],
+  "reference_answer": "The Open-Closed Principle helps in minimizing the risk of failure by encouraging the extension of existing code rather than modifying it. This is because modifying existing code can lead to unexpected behavior. By using OOP features like inheritance and interfaces, new features can be added without changing the existing code, which reduces the chance of introducing bugs.",
+  "followup_question": "How can inheritance help in following the Open-Closed Principle?",
+  "followup_expected": "Inheritance allows new classes to extend existing ones, enabling new behavior without changing the original class.",
+  "target_style": "good",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dsa.binary_search_tree_deletion.easy1",
+  "subject": "DSA",
+  "topic": "Binary search tree deletion",
+  "difficulty": "easy",
+  "question": "Explain how to delete a node from a binary search tree that has two children.",
+  "key_points": [
+   "Replace the node with its inorder successor or predecessor.",
+   "The choice between inorder successor and predecessor is arbitrary."
+  ],
+  "reference_answer": "To delete a node with two children in a binary search tree, you replace the node's value with its inorder successor or predecessor. This changes the problem to deleting a node with one or no children, which is simpler. The inorder successor is the smallest value in the right subtree, and the inorder predecessor is the largest value in the left subtree. After replacing the node's value, you then delete the inorder successor or predecessor, which may involve one or no children.",
+  "followup_question": "Can you delete a node with two children by using either the inorder successor or predecessor?",
+  "followup_expected": "Yes, you can choose either the inorder successor or predecessor, and the choice does not affect the correctness of the deletion.",
+  "target_style": "dont_know",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "ooad.chain_of_responsibility_pattern.medium1",
+  "subject": "OOAD",
+  "topic": "Chain of responsibility pattern",
+  "difficulty": "medium",
+  "question": "Explain how the Chain of Responsibility pattern allows for dynamic decision-making in handling requests, and why this is important for loose coupling.",
+  "key_points": [
+   "The Chain of Responsibility pattern allows multiple objects to handle a request.",
+   "The chain can be decided dynamically at runtime.",
+   "The pattern promotes loose coupling between the sender and the receiver."
+  ],
+  "reference_answer": "The Chain of Responsibility pattern allows for dynamic decision-making by letting the client decide at runtime which objects form the chain and the order in which they handle requests. This is important for loose coupling because it decouples the sender of a request from its receiver, allowing multiple objects to handle the request without the sender needing to know which one will ultimately do so.",
+  "followup_question": "How does giving multiple objects an opportunity to handle the request contribute to loose coupling?",
+  "followup_expected": "It allows the sender to remain unaware of which specific object will handle the request, reducing dependencies between components.",
+  "target_style": "short_casual",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "os.logical_vs_physical_address.easy1",
+  "subject": "OS",
+  "topic": "Logical vs physical address",
+  "difficulty": "easy",
+  "question": "Explain the difference between a logical address and a physical address.",
+  "key_points": [
+   "Logical address is generated by the CPU and is also called a virtual address.",
+   "Physical address is the address seen by the memory unit.",
+   "Logical and physical addresses are the same in compile-time and load-time address-binding schemes."
+  ],
+  "reference_answer": "A logical address is generated by the CPU and is also called a virtual address. A physical address is the address seen by the memory unit. Logical and physical addresses are the same in compile-time and load-time address-binding schemes, but differ in execution-time address-binding schemes.",
+  "followup_question": "In which scenario do logical and physical addresses differ?",
+  "followup_expected": "Logical and physical addresses differ in execution-time address-binding schemes, where translation occurs at runtime.",
+  "target_style": "short_casual",
+  "target_followup": "wrong"
+ },
+ {
+  "question_id": "ooad.inheritance.medium2",
+  "subject": "OOAD",
+  "topic": "Inheritance",
+  "difficulty": "medium",
+  "question": "Explain how inheritance supports code reusability and what kind of relationship it represents in object-oriented design.",
+  "key_points": [
+   "Inheritance enables code reusability by allowing a child class to inherit features from a parent class.",
+   "Inheritance represents an 'is a' relationship between a child class and a parent class.",
+   "Inheritance is also referred to as generalization in class diagrams."
+  ],
+  "reference_answer": "Inheritance allows a child class to inherit the properties and methods of a parent class, which supports code reusability by avoiding duplication. It represents an 'is a' relationship, meaning the child class is a specific type of the parent class. This relationship enables the child class to extend or specialize the functionality of the parent class without rewriting existing code.",
+  "followup_question": "How is inheritance represented in a class diagram?",
+  "followup_expected": "In a class diagram, inheritance is shown as a line with a hollow triangle arrowhead pointing to the superclass.",
+  "target_style": "hesitant",
+  "target_followup": "partly_correct"
+ },
+ {
+  "question_id": "os.deadlock_avoidance.medium2",
+  "subject": "OS",
+  "topic": "Deadlock avoidance",
+  "difficulty": "medium",
+  "question": "How does the concept of a safe state influence the decision-making process when a process requests a resource in a deadlock avoidance system?",
+  "key_points": [
+   "The system must ensure that granting a resource request will not leave it in an unsafe state.",
+   "A safe state guarantees that the system can avoid deadlocks.",
+   "The behavior of processes can lead to unsafe states, which may result in deadlocks."
+  ],
+  "reference_answer": "The concept of a safe state ensures that the system remains in a state where a deadlock cannot occur. When a process requests a resource, the system must determine if granting the request will leave the system in a safe state. If it does, the request is granted; otherwise, the process must wait. This decision is based on the idea that the system must always remain in a safe state to avoid deadlocks.",
+  "followup_question": "How does the behavior of processes affect the system's ability to avoid deadlocks?",
+  "followup_expected": "If processes request resources in a way that leads to an unsafe state, the system may not be able to avoid a deadlock, even if it was initially in a safe state.",
+  "target_style": "confident_wrong",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "ooad.method_overloading.hard2",
+  "subject": "OOAD",
+  "topic": "Method overloading",
+  "difficulty": "hard",
+  "question": "What happens if two overloaded methods differ only in their return types, and how does this affect the compiler's ability to resolve the correct method call?",
+  "key_points": [
+   "The return type is not part of the method signature used for method overloading.",
+   "A difference in return type alone does not allow the compiler to resolve which method to call.",
+   "Method overloading relies solely on the method name and parameter list, not the return type."
+  ],
+  "reference_answer": "If two overloaded methods differ only in their return types, the compiler will not be able to resolve which method to call, resulting in a compilation error. This is because the return type is not part of the method signature used for overloading. The compiler relies solely on the method name and parameter list to determine which method to invoke. This highlights that return type cannot be used to distinguish between overloaded methods.",
+  "followup_question": "Why is the return type not considered when resolving overloaded methods?",
+  "followup_expected": "Because the return type does not affect the method signature, which is what the compiler uses to determine which method to call at compile time.",
+  "target_style": "good_own_words",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dsa.stack_operations.easy1",
+  "subject": "DSA",
+  "topic": "Stack operations",
+  "difficulty": "easy",
+  "question": "Explain how a stack can be implemented using a linked list.",
+  "key_points": [
+   "A stack can be implemented through the linked list.",
+   "Push operation inserts an element at the front of the list.",
+   "Pop operation removes an element from the front of the list."
+  ],
+  "reference_answer": "A stack implemented with a linked list uses a pointer called 'top' that points to the head of the list. Push operations insert new nodes at the front of the list, and pop operations remove nodes from the front. This ensures that the most recently added element is always the first to be removed, maintaining the LIFO property.",
+  "followup_question": "What is the effect of popping an element from a linked list-based stack?",
+  "followup_expected": "The element at the front of the list is removed, and the top pointer is updated to point to the next node in the list.",
+  "target_style": "short_casual",
+  "target_followup": "wrong"
+ },
+ {
+  "question_id": "dbms.nested_and_correlated_subqueries.medium1",
+  "subject": "DBMS",
+  "topic": "Nested and correlated subqueries",
+  "difficulty": "medium",
+  "question": "Explain how correlated subqueries differ from regular nested queries in terms of execution and their impact on query results.",
+  "key_points": [
+   "A correlated nested query is evaluated once for each tuple (or combination of tuples) of the relation in the outer query.",
+   "Correlated subqueries are often used with EXISTS or NOT EXISTS to check for the presence of tuples."
+  ],
+  "reference_answer": "Correlated subqueries are evaluated once for each tuple in the outer query, and they reference attributes from the outer query. This means the subquery depends on the outer query's tuple for its execution. In contrast, regular nested queries are evaluated once and do not depend on the outer query's tuples. This difference in execution leads to different results, as correlated subqueries can produce different results for each row of the outer query.",
+  "followup_question": "Why would you use EXISTS with a correlated subquery?",
+  "followup_expected": "To check if there is at least one matching tuple in the subquery result for a given row in the outer query.",
+  "target_style": "good",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "ooad.abstraction.medium1",
+  "subject": "OOAD",
+  "topic": "Abstraction",
+  "difficulty": "medium",
+  "question": "Explain how abstraction in object-oriented programming helps in managing complexity in software design.",
+  "key_points": [
+   "Abstraction hides implementation details from users.",
+   "Abstraction allows interaction through an interface."
+  ],
+  "reference_answer": "Abstraction in object-oriented programming helps manage complexity by hiding the internal implementation details of an entity and exposing only its essential features. This allows users to interact with the entity through its interface without needing to understand its internal workings. By focusing on what an object does rather than how it does it, abstraction reduces the cognitive load on developers and makes systems easier to maintain and scale.",
+  "followup_question": "What is the role of an interface in abstraction?",
+  "followup_expected": "An interface provides a way for other objects to interact with the entity without needing to know its internal structure, which is a key aspect of abstraction.",
+  "target_style": "confident_wrong",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "ooad.overloading_vs_overriding.medium1",
+  "subject": "OOAD",
+  "topic": "Overloading vs overriding",
+  "difficulty": "medium",
+  "question": "Explain the difference between method overloading and method overriding, and why they are used in different scenarios.",
+  "key_points": [
+   "Method overloading is a compile-time polymorphism, while method overriding is a runtime polymorphism.",
+   "Method overloading differs based on the parameters, while method overriding requires the same method name and parameters.",
+   "Method overriding is used for runtime polymorphism, while method overloading is used to enhance code readability and reusability."
+  ],
+  "reference_answer": "Method overloading allows a class to have multiple methods with the same name but different parameters, enabling flexibility in calling the same method with different inputs. Method overriding, on the other hand, allows a subclass to provide a specific implementation of a method already defined in its parent class, supporting runtime polymorphism. These two concepts are used in different scenarios: overloading is used to enhance readability and reusability within a single class, while overriding is used to customize behavior in a hierarchy of classes.",
+  "followup_question": "Why would you use method overloading instead of creating multiple methods with different names?",
+  "followup_expected": "Method overloading is used to enhance code readability and reusability by allowing the same method name to be used with different parameter types, reducing the need for multiple method names.",
+  "target_style": "partial",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "ooad.composition_over_inheritance.medium1",
+  "subject": "OOAD",
+  "topic": "Composition over inheritance",
+  "difficulty": "medium",
+  "question": "Explain how composition differs from inheritance in terms of how they model relationships between objects, and why composition is often preferred in object-oriented design.",
+  "key_points": [
+   "Composition models a 'has-a' relationship.",
+   "Composition allows for dynamic behavior changes at runtime.",
+   "Composition provides better test-ability."
+  ],
+  "reference_answer": "Composition models a 'has-a' relationship, where one object contains another, while inheritance models an 'is-a' relationship. Composition allows for greater flexibility and reusability, as it enables dynamic behavior changes at runtime.",
+  "followup_question": "Why might test-ability be an important factor in choosing composition over inheritance?",
+  "followup_expected": "Better test-ability means that individual components can be tested in isolation, which simplifies debugging and maintenance.",
+  "target_style": "partial",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dbms.null_handling_in_sql.easy1",
+  "subject": "DBMS",
+  "topic": "NULL handling in SQL",
+  "difficulty": "easy",
+  "question": "Explain how SQL handles comparisons involving NULL values.",
+  "key_points": [
+   "Comparisons involving NULL values result in UNKNOWN.",
+   "NULL represents an unknown or missing value.",
+   "The logical value UNKNOWN is used in SQL for comparisons with NULL."
+  ],
+  "reference_answer": "In SQL, comparisons involving NULL values result in UNKNOWN. This is because NULL represents an unknown or missing value, and it cannot be determined whether the comparison is true or false. For example, the expression (1 < NULL) evaluates to UNKNOWN. Similarly, NOT(1 < NULL) also evaluates to UNKNOWN. This behavior is part of SQL's approach to handling NULL values in logical operations.",
+  "followup_question": "How does this affect the outcome of a WHERE clause with a NULL comparison?",
+  "followup_expected": "It means that rows with NULL values will not be included in the result unless the query explicitly accounts for UNKNOWN using conditions like IS NULL or IS NOT NULL.",
+  "target_style": "partial",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dbms.aggregate_functions_and_group_by.easy1",
+  "subject": "DBMS",
+  "topic": "Aggregate functions and GROUP BY",
+  "difficulty": "easy",
+  "question": "Explain what aggregate functions do and how they are used in SQL queries.",
+  "key_points": [
+   "Aggregate functions take a collection of values and return a single value.",
+   "Aggregate functions are used to summarize information from multiple tuples into a single tuple summary.",
+   "Aggregate functions are used with GROUP BY to compute summaries for each group."
+  ],
+  "reference_answer": "Aggregate functions take a collection of values and return a single value, such as SUM, MAX, MIN, AVG, or COUNT. They are used to summarize information from multiple tuples into a single tuple summary. When used with the GROUP BY clause, they allow you to compute these summaries for each group of tuples that share the same value for the grouping attribute.",
+  "followup_question": "What happens if you include a non-aggregated attribute in the SELECT clause with GROUP BY?",
+  "followup_expected": "It will result in an error, because the non-aggregated attribute is not part of the grouping and cannot be uniquely determined for each group.",
+  "target_style": "confident_wrong",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "os.user_level_vs_kernel_level_threads.medium2",
+  "subject": "OS",
+  "topic": "User-level vs kernel-level threads",
+  "difficulty": "medium",
+  "question": "How does the many-to-one model of user-level threads affect concurrency and parallelism in a multi-core system?",
+  "key_points": [
+   "A single kernel thread is shared among multiple user-level threads.",
+   "Concurrency is limited because only one thread can run at a time.",
+   "The many-to-one model is not well-suited for multi-core systems."
+  ],
+  "reference_answer": "In the many-to-one model, multiple user-level threads are mapped to a single kernel thread. This means that if one user-level thread blocks, all threads in the process block, because they share the same kernel thread. As a result, the many-to-one model limits concurrency and parallelism on multi-core systems, since only one thread can run at a time on a single CPU core. This is why few systems currently use this model, as it does not take full advantage of multi-core hardware.",
+  "followup_question": "Why might this model be less common in modern systems?",
+  "followup_expected": "Because it does not take advantage of multi-core hardware, which can run multiple threads in parallel.",
+  "target_style": "good_own_words",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dsa.topological_sorting.easy1",
+  "subject": "DSA",
+  "topic": "Topological sorting",
+  "difficulty": "easy",
+  "question": "Explain what topological sorting is and why it is important for directed acyclic graphs.",
+  "key_points": [
+   "Topological sorting is listing vertices of a directed graph in such an order that for every edge in the graph, the vertex where the edge starts is listed before the vertex where the edge ends.",
+   "Topological sorting is only possible for directed acyclic graphs (DAGs).",
+   "Topological sorting is used for modeling problems with prerequisite constraints."
+  ],
+  "reference_answer": "Topological sorting is listing vertices of a directed graph in such an order that for every edge in the graph, the vertex where the edge starts is listed before the vertex where the edge ends. It is important for directed acyclic graphs (DAGs) because it allows us to linearly order the vertices in a way that respects the direction of edges, which is essential for modeling problems with prerequisite constraints.",
+  "followup_question": "What kind of real-world problems can be modeled using topological sorting?",
+  "followup_expected": "Problems like construction projects and document version control, where certain tasks or documents must be completed before others.",
+  "target_style": "good_own_words",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dbms.update_anomalies.medium2",
+  "subject": "DBMS",
+  "topic": "Update anomalies",
+  "difficulty": "medium",
+  "question": "Explain how update anomalies can occur in a database schema and why they are problematic.",
+  "key_points": [
+   "Update anomalies occur when redundant data is stored in multiple places.",
+   "Update anomalies result in inconsistent data.",
+   "Update anomalies are a consequence of poor schema design."
+  ],
+  "reference_answer": "Update anomalies occur when redundant data is stored in multiple places, and an update in one place is not reflected in all others, leading to inconsistent data. This is problematic because it can result in loss of essential information or incorrect data. For example, changing an instructor’s name in one record without updating all related records can cause inconsistencies.",
+  "followup_question": "What is one way to avoid update anomalies in a database?",
+  "followup_expected": "By normalizing the schema to eliminate redundant data and ensure that each piece of information is stored in only one place.",
+  "target_style": "confident_wrong",
+  "target_followup": "correct"
+ },
+ {
+  "question_id": "dsa.recurrence_relations.medium1",
+  "subject": "DSA",
+  "topic": "Recurrence relations",
+  "difficulty": "medium",
+  "question": "Explain how the Master Theorem determines the time complexity of a recurrence relation based on the relationship between a, b, and d.",
+  "key_points": [
+   "The Master Theorem determines time complexity by comparing f(n) to n^d.",
+   "When a < b^d, the time complexity is dominated by f(n).",
+   "When a = b^d, the time complexity includes a logarithmic factor."
+  ],
+  "reference_answer": "The Master Theorem evaluates the time complexity of a recurrence relation by comparing the function f(n) to n^d. If f(n) is Θ(n^d), then the theorem uses the relative sizes of a and b^d to determine the dominant term. When a < b^d, the complexity is dominated by f(n), resulting in Θ(n^d). When a = b^d, the complexity includes a logarithmic factor, leading to Θ(n^d log n). When a > b^d, the recursive part dominates, resulting in Θ(n^{log_b a}).",
+  "followup_question": "What role does the logarithmic factor play in the time complexity?",
+  "followup_expected": "The logarithmic factor accounts for the increasing number of levels in the recursion tree, which adds an extra multiplicative factor to the time complexity.",
+  "target_style": "partial",
+  "target_followup": "dont_know"
+ },
+ {
+  "question_id": "dbms.first_normal_form_1nf.medium1",
+  "subject": "DBMS",
+  "topic": "First normal form (1NF)",
+  "difficulty": "medium",
+  "question": "Explain how First Normal Form (1NF) ensures that a relation is properly structured for relational database systems.",
+  "key_points": [
+   "All attributes must be atomic.",
+   "Composite and multivalued attributes are disallowed.",
+   "1NF is a prerequisite for higher normal forms."
+  ],
+  "reference_answer": "First Normal Form (1NF) ensures that all attributes in a relation are atomic, meaning they contain only single, indivisible values. This prevents composite, multivalued, or nested attributes from being part of the relation. By enforcing atomicity, 1NF aligns with the fundamental definition of a relation in relational databases. Most RDBMSs only allow relations that are in 1NF, which ensures data can be efficiently stored and queried.",
+  "followup_question": "Why is 1NF considered a foundational normal form?",
+  "followup_expected": "Because all higher normal forms (like 2NF and 3NF) require the relation to already be in 1NF, ensuring atomicity and proper structure.",
+  "target_style": "short_casual",
+  "target_followup": "correct"
+ }
+]

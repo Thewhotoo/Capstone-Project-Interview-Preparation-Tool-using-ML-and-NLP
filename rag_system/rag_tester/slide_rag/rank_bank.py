@@ -4,6 +4,8 @@ Every question gets a confidence score (0-1) from the evidence recorded while it
 was generated (.qbank_cache). The bank is sorted best-first, and questions below
 the threshold get "active": false -- the app only uses active questions; held-back
 ones stay in the file for human review (the JSON equivalent of commenting them out).
+Questions a person has reviewed ("quality_score" set) keep their "active" flag, so
+re-ranking never undoes a hand decision (question_bank/repairs/).
 
 Signals (each 0-1):
   support     key points kept / key points the model proposed (dropped = unverifiable)
@@ -79,7 +81,10 @@ def rank_subject(subject: str, threshold: float) -> tuple[int, int]:
         slot = q["id"].rsplit(".", 1)[-1]
         text = _slide_text(by_topic[q["topic_id"]], sections, slides)
         q["confidence"], q["confidence_signals"] = score(q, records.get((q["topic_id"], slot)), text)
-        q["active"] = q["confidence"] >= threshold
+        # A hand-reviewed question ("quality_score" set by the review or a repair batch) keeps
+        # its hand-set flag; only unreviewed questions are switched on or off by confidence.
+        if "quality_score" not in q:
+            q["active"] = q["confidence"] >= threshold
     bank.sort(key=lambda q: (not q["active"], -q["confidence"]))
     bank_file.write_text(json.dumps(bank, indent=1, ensure_ascii=False), encoding="utf-8")
     _report(subject, bank, threshold)

@@ -1,6 +1,6 @@
 """
 Regression tests for the fixes made while integrating the Phase 1 engine
-(resumeParser_integration.md §2, 2026-09-30). Each case is the minimal shape of
+(the 2026-09-30 integration, 2026-09-30). Each case is the minimal shape of
 a problem seen on a real or golden-corpus resume; none uses resume-specific
 text in the engine itself.
 """

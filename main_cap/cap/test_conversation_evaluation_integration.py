@@ -109,7 +109,7 @@ class TestEvaluatorPinnedPerSession(unittest.TestCase):
         profile = _real_profile()
         result, _ = ce.start_conversation(profile)
         conversation_id = result["conversation_id"]
-        pinned = ce._conversations[conversation_id]["evaluator"]
+        pinned = ce._load(conversation_id)["evaluator"]
 
         # Registering and activating a DIFFERENT evaluator mid-session must
         # not affect this already-started session (RFC Section 10 risk
@@ -118,7 +118,7 @@ class TestEvaluatorPinnedPerSession(unittest.TestCase):
             name = "other-test-evaluator"
         evaluator_registry.register_evaluator(OtherEvaluator(), make_active=True)
 
-        self.assertIs(ce._conversations[conversation_id]["evaluator"], pinned)
+        self.assertIs(ce._load(conversation_id)["evaluator"], pinned)
         ce.end_conversation(conversation_id)
 
 

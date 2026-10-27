@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from flask import Flask
 
 import resume_store
+from _test_db import UNIT_DATABASE_URL
 from account_routes import init_accounts
 from candidate_profile_generator import CandidateProfile
 from database import db
@@ -68,7 +69,7 @@ class AccountsTestCase(unittest.TestCase):
         self.upload_dir = tempfile.mkdtemp()
         self.app = Flask(__name__)
         self.app.config.update(TESTING=True, SECRET_KEY="test-secret")
-        init_accounts(self.app, database_url="sqlite://", upload_dir=self.upload_dir, auto_upgrade=False)
+        init_accounts(self.app, database_url=UNIT_DATABASE_URL, upload_dir=self.upload_dir, auto_upgrade=False)
         with self.app.app_context():
             db.create_all()
         self.client = self.app.test_client()
@@ -122,7 +123,7 @@ class TestSignup(AccountsTestCase):
             self.assertFalse(user.consent_training)
             resume = user.resumes[0]
             self.assertEqual(resume.parsed_profile["candidate_name"], "Asha Rao")
-            self.assertTrue(resume.file_path.startswith(os.path.join("resumes", str(user.id))))
+            self.assertTrue(resume.file_path.startswith(f"resumes/{user.id}/"))
             with open(resume_store.absolute_path(resume.file_path), "rb") as f:
                 self.assertEqual(f.read(), PDF_BYTES)
         self.query(check)
@@ -209,6 +210,23 @@ class TestLoginLogout(AccountsTestCase):
         self.assertEqual(unknown.status_code, 401)
         self.assertEqual(wrong.get_json(), unknown.get_json())
 
+    def test_repeated_failed_logins_are_locked_out(self):
+        from account_routes import MAX_FAILED_LOGINS_PER_EMAIL
+        for _ in range(MAX_FAILED_LOGINS_PER_EMAIL):
+            self.assertEqual(self.login(password="wrong123").status_code, 401)
+        locked = self.login()   # even the right password waits out the lockout
+        self.assertEqual(locked.status_code, 429)
+        self.assertIn("Too many failed attempts", locked.get_json()["error"])
+
+    def test_a_successful_login_clears_the_failed_count(self):
+        from account_routes import MAX_FAILED_LOGINS_PER_EMAIL
+        for _ in range(MAX_FAILED_LOGINS_PER_EMAIL - 1):
+            self.login(password="wrong123")
+        self.assertEqual(self.login().status_code, 200)
+        self.client.post("/api/auth/logout")
+        for _ in range(MAX_FAILED_LOGINS_PER_EMAIL - 1):
+            self.assertEqual(self.login(password="wrong123").status_code, 401)
+
     def test_disabled_account_cannot_log_in(self):
         def disable():
             db.session.scalars(db.select(User)).one().is_active = False
@@ -283,6 +301,26 @@ class TestResumes(AccountsTestCase):
         self.assertEqual(file_response.status_code, 200)
         self.assertEqual(file_response.data, PDF_BYTES)
         self.assertIn("attachment", file_response.headers["Content-Disposition"])
+        file_response.close()
+
+    def test_stored_path_uses_forward_slashes(self):
+        # So a database written on Windows still works on Linux (Docker).
+        path = self.query(lambda: db.session.get(Resume, self.resumes()[0]["id"]).file_path)
+        self.assertNotIn("\\", path)
+        self.assertTrue(path.startswith("resumes/"))
+
+    def test_file_with_a_windows_style_stored_path_is_still_served(self):
+        resume_id = self.resumes()[0]["id"]
+
+        def to_backslashes():
+            row = db.session.get(Resume, resume_id)
+            row.file_path = row.file_path.replace("/", "\\")
+            db.session.commit()
+
+        self.query(to_backslashes)
+        file_response = self.client.get(f"/api/resumes/{resume_id}/file")
+        self.assertEqual(file_response.status_code, 200)
+        self.assertEqual(file_response.data, PDF_BYTES)
         file_response.close()
 
     def test_cannot_delete_the_only_resume(self):

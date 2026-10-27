@@ -16,9 +16,8 @@ Metrics for the top-k results of each query:
                    expected page (stricter: pins the exact slide)
   MRR           -- mean reciprocal rank of the first section hit
 
-The old page-level index (knowledge_base/, retrieval.py) is scored on the
-same queries as a baseline. Its chunks record one page but a merged chunk
-also holds the next page's text, so it is credited for page and page+1.
+(The old page-level index this replaced scored 68-82% section hit@5 on the gold
+sets; it has since been removed.)
 
     python -m slide_rag.retrieval_eval                    # all subjects, gold + probe
     python -m slide_rag.retrieval_eval --subject dbms --show-misses
@@ -29,13 +28,11 @@ import argparse
 import json
 import random
 import re
-import sys
 from pathlib import Path
 
 from .retrieve import KB_DIR, SubjectIndex
 
 EVAL_DIR = Path(__file__).resolve().parent / "eval"
-BASE = Path(__file__).resolve().parent.parent
 
 
 def load_gold(subject: str) -> dict[str, list[dict]]:
@@ -82,22 +79,6 @@ def evaluate_v2(subject: str, queries: list[dict], k_values=(1, 3, 5), kb_dir: P
     return _summarise(rows, k_values)
 
 
-def evaluate_old(subject: str, queries: list[dict], k_values=(1, 3, 5)) -> dict | None:
-    sys.path.insert(0, str(BASE))
-    try:
-        import retrieval as old
-    except Exception as exc:                       # pragma: no cover
-        print("old retrieval unavailable:", exc)
-        return None
-    if not (old.KNOWLEDGE_BASE_DIR / subject / "index.faiss").exists():
-        return None
-    rows = []
-    for q in queries:
-        res = old.retrieve_relevant_content(subject, q["query"], top_k=max(k_values))
-        rows.append((q, [([r["page"], r["page"] + 1], r["page"]) for r in res], res))
-    return _summarise(rows, k_values)
-
-
 def _summarise(rows, k_values) -> dict:
     out = {"n": len(rows)}
     misses = []
@@ -127,7 +108,6 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--subject")
     ap.add_argument("--kb", default=str(KB_DIR))
-    ap.add_argument("--no-baseline", action="store_true")
     ap.add_argument("--no-rerank", action="store_true")
     ap.add_argument("--alpha", type=float, default=0.6)
     ap.add_argument("--probes", type=int, default=150)
@@ -143,13 +123,9 @@ def main() -> None:
             if not qs:
                 continue
             new = evaluate_v2(subject, qs, kb_dir=kb, rerank=not args.no_rerank, alpha=args.alpha)
-            old = None if args.no_baseline else evaluate_old(subject, qs)
-            results[f"{subject}/{name}"] = {"v2": new, "old": old}
+            results[f"{subject}/{name}"] = {"v2": new}
             line = (f"{subject:5} {name:7} n={new['n']:3}  v2: sec@1={new['section_hit@1']:.2f} "
                     f"sec@5={new['section_hit@5']:.2f} slide@5={new['slide_hit@5']:.2f} mrr={new['mrr']:.2f}")
-            if old:
-                line += (f"   | old: page@1={old['section_hit@1']:.2f} page@5={old['section_hit@5']:.2f} "
-                         f"mrr={old['mrr']:.2f}")
             print(line)
             if args.show_misses and name != "probe":
                 for m in new["misses"]:

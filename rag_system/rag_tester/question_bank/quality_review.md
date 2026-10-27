@@ -4,7 +4,7 @@ Every **active** question was read and scored 1–10 by hand: clear and answerab
 
 **Asked** is how often the topic comes up in placement interviews (`interview_priority`, set in `slide_rag/interview_priority.py`): ★★★ very often, ★★ regularly, ★ rarely.
 
-**Curated** (bold score) = score 8+, or 7+ for a ★★★ topic: **132 of 282** active questions. Only these are used by new interviews (`CAP_CURATED_ONLY`, default on; `0` serves every active question). Each bank file lists them first: most-asked topics first, then by score.
+**Curated** (bold score) = score 8+, or 7+ for a ★★★ topic: **132 of 282** active questions. After the repairs (`repairs/batch1…7`, 2026-10-03 and 2026-10-25; batch 5 activated 63 held-back questions, batch 6 fixed or switched off every question scored 1–6, batch 7 covered the last most-asked topics) it is **321**; the per-question scores and notes in the bank files are current, the lists below are the 2026-09-30 review. Only these are used by new interviews (`CAP_CURATED_ONLY`, default on; `0` serves every active question). Each bank file lists them first: most-asked topics first, then by score.
 
 New interviews favour ★★★ topics (selector weights x6 / x1 / x0.2): 87% of questions asked come from ★★★ topics.
 

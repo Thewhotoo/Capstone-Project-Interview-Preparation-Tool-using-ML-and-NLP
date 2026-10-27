@@ -10,8 +10,13 @@ from alembic import context
 config = context.config
 
 # Interpret the config file for Python logging.
-# This line sets up loggers basically.
-fileConfig(config.config_file_name)
+# This line sets up loggers basically. Only when nothing has configured
+# logging yet (`flask db ...` from the command line): the app runs migrations
+# at startup, and alembic.ini's config would otherwise silence the app's own
+# loggers (disable_existing_loggers) and raise the root level to WARN, hiding
+# every INFO line after startup.
+if not logging.getLogger().handlers:
+    fileConfig(config.config_file_name)
 logger = logging.getLogger('alembic.env')
 
 

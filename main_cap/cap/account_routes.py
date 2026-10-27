@@ -58,6 +58,34 @@ MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 # long either way and response time doesn't reveal which emails have accounts.
 _DUMMY_PASSWORD_HASH = generate_password_hash("not-a-real-password")
 
+# Login rate limit: after this many failed logins for one email (or from one IP
+# address) within LOGIN_LOCKOUT_SECONDS, further attempts get 429 until the window
+# passes. Counted in the live store, so every worker sees the same counts; a
+# successful login clears the email's count.
+MAX_FAILED_LOGINS_PER_EMAIL = 5
+MAX_FAILED_LOGINS_PER_IP = 20
+LOGIN_LOCKOUT_SECONDS = 15 * 60
+
+
+def _login_keys(email: str) -> list[tuple[str, int]]:
+    return [(f"loginfail:email:{email}", MAX_FAILED_LOGINS_PER_EMAIL),
+            (f"loginfail:ip:{request.remote_addr or 'unknown'}", MAX_FAILED_LOGINS_PER_IP)]
+
+
+def _login_locked(email: str) -> bool:
+    from live_store import get_store
+    store = get_store()
+    return any((store.get(key) or {}).get("count", 0) >= limit for key, limit in _login_keys(email))
+
+
+def _record_failed_login(email: str) -> None:
+    from live_store import get_store
+    store = get_store()
+    for key, _ in _login_keys(email):
+        with store.lock(key):
+            count = (store.get(key) or {}).get("count", 0) + 1
+            store.put(key, {"count": count}, ttl=LOGIN_LOCKOUT_SECONDS)
+
 accounts_bp = Blueprint("accounts", __name__)
 login_manager = LoginManager()
 
@@ -185,16 +213,22 @@ def login():
     password = str(data.get("password", ""))
     if not email or not password:
         return _error("Enter your email and password.", 400)
+    if _login_locked(email):
+        return _error("Too many failed attempts. Please wait 15 minutes and try again.", 429)
 
     user = db.session.scalar(select(User).where(User.email == email))
     if user is None:
         check_password_hash(_DUMMY_PASSWORD_HASH, password)
+        _record_failed_login(email)
         return _error("Invalid email or password.", 401)
     if not user.check_password(password):
+        _record_failed_login(email)
         return _error("Invalid email or password.", 401)
     if not user.is_active:
         return _error("This account has been disabled.", 403)
 
+    from live_store import get_store
+    get_store().delete(f"loginfail:email:{email}")
     login_user(user, remember=bool(data.get("remember")))
     user.last_login_at = utcnow()
     db.session.commit()

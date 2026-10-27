@@ -158,6 +158,11 @@ class TestExtractTextFromPdf(unittest.TestCase):
         # Also include legacy test resume
         if os.path.isfile(LEGACY_RESUME_PATH):
             cls.resumes.append(LEGACY_RESUME_PATH)
+        # Real resumes are personal data and not in the repository; fall back to
+        # the synthetic golden-corpus resume that ships with the resume engine.
+        if not cls.resumes:
+            cls.resumes.append(os.path.join(os.path.dirname(__file__), "resume_engine", "tests",
+                                            "golden_corpus", "full_entity_resume_pdf", "resume.pdf"))
 
     def test_each_resume_extracts_text(self):
         """Every available resume must produce meaningful text."""

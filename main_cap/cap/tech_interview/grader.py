@@ -15,9 +15,18 @@ nothing correct cannot earn it.
 Evaluated on 100 hand-checked answers over 25 bank questions (grader_eval/):
 key-point agreement 85% (MiniLM NLI: 72%), "covered" precision 90% / recall
 85%, score correlation with human scores r = 0.80; confidently wrong answers
-average 0.34 (MiniLM: 0.66). A contradiction veto was tried and dropped: correct answers
-often have some chunk the model calls contradictory. A missed point triggers
+average 0.34 (MiniLM: 0.66). A per-chunk contradiction veto was tried and dropped: correct
+answers often have some chunk the model calls contradictory. A missed point triggers
 its prepared follow-up, giving the candidate a second chance.
+
+Contradiction cap (2026-10-02): fluent wrong answers ("time complexity is how much memory an
+algorithm uses", "LRU replaces the page loaded earliest") entail the key points' topic words and
+used to score up to 1.0. The NLI model is asked whether the REFERENCE ANSWER (premise)
+contradicts the candidate's WHOLE answer (hypothesis); at >= CONTRA_THRESHOLD the score is capped
+at CONTRA_CAP. Whole-answer only: per-chunk and per-sentence checks also fire on correct answers.
+Measured on the labelled sets (grader_eval/benchmark.py, tuned on llm400 + mine40 + team_tune):
+catches ~2/3 of confidently wrong answers and fires on ~2% of answers humans scored >= 0.6
+(half of those are on questions whose reference answer is itself wrong).
 Why entailment: calibration on real bank questions showed embedding similarity
 alone rewards shared words -- "context switching is when the context switches"
 out-scored a correct answer (0.71 vs 0.55) -- while entailment gives such
@@ -34,7 +43,7 @@ Clarity signals, used by the follow-up policy (followup.py), not the score:
   too_short     fewer than MIN_WORDS words
   vague         hedges and placeholders ("something like", "stuff", "etc.")
   repetitive    the same few words over and over
-Adapted from the legacy RAG grader (rag_tester/evaluate.py: junk-input gate,
+Adapted from the legacy RAG grader (since removed: junk-input gate,
 semantic + concept matching), scoring against the bank's verified key points
 instead of guessing concepts from raw slide text.
 """
@@ -48,6 +57,7 @@ from typing import Callable, Sequence
 import numpy as np
 
 from .bank import KeyPoint, Question
+from .terms import expand_terms
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +68,9 @@ PARTIAL_ENTAIL, PARTIAL_SIM, PARTIAL_ENTAIL_ALONE = 0.05, 0.60, 0.30
 FALLBACK_COVERED, FALLBACK_PARTIAL = 0.55, 0.40   # word-overlap / embedding-only fallbacks
 REF_SIM_FLOOR, REF_SIM_CEIL = 0.35, 0.80   # rescale answer<->reference cosine to 0..1
 REF_FULL_AT = 0.5                          # key-point score from which the reference term counts fully
+CREDIT_SIM_FLOOR = 0.25                    # no credit for a point the answer is unrelated to (see classify_point)
+CONTRA_THRESHOLD = 0.50                    # reference answer contradicts the whole answer ...
+CONTRA_CAP = 0.20                          # ... -> score capped here (see module docstring)
 KEYPOINT_WEIGHT = 0.85
 MIN_WORDS = 8
 FILLER_RATIO = 0.06
@@ -75,6 +88,7 @@ Embed = Callable[[Sequence[str]], np.ndarray]
 
 
 Entail = Callable[[Sequence[str], str], float]
+Contradict = Callable[[str, str], float]
 
 
 class _LazyModels:
@@ -82,6 +96,7 @@ class _LazyModels:
     _embed = None
     _nli = None
     _entail_idx = None
+    _contra_idx = None
 
     @classmethod
     def embedder(cls):
@@ -102,6 +117,7 @@ class _LazyModels:
                 cls._nli = CrossEncoder(NLI_MODEL)
                 labels = {v.lower(): int(k) for k, v in cls._nli.model.config.id2label.items()}
                 cls._entail_idx = labels.get("entailment", 1)
+                cls._contra_idx = labels.get("contradiction", 0)
             except Exception as exc:  # pragma: no cover - environment-dependent
                 logger.warning("NLI model unavailable, grading by embeddings only: %s", exc)
                 cls._nli = False
@@ -123,6 +139,19 @@ def default_entail(premises: Sequence[str], hypothesis: str) -> float | None:
     logits = np.asarray(model.predict([(p, hypothesis) for p in premises], show_progress_bar=False))
     e = np.exp(logits - logits.max(axis=1, keepdims=True))
     return float((e / e.sum(axis=1, keepdims=True))[:, _LazyModels._entail_idx].max())
+
+
+def default_contradict(premise: str, hypothesis: str) -> float | None:
+    """Probability that the premise contradicts the hypothesis."""
+    model = _LazyModels.nli()
+    if model is None:
+        return None
+    logits = np.asarray(model.predict([(premise, hypothesis)], show_progress_bar=False))
+    e = np.exp(logits - logits.max(axis=1, keepdims=True))
+    return float((e / e.sum(axis=1, keepdims=True))[0, _LazyModels._contra_idx])
+
+
+_USE_DEFAULT = object()
 
 
 @dataclass
@@ -152,6 +181,8 @@ class Grade:
     point_scores: dict[str, dict] = field(default_factory=dict)   # point -> {entailment, similarity}
     clarity: Clarity = field(default_factory=Clarity)
     core: str = ""        # covered | partial | missing for the question's main idea ("" = none in the bank)
+    contradiction: float | None = None   # P(reference answer contradicts the answer); None = not checked
+    contradicts_reference: bool = False  # contradiction >= CONTRA_THRESHOLD: score capped at CONTRA_CAP
 
     def to_dict(self) -> dict:
         d = asdict(self)
@@ -227,6 +258,14 @@ def classify_point(entail: float | None, sim: float) -> str:
     """covered | partial | missing for one key point (see module docstring)."""
     if entail is None:                                   # no NLI model: similarity alone
         return "covered" if sim >= FALLBACK_COVERED else "partial" if sim >= FALLBACK_PARTIAL else "missing"
+    # The NLI model sometimes "entails" a point from text that is about something else
+    # entirely (0.99 for "List allows duplicate elements" from a paragraph about the super
+    # keyword, similarity 0.07). Below this similarity the answer is unrelated to the point.
+    # Measured 2026-10-03: at 0.25 it drops 0 of 585 credits humans agreed with and ~half of
+    # the credits given to other questions' answers; 0.35 dropped more (73%) but cost
+    # agreement on the held-out team answers, so 0.25.
+    if sim < CREDIT_SIM_FLOOR:
+        return "missing"
     if entail >= COVERED_ENTAIL or (entail >= RESCUE_ENTAIL and sim >= RESCUE_SIM):
         return "covered"
     if entail >= PARTIAL_ENTAIL and (sim >= PARTIAL_SIM or entail >= PARTIAL_ENTAIL_ALONE):
@@ -241,15 +280,20 @@ def combine(keypoint_score: float, reference_similarity: float) -> float:
 
 
 def grade_answer(question: Question, answer: str, embed: Embed | None = default_embed,
-                 entail: Entail | None = default_entail) -> Grade:
+                 entail: Entail | None = default_entail, contradict=_USE_DEFAULT) -> Grade:
     clarity = analyse_clarity(answer)
     if clarity.words == 0:
         return Grade(0.0, 0.0, 0.0, missing=[k.point for k in question.key_points], clarity=clarity)
 
-    chunks = _chunks(strip_fillers(answer) or answer)
-    points = [k.point for k in question.key_points]
-    variants = [list(k.variants) for k in question.key_points]
-    sims = _similarities(chunks, points + [question.reference_answer] + [v for vs in variants for v in vs], embed)
+    # abbreviations expanded on both sides ("dfs" = "depth-first search"); terms.py
+    subj = question.subject
+    text = expand_terms(strip_fillers(answer) or answer, subj)
+    chunks = _chunks(text)
+    points = [k.point for k in question.key_points]                  # display / storage keys
+    hyps = [expand_terms(p, subj) for p in points]                   # what the models see
+    reference = expand_terms(question.reference_answer, subj)
+    variants = [[expand_terms(v, subj) for v in k.variants] for k in question.key_points]
+    sims = _similarities(chunks, hyps + [reference] + [v for vs in variants for v in vs], embed)
     point_best = sims[:len(points)].max(axis=1)
     ref_sim = float(sims[len(points)].max())
     variant_sims = iter(sims[len(points) + 1:])
@@ -260,13 +304,13 @@ def grade_answer(question: Question, answer: str, embed: Embed | None = default_
         """Informal variants are short and generic ("safe state avoids deadlock"),
         so the question alone often implies them: only what the answer adds counts."""
         if v not in implied_by_question:
-            implied_by_question[v] = entail([question.text], v)
+            implied_by_question[v] = entail([expand_terms(question.text, subj)], v)
         return entail(top, v) - implied_by_question[v]
 
     covered, partial, missing = [], [], []
     point_scores = {}
-    for p, s, vs in zip(points, point_best, variants):
-        e = entail(chunks, p) if entail else None
+    for p, h, s, vs in zip(points, hyps, point_best, variants):
+        e = entail(chunks, h) if entail else None
         matched = None
         for v in vs:
             # informal variants (enrich_bank.py): each is checked against only
@@ -286,9 +330,9 @@ def grade_answer(question: Question, answer: str, embed: Embed | None = default_
     if question.core_point:
         # Stating the question's main idea correctly is a good answer even when
         # it misses slide-specific key points: an extra route to credit, never a penalty.
-        core_texts = [question.core_point, *question.core_variants]
+        core_texts = [expand_terms(t, subj) for t in (question.core_point, *question.core_variants)]
         core_rows = _similarities(chunks, core_texts, embed)
-        core_e = entail(chunks, question.core_point) if entail else None
+        core_e = entail(chunks, core_texts[0]) if entail else None
         for v, row in zip(core_texts[1:], core_rows[1:]):
             if core_e is not None and core_e < COVERED_ENTAIL:
                 core_e = max(core_e, variant_entail([chunks[j] for j in np.argsort(-row)[:VARIANT_TOP_CHUNKS]], v))
@@ -300,8 +344,16 @@ def grade_answer(question: Question, answer: str, embed: Embed | None = default_
         score = min(score, 0.1)
     if clarity.too_short:
         score = min(score, 0.5)
+    # the real NLI model checks contradiction by default; injected test models opt in explicitly
+    if contradict is _USE_DEFAULT:
+        contradict = default_contradict if entail is default_entail else None
+    contra = contradict(reference, text) if contradict and question.reference_answer else None
+    contradicts = contra is not None and contra >= CONTRA_THRESHOLD
+    if contradicts:
+        score = min(score, CONTRA_CAP)
     return Grade(round(score, 3), round(kp_score, 3), round(ref_score, 3), covered, partial, missing,
-                 point_scores, clarity, core_status)
+                 point_scores, clarity, core_status,
+                 None if contra is None else round(contra, 3), contradicts)
 
 
 FU_COVERED_ENTAIL = 0.50     # a follow-up reply (read with its question) entails the expected answer
@@ -334,7 +386,7 @@ def _yes_no(question: str, expected: str, answer: str) -> str | None:
 
 
 def followup_covers(key_point: KeyPoint, answer: str, embed: Embed | None = default_embed,
-                    entail: Entail | None = default_entail) -> tuple[str, dict]:
+                    entail: Entail | None = default_entail, subject: str = "") -> tuple[str, dict]:
     """Was the follow-up answered correctly? (covered | partial | missing, scores)
 
     The reply is judged against the follow-up it answers (key_point.followup)
@@ -360,11 +412,14 @@ def followup_covers(key_point: KeyPoint, answer: str, embed: Embed | None = defa
     if rule is not None:
         return rule, {**empty, "rule": "yes_no"}
 
-    chunks = _chunks(strip_fillers(answer) or answer)
-    replies = list(key_point.followup_replies)      # short correct replies (enrich_bank.py)
-    hypotheses = [key_point.point] + (_claims(expected) if expected else []) \
+    x = lambda t: expand_terms(t, subject)            # abbreviations, as in grade_answer
+    question, expected = x(question or ""), x(expected or "")
+    text = x(strip_fillers(answer) or answer)
+    chunks = _chunks(text)
+    replies = [x(r) for r in key_point.followup_replies]      # short correct replies (enrich_bank.py)
+    hypotheses = [x(key_point.point)] + (_claims(expected) if expected else []) \
         + ([r for r in replies if len(r.split()) >= 3] if FU_REPLIES_AS_HYPOTHESES else [])
-    sims = _similarities([strip_fillers(answer) or answer], [expected or key_point.point] + replies, embed)[:, 0]
+    sims = _similarities([text], [expected or x(key_point.point)] + replies, embed)[:, 0]
     sim = float(sims.max())
     if replies and embed is not None and float(sims[1:].max()) >= FU_REPLY_MATCH_SIM:
         return "covered", {"entailment": None, "similarity": round(float(sims[1:].max()), 3), "rule": "reply_match"}

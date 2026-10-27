@@ -1,0 +1,228 @@
+{
+ "about": "Key-point repair batch 1 (2026-10-03). Chosen by evidence: questions where >= 40% of the points humans marked covered were graded missing (tuning data only: llm400, mine40, team_tune), plus 6 questions whose reference answer contradicted correct answers. Rule: key points are SHORT, one claim each (about 8-16 words), in plain words a student would use, but naming the specific mechanism (a vague point is also entailed by wrong answers); detail goes in the reference answer (NLI only credits a point the answer supports in full, so long compound points fail correct short answers); keep count and order unless a point is wrong or the core idea is missing. Slide quotes are kept; added points carry a quote verified in the slide text.",
+ "questions": {
+  "cn.tcp_flow_control.medium1": {
+   "quality_note": "classic; key points reworded to plain language (repair 1)",
+   "key_points": [
+    {
+     "point": "The receiver tells the sender how much free buffer space it has (rwnd)."
+    },
+    {
+     "point": "The sender limits its unacknowledged data to the window the receiver advertised."
+    }
+   ]
+  },
+  "dbms.nested_and_correlated_subqueries.medium1": {
+   "quality_note": "good; key points reworded (repair 1)",
+   "key_points": [
+    {
+     "point": "A correlated subquery is evaluated again for each tuple of the outer query."
+    },
+    {
+     "point": "Correlated subqueries are often used with EXISTS or NOT EXISTS."
+    }
+   ],
+   "reference_answer": "A regular nested query does not depend on the outer query, so it is evaluated only once and its result is reused. A correlated subquery refers to a value from the current tuple of the outer query, so it is evaluated again for each tuple of the outer query, and its result can differ from row to row. Correlated subqueries are often used with EXISTS or NOT EXISTS, to check for each outer row whether matching rows exist. Because they run once per outer row, they can be much slower on large tables."
+  },
+  "dsa.expression_trees.medium2": {
+   "quality_score": 8,
+   "quality_note": "fine; reference answer and key points rewritten (repair 1)",
+   "reference_answer": "Scan the postfix expression from left to right using a stack of tree nodes. Each operand becomes a leaf node that is pushed onto the stack. Each operator pops the top two nodes: the first popped becomes its right child and the second its left child, and the new subtree is pushed back. Postfix already places every operator after its operands, so each operator gets exactly the right operands in the right order. At the end the single node left on the stack is the root, and evaluating the tree from the leaves up gives the value of the expression.",
+   "key_points": [
+    {
+     "point": "An operator pops the top two nodes from the stack and makes them its children."
+    },
+    {
+     "point": "The last node left on the stack is the root of the expression tree."
+    }
+   ]
+  },
+  "cn.tcp_connection_establishment.medium2": {
+   "quality_note": "classic; key points reworded (repair 1). KP1's slide quote is generic (the slide shows the two-way handshake failure as a diagram), so its point-quote link is below 0.35",
+   "reference_answer": "In the three-way handshake the client sends SYN, the server replies SYN-ACK and the client answers ACK. Each side sends its own connection request and sees it acknowledged, so both sides know the other agreed to the connection, and both initial sequence numbers are exchanged and confirmed. With only two messages the server would never learn whether its reply reached the client, so an old or duplicate SYN could make the server open a connection the client does not know about.",
+   "key_points": [
+    {
+     "point": "The three-way handshake makes sure both sides agree to establish the connection."
+    },
+    {
+     "point": "With a two-way handshake the server cannot know whether the client received its reply."
+    }
+   ]
+  },
+  "dbms.set_operations_in_sql.medium2": {
+   "quality_score": 8,
+   "quality_note": "fine; key points reworded (repair 1)",
+   "reference_answer": "INTERSECT returns only the rows that appear in the results of both queries, while UNION returns every row that appears in either result. Both operators need union-compatible inputs, meaning the same number of columns with compatible types in the same order, and both remove duplicate rows from the result unless the ALL form is used. So INTERSECT narrows the data down to what the two sets have in common, while UNION combines everything into one set.",
+   "key_points": [
+    {
+     "point": "INTERSECT returns only the rows present in both results."
+    },
+    {
+     "point": "INTERSECT and UNION both need union-compatible inputs."
+    },
+    {
+     "point": "INTERSECT and UNION both remove duplicate rows."
+    }
+   ]
+  },
+  "ooad.singleton_pattern.easy1": {
+   "quality_note": "classic; key points reworded (repair 1)",
+   "key_points": [
+    {
+     "point": "Only one object of the class can ever be created."
+    },
+    {
+     "point": "The constructor is made private so other classes cannot create objects."
+    },
+    {
+     "point": "A static method returns the single shared instance."
+    }
+   ]
+  },
+  "dbms.weak_entity_sets.hard2": {
+   "quality_score": 7,
+   "quality_note": "odd scenario; key points and reference rewritten (repair 1)",
+   "reference_answer": "A weak entity set has no key of its own, so it is identified through its identifying (owner) entity sets. When there are several identifying entity sets, each weak entity is identified by a combination of entities, one from each of them, and its primary key is the union of the primary keys of all identifying entity sets plus its own discriminator (partial key). In the relational schema, the weak entity's table gets a foreign key to each owner table, and those foreign keys together with the discriminator form its primary key.",
+   "key_points": [
+    {
+     "point": "Its primary key includes the primary keys of all its identifying entity sets."
+    },
+    {
+     "point": "A weak entity can depend on more than one identifying entity set."
+    },
+    {
+     "point": "Its primary key also includes its own discriminator (partial key)."
+    }
+   ]
+  },
+  "os.deadlock_detection_and_recovery.easy1": {
+   "quality_note": "good; key points reworded and the missing core idea (cycle = deadlock) added (repair 1)",
+   "key_points": [
+    {
+     "point": "The wait-for graph is the resource-allocation graph without the resource nodes."
+    },
+    {
+     "point": "An edge from Pi to Pj means Pi is waiting for Pj to release a resource."
+    },
+    {
+     "point": "A cycle in the wait-for graph means there is a deadlock.",
+     "quote": "A deadlock exists in the system if and only if the wait-for graph contains a cycle.",
+     "followup": "What does a cycle in the wait-for graph tell you?",
+     "followup_answer": "That the processes in the cycle are deadlocked: each one waits for a resource held by the next one in the cycle, so none can proceed."
+    }
+   ]
+  },
+  "dsa.dijkstra_s_algorithm.medium2": {
+   "quality_score": 7,
+   "quality_note": "odd phrasing; key points reworded (repair 1)",
+   "key_points": [
+    {
+     "point": "The next vertex is the unvisited one with the smallest distance from the source."
+    },
+    {
+     "point": "Once a vertex is picked, its shortest distance is final."
+    }
+   ],
+   "reference_answer": "At each step Dijkstra's algorithm looks at the vertices that are not yet finalized and picks the one with the smallest current distance from the source, which is the smallest dv + w(v,u) over edges (v,u) from finalized vertices v. The choice therefore depends on the edge weights of the graph and on the distances found so far. Once a vertex is picked, its shortest distance is final and never changes, because all edge weights are non-negative; the algorithm then updates the distances of that vertex's neighbours before picking the next vertex."
+  },
+  "dbms.lossless_decomposition.medium1": {
+   "quality_score": 7,
+   "quality_note": "circular question; filler key point replaced by the lossless-join test (repair 1)",
+   "reference_answer": "A decomposition is lossless when joining the decomposed tables back together (natural join) gives exactly the original table, with no rows lost and no extra (spurious) rows added. For a decomposition of R into R1 and R2, this is guaranteed when the attributes they share functionally determine all the attributes of R1 or all the attributes of R2, i.e. the common attributes form a key of one of the two tables. Losslessness is essential, because a lossy decomposition produces spurious tuples and wrong query results.",
+   "key_points": [
+    {
+     "point": "Joining the decomposed tables gives back exactly the original table."
+    },
+    {
+     "point": "The decomposition is lossless if the common attributes are a key of one of the tables.",
+     "quote": "A decomposition D = {R1, R2} of R has the lossless join property with respect to a set of functional dependencies F on R if and only if either",
+     "followup": "How can you test whether splitting R into R1 and R2 is lossless?",
+     "followup_answer": "Check whether the attributes common to R1 and R2 functionally determine all of R1 or all of R2, i.e. whether they form a key of one of the two tables."
+    },
+    {
+     "point": "If it is lossy, joining the smaller relations back creates spurious tuples instead of the original relation."
+    }
+   ]
+  },
+  "cn.distance_vector_routing.medium1": {
+   "quality_score": 8,
+   "quality_note": "fine; key points reworded (repair 1)",
+   "key_points": [
+    {
+     "point": "A node's cost to a destination is the minimum over its neighbours of link cost plus the neighbour's cost."
+    },
+    {
+     "point": "Nodes keep exchanging their distance vectors with their neighbours."
+    }
+   ]
+  },
+  "dsa.dijkstra_s_algorithm.easy1": {
+   "quality_note": "classic; reference answer rewritten (it contradicted correct answers) (repair 1)",
+   "reference_answer": "Dijkstra's algorithm starts with distance 0 for the source and infinity for every other vertex. It repeatedly picks the unvisited vertex with the smallest current distance and marks that distance as final. It then relaxes the vertex's outgoing edges: for each neighbour, if going through this vertex gives a shorter path, the neighbour's distance is updated. Because edge weights are non-negative, a vertex's distance can never improve after it has been picked, so when all vertices are done each one holds its shortest distance from the source.",
+   "key_points": [
+    {
+     "point": "It picks the unvisited vertex with the smallest tentative distance."
+    },
+    {
+     "point": "It updates a neighbour's distance when a shorter path through that vertex is found."
+    }
+   ]
+  },
+  "os.contiguous_memory_allocation.medium1": {
+   "quality_note": "classic; reference answer and key points reworded (repair 1)",
+   "reference_answer": "First-fit takes the first hole that is big enough, so it can stop searching early and is fast. Best-fit takes the smallest hole that fits, which leaves the smallest leftover piece, but it must search the whole list unless the list is sorted by size. Worst-fit takes the largest hole, leaving the largest leftover piece; it also searches the whole list. In practice first-fit and best-fit are better than worst-fit in both speed and memory use. All three suffer from external fragmentation, which compaction can reduce if relocation is dynamic.",
+   "key_points": [
+    {
+     "point": "First-fit and best-fit are better than worst-fit in speed and memory use.",
+     "followup_answer": "Worst-fit keeps breaking up the largest holes, so later large requests may not fit anywhere, while first-fit is faster and tends to leave usable holes."
+    },
+    {
+     "point": "Best-fit picks the smallest hole that fits but must search the whole list."
+    },
+    {
+     "point": "Worst-fit picks the largest hole and leaves the largest leftover."
+    },
+    {
+     "point": "External fragmentation can be reduced by compaction."
+    }
+   ]
+  },
+  "ooad.liskov_substitution_principle.hard2": {
+   "quality_note": "fine; reference answer and key points reworded (repair 1)",
+   "reference_answer": "The Liskov Substitution Principle says that an object of a subclass must be usable anywhere an object of its superclass is expected, without breaking the program. An overriding method violates it when it changes what the parent method promised: for example by demanding more from its inputs, guaranteeing less in its result, throwing new exceptions or doing less than the parent. Code written against the superclass then behaves incorrectly when it is handed the subclass, even though the types still match.",
+   "key_points": [
+    {
+     "point": "A subclass object must be usable wherever the superclass is expected."
+    },
+    {
+     "point": "An overriding method in the child class must not change the characteristics the parent promises."
+    },
+    {
+     "point": "A subclass must not do less than its parent class."
+    }
+   ]
+  },
+  "dbms.triggers.hard2": {
+   "active": false,
+   "quality_note": "deactivated (repair 1): false premise - foreign-key cascades update or delete rows, they do not insert them, and in MySQL cascaded actions do not fire triggers"
+  },
+  "os.deadlock_prevention.hard2": {
+   "quality_score": 7,
+   "quality_note": "wrong key point fixed: preemption breaks 'no preemption', not 'hold and wait' (repair 1)",
+   "reference_answer": "Under this prevention scheme, if a process that holds some resources requests another resource that cannot be given to it immediately, it releases all the resources it currently holds. The released resources are added to the list of resources it is waiting for, and it is restarted only when it can get back its old resources as well as the new one. This removes the 'no preemption' condition, one of the four conditions that must all hold for deadlock, so deadlock cannot occur.",
+   "key_points": [
+    {
+     "point": "A process that cannot get a resource releases all the resources it holds."
+    },
+    {
+     "point": "This breaks the no-preemption condition for deadlock.",
+     "followup": "Which of the four deadlock conditions does this scheme remove?",
+     "followup_answer": "The 'no preemption' condition: resources can now be taken away from a process that is waiting."
+    },
+    {
+     "point": "The preempted resources are added to the list of resources the process is waiting for."
+    }
+   ]
+  }
+ }
+}

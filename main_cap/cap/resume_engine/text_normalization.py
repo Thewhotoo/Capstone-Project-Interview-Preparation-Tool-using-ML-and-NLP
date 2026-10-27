@@ -221,7 +221,7 @@ def contains_year(text: str) -> bool:
     return bool(_YEAR_RE.search(text or ""))
 
 
-# ── Integration fixes (2026-09-30, see resumeParser_integration.md §2) ──────
+# ── Integration fixes (2026-09-30, see the 2026-09-30 integration) ──────
 _PAGE_MARKER_RE = re.compile(r"^\s*(?:page\s*)?\d{1,2}\s*(?:(?:/|of)\s*\d{1,2})?\s*$|^\s*page\s+\d{1,2}\b.*$", re.IGNORECASE)
 _MONTH = r"(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?,?"
 _DATE_POINT = rf"(?:{_MONTH}\s*)?(?:\d{{1,2}}\s*)?(?:19|20)\d{{2}}"

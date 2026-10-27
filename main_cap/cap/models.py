@@ -27,7 +27,7 @@ from datetime import date, datetime, timezone
 from typing import Any, Optional
 
 from flask_login import UserMixin
-from sqlalchemy import JSON, ForeignKey, LargeBinary, String, Text, UniqueConstraint
+from sqlalchemy import JSON, ForeignKey, LargeBinary, String, Text, UniqueConstraint, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -311,3 +311,23 @@ class SessionTurn(db.Model):
             "grade": self.grade,
             "evaluation": self.evaluation,
         }
+
+
+# ── Fit interview text to its column ─────────────────────────────────────────
+# Session and turn rows carry text that comes from parsed resumes (project
+# names, source ids) rather than from validated form fields. SQLite ignores
+# VARCHAR lengths, but PostgreSQL rejects a longer value and the whole answer
+# would fail to save, so it is trimmed to the column's length instead.
+
+def _fit_strings_to_columns(mapper, _connection, target) -> None:
+    for prop in mapper.column_attrs:
+        column = prop.columns[0]
+        length = getattr(column.type, "length", None)
+        value = getattr(target, prop.key, None)
+        if isinstance(column.type, String) and length and isinstance(value, str) and len(value) > length:
+            setattr(target, prop.key, value[:length])
+
+
+for _model in (InterviewSession, SessionTurn):
+    event.listen(_model, "before_insert", _fit_strings_to_columns)
+    event.listen(_model, "before_update", _fit_strings_to_columns)

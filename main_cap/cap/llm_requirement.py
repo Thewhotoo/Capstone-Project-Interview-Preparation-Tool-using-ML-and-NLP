@@ -13,7 +13,9 @@ At startup `ensure_llm_ready()`:
   3. warms the model up in the background so the first re-grade isn't slow.
 
 If any of that fails it raises LLMNotReady with a message saying exactly what
-to install or run; app.py prints it and exits. (If Ollama crashes in the middle
+to install or run; app.py and serve.py (Docker) print it and exit. When Ollama
+is on another machine (CAP_OLLAMA_URL, e.g. the Docker host) it isn't started
+from here, only checked. (If Ollama crashes in the middle
 of an interview, that session finishes with the fast score instead of failing;
 the next app start requires the LLM again.)
 """
@@ -26,6 +28,7 @@ import shutil
 import subprocess
 import threading
 import time
+from urllib.parse import urlparse
 
 from fact_checker import PREFERRED_MODELS, OllamaFactChecker
 
@@ -37,6 +40,10 @@ SETUP_HINT = "Run the one-time setup from the repository root:  python install.p
 
 class LLMNotReady(RuntimeError):
     """Raised when the required local LLM can't be made ready; the message is user-facing."""
+
+
+def _is_on_this_machine(url: str) -> bool:
+    return urlparse(url).hostname in ("localhost", "127.0.0.1", "::1")
 
 
 def find_ollama() -> str | None:
@@ -79,6 +86,12 @@ def ensure_llm_ready(start_server=start_server, find_ollama=find_ollama,
     """Returns the model name in use; raises LLMNotReady with instructions otherwise."""
     checker = checker or OllamaFactChecker()
     installed = checker._installed_models(timeout=3.0)
+    if installed is None and not _is_on_this_machine(checker.base_url):
+        # e.g. Docker: Ollama runs on the host, which this process can't start.
+        raise LLMNotReady(
+            f"Ollama is required but isn't reachable at {checker.base_url}.\n"
+            f"  Install and start it on the host computer, then pull the model:  ollama pull {PREFERRED_MODELS[0]}\n"
+            f"  ({SETUP_HINT} --skip-pip)")
     if installed is None:                                   # server not answering
         binary = find_ollama()
         if binary is None:

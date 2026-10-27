@@ -6,16 +6,8 @@ Integration tests for the complete planning flow — Phase 1.5, Task 3
 
 These exercise the REAL `CandidateProfile` Pydantic model from
 candidate_profile_generator.py (imported read-only, never modified) end to
-end through both entry points that now exist in the project:
-
-    1. Directly through `Planner`/`TopicPool` (the new planning subsystem).
-    2. Through `discussion_engine.start_session`/`reply` (the live Flask
-       route implementation), which — since Phase 1.5's migration — is
-       backed by the exact same planning subsystem via
-       legacy_topic_pool_adapter.TopicPool.
-
-Both entry points must agree, because there is now exactly one planning
-implementation in the project (Phase 1.5's Task 1 goal).
+end through `Planner`/`TopicPool`, the planning subsystem behind the
+live Round 1 (conversation_engine.py).
 """
 
 import os
@@ -24,7 +16,6 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import discussion_engine as de
 from candidate_profile_generator import (
     CandidateProfile,
     ExperienceEntry,
@@ -99,7 +90,7 @@ def _real_candidate_profile() -> CandidateProfile:
 
 class TestFullFlowThroughPlanner(unittest.TestCase):
     """Candidate Profile -> Planner -> TopicPool -> QuestionSpecification,
-    driven directly (no Flask, no discussion_engine)."""
+    driven directly (no Flask)."""
 
     def setUp(self):
         self.profile = _real_candidate_profile()
@@ -201,71 +192,6 @@ class TestFullFlowThroughPlanner(unittest.TestCase):
         for spec in self.planner.pool.specifications.values():
             self.assertIn(spec.source_type, (SourceType.PROJECT, SourceType.EXPERIENCE, SourceType.CERTIFICATION))
             self.assertTrue(spec.id)
-
-
-class TestFullFlowThroughDiscussionEngine(unittest.TestCase):
-    """The SAME real CandidateProfile, driven through the live
-    discussion_engine.start_session/reply routes — which, since Phase 1.5's
-    migration, are backed by legacy_topic_pool_adapter.TopicPool wrapping
-    the exact same planning subsystem exercised above."""
-
-    def setUp(self):
-        self.profile_dict = _real_candidate_profile().model_dump()
-
-    def test_start_session_produces_a_traceable_first_question(self):
-        result, status = de.start_session(self.profile_dict, "profile_session_x")
-        self.assertEqual(status, 200)
-        self.assertEqual(result["status"], "success")
-        self.assertIn(result["question"]["category"], {
-            "project_deep_dive", "project_overview", "experience",
-            "certification", "skill_in_context",
-        })
-
-    def test_full_session_reaches_completion_with_full_coverage(self):
-        result, status = de.start_session(self.profile_dict, "profile_session_y")
-        self.assertEqual(status, 200)
-        session_id = result["session_id"]
-
-        seen_categories = {result["question"]["category"]}
-        completed = False
-        for _ in range(30):
-            reply_result, reply_status = de.reply(session_id, "A reasonably detailed answer about this topic.")
-            self.assertEqual(reply_status, 200)
-            if reply_result.get("next_question"):
-                seen_categories.add(reply_result["next_question"]["category"])
-            if reply_result.get("is_completed"):
-                completed = True
-                break
-        self.assertTrue(completed)
-
-        summary, summary_status = de.end_session(session_id)
-        self.assertEqual(summary_status, 200)
-        # Every category present on this profile must have been touched
-        # (Chapter 14's completion gate) before the session was allowed to end.
-        self.assertEqual(seen_categories, {
-            "project_deep_dive", "project_overview", "experience",
-            "certification", "skill_in_context",
-        })
-
-    def test_planner_and_discussion_engine_agree_on_pool_contents(self):
-        """The direct Planner path and the discussion_engine path must
-        build an IDENTICAL set of specifications from the same profile —
-        proof that there is only one planning implementation, not two that
-        happen to agree by coincidence."""
-        planner = Planner(self.profile_dict)
-        direct_signature = sorted(
-            (s.category.value, s.source_type.value, s.source_id, s.source_field, s.text_seed)
-            for s in planner.pool.specifications.values()
-        )
-
-        from legacy_topic_pool_adapter import TopicPool as AdapterTopicPool
-        adapter = AdapterTopicPool(self.profile_dict)
-        adapter_signature = sorted(
-            (u["category"], u["source_type"], u["source_id"], u["source_field"], u["text_seed"])
-            for u in adapter.units.values()
-        )
-
-        self.assertEqual(direct_signature, adapter_signature)
 
 
 if __name__ == "__main__":

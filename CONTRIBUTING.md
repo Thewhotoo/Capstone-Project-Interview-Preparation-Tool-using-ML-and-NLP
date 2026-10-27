@@ -6,7 +6,6 @@ This repository combines the full capstone stack so the team can work on the sam
 
 - `main` is the integration branch for stable combined work.
 - `adaptive-engine` is the branch for the adaptive interview, RAG, RoBERTa, and API integration work.
-- `resume_classifier` is the branch for the resume classifier model and its supporting API.
 
 ## Working Pattern
 

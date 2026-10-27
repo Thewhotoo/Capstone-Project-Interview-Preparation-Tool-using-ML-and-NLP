@@ -1,0 +1,795 @@
+[
+  {
+    "question_id": "os.priority_scheduling.medium1",
+    "style": "confident_wrong",
+    "answer": "Priority scheduling is where each process gets a priority number and cpu goes to the highest one. And starvation, thats basically when two processes keep waiting for each other forever, like each holds something the other needs. So its pretty much the same thing as deadlock in this case. To fix it you use priority inheritance so the low one borrows the high ones priority and can finish.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "How can we prevent low-priority processes from being starved?",
+      "answer": "i think you just lock the high priority processes with a semaphore so they dont start until the low ones are done",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.command_pattern.medium2",
+    "style": "hesitant",
+    "answer": "so um the command pattern is, uh, you basically wrap a request inside an object, like a command object. And that object has, you know, everything needed to do the thing, the receiver and the method and the params or whatever. So the invoker just calls execute on it and, um, doesnt need to know who the receiver actually is. like a remote control and tv, the button doesnt care how the tv works.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.9,
+    "followup": {
+      "question": "How does this separation affect the flexibility of the system?",
+      "answer": "um yeah more flexible, you can add new commands without touching the invoker or receiver, open closed principle i think",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.kruskal_s_algorithm.easy1",
+    "style": "partial",
+    "answer": "kruskal sorts all the edges by weight first, smallest to largest, then you go through them and pick the cheap ones. you skip an edge if it would make a loop. keep going until you have v-1 edges",
+    "labels": [
+      "missing",
+      "covered",
+      "partial"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "What is the purpose of checking if two vertices are already connected?",
+      "answer": "so you dont make a cycle, otherwise its not a tree anymore",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.depth_first_search.medium1",
+    "style": "vague",
+    "answer": "dfs is basically going deep into the graph, you keep exploring nodes one after another and when you cant go anywhere you come back. its called stack like because of the way it goes back i guess. its used in lots of problems",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.2,
+    "followup": {
+      "question": "How does recursion mimic a stack in DFS?",
+      "answer": "recursion uses the call stack so the last function called is the first to finish, thats lifo like a stack",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.vector_databases_and_embeddings.hard2",
+    "style": "good",
+    "answer": "ANN algorithms like HNSW or IVF give up some exactness to get a lot more speed. So instead of comparing the query with every vector, which gets super slow with millions of high dimensional embeddings, they search a smart structure and return vectors that are very close but maybe not the exact closest ones. thats the tradeoff, you get speed and scalability but the similarity search precision drops a little",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "How does using ANN algorithms impact the accuracy of search results?",
+      "answer": "it can lower the accuracy a bit, sometimes you miss the real closest one, but not sure how much it depends on the settings",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "cn.go_back_n_and_selective_repeat.medium2",
+    "style": "good_own_words",
+    "answer": "ok so imagine youre mailing a bunch of numbered letters. in selective repeat the receiver sends a separate receipt for every single letter that arrives fine, even if some earlier ones are lost, and it holds on to those. so the sender only has to resend the particular letters that never got confirmed instead of the whole batch. and the sender window only slides forward once the oldest unconfirmed letter finally gets its receipt. thats why its better than go back n when the link loses packets, you dont waste bandwidth resending good ones.",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "How does this differ from Go-Back-N's window advancement?",
+      "answer": "in go back n the window moves as soon as any packet in the window is acked, but in selective repeat it waits for the smallest unacked one",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.er_to_relational_mapping.medium2",
+    "style": "short_casual",
+    "answer": "many to many u make a new table with both primary keys as foreign keys. one to many u put the fk on the one side i think",
+    "labels": [
+      "covered",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "What happens if you try to map a many-to-many relationship without an intermediate relation?",
+      "answer": "nothing really, you can just put a foreign key in one of the tables and it works the same",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.chain_of_responsibility_pattern.medium1",
+    "style": "partial",
+    "answer": "so chain of responsibility is when a request goes along a chain of handlers and one of them handles it, like a support call going from level 1 to level 2 to manager",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.4,
+    "followup": {
+      "question": "How does giving multiple objects an opportunity to handle the request contribute to loose coupling?",
+      "answer": "the sender doesnt know which object handles it so less dependency between them",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.asymptotic_notations.medium2",
+    "style": "dont_know",
+    "answer": "no idea honestly. theta and omega both look like big o type things but i dont remember how theyre different, sorry",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "When would you use Ω-notation instead of Θ-notation?",
+      "answer": "omega is lower bound i think so like best case maybe",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.stacks_and_recursion.easy1",
+    "style": "short_casual",
+    "answer": "each call gets pushed on the stack and when it returns its popped off",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "What happens to the return address when a function call is made?",
+      "answer": "not sure",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "cn.network_devices.hard2",
+    "style": "good_own_words",
+    "answer": "so a repeater is dumb basically, it just takes the signal that is getting weak and boosts it so it can travel further, and whatever comes in it blasts out to everything connected, it doesnt look at who its for. a switch is smarter, it learns the mac addresses of whats plugged into each port and sends the frame only to the port of the device its meant for. so if you join two segments with a repeater they share one collision domain and everyone fights for the wire, more collisions and slower. with a switch only the intended device gets the data so collisions drop and performance is better",
+    "labels": [
+      "covered",
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "How does this compare to the behavior of a Repeater?",
+      "answer": "hmm sorry i dont remember what you mean, compare in what way",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dsa.dijkstra_s_algorithm.easy1",
+    "style": "good_own_words",
+    "answer": "dijkstra is kind of greedy. you start at the source with distance 0 and everything else infinity, then keep picking the unvisited node thats closest right now, and from it you look at all its neighbors and see if going through this node gives a shorter route than what they have. if yes you update. repeat till all nodes are done",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "How does the algorithm use the weight of an edge to update distances?",
+      "answer": "you add the edge weight to the distance you already have for the current node, and if that sum is smaller than the neighbors current distance you replace it",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.java_object_class.medium1",
+    "style": "good_own_words",
+    "answer": "by default equals in Object just checks if the two variables point to the same place in memory, so same object, not same values. like two different student objects with the same name and roll no will still say false. every class extends Object in java so everyone gets this method. so you override it when you want to compare by whats inside",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "Why would you want to override the `equals()` method in a subclass?",
+      "answer": "bcz default equals compares the hashcode and we need to change it to compare the class name also",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.segmentation.easy1",
+    "style": "short_casual",
+    "answer": "segmentation splits the memory into logical parts like code, stack, data and each segment can be a different size, unlike paging where pages are fixed",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.7,
+    "followup": {
+      "question": "Why is non-contiguous memory space important?",
+      "answer": "so the process doesnt need one big continuous block, it can use free memory scattered around",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.facade_and_proxy_patterns.easy1",
+    "style": "hesitant",
+    "answer": "proxy is like, um, a stand in for another object. so you dont talk to the real object directly, you talk to the proxy first. and it can, you know, control who gets access, like checking permissions before passing the call on. and uh the proxy has the same interface so it looks like the real class",
+    "labels": [
+      "covered",
+      "covered",
+      "partial"
+    ],
+    "overall": 0.8,
+    "followup": {
+      "question": "How does this help in software design?",
+      "answer": "it keeps things abstracted and decoupled so its easier to change and maintain",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.context_switching.medium1",
+    "style": "short_casual",
+    "answer": "if the time quantum is small you get a lot more context switches so more overhead and the cpu wastes time switching instead of running stuff",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.3,
+    "followup": {
+      "question": "What could make a context switch particularly expensive?",
+      "answer": "it gets expensive when the process is small bcz then cpu has nothing to save so it just takes longer",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.encapsulation.medium1",
+    "style": "confident_wrong",
+    "answer": "Encapsulation basically means encrypting the data inside the class so that outsiders cant read it, thats what data hiding is. You wrap the data and the functions together in one class and then everything inside gets scrambled unless you have the right key through the getter methods. Its important because its a security feature of the software, it stops hackers from reading your variables.",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.25,
+    "followup": {
+      "question": "How does data hiding benefit the overall design of a system?",
+      "answer": "it makes the system more secure and also easier to change later i think, not sure about the second part",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.denormalization.easy1",
+    "style": "partial",
+    "answer": "denormalization is when you add redundant data on purpose, like copying a column into another table, so reads are faster. you do it when you read a lot",
+    "labels": [
+      "covered",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "How does denormalization affect query complexity?",
+      "answer": "fewer joins so the queries get simpler",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.second_normal_form_2nf.easy1",
+    "style": "partial",
+    "answer": "2nf is mostly about getting rid of partial dependencies, if your key is composite then an attribute shouldnt depend on only a part of it, that kind of thing",
+    "labels": [
+      "partial",
+      "missing",
+      "covered"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "What is the purpose of checking for FDs with left-hand side attributes that are part of the primary key?",
+      "answer": "to find the partial dependencies and remove them, since those break 2nf",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.factory_pattern.medium1",
+    "style": "confident_wrong",
+    "answer": "Factory method is when you have one class that makes all the objects in the whole app and it only ever creates a single shared instance, so you dont keep calling new again and again. Thats why its better than constructors, constructors make a fresh object every time which wastes memory but the factory just hands back the same one.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "Why is it important for the client to access objects through a common interface rather than directly?",
+      "answer": "not sure, havent really thought about that part",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.method_overloading.hard2",
+    "style": "confident_wrong",
+    "answer": "So if two methods have the same name and same parameters but different return types, thats totally fine, thats actually the main way overloading works. The compiler looks at the return type to decide which version to call, like int version or String version depending on what youre assigning it to. It just picks the one that matches.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "Why is the return type not considered when resolving overloaded methods?",
+      "answer": "i dont remember, i thought thats how it worked",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.thrashing.medium2",
+    "style": "short_casual",
+    "answer": "working set is the set of pages a process is actively using right now, so if you keep those in memory it doesnt thrash. and to approximate it they use a reference bit and a timer interrupt every so often",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.6,
+    "followup": {
+      "question": "How could the approximation be improved without increasing the overhead significantly?",
+      "answer": "maybe use more bits? not sure if that adds a lot of overhead",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.transactions_and_acid_properties.medium1",
+    "style": "vague",
+    "answer": "acid is basically what makes sure the database stays consistent and reliable even with many users, so transactions dont mess with each other and everything stays correct and safe",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.25,
+    "followup": {
+      "question": "How does the system ensure that changes are not lost after a failure?",
+      "answer": "it uses logs and recovery, once its committed its written to disk and after a crash it redoes from the log",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "ooad.information_expert.medium1",
+    "style": "hesitant",
+    "answer": "um so information expert is like, you give the responsibility to the class that has the information to do it. so if order has the items then order calculates the total. um and sometimes the info is in a few different classes so they, uh, have to work together i guess",
+    "labels": [
+      "covered",
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "Can an object have information but not be responsible for an action?",
+      "answer": "um yes maybe? i think so but not sure how, like if it has data but another class is better to do the action",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.liskov_substitution_principle.hard2",
+    "style": "good",
+    "answer": "so if a subclass overrides a method in a way that changes what the parent promised, then you cant just swap the child in wherever the parent was used. lsp says derived classes should be fully substitutable for base classes. like the classic rectangle and square, square overrides setWidth to also change height and code written for rectangle breaks. a child shouldnt change the parents behaviour and shouldnt do less than the parent, like throwing not supported on something the parent could do. then programs depending on the superclass behave wrong",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "What does it mean for a derived class to 'do less than' its base class?",
+      "answer": "it means the child doesnt support everything the parent could do, like an override that throws an exception or ignores the call, so code using the parent type breaks",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.tries.medium2",
+    "style": "partial",
+    "answer": "trie stores words one character at a time, every node is a letter. so for autocomplete you walk down the letters of what the user typed and then everything below that node is the suggestions, like in google search",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "What advantage does a trie provide for auto-complete that a hash table does not?",
+      "answer": "in a trie you just go to the prefix node and list everything below, with a hash table you cant, you would have to check lots of variations",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.aggregate_functions_and_group_by.easy1",
+    "style": "good_own_words",
+    "answer": "aggregate functions are like count, sum, avg, min, max. they look at a whole bunch of rows and squash them into one value, like the average salary of everyone instead of every salary. you can use them over the entire table or with group by so you get one answer per group, like average salary per department",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "What happens if you include a non-aggregated attribute in the SELECT clause with GROUP BY?",
+      "answer": "i dont remember, never tried it",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.outer_joins.medium1",
+    "style": "short_casual",
+    "answer": "full outer gives all rows from both tables with nulls where theres no match, mysql doesnt have it so you do left join union right join",
+    "labels": [
+      "covered",
+      "partial",
+      "covered"
+    ],
+    "overall": 0.8,
+    "followup": {
+      "question": "What is a common workaround for implementing Full Outer Join in MySQL?",
+      "answer": "left join union right join",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.indexing_basics.medium1",
+    "style": "hesitant",
+    "answer": "so um indexing, i think its like a b tree so the database doesnt have to read all the rows, it can jump to the right place directly. like the index at the back of a book. um without it it has to scan the whole table which is slow when the table is big",
+    "labels": [
+      "covered",
+      "partial",
+      "covered"
+    ],
+    "overall": 0.7,
+    "followup": {
+      "question": "What is the main disadvantage of a full table scan?",
+      "answer": "it reads every row so its slow, like linear, but im not sure about the exact complexity part",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dsa.topological_sorting.easy1",
+    "style": "confident_wrong",
+    "answer": "Topological sorting is just sorting the vertices of a graph by their value or label, like putting them in increasing order, and you can do it for any graph, cyclic or not, using dfs. Its important for DAGs because they have fewer edges so the sort is faster.",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "What kind of real-world problems can be modeled using topological sorting?",
+      "answer": "stuff like course prerequisites, or tasks where one has to finish before another",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dbms.integrity_constraints.medium1",
+    "style": "confident_wrong",
+    "answer": "Referential integrity means a foreign key has to point to a row that exists in the other table. Its there to keep the tables consistent. And if you try to delete a row that is being referenced, the database will always just throw an error and block it, thats the whole point, theres no way around that.",
+    "labels": [
+      "covered",
+      "covered",
+      "missing"
+    ],
+    "overall": 0.4,
+    "followup": {
+      "question": "What is the purpose of the CASCADE option in referential integrity?",
+      "answer": "oh it deletes or updates the child rows automatically when the parent row is changed",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.tcp_flow_control.medium1",
+    "style": "confident_wrong",
+    "answer": "TCP flow control is basically the sender watching for packet loss, when packets start getting dropped it halves its congestion window and slows down so it doesnt flood the receiver. Then it grows the window again slowly. This way the receivers buffer never overflows because the sender backs off as soon as it sees timeouts.",
+    "labels": [
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "How does the sender know how much data it can send at any time?",
+      "answer": "no idea",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.constructors.easy1",
+    "style": "partial",
+    "answer": "a constructor is a special method that runs when you create an object with new, used to set initial values",
+    "labels": [
+      "covered",
+      "missing",
+      "partial"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "Why would you want to use a constructor instead of initializing variables in a method?",
+      "answer": "so the object is ready to use right when its created, no chance you forget to initialize it",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.tcp_connection_establishment.medium2",
+    "style": "short_casual",
+    "answer": "bcz syn, syn-ack, ack, so both sides confirm they can send and receive",
+    "labels": [
+      "covered",
+      "partial"
+    ],
+    "overall": 0.6,
+    "followup": {
+      "question": "What is the risk of using a two-way handshake in a network with packet loss?",
+      "answer": "not much of a risk really, tcp would just retransmit the data anyway",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.singleton_pattern.medium2",
+    "style": "vague",
+    "answer": "eager is simple and safe, double checked is faster but more complicated, you have to be careful with it",
+    "labels": [
+      "partial",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.3,
+    "followup": {
+      "question": "Why is the volatile keyword necessary in double-checked locking?",
+      "answer": "volatile makes sure all threads see the updated instance value",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.icmp.easy1",
+    "style": "good",
+    "answer": "icmp is the protocol routers and hosts use to tell each other about problems in the network layer, so mainly error reporting, like when a packet cant get to where its going or its ttl expired. ping uses it too",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.9,
+    "followup": {
+      "question": "Can you give an example of an ICMP message used for error reporting?",
+      "answer": "ping uses it i think, and something like host unreachable maybe",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.composition_over_inheritance.medium1",
+    "style": "short_casual",
+    "answer": "composition is has-a, like a car has an engine. inheritance is is-a",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.35,
+    "followup": {
+      "question": "Why might test-ability be an important factor in choosing composition over inheritance?",
+      "answer": "testing is easier with inheritance bcz you inherit the tests from the parent class",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.abstraction.medium1",
+    "style": "good_own_words",
+    "answer": "think about driving a car. you press the pedal and it goes, you dont need to know how the engine burns fuel. abstraction is the same, you hide all the messy inner details and just expose a simple interface to whoever is using it. so when the software gets big you only think about what something does not how, and that keeps the complexity manageable",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "What is the role of an interface in abstraction?",
+      "answer": "the interface is what other objects use to talk to the thing without knowing whats inside it",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.stack_operations.easy1",
+    "style": "partial",
+    "answer": "you make a node class and keep a head pointer, push is adding a new node at the front and making head point to it, and pop does the reverse",
+    "labels": [
+      "covered",
+      "covered",
+      "partial"
+    ],
+    "overall": 0.6,
+    "followup": {
+      "question": "What is the effect of popping an element from a linked list-based stack?",
+      "answer": "the front node gets removed and head moves to the next node",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.peterson_s_solution.easy1",
+    "style": "partial",
+    "answer": "in peterson you have a flag array, each process sets its flag to true when it wants into the critical section. then i think theres another variable but i forget exactly what it does",
+    "labels": [
+      "covered",
+      "partial"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "Why is the turn variable necessary for mutual exclusion?",
+      "answer": "if both flags are true then turn decides who goes, so only one gets in",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "os.virtual_memory_and_demand_paging.easy1",
+    "style": "partial",
+    "answer": "demand paging means pages are only loaded into memory when they are needed",
+    "labels": [
+      "covered",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.35,
+    "followup": {
+      "question": "What is the significance of starting a process with no pages in memory?",
+      "answer": "so that the process is faster bcz everything is already in memory from the start",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.user_mode_vs_kernel_mode.hard2",
+    "style": "good_own_words",
+    "answer": "the cpu has a mode bit, 0 for kernel and 1 for user. things like io instructions or changing the page tables are privileged so only work in kernel mode. if a user program tries one anyway the hardware sees the mode bit is user and doesnt run it, it raises a trap or protection fault into the os and the os usually kills the program. its on purpose so a buggy or malicious program cant mess with other programs or the hardware",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "Why is it important for the OS to prevent user programs from executing privileged instructions?",
+      "answer": "so that user programs run faster and dont take too much cpu time",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.interface_segregation_principle.easy1",
+    "style": "good_own_words",
+    "answer": "isp is basically dont make one giant interface that makes everyone implement everything. split it into small ones for each kind of client. like if you have a printer interface with print, scan and fax, a basic printer class shouldnt be forced to write scan and fax that it cant do. so smaller focused interfaces, and classes only implement what they actually use",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "What is the consequence of having a fat interface?",
+      "answer": "it makes the code slower bcz bigger interfaces take more memory",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "ooad.method_overriding.medium2",
+    "style": "off_topic",
+    "answer": "method overloading is when you have same method name in a class but different parameters, like add(int, int) and add(double, double). the compiler decides at compile time which one to call based on the arguments",
+    "labels": [
+      "missing",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.05,
+    "followup": {
+      "question": "What if a class implements an interface with a method that it does not inherit from a parent class?",
+      "answer": "dont know",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.preemptive_vs_non_preemptive_scheduling.medium1",
+    "style": "short_casual",
+    "answer": "preemptive means the os can interrupt a running process and give the cpu to another, non preemptive waits till it finishes",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.55,
+    "followup": {
+      "question": "What is a potential downside of preemptive scheduling?",
+      "answer": "context switching overhead probably, and maybe problems with shared stuff",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "dbms.first_normal_form_1nf.medium1",
+    "style": "partial",
+    "answer": "1nf means every attribute value has to be atomic, one value in one cell",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "Why is 1NF considered a foundational normal form?",
+      "answer": "i dont remember",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.deadlock_avoidance.medium2",
+    "style": "good_own_words",
+    "answer": "so a safe state means theres some order you can run all the processes in so that each one gets what it needs and finishes, like a bank that can always pay everyone back in some order. when a process asks for a resource the os pretends to give it and checks if the system is still safe after that, if not it makes the process wait. so it only grants if it stays safe, and safe state means no deadlock. unsafe doesnt always mean deadlock but it can happen depending on what processes do",
+    "labels": [
+      "covered",
+      "covered",
+      "covered"
+    ],
+    "overall": 0.95,
+    "followup": {
+      "question": "How does the behavior of processes affect the system's ability to avoid deadlocks?",
+      "answer": "sorry i dont remember this one",
+      "correct": false
+    }
+  },
+  {
+    "question_id": "os.producer_consumer_problem.easy1",
+    "style": "hesitant",
+    "answer": "so its like, um, a producer makes items and puts them in a buffer and the consumer takes them out, and they run at the same time. its a classic example of cooperating processes. and uh it shows why we need synchronization, like semaphores, so the producer doesnt add to a full buffer and the consumer doesnt take from empty",
+    "labels": [
+      "covered",
+      "covered"
+    ],
+    "overall": 0.9,
+    "followup": {
+      "question": "What role does the 'mutex' semaphore play in this problem?",
+      "answer": "mutex makes sure only one of them touches the buffer at a time so no race condition",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "dsa.expression_trees.easy1",
+    "style": "confident_wrong",
+    "answer": "An expression tree is basically a binary search tree for an expression. You take the numbers and operators and insert them in sorted order so smaller values go left and bigger go right, then reading it inorder gives you back the expression. Its used because searching a sorted tree is fast.",
+    "labels": [
+      "partial",
+      "missing",
+      "missing"
+    ],
+    "overall": 0.15,
+    "followup": {
+      "question": "How does an operator node relate to its operands in the tree?",
+      "answer": "the operator has its two operands as the left and right child",
+      "correct": true
+    }
+  },
+  {
+    "question_id": "cn.throughput_and_bottleneck_link.medium1",
+    "style": "partial",
+    "answer": "so the slowest link basically decides the max speed, you cant go faster than the bottleneck. and if lots of pairs use the same middle link then they share it",
+    "labels": [
+      "covered",
+      "partial",
+      "missing"
+    ],
+    "overall": 0.5,
+    "followup": {
+      "question": "How does the number of pairs affect the shared link capacity available to each pair?",
+      "answer": "more pairs means each one gets a smaller piece of the shared link, its split equally",
+      "correct": true
+    }
+  }
+]

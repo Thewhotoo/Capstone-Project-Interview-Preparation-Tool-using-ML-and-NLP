@@ -16,9 +16,10 @@ from llm_requirement import LLMNotReady, ensure_llm_ready
 
 
 class _FakeChecker:
-    def __init__(self, installed_sequence, available=True, model="qwen3:4b"):
+    def __init__(self, installed_sequence, available=True, model="qwen3:4b",
+                 base_url="http://localhost:11434"):
         self._seq = list(installed_sequence)   # successive _installed_models() results
-        self._available, self.model = available, model
+        self._available, self.model, self.base_url = available, model, base_url
 
     def _installed_models(self, timeout):
         return self._seq.pop(0) if len(self._seq) > 1 else self._seq[0]
@@ -65,6 +66,19 @@ def test_not_installed_explains_how_to_install():
 def test_server_that_never_comes_up_explains_what_to_do():
     with pytest.raises(LLMNotReady, match="didn't start"):
         _ready(checker=_FakeChecker([None]))
+
+
+def test_ollama_on_another_host_is_checked_not_started():
+    started = []
+    checker = _FakeChecker([None], base_url="http://host.docker.internal:11434")
+    with pytest.raises(LLMNotReady, match="host.docker.internal"):
+        _ready(checker=checker, start_server=started.append)
+    assert started == []
+
+
+def test_ollama_on_another_host_that_answers_is_fine():
+    checker = _FakeChecker([{"qwen3:4b"}], base_url="http://host.docker.internal:11434")
+    assert _ready(checker=checker) == "qwen3:4b"
 
 
 def test_missing_model_says_which_to_pull():

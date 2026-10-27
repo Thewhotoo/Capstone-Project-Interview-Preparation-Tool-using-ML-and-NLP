@@ -28,15 +28,11 @@ Evaluation Engine types (`Evaluator`, `EvaluationRequest`,
 test_evaluation_engine.py's import-graph assertions — so none of them ever
 become "aware" that evaluation exists.
 
-Scope boundary UNCHANGED from Phase 2 (Phase 3 does not implement the
-Adaptive Controller): a live session here still never probes or follows up
-automatically. Evaluation now genuinely happens on every turn, but its
-result is recorded to the Evaluation Ledger and otherwise NOT acted upon —
-`planner.advance(..., UnitStatus.COVERED)` remains unconditional, exactly
-as before. Follow-up infrastructure (`question_realizer.realize_followup`)
-still exists and is directly callable by a future phase; nothing in this
-module invokes it on its own, and nothing here lets an `EvaluationResult`
-change what happens next.
+Adaptive follow-ups (opt-in, `start_conversation(..., enable_adaptive_followups=True)`,
+which the live app uses): on a weak-but-real answer the session asks one deeper probe on
+the same topic (`question_realizer.realize_followup`) before moving on, throttled per
+project and per session. This is the only place an `EvaluationResult` changes what
+happens next. With it off, `planner.advance(..., UnitStatus.COVERED)` is unconditional.
 """
 
 from __future__ import annotations
@@ -45,16 +41,19 @@ import concurrent.futures
 import logging
 import os
 import re
+import threading
 import time
 import uuid as _uuid
 
 import question_realizer
 from conversation_memory import ConversationMemory
 from evaluation_engine import EvaluationLedger, build_request, evaluate
+from evaluation_result import EvaluationResult
 from evaluator import Evaluator
-from evaluator_registry import UnknownEvaluatorError, get_active_evaluator, register_evaluator
+from evaluator_registry import UnknownEvaluatorError, get_active_evaluator, get_evaluator, register_evaluator
 from heuristic_evaluator import HeuristicEvaluator
 from interview_question import InterviewQuestion
+from live_store import LocalCache, get_store
 from planner import ConversationState, Planner
 from question_specification import UnitStatus
 from concept_analysis import concept_coverage_percent
@@ -62,7 +61,22 @@ from strong_answer import build_improved_answer, coaching_note
 from tech_consistency_flag import check_tech_consistency
 from topic_pool import ProfileLike
 
-_conversations: dict[str, dict] = {}
+# Live conversations are kept in the live store (live_store.py: this
+# process's memory, or Redis shared by every worker) as a small JSON record:
+#
+#     {"version", "profile", "evaluator": [name, version], "adaptive_followups",
+#      "turns": [{"answer", "evaluation", "tech_consistency", "followup"}],
+#      "current_question", "ended"}
+#
+# The planner, memory and ledger are not stored: they are rebuilt by
+# replaying the record (`_rebuild`). That is exact because planning is
+# deterministic (no `random`, crc32 not `hash()`; checked across hash seeds).
+# The one decision that depends on a score -- whether an answer triggered an
+# adaptive follow-up -- is stored per turn ("followup") and replayed as stored,
+# never recomputed. `_cache` keeps the rebuilt objects
+# per process, reused while the stored record's version is unchanged, so a
+# single-process server never replays.
+_cache = LocalCache()
 
 # Interview budget (session 14, UX milestone): a real technical interview
 # doesn't exhaust a candidate's entire topic pool -- capping the number of
@@ -94,20 +108,25 @@ def _answer_warrants_followup(result) -> bool:
     falls below this band; in both cases the interview simply moves on."""
     return 0.15 < result.overall_score < 0.60
 
-
 logger = logging.getLogger(__name__)
 
 # ── Background LLM re-grade (CAP_FACT_CHECK=1). The live flow keeps the fast,
-# deterministic evidence score (the follow-up decision above needs it at once);
-# each real answer is also queued for a slower re-grade with the local-LLM fact
-# check + rubric grade (resume_evidence_evaluator + fact_checker, ~5 s on a laptop
-# GPU) while the candidate reads and answers the next question. end_conversation
-# swaps finished re-grades into the report. ONE worker, so the GPU/RAM only ever
-# runs one LLM call at a time; when Ollama is down the re-grade just equals the
-# fast score. Off by default: nothing is queued and the flow is unchanged.
+# deterministic evidence score (the interview needs it at once); each real
+# answer is also queued for a slower re-grade with the local-LLM fact check +
+# rubric grade (resume_evidence_evaluator + fact_checker, ~5 s on a laptop GPU)
+# while the candidate reads and answers the next question. ONE worker, so the
+# GPU/RAM only ever runs one LLM call at a time; when Ollama is down the
+# re-grade just equals the fast score. CAP_FACT_CHECK (below) decides whether it runs.
+#
+# A finished re-grade is written to the live store (`regrade:<id>:<turn index>`),
+# not kept on the session, so end_conversation finds it whichever server ends
+# the interview and after a restart. Futures are kept only so the process that
+# queued them can wait for them at the end.
 REGRADE_WAIT_SECONDS = float(os.environ.get("CAP_REGRADE_WAIT_SECONDS", "30"))
 _regrade_pool: concurrent.futures.ThreadPoolExecutor | None = None
 _regrader = None
+_regrade_futures: dict[tuple[str, int], concurrent.futures.Future] = {}
+_regrade_futures_lock = threading.Lock()
 
 
 # CAP_FACT_CHECK: "auto" (default) re-grades only when the local Ollama server is up and has
@@ -147,7 +166,18 @@ def _get_regrader():
     return _regrade_pool, _regrader
 
 
-def _queue_regrade(session: dict, ledger_index: int, request, result) -> None:
+def _regrade_key(conversation_id: str, index: int) -> str:
+    return f"regrade:{conversation_id}:{index}"
+
+
+def _run_regrade(regrader, request, conversation_id: str, index: int) -> None:
+    # through evaluation_engine.evaluate, like the live grade: same non-answer gate,
+    # so a re-grade can never escape that cap
+    result = evaluate(regrader, request)
+    get_store().put(_regrade_key(conversation_id, index), result.model_dump(mode="json"))
+
+
+def _queue_regrade(conversation_id: str, session: dict, index: int, request, result) -> None:
     from resume_evidence_evaluator import ResumeEvidenceEvaluator
     evaluator = session["evaluator"]
     # Only re-grade what the same scoring family produced (scores must stay comparable),
@@ -157,28 +187,41 @@ def _queue_regrade(session: dict, ledger_index: int, request, result) -> None:
         return
     try:
         pool, regrader = _get_regrader()
-        # through evaluation_engine.evaluate, like the live grade: same non-answer gate and
-        # engagement attenuator, so a re-grade can never escape those caps
-        session["regrade_futures"][ledger_index] = pool.submit(evaluate, regrader, request)
+        future = pool.submit(_run_regrade, regrader, request, conversation_id, index)
+        with _regrade_futures_lock:
+            _regrade_futures[(conversation_id, index)] = future
     except Exception:  # optional enhancement: never break the interview
         logger.warning("could not queue LLM re-grade", exc_info=True)
 
 
-def _final_results(session: dict, wait: bool) -> tuple[list, int]:
-    """Ledger results with finished re-grades swapped in. With `wait`, gives pending
-    re-grades up to REGRADE_WAIT_SECONDS in total; anything unfinished keeps its fast
-    score. Returns (results, number_regraded)."""
-    results = list(session["evaluation_ledger"].all())
-    futures: dict = session.get("regrade_futures") or {}
+def _final_results(conversation_id: str, results: list, wait: bool) -> tuple[list, int]:
+    """Ledger results with finished re-grades swapped in. With `wait`, gives this
+    process's pending re-grades up to REGRADE_WAIT_SECONDS in total; anything
+    unfinished keeps its fast score. Returns (results, number_regraded)."""
+    results = list(results)
+    with _regrade_futures_lock:
+        mine = {i: _regrade_futures.pop((conversation_id, i)) for i in range(len(results))
+                if (conversation_id, i) in _regrade_futures}
     deadline = time.monotonic() + (REGRADE_WAIT_SECONDS if wait else 0.0)
-    regraded = 0
-    for index, future in sorted(futures.items()):
+    for future in mine.values():
         try:
-            results[index] = future.result(timeout=max(0.0, deadline - time.monotonic()))
-            regraded += 1
+            future.result(timeout=max(0.0, deadline - time.monotonic()))
         except Exception:  # timeout or a failed re-grade: keep the fast result
             future.cancel()
+    store = get_store()
+    regraded = 0
+    for index in range(len(results)):
+        stored = store.get(_regrade_key(conversation_id, index))
+        if stored is None:
+            continue
+        store.delete(_regrade_key(conversation_id, index))
+        try:
+            results[index] = EvaluationResult.model_validate(stored)
+            regraded += 1
+        except Exception:
+            logger.warning("ignoring an unreadable LLM re-grade", exc_info=True)
     return results, regraded
+
 
 # Session-integrity rules (full screen, no tab/window switching, no
 # copy/cut/paste) are enforced in the browser -- a web page can detect a
@@ -250,26 +293,170 @@ def _resolve_session_evaluator() -> Evaluator:
         return default
 
 
+def _key(conversation_id: str) -> str:
+    return f"conv:{conversation_id}"
+
+
+def _profile_dict(profile: ProfileLike) -> dict:
+    return profile.model_dump(mode="json") if hasattr(profile, "model_dump") else profile
+
+
+def _first_question(planner: Planner, memory: ConversationMemory):
+    spec = planner.plan_next(ConversationState())
+    if spec is None:
+        return None, None, None
+    question, variant_idx = question_realizer.realize(spec, memory, turn_number=1)
+    return spec, question, variant_idx
+
+
+def _plan_after_answer(planner: Planner, memory: ConversationMemory, last_category):
+    """The next specification once the current one is marked covered, or None
+    when the budget is spent or the pool is empty. Shared by live answers and
+    by replay, so both always take the same path."""
+    # Budget check BEFORE asking the planner for another unit -- this is
+    # the only way lower-priority units "never get scheduled" rather than
+    # scheduled-then-discarded; select_next() itself is never told to stop
+    # early, it simply isn't called again once the budget is spent.
+    if memory.turn_count() >= RESUME_DISCUSSION_QUESTION_BUDGET:
+        return None
+    return planner.plan_next(ConversationState(
+        last_category=last_category,
+        # soft cooldown so one project/job doesn't take several turns in a row
+        recent_source_ids=memory.recent_source_ids(),
+    ))
+
+
+def _wants_followup(session: dict, question: InterviewQuestion, memory: ConversationMemory, result) -> bool:
+    """Throttles: one probe per project, MAX_FOLLOWUPS_PER_SESSION per session, within
+    the question budget, and only on a weak-but-real answer."""
+    source_id = question.specification.source_id
+    return (session["record"].get("adaptive_followups", False)
+            and session["followups_by_source"].get(source_id, 0) < MAX_FOLLOWUPS_PER_PROJECT
+            and sum(session["followups_by_source"].values()) < MAX_FOLLOWUPS_PER_SESSION
+            and memory.turn_count() < RESUME_DISCUSSION_QUESTION_BUDGET
+            and _answer_warrants_followup(result))
+
+
+def _realize_followup(followups_by_source: dict, question: InterviewQuestion, memory: ConversationMemory):
+    """The deeper-probe follow-up on the SAME topic (the spec isn't advanced, so the next
+    answer is evaluated against it). Counts are tracked by source_id, NOT via the pool's
+    lifecycle: specs go unasked->covered and are never ACTIVE, so pool.mark_followup_used
+    would reject them. Shared by live answers and by replay."""
+    source_id = question.specification.source_id
+    used = followups_by_source.get(source_id, 0)
+    followups_by_source[source_id] = used + 1
+    # The probe template embeds this as a noun phrase ("What more can you tell
+    # me about {focus}?"), so it must be a short SUBJECT, never a full question
+    # or sentence -- passing a sentence seed here produced garbled probes like
+    # "...about Why did you use X in this project??". Use the project title's
+    # head (e.g. "LinkLens -- URL Shortener..." -> "LinkLens"); when there is no
+    # project reference, pass None and let realize_followup fall back to its own
+    # safe generic ("that part of your work") rather than risk a sentence seed.
+    ref = (question.project_reference or "").strip()
+    focus = re.split(r"\s[—–-]\s", ref)[0].strip().rstrip("?.:,").strip() or None
+    return question_realizer.realize_followup(
+        question.specification, memory, memory.turn_count() + 1,
+        followups_used_on_this_spec=used, angle="more_detail", focus_hint=focus,
+    )
+
+
+def _save(conversation_id: str, session: dict) -> None:
+    record = session["record"]
+    record["version"] += 1
+    get_store().put(_key(conversation_id), record)
+    _cache.put(conversation_id, record["version"], session)
+
+
+def _pinned_evaluator(name: str) -> Evaluator:
+    try:
+        return get_evaluator(name)
+    except UnknownEvaluatorError:
+        logger.warning("Evaluator %r pinned to a live conversation is not registered in this "
+                       "process; using the active one", name)
+        return _resolve_session_evaluator()
+
+
+def _rebuild(record: dict) -> dict | None:
+    """Recreate a conversation's live objects from its record by replaying
+    every answered turn through the same planning steps the live session took.
+    Evaluations are restored from the record, never recomputed. Returns None
+    if the replay doesn't reach the question the candidate is looking at
+    (the profile or planning code changed since the record was written)."""
+    planner = Planner(record["profile"])
+    memory = ConversationMemory()
+    ledger = EvaluationLedger()
+    answer_history: dict[str, tuple[str, ...]] = {}
+    followups_by_source: dict[str, int] = {}
+
+    spec, question, variant_idx = _first_question(planner, memory)
+    for turn in record["turns"]:
+        if spec is None:
+            return None
+        spec_id = question.specification.id
+        ledger.append(EvaluationResult.model_validate(turn["evaluation"]))
+        answer_history[spec_id] = answer_history.get(spec_id, ()) + (turn["answer"],)
+        memory.record_turn(question, variant_idx, answer_text=turn["answer"])
+        if turn.get("followup"):   # the stored decision, never recomputed from a score
+            question, variant_idx = _realize_followup(followups_by_source, question, memory)
+            continue
+        planner.advance(spec_id, UnitStatus.COVERED)
+        spec = _plan_after_answer(planner, memory, spec.category)
+        if spec is not None:
+            question, variant_idx = question_realizer.realize(spec, memory, memory.turn_count() + 1)
+
+    if not record["ended"] and (spec is None or question.question_text != record["current_question"]["text"]):
+        logger.error("Replaying a live conversation did not reach its current question; dropping it")
+        return None
+    return {
+        "planner": planner,
+        "memory": memory,
+        "current_question": question,
+        "current_variant_idx": variant_idx,
+        "last_category": spec.category if spec is not None else None,
+        "ended": record["ended"],
+        "evaluator": _pinned_evaluator(record["evaluator"][0]),
+        "evaluation_ledger": ledger,
+        "answer_history": answer_history,
+        "followups_by_source": followups_by_source,
+        "record": record,
+    }
+
+
+def _load(conversation_id: str) -> dict | None:
+    """The live conversation's objects, from this process's cache when the
+    stored record is unchanged, otherwise rebuilt from the record."""
+    record = get_store().get(_key(conversation_id))
+    if record is None:
+        _cache.drop(conversation_id)
+        return None
+    session = _cache.get(conversation_id, record["version"])
+    if session is None:
+        session = _rebuild(record)
+        if session is None:
+            return None
+        _cache.put(conversation_id, record["version"], session)
+    return session
+
+
 def start_conversation(profile: ProfileLike, enable_adaptive_followups: bool = False) -> tuple[dict, int]:
     """Start a new Resume Discussion conversation from a Candidate Profile
-    (the real Pydantic model or its `.model_dump()` dict form — Planner
-    already accepts either).
+    (the real Pydantic model or its `.model_dump()` dict form). Planning runs
+    on the dict form, the same form a replay starts from.
 
     `enable_adaptive_followups` (default False) turns on deeper-probe follow-ups
     on weak-but-real answers. Default off keeps the original flow and all
     existing behavior unchanged; the live app opts in."""
+    profile = _profile_dict(profile)
     planner = Planner(profile)
     memory = ConversationMemory()
     session_evaluator = _resolve_session_evaluator()
 
-    spec = planner.plan_next(ConversationState())
+    spec, question, variant_idx = _first_question(planner, memory)
     if spec is None:
         return {"error": "No discussion questions could be generated from this profile."}, 400
 
-    question, variant_idx = question_realizer.realize(spec, memory, turn_number=1)
-
     conversation_id = f"conv_{_uuid.uuid4().hex[:12]}"
-    _conversations[conversation_id] = {
+    session = {
         "planner": planner,
         "memory": memory,
         "current_question": question,
@@ -279,11 +466,18 @@ def start_conversation(profile: ProfileLike, enable_adaptive_followups: bool = F
         "evaluator": session_evaluator,
         "evaluation_ledger": EvaluationLedger(),
         "answer_history": {},  # spec_id -> tuple[str, ...] of raw answers given (Phase 3)
-        "enable_adaptive_followups": enable_adaptive_followups,
-        "followups_by_source": {},  # source_id (project) -> count of adaptive follow-ups asked (session-local)
-        "tech_consistency_flags": [],  # one entry per turn, parallel to memory.timeline/ledger (see check_tech_consistency)
-        "regrade_futures": {},  # ledger index -> Future of a background LLM re-grade (CAP_FACT_CHECK=1 only)
+        "followups_by_source": {},  # source_id (project) -> adaptive follow-ups asked
+        "record": {
+            "version": 0,
+            "profile": profile,
+            "evaluator": [session_evaluator.name, session_evaluator.version],
+            "adaptive_followups": enable_adaptive_followups,
+            "turns": [],
+            "current_question": _question_payload(question),
+            "ended": False,
+        },
     }
+    _save(conversation_id, session)
     return {
         "status": "success",
         "conversation_id": conversation_id,
@@ -295,11 +489,11 @@ def start_conversation(profile: ProfileLike, enable_adaptive_followups: bool = F
 def evaluator_info(conversation_id: str) -> tuple[str, str] | None:
     """(name, version) of the evaluator pinned to this conversation, for
     session history — scores from different evaluators aren't comparable."""
-    session = _conversations.get(conversation_id)
-    if session is None:
+    record = get_store().get(_key(conversation_id))
+    if record is None:
         return None
-    evaluator = session["evaluator"]
-    return evaluator.name, evaluator.version
+    name, version = record["evaluator"]
+    return name, version
 
 
 def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
@@ -317,11 +511,20 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
     `ConversationMemory` still only ever receives answer-length metadata,
     never a score (Phase 2's approved boundary, untouched).
     """
-    session = _conversations.get(conversation_id)
-    if session is None:
-        return {"error": "Invalid or expired conversation"}, 404
-    if session["ended"]:
-        return {"status": "completed"}, 200
+    with get_store().lock(_key(conversation_id)):
+        session = _load(conversation_id)
+        if session is None:
+            return {"error": "Invalid or expired conversation"}, 404
+        if session["ended"]:
+            return {"status": "completed"}, 200
+        try:
+            return _advance(conversation_id, session, answer)
+        except Exception:
+            _cache.drop(conversation_id)   # objects may be half-updated; rebuild from the record next time
+            raise
+
+
+def _advance(conversation_id: str, session: dict, answer: str) -> tuple[dict, int]:
 
     planner: Planner = session["planner"]
     memory: ConversationMemory = session["memory"]
@@ -338,94 +541,74 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
     request = build_request(current_question, answer, memory, planner, answer_history)
     result = evaluate(session_evaluator, request)
     ledger.append(result)
-    _queue_regrade(session, len(ledger) - 1, request, result)
+    _queue_regrade(conversation_id, session, len(ledger) - 1, request, result)
     answer_history[spec_id] = answer_history.get(spec_id, ()) + (answer,)
 
-    memory.record_turn(current_question, variant_idx, answer_text=answer)
+    # Tech-consistency flag (informational only -- see tech_consistency_flag.py):
+    # never touches overall_score/grade; a resume-grounded side check of whether
+    # the described tech stack matches what the resume lists for this project.
+    # None when not applicable. Kept in the record, one per turn, for the end feedback.
+    tech_consistency = check_tech_consistency(request)
 
-    # Improved Answer / Coaching Note / concept coverage are derived here, at the
-    # one site where the EvaluationResult, the InterviewQuestion (its grounding)
-    # AND the raw candidate `answer` are all in scope; built once so BOTH the
-    # follow-up and move-on branches return the same payload. `_result_payload`
-    # stays a pure field-selector; the ledger (results only) is untouched.
-    # UI-honesty: `improved_answer` is the candidate's own answer + one appended
-    # coaching sentence; `coaching_note` is that same sentence alone (identical
-    # shared logic, strong_answer._compute) so the report can show "Your Answer"
-    # and "Coaching Note" separately without implying a rewrite. concept_coverage_pct
-    # comes straight from result.concept_coverage's per-concept statuses (None when
-    # the turn has no concept pool).
+    memory.record_turn(current_question, variant_idx, answer_text=answer)
+    record = session["record"]
+    # ADAPTIVE FOLLOW-UP (opt-in): on a weak-but-real answer, probe deeper on the SAME
+    # topic before covering it. The decision is stored with the turn so a replay takes
+    # the same path. Default off -> never taken, and the flow below is unchanged.
+    followup = _wants_followup(session, current_question, memory, result)
+    record["turns"].append({"answer": answer, "evaluation": result.model_dump(mode="json"),
+                            "tech_consistency": tech_consistency, "followup": followup})
+
+    # Improved Answer / Coaching Note are derived here, at the one site
+    # where the EvaluationResult, the InterviewQuestion (its grounding) AND
+    # the raw candidate `answer` are all in scope. `_result_payload` stays a
+    # pure field-selector and the ledger (results only) is untouched. See
+    # strong_answer.py.
+    #
+    # UI-honesty fix (post-demo forensic investigation): `improved_answer`
+    # (the candidate's own answer + one appended coaching sentence,
+    # concatenated) is kept for any existing consumer, but the report now
+    # additionally receives `coaching_note` -- that same appended sentence
+    # on its own -- computed from the identical shared logic
+    # (strong_answer._compute), so it can never disagree with what
+    # `improved_answer` would have embedded. This lets the report show
+    # "Your Answer" (the candidate's real, unmodified `answer`, already
+    # available on this payload) and "Coaching Note" as two honest, separate
+    # pieces instead of one blob under a label implying a rewritten answer.
     turn_evaluation = _result_payload(result)
     turn_evaluation["improved_answer"] = build_improved_answer(current_question, result, answer)
     turn_evaluation["coaching_note"] = coaching_note(current_question, result, answer)
+    # Concept Coverage % for the dashboard, derived directly from
+    # result.concept_coverage's own per-concept statuses (never a separate
+    # re-scan of the answer text -- see concept_analysis.py's module
+    # docstring for the bug this fixed). None when the turn has no concept
+    # pool (e.g. experience/certification) — the dashboard averages only
+    # non-null turns.
     turn_evaluation["concept_coverage_pct"] = concept_coverage_percent(result)
-    # Tech-consistency flag (informational only -- see tech_consistency_flag.py):
-    # never touches overall_score/grade above; a resume-grounded side-channel
-    # check for whether the described tech stack is consistent with what the
-    # resume itself lists for this project. None when not applicable.
-    turn_evaluation["tech_consistency"] = check_tech_consistency(request)
-    # Recorded in parallel with memory.timeline/the ledger (both grow by exactly
-    # one entry per advance_conversation call, including follow-up probes) so
-    # end_conversation can line this up with project_reference per turn.
-    session["tech_consistency_flags"].append(turn_evaluation["tech_consistency"])
+    turn_evaluation["tech_consistency"] = tech_consistency
 
-    # ── ADAPTIVE FOLLOW-UP (opt-in): on a weak-but-real answer, probe deeper on
-    # the SAME topic before covering it — throttled per project, per session, and
-    # to the question budget so it never badgers. Counts are tracked session-
-    # locally by source_id (NOT via the pool's lifecycle: specs go unasked->covered
-    # and are never ACTIVE, so pool.mark_followup_used would reject them). The spec
-    # simply isn't advanced yet, so the next answer is evaluated against it.
-    # Default off → this whole block is skipped and the flow below is unchanged. ──
-    source_id = current_question.specification.source_id
-    followups_for_project = session["followups_by_source"].get(source_id, 0)
-    total_followups = sum(session["followups_by_source"].values())
-    if (session.get("enable_adaptive_followups")
-            and followups_for_project < MAX_FOLLOWUPS_PER_PROJECT
-            and total_followups < MAX_FOLLOWUPS_PER_SESSION
-            and memory.turn_count() < RESUME_DISCUSSION_QUESTION_BUDGET
-            and _answer_warrants_followup(result)):
-        session["followups_by_source"][source_id] = followups_for_project + 1
-        # The probe template embeds this as a noun phrase ("What more can you tell
-        # me about {focus}?"), so it must be a short SUBJECT, never a full question
-        # or sentence -- passing a sentence seed here produced garbled probes like
-        # "...about Why did you use X in this project??". Use the project title's
-        # head (e.g. "LinkLens -- URL Shortener..." -> "LinkLens"); when there is no
-        # project reference, pass None and let realize_followup fall back to its own
-        # safe generic ("that part of your work") rather than risk a sentence seed.
-        ref = (current_question.project_reference or "").strip()
-        focus = re.split(r"\s[—–-]\s", ref)[0].strip().rstrip("?.:,").strip() or None
-        followup_turn_number = memory.turn_count() + 1
-        followup_q, followup_variant = question_realizer.realize_followup(
-            current_question.specification, memory, followup_turn_number,
-            followups_used_on_this_spec=followups_for_project, angle="more_detail", focus_hint=focus,
-        )
+    if followup:
+        followup_q, followup_variant = _realize_followup(session["followups_by_source"], current_question, memory)
         session["current_question"] = followup_q
         session["current_variant_idx"] = followup_variant
-        # same topic → last_category unchanged; spec not advanced (probed again)
+        # same topic -> last_category unchanged; spec not advanced (probed again)
+        record["current_question"] = _question_payload(followup_q)
+        _save(conversation_id, session)
         return {
             "status": "success",
             "next_question": _question_payload(followup_q),
             "is_completed": False,
-            "turn_number": followup_turn_number,
+            "turn_number": memory.turn_count() + 1,
             "evaluation": turn_evaluation,
         }, 200
 
-    # ── Move on: cover this topic and select the next one (original behavior). ──
+    # Move on: cover this topic and select the next one (original behavior).
     planner.advance(spec_id, UnitStatus.COVERED)
-
-    # Budget check BEFORE asking the planner for another unit -- this is
-    # the only way lower-priority units "never get scheduled" rather than
-    # scheduled-then-discarded; select_next() itself is never told to stop
-    # early, it simply isn't called again once the budget is spent.
-    if memory.turn_count() >= RESUME_DISCUSSION_QUESTION_BUDGET:
-        next_spec = None
-    else:
-        next_spec = planner.plan_next(ConversationState(
-            last_category=session["last_category"],
-            recent_source_ids=memory.recent_source_ids(),
-        ))
+    next_spec = _plan_after_answer(planner, memory, session["last_category"])
 
     if next_spec is None:
-        session["ended"] = True
+        session["ended"] = record["ended"] = True
+        _save(conversation_id, session)
         return {
             "status": "success", "next_question": None, "is_completed": True,
             "turn_number": memory.turn_count(),
@@ -437,6 +620,8 @@ def advance_conversation(conversation_id: str, answer: str) -> tuple[dict, int]:
     session["current_question"] = next_question
     session["current_variant_idx"] = next_variant_idx
     session["last_category"] = next_spec.category
+    record["current_question"] = _question_payload(next_question)
+    _save(conversation_id, session)
 
     return {
         "status": "success",
@@ -502,14 +687,18 @@ def end_conversation(conversation_id: str, integrity: dict | None = None,
     `sanitize_integrity`); a terminated session is ended exactly like a
     completed one -- the session is discarded, so no further replies are
     accepted -- and the termination is recorded in the summary."""
-    session = _conversations.get(conversation_id)
-    if session is None:
-        return {"error": "Invalid or expired conversation"}, 404
+    with get_store().lock(_key(conversation_id)):
+        session = _load(conversation_id)
+        if session is None:
+            return {"error": "Invalid or expired conversation"}, 404
+        get_store().delete(_key(conversation_id))
+        _cache.drop(conversation_id)
 
     memory: ConversationMemory = session["memory"]
+    ledger: EvaluationLedger = session["evaluation_ledger"]
     # `wait_for_regrades`: the /end route waits briefly for background LLM re-grades;
     # abandonment clean-up does not (nobody is waiting for that report).
-    results, regraded = _final_results(session, wait_for_regrades)
+    results, regraded = _final_results(conversation_id, ledger.all(), wait_for_regrades)
 
     summary = {
         "status": "success",
@@ -533,17 +722,17 @@ def end_conversation(conversation_id: str, integrity: dict | None = None,
         "regraded_turns": regraded,
         "integrity": sanitize_integrity(integrity),
     }
-    # Honest, data-driven end-of-session feedback derived from the actual per-turn
-    # results (replaces the frontend's fixed narrative templates). No evaluation
-    # logic here — pure summarization of results already computed.
+    # Data-driven end-of-session feedback (interview_feedback.py): pure
+    # summarization of the results above, no evaluation logic. Saved with the
+    # session (session_history keeps everything but "evaluations").
     from interview_feedback import build_feedback
     summary["feedback"] = build_feedback(
-        summary["evaluations"], summary["timeline"], session["tech_consistency_flags"],
+        summary["evaluations"], summary["timeline"],
+        [turn.get("tech_consistency") for turn in session["record"]["turns"]],
     )
     if summary["integrity"]["terminated"]:
         logger.warning(
             "Conversation %s terminated for an integrity violation: %s at turn %s",
             conversation_id, summary["integrity"]["type"], summary["integrity"]["at_turn"],
         )
-    _conversations.pop(conversation_id, None)
     return summary, 200

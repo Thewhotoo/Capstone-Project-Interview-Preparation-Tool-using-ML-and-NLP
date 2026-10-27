@@ -36,24 +36,65 @@ Details, main files and LOC per module: [`PROJECT_DOCUMENTATION.md` §1.1](PROJE
 
 ---
 
-## Quick start
+## Quick start (Docker, recommended)
 
-**Requirements:** Python 3.12, about 8 GB RAM, Chrome or Edge with a webcam, internet on the first run, and [Ollama](https://ollama.com) with the `qwen3:4b` model (installed by `install.py`; an NVIDIA GPU with ~3 GB free makes it fast). Node.js only for the frontend tests. Full list (disk space, models, the weights file, browser permissions): [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
+Docker builds everything for you: Python, every package and every model go into the image, and the app runs with PostgreSQL and Redis. The one thing outside Docker is the local LLM.
+
+**You need:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) (on Windows it also needs WSL 2), [Git LFS](https://git-lfs.com) for the trained Round 1 evaluator, **[Ollama](https://ollama.com) on this computer with the `qwen3:4b` model** (required: résumé answers are graded with it; an NVIDIA GPU with ~3 GB free makes it fast), about 8 GB RAM and 10 GB free disk, and a browser with a webcam. Full list: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
 
 ```bash
-python install.py        # one-time: Python packages + Ollama + the qwen3:4b model
-cd main_cap/cap
-python app.py
+git lfs install                  # once per machine, before cloning
+git clone https://github.com/Thewhotoo/Capstone-Project-Interview-Preparation-Tool-using-ML-and-NLP.git
+cd Capstone-Project-Interview-Preparation-Tool-using-ML-and-NLP
+python install.py --skip-pip     # one-time: Ollama + the qwen3:4b model (or: winget install Ollama.Ollama, ollama pull qwen3:4b)
+docker compose up --build -d     # first time ~15 min (downloads ~3 GB); later starts take seconds
 ```
 
-Open **http://localhost:5000**, sign up with a resume, and start an interview from Home.
+The app won't start until it reaches Ollama: `docker compose logs app` then says what's missing, and the container retries by itself once Ollama is running.
 
-- The SQLite database and its migrations are created automatically on first start (`main_cap/cap/instance/`, not in git).
-- The first start downloads the Hugging Face models the graders use; later starts load them offline in a background thread (~2 s to a running server).
+Open **http://localhost:5000**, sign up with a resume, and start an interview from Home. `docker compose logs -f app` shows the server starting (Ctrl+C stops watching, not the app).
+
+| Task | Command (from the repository root) |
+|---|---|
+| Stop | `docker compose down` (your data is kept) |
+| Start again | `docker compose up -d` |
+| After pulling or changing code | `docker compose up --build -d` (rebuilds only the code layer, seconds) |
+| Logs | `docker compose logs -f app` |
+| Database shell | `docker compose exec postgres psql -U cap cap` |
+
+- **Your data** (accounts, resumes, sessions, interviews in progress) lives in Docker volumes and is kept across `down` / `up` and rebuilds. **`docker compose down -v` deletes it.**
+- **The trained Round 1 evaluator** is mounted from `main_cap/cap/deployed_model_overall_single_v5_1088/` (Git LFS, below). Without it Round 1 uses the heuristic evaluator; the startup log says which one is active.
+- **Optional settings** (port, database password, secret key, threads): copy `.env.example` to `.env`.
+- **Bringing over data from a non-Docker install** (the SQLite file and its resumes): with the stack running, from the repository root:
+  ```bash
+  docker compose cp main_cap/cap/instance/app.db app:/tmp/app.db
+  docker compose cp main_cap/cap/instance/uploads app:/tmp/uploads
+  docker compose exec app python copy_database.py --from sqlite:////tmp/app.db --from-uploads /tmp/uploads --replace
+  ```
+  `--replace` first deletes everything already in the Docker database.
+
+### Without Docker (for development and running the tests)
+
+Needed only to work on the code or run the test suite. **Requirements:** Python 3.12, about 8 GB RAM and internet on the first run (about 2.5 GB of models download then). Node.js only for the frontend tests. Details: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
+
+```bash
+python install.py                # one-time: Python packages + Ollama + the qwen3:4b model
+cd main_cap/cap
+python app.py                    # http://localhost:5000
+```
+
+No NVIDIA GPU? Install the small CPU-only PyTorch first: `pip install torch --index-url https://download.pytorch.org/whl/cpu`. Both ways of running refuse to start without the local LLM and print what to install.
+
+| | Docker (default) | `python app.py` |
+|---|---|---|
+| Install | Docker + Ollama | Python 3.12 + packages + models + Ollama (`install.py` does all of it) |
+| Database | PostgreSQL | SQLite file (`main_cap/cap/instance/`, created automatically) |
+| Interviews in progress | Redis; survive a restart | Process memory; a restart ends them |
+| Server | waitress (`serve.py`) | Flask development server |
 
 ### Round 1 evaluator weights (Git LFS)
 
-The trained Round 1 evaluator's weights (`best_checkpoint_weights.pt`, ~735 MB) are stored with **Git LFS**. Install Git LFS and run `git lfs install` **before cloning**, or run `git lfs pull` afterwards. Without Git LFS you get a small pointer file instead of the model. Details, and the monthly download allowance: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
+The trained Round 1 evaluator's weights (`best_checkpoint_weights.pt`, ~735 MB) are stored with **Git LFS** (used by both ways of running). Run `git lfs install` **before cloning**, or `git lfs pull` afterwards. Without Git LFS you get a small pointer file instead of the model. Details, and the monthly download allowance: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
 
 ```
 main_cap/cap/deployed_model_overall_single_v5_1088/best_checkpoint_weights.pt
@@ -69,15 +110,24 @@ All optional; set as environment variables.
 
 | Variable | Default | Effect |
 |---|---|---|
-| `CAP_DATABASE_URL` | `sqlite:///main_cap/cap/instance/app.db` | Database (any SQLAlchemy URL) |
+| `CAP_DATABASE_URL` | `sqlite:///main_cap/cap/instance/app.db` | Database: SQLite by default, or PostgreSQL (`postgresql+psycopg://user:password@host:5432/dbname`) |
 | `CAP_UPLOAD_DIR` | `main_cap/cap/instance/uploads` | Where uploaded resumes are stored |
 | `CAP_SECRET_KEY` | generated once into `instance/secret_key` | Flask session secret; set explicitly in production |
+| `CAP_RESUME_EVIDENCE_EVALUATOR` | on | Round 1 is graded by the resume-evidence evaluator first; `0` falls back to the trained evaluator below |
+| `CAP_EVIDENCE_SCORING` | `v2` | Scoring version of the resume-evidence evaluator (`v1` rolls back) |
 | `CAP_TRAINED_EVALUATOR` | on | `0` forces the heuristic Round 1 evaluator |
+| `CAP_FACT_CHECK` | `auto` | Background re-grade of Round 1 answers with a local LLM (fact check + rubric grade). The app requires Ollama at startup; `auto` then skips the re-grade only if Ollama stops mid-session (those answers keep the fast score), `1` always tries it, `0` never |
+| `CAP_OLLAMA_URL` / `CAP_FACT_CHECK_MODEL` | `http://localhost:11434` (Docker: the host machine) / first of `qwen3:4b`, `qwen2.5:3b` that Ollama has | Ollama server and model for the re-grade |
+| `CAP_REGRADE_WAIT_SECONDS` | `30` | How long ending an interview waits for unfinished re-grades; unfinished ones keep the live score |
+| `CAP_TECH_LLM_GRADE` / `CAP_TECH_JUDGE_MODEL` | `auto` / `qwen3:8b` | Background re-grade of Round 2 answers with a local LLM (per-key-point verdicts, blended 50/50 with the fast grade): `auto` runs it only when Ollama has the model, `1` always, `0` never |
 | `CAP_CURATED_ONLY` | `1` | Technical interviews use the hand-reviewed top tier of the bank; `0` widens to every active question |
 | `CAP_GRADER_ENRICHMENT` | `replies` | How much of the offline bank enrichment the technical grader uses (`off` / `replies` / `all`) |
 | `CAP_QUESTION_BANK_DIR` | `rag_system/rag_tester/question_bank` | Where the question bank is read from |
 | `CAP_MODEL_WARMUP` | on | `0` disables background model loading at startup |
-| `CAP_FACT_CHECK_MODEL` | first installed of `qwen3:4b`, `qwen2.5:3b` | Ollama model used for the re-grade |
+| `CAP_WHISPER_MODEL` | `base.en` | Speech-to-text model for voice answers (faster-whisper name, e.g. `small.en`: more accurate on some voices, about 3x slower) |
+| `CAP_LIVE_STORE` | `memory` | Where interviews in progress are kept: `memory` (one process) or `redis` (shared by several workers, survives restarts) |
+| `CAP_REDIS_URL` | `redis://localhost:6379/0` | Redis server for `CAP_LIVE_STORE=redis` |
+| `CAP_HOST` / `CAP_PORT` / `CAP_THREADS` | `127.0.0.1` / `5000` / `8` | Production server `python serve.py` (waitress) |
 | `GEMINI_API_KEY` | unset | Only for optional developer tooling (parser shadow mode, experiment scripts); **not** needed to run the app |
 
 The server port is 5000 (set in `app.run` at the bottom of `main_cap/cap/app.py`).
@@ -99,8 +149,7 @@ python -m pytest slide_rag/tests -q                  # slide pipeline: 19 passed
 Some grader tests load the real models; set `CAP_SKIP_MODEL_TESTS=1` to skip them.
 
 Evaluation scripts:
-- `grader_eval/`: technical grader vs hand-labelled answers.
-- `integration_checks/`: resume engine, non-answer filter and Round 1 evaluator comparisons.
+- `grader_eval/`: technical grader vs hand-labelled answers (`benchmark.py`, `sanity_check.py`).
 
 ---
 
@@ -126,10 +175,9 @@ Evaluation scripts:
 │   ├── slide_rag/                 Offline slide pipeline + question-bank generation, ranking, enrichment
 │   └── question_bank/             The technical question bank (one JSON per subject) + quality review
 ├── grader_eval/                   Technical grader evaluation sets and scripts
-├── integration_checks/            Before/after comparison scripts and data
-├── resume_classifier/             Resume text extraction for DOCX/DOC/TXT
-├── parser_tests/                  Parser benchmark scripts (the test resumes themselves are not in git)
-└── docs/architecture/             Earlier design documents
+├── docs/architecture/             Earlier design documents
+├── Dockerfile, docker-compose.yml, .dockerignore, .env.example   Production mode in Docker
+└── docker/                        Model download script and pinned versions for the image
 ```
 
 Not in git (see `.gitignore`): the database and uploads, the lecture slides and the search indexes built from them, generation caches, and personal test resumes.
@@ -154,9 +202,7 @@ python -m slide_rag.interview_priority    # interview-frequency tiers
 
 - [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md): everything a new machine needs (system, models, weights file, browser, question-bank rebuild).
 - [`PROJECT_DOCUMENTATION.md`](PROJECT_DOCUMENTATION.md): architecture, every subsystem, design decisions, measured results, limitations and a glossary.
-- [`resumeParser_integration.md`](resumeParser_integration.md): how the improved resume engine and trained evaluator were integrated and measured.
 - [`rag_system/rag_tester/question_bank/quality_review.md`](rag_system/rag_tester/question_bank/quality_review.md): per-question quality scores and the topics still to cover.
-- [`mcq_tobedone.md`](mcq_tobedone.md): the planned 30-question MCQ test.
 
 ## Team workflow
 

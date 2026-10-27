@@ -80,3 +80,34 @@ def test_no_two_consecutive_followups():
     on = _run_interview(enable=True)
     assert MAX_FOLLOWUPS_PER_PROJECT == 1
     assert not any(on[i] and on[i + 1] for i in range(len(on) - 1))
+
+
+# ── live store: an interview with follow-ups continues from its record ───────
+
+def _questions(enable: bool, forget_between_turns: bool):
+    import deployment_evaluator
+    deployment_evaluator.bootstrap_production_evaluator()
+    from experiment_profile_library import all_experiment_profiles
+    resp, code = ce.start_conversation(all_experiment_profiles()[0], enable_adaptive_followups=enable)
+    assert code == 200
+    cid = resp["conversation_id"]
+    asked = [(resp["question"]["text"], resp["question"]["is_followup"])]
+    for _ in range(RESUME_DISCUSSION_QUESTION_BUDGET + 5):
+        if forget_between_turns:
+            ce._cache.drop(cid)            # as if another worker (or a restart) serves the next answer
+        r, _c = ce.advance_conversation(cid, _WEAK_ANSWER)
+        if r.get("is_completed") or r.get("next_question") is None:
+            break
+        asked.append((r["next_question"]["text"], r["next_question"]["is_followup"]))
+    ce.end_conversation(cid)
+    return asked
+
+
+def test_followups_survive_a_rebuild_from_the_record():
+    # The follow-up decision depends on a score, so it is stored with the turn and
+    # replayed as stored: a conversation rebuilt before every answer asks exactly the
+    # same questions, follow-ups included, as one that never left memory.
+    uninterrupted = _questions(enable=True, forget_between_turns=False)
+    rebuilt = _questions(enable=True, forget_between_turns=True)
+    assert any(followup for _, followup in uninterrupted)
+    assert rebuilt == uninterrupted

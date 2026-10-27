@@ -1,12 +1,11 @@
 """
 AveragedEvaluator — Round 1 scoring as a weighted blend of a teammate's trained
-model and our heuristic evaluator (integrated 2026-09-30,
-resumeParser_integration.md step 5):
+model and our heuristic evaluator (integrated 2026-09-30):
 
     overall_score = 0.8 x OverallSingleEvaluator (DeBERTa-v3, v5_1088)
                   + 0.2 x HeuristicEvaluator ("heuristic-v1")
 
-Measured on two sets (integration_checks/eval_151.py, v4_eval.py + score_v4.py),
+Measured on two sets (with one-off scripts since removed from the repo),
 QWK against the gold grades:
 
     | | his 151 test answers | 58 hard V4 cases | pairs ordered right |

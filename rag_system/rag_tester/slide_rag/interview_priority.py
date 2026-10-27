@@ -104,7 +104,7 @@ TIERS: dict[str, int] = {
     "ooad.low_level_design_approach": 1, "ooad.object_memory_allocation": 1, "ooad.anti_patterns": 1,
 
     # ── Operating Systems ────────────────────────────────────────────────
-    "os.threads": 3, "os.process_vs_thread": 3, "os.deadlock_conditions": 3, "os.deadlock_avoidance": 3,
+    "os.threads": 3, "os.deadlock_conditions": 3, "os.deadlock_avoidance": 3,
     "os.banker_s_algorithm": 3, "os.deadlock_vs_starvation_vs_livelock": 3, "os.paging": 3,
     "os.segmentation": 3, "os.virtual_memory_and_demand_paging": 3, "os.thrashing": 3,
     "os.fifo_page_replacement": 3, "os.optimal_and_lru_page_replacement": 3, "os.fcfs_scheduling": 3,

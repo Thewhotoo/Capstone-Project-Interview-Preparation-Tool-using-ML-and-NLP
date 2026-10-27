@@ -80,6 +80,22 @@ def test_unfinished_regrades_keep_the_live_score(monkeypatch):
     assert [e["overall_score"] for e in summary["evaluations"]] == live
 
 
+def test_finished_regrades_are_found_by_another_server(monkeypatch):
+    # The re-grade is saved in the live store, so the server that ends the interview
+    # (or this one after a restart) uses it without the future that produced it.
+    fake = _FakeRegrader(score=0.99)
+    cid, live = _interview(monkeypatch, enabled=True, regrader=fake)
+    with ce._regrade_futures_lock:
+        futures = [f for (c, _), f in ce._regrade_futures.items() if c == cid]
+        for key in [k for k in ce._regrade_futures if k[0] == cid]:
+            del ce._regrade_futures[key]
+    for future in futures:
+        future.result(timeout=120)
+    ce._cache.drop(cid)                                      # nothing left in this process
+    summary, _ = ce.end_conversation(cid, wait_for_regrades=False)
+    assert summary["regraded_turns"] == sum(s > 0.10 for s in live) > 0
+
+
 def test_non_answers_are_not_regraded(monkeypatch):
     fake = _FakeRegrader()
     import deployment_evaluator

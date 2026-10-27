@@ -132,7 +132,7 @@ def test_golden_corpus_fixture(fixture_dir: Path):
         # some deliberately probing known limitations -- see
         # docs/architecture/Milestone1_ValidationReport.md) intentionally
         # have no hand-verified expectations yet: their purpose is
-        # exploratory reporting (resume_engine/devtools/golden_corpus_report.py),
+        # exploratory reporting,
         # not a hard regression gate. Smoke-only here: must not crash.
         return
 

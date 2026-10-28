@@ -350,12 +350,24 @@ class TestLLMRegrade(unittest.TestCase):
                 "key_points": [{"point": p} for p in POINTS],
                 "final_grade": {"reference_similarity": 0.5, "core": "", "covered": [], "clarity": {}, **final}}
 
-    def test_blend_is_half_fast_half_llm(self):
+    def test_blend_weights_the_llm_overall_score_and_the_fast_score(self):
+        out = llm_judge.blended(self.record(0.4), {"verdicts": ["covered"] * 3, "wrong": False, "holistic": 0.9})
+        self.assertAlmostEqual(out["score"], 0.6 * 0.9 + 0.4 * 0.4, places=3)
+        self.assertEqual(out["fast_score"], 0.4)
+        self.assertAlmostEqual(out["llm_score"], 0.85 * 1.0 + 0.15 * 0.5, places=3)   # point count, reported
+
+    def test_without_an_overall_score_the_point_count_stands_in(self):
         out = llm_judge.blended(self.record(0.4), {"verdicts": ["covered"] * 3, "wrong": False})
         llm = 0.85 * 1.0 + 0.15 * 0.5
-        self.assertAlmostEqual(out["llm_score"], round(llm, 3))
-        self.assertAlmostEqual(out["score"], 0.5 * llm + 0.5 * 0.4, places=2)
-        self.assertEqual(out["fast_score"], 0.4)
+        self.assertAlmostEqual(out["score"], 0.6 * llm + 0.4 * 0.4, places=2)
+        self.assertIsNone(out["llm_holistic"])
+
+    def test_followup_recovery_adds_to_the_overall_score(self):
+        ex = [{"kind": "followup", "key_point": "P2 point", "verdict": "covered", "answer": "x"}]
+        judged = {"verdicts": ["covered", "missing", "missing"], "wrong": False, "holistic": 0.3,
+                  "followups": {0: "covered"}}
+        out = llm_judge.blended(self.record(0.5, ex), judged)
+        self.assertAlmostEqual(out["llm_holistic"], 0.3 + 0.85 * RECOVERED_CREDIT / 3, places=2)
 
     def test_wrong_answer_is_capped(self):
         out = llm_judge.blended(self.record(0.9), {"verdicts": ["covered"] * 3, "wrong": True})

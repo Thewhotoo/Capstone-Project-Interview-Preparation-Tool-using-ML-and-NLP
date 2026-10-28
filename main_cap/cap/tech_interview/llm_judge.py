@@ -4,12 +4,19 @@ The live interview keeps the fast grader (grader.py): it decides follow-ups inst
 Once a main question closes, its answer is also judged by a local LLM on ONE worker
 thread, while the candidate works on the next question:
 
-    the LLM marks each key point covered / partial / missing, and says whether the
-    answer contains a clear factual error ("wrong")
-    llm_score   = the same formula as the fast grader (key points + reference
-                  similarity), with points recovered through follow-ups credited
-                  as in session.py
-    final score = 0.5 x fast score + 0.5 x llm_score, capped at WRONG_CAP when "wrong"
+    the LLM marks each key point covered / partial / missing, says whether the answer
+    contains a clear factual error ("wrong"), and gives an overall score for the whole
+    answer ("holistic", 0-1, the way frontier-model judges grade)
+    final score = 0.6 x holistic + 0.4 x fast score (which includes follow-up
+                  recoveries); points recovered through follow-ups also add to the
+                  holistic part; capped at WRONG_CAP when "wrong"
+
+2026-10-28, holistic score added (grader_eval/frontier_eval.py compares with frontier
+models). On 412 tuning answers (current bank; stale labels skipped), vs the previous
+0.5 fast + 0.5 LLM-point-count blend: move-on decision 88.8% -> 90.3%, r 0.922 -> 0.946,
+mean gap 0.107 -> 0.096; once on the never-tuned fresh set: decision 70% -> 80%,
+r 0.81 -> 0.85, gap 0.149 -> 0.130 (fast grader alone: 66%, 0.55, 0.235).
+The numbers below are the earlier (point-count) blend's.
 
 Measured 2026-10-25 on 575 human-labelled answers (grader_eval/: llm400, mine40,
 team_tune, team_test; never the `fresh` set) with qwen3:8b, ~3-5 s per answer:
@@ -54,7 +61,7 @@ logger = logging.getLogger(__name__)
 # Only qwen3:8b was measured; smaller models are untested here, so they are not used by default.
 PREFERRED_MODELS = ("qwen3:8b",)
 DEFAULT_URL = "http://localhost:11434"
-LLM_WEIGHT = 0.5
+LLM_WEIGHT = 0.6     # weight of the LLM's holistic score; the rest is the fast score
 WRONG_CAP = 0.20
 TIMEOUT = 60.0
 COLD_START_TIMEOUT = 120.0          # the first call loads the model into GPU memory
@@ -69,10 +76,13 @@ SYSTEM = (
     "- missing: the answer does not say it, says something different, or says it wrongly\n"
     "Judge only what the candidate said. Talking about the same topic is not stating the point. "
     "A claim that contradicts the reference answer is wrong and earns nothing. "
-    "Do not give credit for words that merely repeat the question.")
+    "Do not give credit for words that merely repeat the question."
+    " Also give an overall score from 0.0 to 1.0 for the whole answer: 1.0 = complete and correct,"
+    " about 0.5 = roughly half of what the question needs, near 0 = wrong, off-topic or no real answer."
+    " A confident wrong answer scores near 0 even if it uses the right words.")
 USER = ("QUESTION: {q}\n\nREFERENCE ANSWER: {ref}\n\nKEY POINTS:\n{points}\n\nCANDIDATE ANSWER: {a}\n\n"
         "Return a verdict for every key point, in order, and wrong=true if the answer contains "
-        "a clear factual error about the question.")
+        "a clear factual error about the question. Also return score, the overall score from 0.0 to 1.0.")
 
 
 FU_SYSTEM = (
@@ -93,10 +103,11 @@ FU_SCHEMA = {"type": "object", "required": ["verdict"], "properties": {
 
 
 def _schema(n: int) -> dict:
-    return {"type": "object", "required": ["verdicts", "wrong"], "properties": {
+    return {"type": "object", "required": ["verdicts", "wrong", "score"], "properties": {
         "verdicts": {"type": "array", "minItems": n, "maxItems": n,
                      "items": {"type": "string", "enum": ["covered", "partial", "missing"]}},
-        "wrong": {"type": "boolean"}}}
+        "wrong": {"type": "boolean"},
+        "score": {"type": "number", "minimum": 0, "maximum": 1}}}
 
 
 class OllamaJudge:
@@ -135,13 +146,18 @@ class OllamaJudge:
         return out
 
     def judge(self, question: Question, answer: str) -> dict:
-        """{"verdicts": [covered|partial|missing per key point], "wrong": bool}"""
+        """{"verdicts": [covered|partial|missing per key point], "wrong": bool, "holistic": 0-1}"""
         n = len(question.key_points)
         points = "\n".join(f"{i + 1}. {k.point}" for i, k in enumerate(question.key_points))
         out = self._chat(SYSTEM, USER.format(q=question.text, ref=question.reference_answer,
                                              points=points, a=answer), _schema(n))
         verdicts = [v if v in CREDIT else "missing" for v in list(out.get("verdicts") or [])[:n]]
-        return {"verdicts": verdicts + ["missing"] * (n - len(verdicts)), "wrong": bool(out.get("wrong"))}
+        try:
+            holistic = min(1.0, max(0.0, float(out.get("score"))))
+        except (TypeError, ValueError):
+            holistic = None
+        return {"verdicts": verdicts + ["missing"] * (n - len(verdicts)), "wrong": bool(out.get("wrong")),
+                "holistic": holistic}
 
     def judge_followup(self, followup: str, expected: str, point: str, reply: str) -> str:
         """covered | partial | missing for one reply to a key point's follow-up question."""
@@ -176,6 +192,7 @@ def blended(record: dict, judged: dict) -> dict:
     points = [k["point"] for k in record["key_points"]]
     status = dict(zip(points, judged["verdicts"]))
     credit = {p: CREDIT[s] for p, s in status.items()}
+    kp_main = sum(credit.values()) / len(credit) if credit else 0.0   # before follow-up recoveries
     fu_llm = judged.get("followups") or {}
     for i, e in enumerate(record.get("exchanges", [])):   # points recovered through follow-ups, as in session.py
         if e.get("kind") != "followup":
@@ -193,10 +210,20 @@ def blended(record: dict, judged: dict) -> dict:
         llm_score = min(llm_score, 0.1)
     if clarity.get("too_short"):
         llm_score = min(llm_score, 0.5)
-    score = LLM_WEIGHT * llm_score + (1 - LLM_WEIGHT) * record["score"]
+    holistic = judged.get("holistic")
+    if holistic is None:      # an older or malformed verdict: fall back to the point count
+        holistic = llm_score
+    else:                     # points recovered through follow-ups count on top of the main answer
+        holistic = min(1.0, holistic + 0.85 * max(0.0, kp - max(kp_main, CORE_FLOORS.get(final.get("core", ""), 0.0))))
+        if clarity.get("dont_know") and not final.get("covered"):
+            holistic = min(holistic, 0.1)
+        if clarity.get("too_short"):
+            holistic = min(holistic, 0.5)
+    score = LLM_WEIGHT * holistic + (1 - LLM_WEIGHT) * record["score"]
     if judged["wrong"] or final.get("contradicts_reference"):
         score = min(score, WRONG_CAP)
     return {"score": round(score, 3), "fast_score": record["score"], "llm_score": round(llm_score, 3),
+            "llm_holistic": None if judged.get("holistic") is None else round(holistic, 3),
             "llm_verdicts": status, "llm_wrong": judged["wrong"],
             "followup_verdicts": {str(i): v for i, v in fu_llm.items()},
             # what the report lists: the LLM's per-point verdicts (with follow-up recoveries);

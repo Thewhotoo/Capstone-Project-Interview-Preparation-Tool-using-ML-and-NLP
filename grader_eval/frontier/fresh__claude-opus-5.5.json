@@ -1,0 +1,437 @@
+{
+ "fresh-000": {
+  "id": "fresh-000",
+  "verdicts": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "score": 1.0
+ },
+ "fresh-001": {
+  "id": "fresh-001",
+  "verdicts": [
+   "missing",
+   "missing"
+  ],
+  "score": 0.05
+ },
+ "fresh-002": {
+  "id": "fresh-002",
+  "verdicts": [
+   "covered",
+   "covered",
+   "missing"
+  ],
+  "score": 0.6
+ },
+ "fresh-003": {
+  "id": "fresh-003",
+  "verdicts": [
+   "partial",
+   "missing",
+   "missing"
+  ],
+  "score": 0.1
+ },
+ "fresh-004": {
+  "id": "fresh-004",
+  "verdicts": [
+   "covered",
+   "covered",
+   "missing",
+   "covered"
+  ],
+  "score": 0.7
+ },
+ "fresh-005": {
+  "id": "fresh-005",
+  "verdicts": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "score": 1.0
+ },
+ "fresh-006": {
+  "id": "fresh-006",
+  "verdicts": [
+   "covered",
+   "missing"
+  ],
+  "score": 0.5
+ },
+ "fresh-007": {
+  "id": "fresh-007",
+  "verdicts": [
+   "covered",
+   "missing",
+   "missing"
+  ],
+  "score": 0.3
+ },
+ "fresh-008": {
+  "id": "fresh-008",
+  "verdicts": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "score": 0.95
+ },
+ "fresh-009": {
+  "id": "fresh-009",
+  "verdicts": [
+   "covered",
+   "covered",
+   "missing"
+  ],
+  "score": 0.65
+ },
+ "fresh-010": {
+  "id": "fresh-010",
+  "verdicts": [
+   "covered",
+   "partial",
+   "missing"
+  ],
+  "score": 0.5
+ },
+ "fresh-011": {
+  "id": "fresh-011",
+  "verdicts": [
+   "partial",
+   "covered",
+   "covered"
+  ],
+  "score": 0.7
+ },
+ "fresh-012": {
+  "id": "fresh-012",
+  "verdicts": [
+   "covered",
+   "covered"
+  ],
+  "score": 1.0
+ },
+ "fresh-013": {
+  "id": "fresh-013",
+  "verdicts": [
+   "covered",
+   "covered",
+   "missing"
+  ],
+  "score": 0.55
+ },
+ "fresh-014": {
+  "id": "fresh-014",
+  "verdicts": [
+   "covered",
+   "missing",
+   "covered",
+   "missing"
+  ],
+  "score": 0.45
+ },
+ "fresh-015": {
+  "id": "fresh-015",
+  "verdicts": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "score": 1.0
+ },
+ "fresh-016": {
+  "id": "fresh-016",
+  "verdicts": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "score": 1.0
+ },
+ "fresh-017": {
+  "id": "fresh-017",
+  "verdicts": [
+   "covered",
+   "covered"
+  ],
+  "score": 1.0
+ },
+ "fresh-018": {
+  "id": "fresh-018",
+  "verdicts": [
+   "covered",
+   "covered"
+  ],
+  "score": 0.95
+ },
+ "fresh-019": {
+  "id": "fresh-019",
+  "verdicts": [
+   "missing",
+   "missing",
+   "missing"
+  ],
+  "score": 0.05
+ },
+ "fresh-020": {
+  "id": "fresh-020",
+  "verdicts": [
+   "covered",
+   "covered"
+  ],
+  "score": 1.0
+ },
+ "fresh-021": {
+  "id": "fresh-021",
+  "verdicts": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "score": 1.0
+ },
+ "fresh-022": {
+  "id": "fresh-022",
+  "verdicts": [
+   "partial",
+   "missing",
+   "covered"
+  ],
+  "score": 0.2
+ },
+ "fresh-023": {
+  "id": "fresh-023",
+  "verdicts": [
+   "covered",
+   "covered"
+  ],
+  "score": 1.0
+ },
+ "fresh-024": {
+  "id": "fresh-024",
+  "verdicts": [
+   "covered",
+   "partial"
+  ],
+  "score": 0.7
+ },
+ "fresh-025": {
+  "id": "fresh-025",
+  "verdicts": [
+   "covered",
+   "covered"
+  ],
+  "score": 1.0
+ },
+ "fresh-026": {
+  "id": "fresh-026",
+  "verdicts": [
+   "covered",
+   "missing",
+   "covered"
+  ],
+  "score": 0.65
+ },
+ "fresh-027": {
+  "id": "fresh-027",
+  "verdicts": [
+   "missing",
+   "missing"
+  ],
+  "score": 0.1
+ },
+ "fresh-028": {
+  "id": "fresh-028",
+  "verdicts": [
+   "covered",
+   "covered"
+  ],
+  "score": 0.95
+ },
+ "fresh-029": {
+  "id": "fresh-029",
+  "verdicts": [
+   "missing",
+   "covered",
+   "partial",
+   "missing"
+  ],
+  "score": 0.4
+ },
+ "fresh-030": {
+  "id": "fresh-030",
+  "verdicts": [
+   "covered",
+   "covered",
+   "missing"
+  ],
+  "score": 0.65
+ },
+ "fresh-031": {
+  "id": "fresh-031",
+  "verdicts": [
+   "covered",
+   "missing"
+  ],
+  "score": 0.45
+ },
+ "fresh-032": {
+  "id": "fresh-032",
+  "verdicts": [
+   "partial",
+   "covered",
+   "missing"
+  ],
+  "score": 0.45
+ },
+ "fresh-033": {
+  "id": "fresh-033",
+  "verdicts": [
+   "missing",
+   "missing",
+   "missing"
+  ],
+  "score": 0.1
+ },
+ "fresh-034": {
+  "id": "fresh-034",
+  "verdicts": [
+   "missing",
+   "missing",
+   "missing"
+  ],
+  "score": 0.0
+ },
+ "fresh-035": {
+  "id": "fresh-035",
+  "verdicts": [
+   "covered",
+   "missing"
+  ],
+  "score": 0.5
+ },
+ "fresh-036": {
+  "id": "fresh-036",
+  "verdicts": [
+   "covered",
+   "missing"
+  ],
+  "score": 0.45
+ },
+ "fresh-037": {
+  "id": "fresh-037",
+  "verdicts": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "score": 1.0
+ },
+ "fresh-038": {
+  "id": "fresh-038",
+  "verdicts": [
+   "covered",
+   "missing"
+  ],
+  "score": 0.45
+ },
+ "fresh-039": {
+  "id": "fresh-039",
+  "verdicts": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "score": 1.0
+ },
+ "fresh-040": {
+  "id": "fresh-040",
+  "verdicts": [
+   "covered",
+   "partial",
+   "covered"
+  ],
+  "score": 0.9
+ },
+ "fresh-041": {
+  "id": "fresh-041",
+  "verdicts": [
+   "covered",
+   "missing"
+  ],
+  "score": 0.5
+ },
+ "fresh-042": {
+  "id": "fresh-042",
+  "verdicts": [
+   "missing",
+   "missing",
+   "missing"
+  ],
+  "score": 0.0
+ },
+ "fresh-043": {
+  "id": "fresh-043",
+  "verdicts": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "score": 1.0
+ },
+ "fresh-044": {
+  "id": "fresh-044",
+  "verdicts": [
+   "partial",
+   "covered",
+   "missing"
+  ],
+  "score": 0.45
+ },
+ "fresh-045": {
+  "id": "fresh-045",
+  "verdicts": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "score": 0.9
+ },
+ "fresh-046": {
+  "id": "fresh-046",
+  "verdicts": [
+   "missing",
+   "missing"
+  ],
+  "score": 0.1
+ },
+ "fresh-047": {
+  "id": "fresh-047",
+  "verdicts": [
+   "covered",
+   "covered",
+   "missing"
+  ],
+  "score": 0.7
+ },
+ "fresh-048": {
+  "id": "fresh-048",
+  "verdicts": [
+   "covered",
+   "missing"
+  ],
+  "score": 0.5
+ },
+ "fresh-049": {
+  "id": "fresh-049",
+  "verdicts": [
+   "missing",
+   "missing",
+   "missing"
+  ],
+  "score": 0.0
+ }
+}

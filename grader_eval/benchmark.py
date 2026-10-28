@@ -50,8 +50,10 @@ LLM_CACHE = HERE / "llm_judge_cache.jsonl"
 
 
 def _judge_key(model, q, answer) -> str:
-    """Changes when the model, the question's key points or the answer change."""
-    return f"{model}|{q.id}|{zlib.crc32('|'.join(k.point for k in q.key_points).encode())}|{zlib.crc32(answer.encode())}"
+    """Changes when the model, the judge prompt, the question's key points or the answer change."""
+    prompt = zlib.crc32((llm_judge.SYSTEM + llm_judge.USER).encode())
+    return (f"{model}|{prompt}|{q.id}|{zlib.crc32('|'.join(k.point for k in q.key_points).encode())}"
+            f"|{zlib.crc32(answer.encode())}")
 
 
 class CachedJudge:

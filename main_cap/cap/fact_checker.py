@@ -38,7 +38,9 @@ logger = logging.getLogger(__name__)
 # qwen3:4b 0.73, phi3.5 0.64, qwen2.5:3b 0.54-0.58, gemma2:2b 0.44; two experts agree at 0.59.
 # qwen3:4b (2.5 GB) only partly fits a 4 GB GPU, so it is slower (~3.5 s per call) but runs in
 # the background re-grade; qwen2.5:3b (1.9 GB) is the fallback.
-PREFERRED_MODELS = ("qwen3:4b", "qwen2.5:3b")
+# 2026-10-29: qwen3:8b first. Same three Claude-labelled sets and code as qwen3:4b, all on an 8 GB GPU:
+# final test set pairwise 84% -> 94%, QWK 0.79 -> 0.86; holdout QWK 0.67 -> 0.78; stress QWK 0.75 -> 0.77.
+PREFERRED_MODELS = ("qwen3:8b", "qwen3:4b", "qwen2.5:3b")
 DEFAULT_MODEL = PREFERRED_MODELS[0]
 DEFAULT_URL = "http://localhost:11434"
 

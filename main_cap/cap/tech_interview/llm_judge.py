@@ -58,8 +58,10 @@ from .grader import CORE_FLOORS, combine
 
 logger = logging.getLogger(__name__)
 
-# Only qwen3:8b was measured; smaller models are untested here, so they are not used by default.
-PREFERRED_MODELS = ("qwen3:8b",)
+# qwen3:8b first. qwen3:4b only as a fallback on machines without it: on 412 tuning answers it
+# reached move-on decision 86.9% / r 0.91 vs 90.3% / 0.95 for 8b (fast grader alone 86.7% / 0.82);
+# follow-up replies judged equally well (89.6%), wrong ones accepted 8.1% vs 4.1%.
+PREFERRED_MODELS = ("qwen3:8b", "qwen3:4b")
 DEFAULT_URL = "http://localhost:11434"
 LLM_WEIGHT = 0.6     # weight of the LLM's holistic score; the rest is the fast score
 WRONG_CAP = 0.20

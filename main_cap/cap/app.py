@@ -6,6 +6,7 @@ Integrates with existing UI and all components
 from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 import os
+import sys
 import logging
 
 # Must run before anything imports huggingface_hub / sentence_transformers.
@@ -280,6 +281,16 @@ def resume_discussion_v2_end():
 # ═══════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
+    # The local LLM (Ollama) is required: it measurably improves résumé-answer grading.
+    # Checked before serving so a missing install fails loudly with instructions instead
+    # of silently grading worse; `python install.py` sets it up. CAP_ALLOW_NO_LLM=1 starts
+    # without it (fast scores only) on machines that can't run it.
+    from llm_requirement import LLMNotReady, ensure_llm_ready
+    try:
+        ensure_llm_ready()
+    except LLMNotReady as e:
+        print(f"\nCannot start: {e}\n", file=sys.stderr)
+        sys.exit(1)
     logger.info("Models: %s", "local cache only (no update checks)" if os.environ.get("HF_HUB_OFFLINE") == "1"
                 else "may download / check huggingface.co")
     # Load every model now, in the background, so no user action waits for one.

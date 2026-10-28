@@ -38,16 +38,19 @@ Details, main files and LOC per module: [`PROJECT_DOCUMENTATION.md` §1.1](PROJE
 
 ## Quick start (Docker, recommended)
 
-Docker builds everything for you: Python, every package and every model go into the image, and the app runs with PostgreSQL and Redis. Nothing to install except Docker.
+Docker builds everything for you: Python, every package and every model go into the image, and the app runs with PostgreSQL and Redis. The one thing outside Docker is the local LLM.
 
-**You need:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) (on Windows it also needs WSL 2), [Git LFS](https://git-lfs.com) for the trained Round 1 evaluator, about 8 GB RAM and 10 GB free disk, and a browser with a webcam. Full list: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
+**You need:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) (on Windows it also needs WSL 2), [Git LFS](https://git-lfs.com) for the trained Round 1 evaluator, **[Ollama](https://ollama.com) on this computer with the `qwen3:8b` model** (`qwen3:4b` on a GPU with less than 8 GB; required by default: both rounds' final grades use it, `CAP_ALLOW_NO_LLM=1` starts without it), about 8 GB RAM and 10 GB free disk, and a browser with a webcam. Full list: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
 
 ```bash
 git lfs install                  # once per machine, before cloning
 git clone https://github.com/Thewhotoo/Capstone-Project-Interview-Preparation-Tool-using-ML-and-NLP.git
 cd Capstone-Project-Interview-Preparation-Tool-using-ML-and-NLP
+python install.py --skip-pip     # one-time: Ollama + qwen3:8b, or qwen3:4b on a GPU under 8 GB
 docker compose up --build -d     # first time ~15 min (downloads ~3 GB); later starts take seconds
 ```
+
+The app won't start until it reaches Ollama: `docker compose logs app` then says what's missing, and the container retries by itself once Ollama is running.
 
 Open **http://localhost:5000**, sign up with a resume, and start an interview from Home. `docker compose logs -f app` shows the server starting (Ctrl+C stops watching, not the app).
 
@@ -75,15 +78,16 @@ Open **http://localhost:5000**, sign up with a resume, and start an interview fr
 Needed only to work on the code or run the test suite. **Requirements:** Python 3.12, about 8 GB RAM and internet on the first run (about 2.5 GB of models download then). Node.js only for the frontend tests. Details: [`SETUP_PREREQUISITES.md`](SETUP_PREREQUISITES.md).
 
 ```bash
-pip install torch --index-url https://download.pytorch.org/whl/cpu   # no NVIDIA GPU: small CPU-only PyTorch
-pip install -r Requirements_Global.txt
+python install.py                # one-time: Python packages + Ollama + the model (qwen3:8b or qwen3:4b)
 cd main_cap/cap
 python app.py                    # http://localhost:5000
 ```
 
+No NVIDIA GPU? Install the small CPU-only PyTorch first: `pip install torch --index-url https://download.pytorch.org/whl/cpu`. Both ways of running refuse to start without the local LLM and print what to install.
+
 | | Docker (default) | `python app.py` |
 |---|---|---|
-| Install | Docker only | Python 3.12 + packages + models |
+| Install | Docker + Ollama | Python 3.12 + packages + models + Ollama (`install.py` does all of it) |
 | Database | PostgreSQL | SQLite file (`main_cap/cap/instance/`, created automatically) |
 | Interviews in progress | Redis; survive a restart | Process memory; a restart ends them |
 | Server | waitress (`serve.py`) | Flask development server |
@@ -112,8 +116,8 @@ All optional; set as environment variables.
 | `CAP_RESUME_EVIDENCE_EVALUATOR` | on | Round 1 is graded by the resume-evidence evaluator first; `0` falls back to the trained evaluator below |
 | `CAP_EVIDENCE_SCORING` | `v2` | Scoring version of the resume-evidence evaluator (`v1` rolls back) |
 | `CAP_TRAINED_EVALUATOR` | on | `0` forces the heuristic Round 1 evaluator |
-| `CAP_FACT_CHECK` | `auto` | Background re-grade of Round 1 answers with a local LLM (fact check + rubric grade): `auto` runs it only when Ollama is up with a model pulled, `1` always, `0` never |
-| `CAP_OLLAMA_URL` / `CAP_FACT_CHECK_MODEL` | `http://localhost:11434` (Docker: the host machine) / first of `qwen3:4b`, `qwen2.5:3b` that Ollama has | Ollama server and model for the re-grade |
+| `CAP_FACT_CHECK` | `auto` | Background re-grade of Round 1 answers with a local LLM (fact check + rubric grade). The app requires Ollama at startup; `auto` then skips the re-grade only if Ollama stops mid-session (those answers keep the fast score), `1` always tries it, `0` never |
+| `CAP_OLLAMA_URL` / `CAP_FACT_CHECK_MODEL` | `http://localhost:11434` (Docker: the host machine) / first of `qwen3:8b`, `qwen3:4b`, `qwen2.5:3b` that Ollama has | Ollama server and model for the re-grade |
 | `CAP_REGRADE_WAIT_SECONDS` | `30` | How long ending an interview waits for unfinished re-grades; unfinished ones keep the live score |
 | `CAP_TECH_LLM_GRADE` / `CAP_TECH_JUDGE_MODEL` | `auto` / `qwen3:8b` | Background re-grade of Round 2 answers with a local LLM (per-key-point verdicts, blended 50/50 with the fast grade): `auto` runs it only when Ollama has the model, `1` always, `0` never |
 | `CAP_CURATED_ONLY` | `1` | Technical interviews use the hand-reviewed top tier of the bank; `0` widens to every active question |

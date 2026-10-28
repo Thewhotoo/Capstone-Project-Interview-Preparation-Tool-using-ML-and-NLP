@@ -16,10 +16,23 @@ The default way to run the app (README, "Quick start"): `docker compose up` buil
 | **Disk** | About **6 GB** for the image (CPU-only PyTorch and the models are inside it), plus the database volume. |
 | **RAM** | About 3 GB for the app, plus a little for PostgreSQL and Redis. On Windows, containers may use up to half the machine's RAM by default, which is enough with 8 GB or more. |
 | **Internet** | Only for the first build (about 3 GB of downloads). The running container needs none, except the browser still loads MediaPipe and fonts from the internet. |
-| **GPU** | **Not needed.** The image uses CPU-only PyTorch. |
+| **GPU** | **Recommended for the local LLM** (below), which runs outside Docker: an NVIDIA GPU with 8 GB runs `qwen3:8b` entirely on the GPU (tested on an RTX 5050 8 GB laptop, ~3–5 s per answer); one with ~3 GB free runs `qwen3:4b` (RTX 3050 4 GB, ~3.5 s per call); without one Ollama uses the CPU, much more slowly. The image itself uses CPU-only PyTorch. |
 | **Git LFS** | For the trained Round 1 evaluator, which is mounted from the repository (next section). Without it Round 1 uses the heuristic evaluator. |
 
 **Deploying for other people:** the webcam only works on `http://localhost` or over **HTTPS**, so a server that others reach by its address needs HTTPS in front of it (a reverse proxy with a certificate, or a tunnel). Set `CAP_SECRET_KEY` and `POSTGRES_PASSWORD` in `.env` before the first start.
+
+### Local LLM (required by default): Ollama
+
+Both rounds re-grade answers in the background with a local LLM (Round 1: a technical fact check plus a rubric grade; Round 2: per-point verdicts, follow-up checks and an overall score), and the end-of-session report uses those grades. **By default the app refuses to start without it** (`python app.py`, `python serve.py` and the Docker container alike) and prints what to install. On a machine that can't run it, `CAP_ALLOW_NO_LLM=1` starts the app anyway; the interview is unchanged and the final reports use the fast scores only (measured to be less accurate). It runs on the computer itself, not inside Docker, so it can use the GPU; the container reaches it at `host.docker.internal`.
+
+| Need | Details |
+|---|---|
+| **Ollama** | [ollama.com](https://ollama.com) (Windows: `winget install Ollama.Ollama`), tested with 0.40. Without Docker the app starts the Ollama server itself if it's installed but not running; with Docker, Ollama must already be running (it starts with Windows once installed). |
+| **A model** | `ollama pull qwen3:8b` (about 5.2 GB; grades best in both rounds; needs a GPU with about 8 GB) or `ollama pull qwen3:4b` (about 2.5 GB; for smaller GPUs). The first one installed is used, in that order (`qwen2.5:3b` is also accepted for Round 1). `install.py` picks by GPU memory. |
+
+Not installable with pip: it's a separate program, like a database. **`python install.py`** (repository root) installs it, downloads the model and checks it works, together with the Python packages (`--skip-pip` for Ollama and the model only, e.g. with Docker).
+
+On a GPU the re-grade takes about 3–5 s per answer, while the candidate answers the next question. If Ollama stops in the middle of an interview, those answers keep the fast score instead of failing.
 
 ### Git LFS, for the Round 1 evaluator weights
 
@@ -42,17 +55,6 @@ To check your copy is intact, it should be exactly **735,421,149 bytes** with th
 Windows: `certutil -hashfile best_checkpoint_weights.pt SHA256`. Linux/macOS: `sha256sum best_checkpoint_weights.pt`.
 
 **Without the file the app still works**: Round 1 uses the heuristic evaluator instead, and the startup log says which one is active (`Production evaluator ACTIVE: ...`).
-
-### Optional: sharper Round 1 grading with a local LLM (Ollama)
-
-If [Ollama](https://ollama.com) is running on the machine with a model pulled, Round 1 answers are also re-graded in the background (a technical fact check plus a rubric grade), and the end-of-session report uses those grades. Nothing else to set up, with or without Docker:
-
-```bash
-# Windows: winget install Ollama.Ollama   (macOS/Linux: see ollama.com)
-ollama pull qwen3:4b      # ~2.5 GB; or qwen2.5:3b (~1.9 GB) for a smaller GPU
-```
-
-A GPU with about 2.5 GB free makes it about 3–5 s per answer, while the candidate answers the next question; on CPU it is slower and may not finish before the interview ends (unfinished answers keep the normal score). Without Ollama nothing changes. `CAP_FACT_CHECK=0` turns it off, `1` forces it.
 
 ### Browser and hardware for the interview itself
 
@@ -79,6 +81,8 @@ Only needed to work on the code or run the test suite.
 | **Internet** | Needed on the **first run** (model downloads) and **whenever the page loads**: the browser fetches MediaPipe (face tracking) from `cdn.jsdelivr.net` and fonts from Google Fonts. |
 
 ### Python packages
+
+`python install.py` installs these together with Ollama and the model (section 1). By hand:
 
 ```bash
 # no NVIDIA GPU? install the small CPU-only PyTorch first:

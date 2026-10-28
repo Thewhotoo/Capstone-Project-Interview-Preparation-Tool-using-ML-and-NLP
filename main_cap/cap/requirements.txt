@@ -1,4 +1,8 @@
 # Interview Preparation Tool — runtime dependencies (Python 3.11–3.13).
+#
+# Prefer the full list in ../../Requirements_Global.txt, installed together with Ollama and the
+# model (qwen3:8b, or qwen3:4b on a GPU under 8 GB) by `python install.py` at the repository root.
+# Ollama is required by default (not pip-installable); CAP_ALLOW_NO_LLM=1 starts without it.
 # Versions pinned to the environment the app is developed/tested on.
 #
 # NOTE on torch: this is CPU-only. On a machine with no CUDA, install the CPU

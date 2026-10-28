@@ -19,16 +19,25 @@ PROJECT_DOCUMENTATION.md (production server, live store).
 
 import logging
 import os
+import sys
 
 from waitress import serve
 
 import model_warmup
 from app import app
+from llm_requirement import LLMNotReady, ensure_llm_ready
 
 logger = logging.getLogger(__name__)
 
 
 def main() -> None:
+    # The local LLM is required here too, as in `python app.py`. In Docker a failure
+    # exits the container, which `restart: unless-stopped` retries until Ollama is up.
+    try:
+        ensure_llm_ready()
+    except LLMNotReady as e:
+        print(f"\nCannot start: {e}\n", file=sys.stderr)
+        sys.exit(1)
     host = os.environ.get("CAP_HOST", "127.0.0.1")
     port = int(os.environ.get("CAP_PORT", "5000"))
     threads = int(os.environ.get("CAP_THREADS", "8"))

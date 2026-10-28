@@ -24,9 +24,12 @@ services:
       # Empty: a key is generated once and kept in the app-data volume.
       CAP_SECRET_KEY: ${CAP_SECRET_KEY:-}
       CAP_THREADS: ${CAP_THREADS:-8}
-      # Optional background LLM re-grade of Round 1 answers: uses Ollama on the
-      # host machine when it is running with a model pulled, otherwise nothing.
+      # Local LLM, required by default (background re-grade of both rounds): Ollama on the
+      # host machine with qwen3:8b (or qwen3:4b) pulled. Until it answers, the app exits at
+      # startup with what to install, and the container retries. CAP_ALLOW_NO_LLM=1 in .env
+      # starts without it (fast scores only).
       CAP_FACT_CHECK: ${CAP_FACT_CHECK:-auto}
+      CAP_ALLOW_NO_LLM: ${CAP_ALLOW_NO_LLM:-}
       CAP_OLLAMA_URL: ${CAP_OLLAMA_URL:-http://host.docker.internal:11434}
     extra_hosts:
       # Docker Desktop provides host.docker.internal; this adds it on Linux.

@@ -33,6 +33,11 @@ MODEL_NAME = os.environ.get("CAP_WHISPER_MODEL", "base.en")
 SAMPLE_RATE = 16000
 # The page stops recording at 5 minutes; allow some slack for the container.
 MAX_SECONDS = 330
+# Vocabulary hint for Whisper: tech names it otherwise mishears ("Redis" -> "readies" on some
+# CPUs). Only biases spelling toward these words; silence still gives no text (vad_filter).
+TECH_VOCABULARY = ("A technical interview answer about software projects and computer science: "
+                   "Redis, PostgreSQL, MySQL, MongoDB, SQL, Docker, Kubernetes, Kafka, React, Node.js, "
+                   "Django, Flask, REST API, JWT, AWS, TCP, UDP, HTTP, DNS, DBMS, OOP, CPU, latency.")
 
 
 def hub_repo_id(model_name: str = MODEL_NAME) -> str:
@@ -94,7 +99,8 @@ def decode_audio(data: bytes):
 def transcribe(data: bytes) -> str:
     samples = decode_audio(data)
     segments, _info = _LazyModel.get().transcribe(
-        samples, language="en", beam_size=5, vad_filter=True, condition_on_previous_text=False)
+        samples, language="en", beam_size=5, vad_filter=True, condition_on_previous_text=False,
+        initial_prompt=TECH_VOCABULARY)
     return " ".join(segment.text.strip() for segment in segments).strip()
 
 

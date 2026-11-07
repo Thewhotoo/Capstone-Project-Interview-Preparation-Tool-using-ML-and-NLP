@@ -1,0 +1,55 @@
+{
+  "person": "ninad",
+  "how_to": "Replace each \"answer here\" with your own answer, typed the way you would say it in an interview. Do not look anything up. Leave it to skip a question.",
+  "questions": [
+    {
+      "question_id": "cn.ipv4_addressing.easy1",
+      "subject": "cn",
+      "difficulty": "easy",
+      "question": "Explain how the class of an IPv4 address is determined based on its binary representation.",
+      "answer": "In ipv4, you look at the leading bits of the first octect to determine its class. class A starts with 0, class B starts with 10, class C starts with 110, class D starts with 1110 and class E starts with 1111 if im not wrong"
+    },
+    {
+      "question_id": "dbms.outer_joins.hard2",
+      "subject": "dbms",
+      "difficulty": "hard",
+      "question": "MySQL has no FULL OUTER JOIN. How can you get the same result, and what do you have to be careful about?",
+      "answer": "you can perform a full outer join by combining/unioning a left join and a right join. We must be careful about not using union all, as that will include duplicates, hence we use union."
+    },
+    {
+      "question_id": "dsa.binary_search.medium1",
+      "subject": "dsa",
+      "difficulty": "medium",
+      "question": "Explain how binary search uses the decrease-by-a-constant-factor approach to solve a problem efficiently.",
+      "answer": "Binary search works on a sorted array by comparing the target element with the middle element of the array. If its lesser, our target lies on the left half of the array, if its more than our target lies in the right half of the current array being considered."
+    },
+    {
+      "question_id": "os.user_level_vs_kernel_level_threads.easy1",
+      "subject": "os",
+      "difficulty": "easy",
+      "question": "Explain the difference between user-level and kernel-level threads based on how they are scheduled.",
+      "answer": "User-level threads are managed and scheduled entirely in user space by a thread library, so the kernel is completely unaware of them and treats the entire process as a single thread of execution. Kernel-level threads, on the other hand, are directly managed and scheduled by the OS kernel, which means the kernel can schedule different threads of the same process onto multiple CPU cores simultaneously."
+    },
+    {
+      "question_id": "cn.tcp_congestion_control.medium2",
+      "subject": "cn",
+      "difficulty": "medium",
+      "question": "How does TCP congestion control balance between underutilizing bandwidth and causing congestion collapse?",
+      "answer": "So TCP handles this using AIMD—additive increase, multiplicative decrease. Basically, it starts off in slow start to quickly see how much bandwidth is available, and then in congestion avoidance, it gradually increases the window size line by line to get maximum throughput. If it detects packet loss—like through repeated ACKs or a timeout—it immediately cuts the window size way down, like halving it or dropping back to one segment. That way it backs off quickly before the whole network gets overwhelmed."
+    },
+    {
+      "question_id": "dsa.breadth_first_search.easy1",
+      "subject": "dsa",
+      "difficulty": "easy",
+      "question": "Can you explain what breadth-first search does in terms of node exploration?",
+      "answer": "BFS basically explores a graph level by level using a queue. You start at a node, visit all of its immediate neighbors first—so everything at distance 1—and then move on to their neighbors at distance 2, and so on. Because it expands outward in layers, you're guaranteed to visit nodes in order of how far they are from the start, which is super handy for finding shortest paths in unweighted graphs."
+    },
+    {
+      "question_id": "ooad.composition_over_inheritance.medium1",
+      "subject": "ooad",
+      "difficulty": "medium",
+      "question": "Explain how composition differs from inheritance in terms of how they model relationships between objects, and why composition is often preferred in object-oriented design.",
+      "answer": "Inheritance is an 'is-a' relationship, like a Car is a Vehicle, whereas composition is a 'has-a' relationship, like a Car has an Engine. We usually prefer composition because it gives you way more flexibility. With inheritance, you're tightly coupled to the parent class at compile time, but with composition, you can swap out behavior dynamically at runtime just by changing the underlying component. It keeps things loosely coupled and much easier to test."
+    }
+  ]
+}

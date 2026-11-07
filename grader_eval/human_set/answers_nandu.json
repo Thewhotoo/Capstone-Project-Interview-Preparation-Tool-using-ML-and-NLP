@@ -1,0 +1,56 @@
+{
+  "person": "nandu",
+  "how_to": "Replace each \"answer here\" with your own answer, typed the way you would say it in an interview. Do not look anything up. Leave it to skip a question.",
+  "questions": [
+    {
+      "question_id": "dbms.participation_constraints.easy1",
+      "subject": "dbms",
+      "difficulty": "easy",
+      "question": "Explain what total participation means in the context of database relationships.",
+      "answer": "Total participation in database relationships means that every instance of an entity in a set must be associated with at least one instance of another entity in the relationship. There can be no entities in the set that is not linked to something through the relationship. It is represented as a double line between entity and the relatioship in ER diagram.and 'Courses', total participation would mean that every student must be enrolled in at least one course."
+
+    },
+    {
+      "question_id": "dsa.horspool_and_boyer_moore_string_matching.hard2",
+      "subject": "dsa",
+      "difficulty": "hard",
+      "question": "Compare the preprocessing steps of Horspool’s and Boyer-Moore algorithms, and explain how these differences affect their performance in string matching.",
+      "answer": "Horspool's algorithm builds a single shift table, for which each charecter in the pattern except the last, the shift is the distance from its rightmost occurrence to the end of the pattern.Every other charecter gets a shift equal to the pattern length m. It always compares from right to left during matching, but on a mismatch it will always shift according to the text charecter aligned with the last pattern position. Boyer-Moore algorithm builds two tables, one for the bad character rule and one for the good suffix rule. The bad character table is similar to Horspool's shift table, but it includes all characters in the alphabet, not just those in the pattern. The good suffix table allows for larger shifts when a mismatch occurs after a partial match. As a result, Boyer-Moore on the other hand builds 2 tables: a bad character table that uses the mismatched text character and how many text characters have been matched already, and a good suffix table uses the matched suffix to align it with another occurrence of that suffix in the pattern or with a prefix.Both preprocess in O(m + alphabet size), but boyer moore's good suffix table is more complex to build, meanwhile horspool has a lesser overhead and works well on average for large alphabets and natural text bu in worse case is O(nm). The algo then takes the longer of the two shifts. "
+    },
+    {
+      "question_id": "ooad.classes_and_objects.medium1",
+      "subject": "ooad",
+      "difficulty": "medium",
+      "question": "Explain how a class and an object are related in Java, and why the Object class is important in this relationship.",
+      "answer": "A class is the blueprint that defines the fields and methods a type has while an object is a concrete instance of that class, with its own memory and field values. Many objects can be created from one class, and each holds its own state while sharing the same behavior. Object class is the root of the Class hierarchy while every other class extends it. This gives all objects a baseline behaviour, which cant be overridden while enabling polymorhpism."
+    },
+    {
+      "question_id": "cn.https_and_tls.easy1",
+      "subject": "cn",
+      "difficulty": "easy",
+      "question": "Explain how HTTPS ensures secure communication between a browser and a server.",
+      "answer": "HTTPS ensures a secure communication between user and server by performing a TLS handshke which involves sending the versions and cipher that the browswer supports from which the server picks one and sends a certificate that holds the server's public key to the user. The browser verfies the signature chain, the domain name and the validity dates, which authenticates the server and protects against impersonation. The two sides then run a key exchange, typically ephemeral Diffie-Hellman, to derive a shared session key without ever sending it over the wire."
+    },
+    {
+      "question_id": "dbms.query_processing_and_join_algorithms.easy1",
+      "subject": "dbms",
+      "difficulty": "medium",
+      "question": "Explain how an index-based nested-loop join improves upon the standard nested-loop join.",
+      "answer": "The algorithm uses the index ont he join attribute of the inner relation to accurately locate the matching tuples for each tuple in the outer relation. This is much cheaper compared to scanning the inner relation wach time especially when the outer relation is small or the join is selective"
+    },
+    {
+      "question_id": "ooad.method_overloading.hard2",
+      "subject": "ooad",
+      "difficulty": "hard",
+      "question": "What happens if two overloaded methods differ only in their return types, and how does this affect the compiler's ability to resolve the correct method call?",
+      "answer": "If two overloaded methods differ only in their return types, the compiler will not be able to resolve which method to call based solely on the return type. This is because method overloading is determined by the method signature, which includes the method name and parameter types, but not the return type. As a result, having two methods with the same name and parameter types but different return types will lead to a compilation error, as the compiler cannot distinguish between them when a method call is made."
+    },
+    {
+      "question_id": "os.multiprocessor_scheduling.medium1",
+      "subject": "os",
+      "difficulty": "medium",
+      "question": "Explain how symmetric multiprocessing differs from asymmetric multiprocessing in terms of scheduling and system complexity.",
+      "answer": "In symmetric multiprocessing, all processors are equal and can execute any task, leading to a more complex scheduling algorithm but better load distribution. In asymmetric multiprocessing, one processor acts as the master and controls the others, simplifying scheduling but potentially creating a bottleneck."
+    }
+  ]
+}

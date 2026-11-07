@@ -65,6 +65,7 @@ PREFERRED_MODELS = ("qwen3:8b", "qwen3:4b")
 DEFAULT_URL = "http://localhost:11434"
 LLM_WEIGHT = 0.6     # weight of the LLM's holistic score; the rest is the fast score
 WRONG_CAP = 0.20
+CONTRADICTION_CAP_BELOW = 0.5   # fast-grader contradiction caps only if the LLM's overall score is lower
 TIMEOUT = 60.0
 COLD_START_TIMEOUT = 120.0          # the first call loads the model into GPU memory
 AVAILABILITY_RECHECK_SECONDS = 300.0
@@ -222,7 +223,13 @@ def blended(record: dict, judged: dict) -> dict:
         if clarity.get("too_short"):
             holistic = min(holistic, 0.5)
     score = LLM_WEIGHT * holistic + (1 - LLM_WEIGHT) * record["score"]
-    if judged["wrong"] or final.get("contradicts_reference"):
+    # The fast grader's contradiction check also misfires on good answers (3 of 28 real team
+    # answers, each scored 0.75-1.0 by the LLM), so it caps only when the LLM agrees the answer
+    # is weak. Held out: team_test r 0.849 -> 0.904, fresh 0.842 -> 0.848, real answers
+    # 0.43 -> 0.64; confidently wrong answers score the same.
+    llm_h = judged.get("holistic")
+    if judged["wrong"] or (final.get("contradicts_reference")
+                           and (llm_h is None or llm_h < CONTRADICTION_CAP_BELOW)):
         score = min(score, WRONG_CAP)
     return {"score": round(score, 3), "fast_score": record["score"], "llm_score": round(llm_score, 3),
             "llm_holistic": None if judged.get("holistic") is None else round(holistic, 3),

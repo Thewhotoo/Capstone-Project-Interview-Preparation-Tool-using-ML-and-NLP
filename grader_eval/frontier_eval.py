@@ -55,7 +55,7 @@ def _rows(set_name: str) -> list[dict]:
     rows = []
     for i, x in enumerate(B.load_sets()[set_name]):
         q = bank.get(x["question_id"])
-        if q is None or B._stale(x["question_id"], q, basis):
+        if q is None or B._stale(x, q, basis):
             continue
         rows.append({"id": f"{set_name}-{i:03d}", "x": x, "q": q})
     return rows

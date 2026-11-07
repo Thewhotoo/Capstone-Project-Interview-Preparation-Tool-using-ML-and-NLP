@@ -1,25 +1,28 @@
 """Human evaluation set for the technical (Round 2) grader: real answers, blind human labels.
 
-Every answer and every label in this set comes from a person. Three steps:
+Every answer and every label in this set comes from a person. Three steps, all JSON:
 
 1. answer sheets: each person answers questions from the served bank in their own words
-       python grader_eval/human_eval.py answers --people A,B,C --per-person 50
-   -> grader_eval/human_set/answers_<person>.csv  (fill the "answer" column; type it the way
-      you would say it in an interview; leave a question blank to skip it)
+       python grader_eval/human_eval.py answers --people ninad,mayuran,surya,nandu
+   -> grader_eval/human_set/answers_<person>.json (7 questions each by default). Replace each
+      "answer here" with your answer, typed the way you would say it in an interview, without
+      looking anything up; leave "answer here" to skip a question.
 
 2. label sheets: every answer is labelled blind by two people who did NOT write it
-       python grader_eval/human_eval.py labels --people A,B,C
-   -> grader_eval/human_set/labels_<person>.csv  (no grader scores are shown anywhere;
-      answers are shuffled and nobody labels their own; author i's answers go to the
-      next two people in the list, so with 4 people each labels 2 x 50 answers)
-   For each answer: kp1..kp4 = c (covered) / p (partial) / m (missing) for each listed
-   point, and overall = 0-4 (rubric in the sheet's first rows).
+       python grader_eval/human_eval.py labels --people ninad,mayuran,surya,nandu
+   -> grader_eval/human_set/labels_<person>.json (no grader scores are shown anywhere;
+      answers are shuffled; author i's answers go to the next two people in the list).
+      For each answer replace every "label here" with covered / partial / missing, and
+      "score here" with 0-4 (the rubric is at the top of the file).
 
 3. results: inter-annotator agreement and the gold set the benchmark reads
-       python grader_eval/human_eval.py gold --people A,B,C
+       python grader_eval/human_eval.py gold --people ninad,mayuran,surya,nandu
    -> prints agreement (per point: Cohen's kappa; overall: quadratic weighted kappa,
       Pearson) and writes grader_eval/human_set/gold.json, where each answer's label is
       the agreed per-point label (ties -> partial) and the mean overall score / 4.
+
+Status (2026-11-06): step 1 is done (answers_<person>.json, 28 answers); steps 2-3 were not
+run. Those answers are labelled by an LLM instead in human_answers.json ("human_answers" set).
 
 `benchmark.py` reports the gold set as its own "human" set. Questions come from the
 served (curated) bank, stratified by subject and difficulty, with a fixed seed.
@@ -27,7 +30,6 @@ served (curated) bank, stratified by subject and difficulty, with a fixed seed.
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import random
 import sys
@@ -38,14 +40,17 @@ HERE = Path(__file__).resolve().parent
 OUT = HERE / "human_set"
 sys.path.insert(0, str(HERE.parent / "main_cap" / "cap"))
 
-MAX_POINTS = 4
-LABEL = {"c": "covered", "p": "partial", "m": "missing"}
-RUBRIC = [
-    "overall: 4 = complete and correct; 3 = mostly right, one point missing or vague;",
-    "2 = about half right; 1 = little that is right; 0 = wrong, off-topic or no answer.",
-    "kp columns: c = the answer states this point correctly (any wording); p = partly or vaguely;",
-    "m = not stated, or stated wrongly. Judge what the answer says, not its length or confidence.",
-]
+ANSWER_HERE, LABEL_HERE, SCORE_HERE = "answer here", "label here", "score here"
+LABELS = ("covered", "partial", "missing")
+RUBRIC = {
+    "how_to": 'Replace every "label here" with covered, partial or missing, and "score here" with a number 0-4. '
+              "Judge only what the answer says, not its length or confidence. Do not look anything up.",
+    "label": {"covered": "the answer states this point correctly, in any wording",
+              "partial": "it gets part of the point, or says it vaguely",
+              "missing": "it does not say the point, or says it wrongly"},
+    "score": {"4": "complete and correct", "3": "mostly right, one point missing or vague",
+              "2": "about half right", "1": "little that is right", "0": "wrong, off-topic or no answer"},
+}
 
 
 def _bank():
@@ -54,10 +59,14 @@ def _bank():
 
 
 def _people(s: str) -> list[str]:
-    people = [p.strip() for p in s.split(",") if p.strip()]
+    people = [p.strip().lower() for p in s.split(",") if p.strip()]
     if len(people) < 2:
         raise SystemExit("need at least two people, so every answer gets a label from someone else")
     return people
+
+
+def _write(path: Path, data) -> None:
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def make_answer_sheets(people: list[str], per_person: int, seed: int) -> None:
@@ -76,25 +85,25 @@ def make_answer_sheets(people: list[str], per_person: int, seed: int) -> None:
     OUT.mkdir(exist_ok=True)
     for i, person in enumerate(people):
         mine = picked[i::len(people)][:per_person]
-        path = OUT / f"answers_{person}.csv"
-        with path.open("w", newline="", encoding="utf-8-sig") as f:
-            w = csv.writer(f)
-            w.writerow(["question_id", "subject", "question", "answer"])
-            for q in mine:
-                w.writerow([q.id, q.subject, q.text, ""])
+        path = OUT / f"answers_{person}.json"
+        _write(path, {"person": person,
+                      "how_to": f'Replace each "{ANSWER_HERE}" with your own answer, typed the way you would '
+                                "say it in an interview. Do not look anything up. Leave it to skip a question.",
+                      "questions": [{"question_id": q.id, "subject": q.subject, "difficulty": q.difficulty,
+                                     "question": q.text, "answer": ANSWER_HERE} for q in mine]})
         print(f"{path.name}: {len(mine)} questions")
 
 
 def _read_answers(people):
     rows = []
     for person in people:
-        path = OUT / f"answers_{person}.csv"
+        path = OUT / f"answers_{person}.json"
         if not path.exists():
             raise SystemExit(f"missing {path.name}")
-        with path.open(encoding="utf-8-sig") as f:
-            for r in csv.DictReader(f):
-                if r["answer"].strip():
-                    rows.append({"question_id": r["question_id"], "answer": r["answer"].strip(), "author": person})
+        for r in json.loads(path.read_text(encoding="utf-8"))["questions"]:
+            text = (r.get("answer") or "").strip()
+            if text and text.lower() != ANSWER_HERE:
+                rows.append({"question_id": r["question_id"], "answer": text, "author": person})
     for i, r in enumerate(rows):
         r["answer_id"] = f"h{i:04d}"
     return rows
@@ -103,44 +112,35 @@ def _read_answers(people):
 def make_label_sheets(people: list[str], seed: int) -> None:
     bank = {q.id: q for q in _bank()}
     answers = _read_answers(people)
-    (OUT / "pool.json").write_text(json.dumps(answers, indent=1, ensure_ascii=False), encoding="utf-8")
+    _write(OUT / "pool.json", answers)
     labellers = {p: [people[(i + k) % len(people)] for k in (1, 2)][:len(people) - 1]
                  for i, p in enumerate(people)}
     for person in people:
         mine = [a for a in answers if person in labellers[a["author"]]]
         random.Random(f"{seed}-{person}").shuffle(mine)
-        path = OUT / f"labels_{person}.csv"
-        with path.open("w", newline="", encoding="utf-8-sig") as f:
-            w = csv.writer(f)
-            for line in RUBRIC:
-                w.writerow(["#", line])
-            w.writerow(["answer_id", "question", "answer"]
-                       + [c for k in range(1, MAX_POINTS + 1) for c in (f"point{k}", f"kp{k}")] + ["overall"])
-            for a in mine:
-                q = bank[a["question_id"]]
-                pts = [k.point for k in q.key_points][:MAX_POINTS]
-                cells = [c for p in pts for c in (p, "")] + ["", ""] * (MAX_POINTS - len(pts))
-                w.writerow([a["answer_id"], q.text, a["answer"]] + cells + [""])
+        path = OUT / f"labels_{person}.json"
+        _write(path, {"person": person, "rubric": RUBRIC, "answers": [
+            {"answer_id": a["answer_id"], "question": bank[a["question_id"]].text, "answer": a["answer"],
+             "key_points": [{"point": k.point, "label": LABEL_HERE} for k in bank[a["question_id"]].key_points],
+             "overall": SCORE_HERE} for a in mine]})
         print(f"{path.name}: {len(mine)} answers to label")
 
 
 def _read_labels(person):
     out = {}
-    with (OUT / f"labels_{person}.csv").open(encoding="utf-8-sig") as f:
-        rows = [r for r in csv.reader(f) if r and r[0] != "#"]
-    head, rows = rows[0], rows[1:]
-    for r in rows:
-        d = dict(zip(head, r))
-        if not d.get("overall", "").strip():
+    for d in json.loads((OUT / f"labels_{person}.json").read_text(encoding="utf-8"))["answers"]:
+        score = str(d.get("overall", "")).strip()
+        if score.lower() == SCORE_HERE or not score:
             continue
         kps = []
-        for k in range(1, MAX_POINTS + 1):
-            if d.get(f"point{k}", "").strip():
-                v = d.get(f"kp{k}", "").strip().lower()[:1]
-                if v not in LABEL:
-                    raise SystemExit(f"{person} {d['answer_id']}: kp{k} must be c, p or m")
-                kps.append(LABEL[v])
-        out[d["answer_id"]] = {"labels": kps, "overall": int(d["overall"])}
+        for k in d["key_points"]:
+            v = str(k.get("label", "")).strip().lower()
+            if v not in LABELS:
+                raise SystemExit(f"{person} {d['answer_id']}: each label must be covered, partial or missing")
+            kps.append(v)
+        if score not in {"0", "1", "2", "3", "4"}:
+            raise SystemExit(f"{person} {d['answer_id']}: overall must be 0-4")
+        out[d["answer_id"]] = {"labels": kps, "overall": int(score)}
     return out
 
 
@@ -177,7 +177,7 @@ def make_gold(people: list[str]) -> None:
             kb = [x for aid in both for x in labels[b][aid]["labels"]]
             oa = [labels[a][aid]["overall"] for aid in both]
             ob = [labels[b][aid]["overall"] for aid in both]
-            print(f"{a} vs {b}: {len(both)} answers | per-point kappa {_kappa(ka, kb, list(LABEL.values()))} | "
+            print(f"{a} vs {b}: {len(both)} answers | per-point kappa {_kappa(ka, kb, list(LABELS))} | "
                   f"overall QWK {_qwk(oa, ob)} | Pearson {round(float(np.corrcoef(oa, ob)[0, 1]), 3)}")
     gold = []
     for aid, a in pool.items():
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("step", choices=["answers", "labels", "gold"])
     ap.add_argument("--people", required=True, help="comma-separated names or initials")
-    ap.add_argument("--per-person", type=int, default=50)
+    ap.add_argument("--per-person", type=int, default=7)
     ap.add_argument("--seed", type=int, default=7)
     a = ap.parse_args()
     people = _people(a.people)

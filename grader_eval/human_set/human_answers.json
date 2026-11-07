@@ -1,0 +1,572 @@
+[
+ {
+  "question_id": "cn.ipv4_addressing.easy1",
+  "style": "human",
+  "author": "ninad",
+  "answer": "In ipv4, you look at the leading bits of the first octect to determine its class. class A starts with 0, class B starts with 10, class C starts with 110, class D starts with 1110 and class E starts with 1111 if im not wrong",
+  "labels": [
+   "covered",
+   "missing"
+  ],
+  "overall": 0.6,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain how the class of an IPv4 address is determined based on its binary representation.",
+   "key_points": [
+    "The class is given by the leading bits of the address.",
+    "The class decides the default subnet mask, i.e. the network and host parts."
+   ]
+  }
+ },
+ {
+  "question_id": "dbms.outer_joins.hard2",
+  "style": "human",
+  "author": "ninad",
+  "answer": "you can perform a full outer join by combining/unioning a left join and a right join. We must be careful about not using union all, as that will include duplicates, hence we use union.",
+  "labels": [
+   "covered",
+   "missing"
+  ],
+  "overall": 0.65,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "MySQL has no FULL OUTER JOIN. How can you get the same result, and what do you have to be careful about?",
+   "key_points": [
+    "Combine a LEFT and a RIGHT outer join with UNION.",
+    "Unmatched rows are padded with NULLs for the other table's columns."
+   ]
+  }
+ },
+ {
+  "question_id": "dsa.binary_search.medium1",
+  "style": "human",
+  "author": "ninad",
+  "answer": "Binary search works on a sorted array by comparing the target element with the middle element of the array. If its lesser, our target lies on the left half of the array, if its more than our target lies in the right half of the current array being considered.",
+  "labels": [
+   "partial",
+   "partial"
+  ],
+  "overall": 0.5,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain how binary search uses the decrease-by-a-constant-factor approach to solve a problem efficiently.",
+   "key_points": [
+    "Binary search reduces the problem size by a constant factor at each step.",
+    "Binary search is a recursive algorithm that reduces the problem to smaller instances."
+   ]
+  }
+ },
+ {
+  "question_id": "os.user_level_vs_kernel_level_threads.easy1",
+  "style": "human",
+  "author": "ninad",
+  "answer": "User-level threads are managed and scheduled entirely in user space by a thread library, so the kernel is completely unaware of them and treats the entire process as a single thread of execution. Kernel-level threads, on the other hand, are directly managed and scheduled by the OS kernel, which means the kernel can schedule different threads of the same process onto multiple CPU cores simultaneously.",
+  "labels": [
+   "covered",
+   "covered",
+   "missing"
+  ],
+  "overall": 0.75,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain the difference between user-level and kernel-level threads based on how they are scheduled.",
+   "key_points": [
+    "User-level threads are scheduled by the thread library.",
+    "Kernel-level threads are scheduled by the system scheduler.",
+    "User-level threads are mapped to lightweight processes (LWPs)."
+   ]
+  }
+ },
+ {
+  "question_id": "cn.tcp_congestion_control.medium2",
+  "style": "human",
+  "author": "ninad",
+  "answer": "So TCP handles this using AIMD—additive increase, multiplicative decrease. Basically, it starts off in slow start to quickly see how much bandwidth is available, and then in congestion avoidance, it gradually increases the window size line by line to get maximum throughput. If it detects packet loss—like through repeated ACKs or a timeout—it immediately cuts the window size way down, like halving it or dropping back to one segment. That way it backs off quickly before the whole network gets overwhelmed.",
+  "labels": [
+   "covered",
+   "covered"
+  ],
+  "overall": 0.9,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "How does TCP congestion control balance between underutilizing bandwidth and causing congestion collapse?",
+   "key_points": [
+    "TCP congestion control uses a feedback mechanism based on acknowledged segments to increase the sending rate.",
+    "TCP congestion control reduces the sending rate when packet loss occurs to prevent congestion collapse."
+   ]
+  }
+ },
+ {
+  "question_id": "dsa.breadth_first_search.easy1",
+  "style": "human",
+  "author": "ninad",
+  "answer": "BFS basically explores a graph level by level using a queue. You start at a node, visit all of its immediate neighbors first—so everything at distance 1—and then move on to their neighbors at distance 2, and so on. Because it expands outward in layers, you're guaranteed to visit nodes in order of how far they are from the start, which is super handy for finding shortest paths in unweighted graphs.",
+  "labels": [
+   "covered",
+   "covered"
+  ],
+  "overall": 0.95,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Can you explain what breadth-first search does in terms of node exploration?",
+   "key_points": [
+    "BFS explores all neighbour nodes in the first level before moving to the next level.",
+    "BFS ensures nodes are visited in order of their distance from the starting node."
+   ]
+  }
+ },
+ {
+  "question_id": "ooad.composition_over_inheritance.medium1",
+  "style": "human",
+  "author": "ninad",
+  "answer": "Inheritance is an 'is-a' relationship, like a Car is a Vehicle, whereas composition is a 'has-a' relationship, like a Car has an Engine. We usually prefer composition because it gives you way more flexibility. With inheritance, you're tightly coupled to the parent class at compile time, but with composition, you can swap out behavior dynamically at runtime just by changing the underlying component. It keeps things loosely coupled and much easier to test.",
+  "labels": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "overall": 0.95,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain how composition differs from inheritance in terms of how they model relationships between objects, and why composition is often preferred in object-oriented design.",
+   "key_points": [
+    "Composition models a 'has-a' relationship.",
+    "Composition allows for dynamic behavior changes at runtime.",
+    "Composition provides better test-ability."
+   ]
+  }
+ },
+ {
+  "question_id": "cn.network_devices.hard2",
+  "style": "human",
+  "author": "mayuran",
+  "answer": "A repeater's job is essentially to catch a weak signal and amplify it and transmit it to the next segment. This way, it ensures the traffic is repeated without loss in strength. However, a switch receives an ethernet frame, reads the destination MAC address and forwards it to the appropriate port. A switch would be a better choice since a repeater is simply used for extending the physical range of a network.",
+  "labels": [
+   "covered",
+   "missing",
+   "covered",
+   "missing"
+  ],
+  "overall": 0.5,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Consider a scenario where a network administrator is deciding between using a Repeater and a Switch to connect two segments of a network. What are the key differences in their operation and how might these differences affect network performance?",
+   "key_points": [
+    "A Repeater regenerates signals to extend the reach of a network.",
+    "A Repeater broadcasts all data to all connected devices.",
+    "A Switch uses MAC addresses to forward data directly to the intended device.",
+    "A Switch reduces collisions by only forwarding data to the intended recipient."
+   ]
+  }
+ },
+ {
+  "question_id": "dbms.graph_databases_and_neo4j.medium2",
+  "style": "human",
+  "author": "mayuran",
+  "answer": "The reason Neo4j is so flexible is because it isn't relational like MySQL or PostgreSQL. It stores data in the form of a graph where all the nodes in it can have different types of properties where adding and removing these features are just as convenient.",
+  "labels": [
+   "covered",
+   "partial"
+  ],
+  "overall": 0.6,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain how Neo4j handles the flexibility of schema in comparison to traditional relational databases.",
+   "key_points": [
+    "Neo4j allows nodes and relationships to have properties without a predefined structure.",
+    "Neo4j's flexible schema supports dynamic addition of new elements to the graph."
+   ]
+  }
+ },
+ {
+  "question_id": "ooad.abstraction_vs_encapsulation.easy1",
+  "style": "human",
+  "author": "mayuran",
+  "answer": "Abstraction is responsible for hiding implementation details and simply offering a simple interface to the user. Encapsulation is responsible for coupling data and methods to prevent any direct access to data.",
+  "labels": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "overall": 0.85,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "What is the difference between abstraction and encapsulation in object-oriented programming?",
+   "key_points": [
+    "Encapsulation bundles data and the methods that use it into one unit, a class.",
+    "Encapsulation hides the internal data so outside code can reach it only through methods.",
+    "Abstraction shows only the essential features of an object and hides the background details."
+   ]
+  }
+ },
+ {
+  "question_id": "os.free_space_management.hard2",
+  "style": "human",
+  "author": "mayuran",
+  "answer": "A limitation of using a bit vector would be that it uses one bit per block to denote it's availability but this would result in requiring more memory for large disks and can lead to inefficiency when searching for large contiguous blocks of free space.",
+  "labels": [
+   "missing",
+   "partial",
+   "covered"
+  ],
+  "overall": 0.55,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "What are the limitations of using a bit vector for free-space management, and how do these limitations affect the design of disk allocation strategies in operating systems?",
+   "key_points": [
+    "A bit vector is fast only if the whole map is kept in main memory.",
+    "For large disks the map is too big to keep in memory.",
+    "The map needs one bit per block, so it grows with the disk size."
+   ]
+  }
+ },
+ {
+  "question_id": "dbms.denormalization.easy1",
+  "style": "human",
+  "author": "mayuran",
+  "answer": "Denormalization is a method used to introduce redundancy into a database to improve it's read performance. This way, it reduces the number of joins required to retrieve data.",
+  "labels": [
+   "covered",
+   "partial",
+   "covered"
+  ],
+  "overall": 0.75,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain what denormalization is and why it might be used in a database.",
+   "key_points": [
+    "Denormalization is a database optimization technique where redundant data is added to one or more tables.",
+    "Denormalization is used when retrieving data is prioritized over update efficiency.",
+    "Denormalization allows for simpler queries and faster data retrieval."
+   ]
+  }
+ },
+ {
+  "question_id": "dsa.parenthesis_matching.medium1",
+  "style": "human",
+  "author": "mayuran",
+  "answer": "The parenthesis matching algorithm uses a stack to store the opening brackets. Whenever it encounters an opening bracket, it pushes into the stack but if it encounters a closing bracket it will check if the top of the stack matches it. If it doesn't match, it is invalid and if we have an empty stack at the end, it is valid.",
+  "labels": [
+   "covered",
+   "covered",
+   "partial"
+  ],
+  "overall": 0.8,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain how the parenthesis matching algorithm ensures that the parentheses are properly nested and matched.",
+   "key_points": [
+    "The stack is used to track opening parentheses.",
+    "Mismatched parentheses result in an invalid expression.",
+    "The algorithm checks for extra opening or closing parentheses at the end of the expression."
+   ]
+  }
+ },
+ {
+  "question_id": "os.translation_lookaside_buffer.easy1",
+  "style": "human",
+  "author": "mayuran",
+  "answer": "A TLB is a small but fast cache in the CPU's MMU that stores recent translations of virtual memory to physical memory addresses. This helps us avoid repeated access to the page table in memory.",
+  "labels": [
+   "covered",
+   "covered"
+  ],
+  "overall": 0.95,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain what a Translation Look-aside Buffer (TLB) is and why it is used.",
+   "key_points": [
+    "A TLB is a hardware cache used to speed up address translation for virtual memory.",
+    "A TLB stores recently used page table entries."
+   ]
+  }
+ },
+ {
+  "question_id": "cn.icmp.medium2",
+  "style": "human",
+  "author": "surya",
+  "answer": "ICMP is used to check for whethere devices are reachable or not. It reports if there any errors in the communcation. Examples : 1) Echo Request : Used by ping command to check whether another device is reachable or not . 2)Destination Unreahable : it is basically sent  when packet does not reach its destination.  ",
+  "labels": [
+   "covered",
+   "missing"
+  ],
+  "overall": 0.6,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "How does ICMP support network diagnostics, and what are two specific examples of ICMP messages used in this role?",
+   "key_points": [
+    "The echo request and echo reply messages are used for connectivity testing.",
+    "The time exceeded message helps trace the path of a packet."
+   ]
+  }
+ },
+ {
+  "question_id": "dsa.stacks_and_recursion.easy1",
+  "style": "human",
+  "author": "surya",
+  "answer": "Whenever a function calls itself, a new stack frame is created in the call stack, information about the function like local variables, parameters and return addresses are stored in it. Each function call is pushed onto the stack, and once it is done executing, its stack frame is popped and the control is returned to the previous function call.",
+  "labels": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "overall": 0.95,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain how a stack is used in the execution of recursive functions.",
+   "key_points": [
+    "Each recursive function call creates an activation record that is pushed onto the stack.",
+    "The stack ensures that the most recent function call is executed first, and the most recent call is removed first.",
+    "The stack stores the return address so that the program can resume execution after the function call completes."
+   ]
+  }
+ },
+ {
+  "question_id": "ooad.abstract_classes.hard2",
+  "style": "human",
+  "author": "surya",
+  "answer": "An abstract class cannot be instantiated, that means objects cannot be creataed of that class. It is used as a base class for other classes to inherit , for example animal can be an abstract class and dog,cat can inherit from it. The child classes inherit the properties and methods of the abstract class and are required to implement the abstract methods defined in the abstract class.This helps in code reusability.",
+  "labels": [
+   "covered",
+   "partial",
+   "partial"
+  ],
+  "overall": 0.7,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "What are the implications of an abstract class being unable to be instantiated, and how does this affect its role in an inheritance hierarchy?",
+   "key_points": [
+    "An abstract class cannot be instantiated.",
+    "A subclass must implement every abstract method or be declared abstract itself.",
+    "An abstract class can have both abstract and concrete methods."
+   ]
+  }
+ },
+ {
+  "question_id": "os.deadlock_conditions.medium1",
+  "style": "human",
+  "author": "surya",
+  "answer": "The four conditions for deadlock are mutual exclusion, hold and wait, no preemption, and circular wait. These conditions are interdependent because all the conditions must be present for a deadlock to occur, even if any one of the condition is not fulfilled, deadlock wont occur.",
+  "labels": [
+   "partial",
+   "partial",
+   "partial",
+   "partial"
+  ],
+  "overall": 0.55,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain how the four deadlock conditions are interdependent in the occurrence of a deadlock.",
+   "key_points": [
+    "Mutual exclusion: at least one resource can be used by only one process at a time.",
+    "Hold and wait: a process holds some resources while waiting for others.",
+    "No preemption: a resource is released only voluntarily by the process holding it.",
+    "Circular wait: a cycle of processes, each waiting for a resource held by the next."
+   ]
+  }
+ },
+ {
+  "question_id": "dbms.primary_key.hard2",
+  "style": "human",
+  "author": "surya",
+  "answer": "A weak entity does not have a primary key of it own to unqiuely identift the rows and columns in the table . Its primary key is combination of Primary key of its owner and its own parital key. Identifying relationship connects the weak enitity to the stron entity.",
+  "labels": [
+   "covered",
+   "covered",
+   "missing",
+   "covered"
+  ],
+  "overall": 0.75,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain how the primary key of a weak entity set is determined, and what role the identifying relationship plays in this process.",
+   "key_points": [
+    "The primary key of a weak entity set includes the primary key of the identifying entity set.",
+    "The discriminator of the weak entity set is part of the primary key.",
+    "The identifying relationship enforces a foreign key constraint.",
+    "The combination of the identifying entity's primary key and the weak entity's discriminator ensures uniqueness."
+   ]
+  }
+ },
+ {
+  "question_id": "ooad.singleton_pattern.easy1",
+  "style": "human",
+  "author": "surya",
+  "answer": "This is achieved by making the constructor of the class private, so that objects cannot be created from outside the class. A static method is provided to get the instance of the class, and providing a public static method that returns the same instance whenever it is called.",
+  "labels": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "overall": 0.95,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain how the Singleton pattern ensures that only one instance of a class is created in Java.",
+   "key_points": [
+    "Only one object of the class can ever be created.",
+    "The constructor is made private so other classes cannot create objects.",
+    "A static method returns the single shared instance."
+   ]
+  }
+ },
+ {
+  "question_id": "os.page_faults.hard2",
+  "style": "human",
+  "author": "surya",
+  "answer": "Page fault frequency refers to how often the process deals with page faults during execution. Based on this frequency, the Os decides whether to allocated  more or less frame  to the process in phyiscal memmory. 1) if the page fault frequency is high , process does not have enough frames so Os will provide more frames to it. 2) if the page fault  frequncy is too low , it means the process  have more frames than required , so Os try allocate those frame to other processes.  ",
+  "labels": [
+   "partial",
+   "covered",
+   "covered"
+  ],
+  "overall": 0.85,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "What is the role of page-fault frequency in managing memory allocation, and how does it affect the behavior of a process when the system is under memory pressure?",
+   "key_points": [
+    "The OS sets an acceptable range for each process's page-fault rate.",
+    "A process can lose a frame if its page-fault rate is too low.",
+    "A process can gain a frame if its page-fault rate is too high."
+   ]
+  }
+ },
+ {
+  "question_id": "dbms.participation_constraints.easy1",
+  "style": "human",
+  "author": "nandu",
+  "answer": "Total participation in database relationships means that every instance of an entity in a set must be associated with at least one instance of another entity in the relationship. There can be no entities in the set that is not linked to something through the relationship. It is represented as a double line between entity and the relatioship in ER diagram.and 'Courses', total participation would mean that every student must be enrolled in at least one course.",
+  "labels": [
+   "covered",
+   "covered"
+  ],
+  "overall": 0.9,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain what total participation means in the context of database relationships.",
+   "key_points": [
+    "Total participation means every entity must take part in at least one relationship.",
+    "Total participation is drawn as a double line between the entity set and the relationship."
+   ]
+  }
+ },
+ {
+  "question_id": "dsa.horspool_and_boyer_moore_string_matching.hard2",
+  "style": "human",
+  "author": "nandu",
+  "answer": "Horspool's algorithm builds a single shift table, for which each charecter in the pattern except the last, the shift is the distance from its rightmost occurrence to the end of the pattern.Every other charecter gets a shift equal to the pattern length m. It always compares from right to left during matching, but on a mismatch it will always shift according to the text charecter aligned with the last pattern position. Boyer-Moore algorithm builds two tables, one for the bad character rule and one for the good suffix rule. The bad character table is similar to Horspool's shift table, but it includes all characters in the alphabet, not just those in the pattern. The good suffix table allows for larger shifts when a mismatch occurs after a partial match. As a result, Boyer-Moore on the other hand builds 2 tables: a bad character table that uses the mismatched text character and how many text characters have been matched already, and a good suffix table uses the matched suffix to align it with another occurrence of that suffix in the pattern or with a prefix.Both preprocess in O(m + alphabet size), but boyer moore's good suffix table is more complex to build, meanwhile horspool has a lesser overhead and works well on average for large alphabets and natural text bu in worse case is O(nm). The algo then takes the longer of the two shifts. ",
+  "labels": [
+   "covered",
+   "covered"
+  ],
+  "overall": 0.9,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Compare the preprocessing steps of Horspool’s and Boyer-Moore algorithms, and explain how these differences affect their performance in string matching.",
+   "key_points": [
+    "Horspool uses one shift table based on the text character.",
+    "Boyer-Moore uses two tables: bad-symbol and good-suffix shifts."
+   ]
+  }
+ },
+ {
+  "question_id": "ooad.classes_and_objects.medium1",
+  "style": "human",
+  "author": "nandu",
+  "answer": "A class is the blueprint that defines the fields and methods a type has while an object is a concrete instance of that class, with its own memory and field values. Many objects can be created from one class, and each holds its own state while sharing the same behavior. Object class is the root of the Class hierarchy while every other class extends it. This gives all objects a baseline behaviour, which cant be overridden while enabling polymorhpism.",
+  "labels": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "overall": 0.8,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain how a class and an object are related in Java, and why the Object class is important in this relationship.",
+   "key_points": [
+    "A class is a blueprint; objects are created from it with new.",
+    "Each object has its own values for the class's attributes (its own state).",
+    "Every Java class implicitly inherits from Object, the root of the hierarchy."
+   ]
+  }
+ },
+ {
+  "question_id": "cn.https_and_tls.easy1",
+  "style": "human",
+  "author": "nandu",
+  "answer": "HTTPS ensures a secure communication between user and server by performing a TLS handshke which involves sending the versions and cipher that the browswer supports from which the server picks one and sends a certificate that holds the server's public key to the user. The browser verfies the signature chain, the domain name and the validity dates, which authenticates the server and protects against impersonation. The two sides then run a key exchange, typically ephemeral Diffie-Hellman, to derive a shared session key without ever sending it over the wire.",
+  "labels": [
+   "covered",
+   "covered"
+  ],
+  "overall": 0.9,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain how HTTPS ensures secure communication between a browser and a server.",
+   "key_points": [
+    "HTTPS uses TLS to encrypt all communications between the browser and the server.",
+    "HTTPS relies on public and private key pairs for secure communication."
+   ]
+  }
+ },
+ {
+  "question_id": "dbms.query_processing_and_join_algorithms.easy1",
+  "style": "human",
+  "author": "nandu",
+  "answer": "The algorithm uses the index ont he join attribute of the inner relation to accurately locate the matching tuples for each tuple in the outer relation. This is much cheaper compared to scanning the inner relation wach time especially when the outer relation is small or the join is selective",
+  "labels": [
+   "covered",
+   "covered"
+  ],
+  "overall": 0.95,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain how an index-based nested-loop join improves upon the standard nested-loop join.",
+   "key_points": [
+    "An index-based nested-loop join uses an index on the inner relation's join attribute.",
+    "The index finds matching rows directly instead of scanning the whole inner table."
+   ]
+  }
+ },
+ {
+  "question_id": "ooad.method_overloading.hard2",
+  "style": "human",
+  "author": "nandu",
+  "answer": "If two overloaded methods differ only in their return types, the compiler will not be able to resolve which method to call based solely on the return type. This is because method overloading is determined by the method signature, which includes the method name and parameter types, but not the return type. As a result, having two methods with the same name and parameter types but different return types will lead to a compilation error, as the compiler cannot distinguish between them when a method call is made.",
+  "labels": [
+   "covered",
+   "covered",
+   "covered"
+  ],
+  "overall": 0.95,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "What happens if two overloaded methods differ only in their return types, and how does this affect the compiler's ability to resolve the correct method call?",
+   "key_points": [
+    "The return type is not part of the method signature used for method overloading.",
+    "A difference in return type alone does not allow the compiler to resolve which method to call.",
+    "Method overloading relies solely on the method name and parameter list, not the return type."
+   ]
+  }
+ },
+ {
+  "question_id": "os.multiprocessor_scheduling.medium1",
+  "style": "human",
+  "author": "nandu",
+  "answer": "In symmetric multiprocessing, all processors are equal and can execute any task, leading to a more complex scheduling algorithm but better load distribution. In asymmetric multiprocessing, one processor acts as the master and controls the others, simplifying scheduling but potentially creating a bottleneck.",
+  "labels": [
+   "partial",
+   "covered",
+   "partial"
+  ],
+  "overall": 0.75,
+  "label_source": "claude-opus-5.5",
+  "labelled_on": {
+   "question": "Explain how symmetric multiprocessing differs from asymmetric multiprocessing in terms of scheduling and system complexity.",
+   "key_points": [
+    "Symmetric multiprocessing allows each processor to self-schedule.",
+    "Asymmetric multiprocessing has a single master processor handling scheduling and system activities.",
+    "Symmetric multiprocessing introduces more complexity due to data sharing and coordination."
+   ]
+  }
+ }
+]

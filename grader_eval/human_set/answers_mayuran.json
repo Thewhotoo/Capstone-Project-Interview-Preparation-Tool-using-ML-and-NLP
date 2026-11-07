@@ -1,0 +1,55 @@
+{
+  "person": "mayuran",
+  "how_to": "Replace each \"answer here\" with your own answer, typed the way you would say it in an interview. Do not look anything up. Leave it to skip a question.",
+  "questions": [
+    {
+      "question_id": "cn.network_devices.hard2",
+      "subject": "cn",
+      "difficulty": "hard",
+      "question": "Consider a scenario where a network administrator is deciding between using a Repeater and a Switch to connect two segments of a network. What are the key differences in their operation and how might these differences affect network performance?",
+      "answer": "A repeater's job is essentially to catch a weak signal and amplify it and transmit it to the next segment. This way, it ensures the traffic is repeated without loss in strength. However, a switch receives an ethernet frame, reads the destination MAC address and forwards it to the appropriate port. A switch would be a better choice since a repeater is simply used for extending the physical range of a network."
+    },
+    {
+      "question_id": "dbms.graph_databases_and_neo4j.medium2",
+      "subject": "dbms",
+      "difficulty": "medium",
+      "question": "Explain how Neo4j handles the flexibility of schema in comparison to traditional relational databases.",
+      "answer": "The reason Neo4j is so flexible is because it isn't relational like MySQL or PostgreSQL. It stores data in the form of a graph where all the nodes in it can have different types of properties where adding and removing these features are just as convenient."
+    },
+    {
+      "question_id": "ooad.abstraction_vs_encapsulation.easy1",
+      "subject": "ooad",
+      "difficulty": "easy",
+      "question": "What is the difference between abstraction and encapsulation in object-oriented programming?",
+      "answer": "Abstraction is responsible for hiding implementation details and simply offering a simple interface to the user. Encapsulation is responsible for coupling data and methods to prevent any direct access to data."
+    },
+    {
+      "question_id": "os.free_space_management.hard2",
+      "subject": "os",
+      "difficulty": "hard",
+      "question": "What are the limitations of using a bit vector for free-space management, and how do these limitations affect the design of disk allocation strategies in operating systems?",
+      "answer": "A limitation of using a bit vector would be that it uses one bit per block to denote it's availability but this would result in requiring more memory for large disks and can lead to inefficiency when searching for large contiguous blocks of free space."
+    },
+    {
+      "question_id": "dbms.denormalization.easy1",
+      "subject": "dbms",
+      "difficulty": "easy",
+      "question": "Explain what denormalization is and why it might be used in a database.",
+      "answer": "Denormalization is a method used to introduce redundancy into a database to improve it's read performance. This way, it reduces the number of joins required to retrieve data."
+    },
+    {
+      "question_id": "dsa.parenthesis_matching.medium1",
+      "subject": "dsa",
+      "difficulty": "medium",
+      "question": "Explain how the parenthesis matching algorithm ensures that the parentheses are properly nested and matched.",
+      "answer": "The parenthesis matching algorithm uses a stack to store the opening brackets. Whenever it encounters an opening bracket, it pushes into the stack but if it encounters a closing bracket it will check if the top of the stack matches it. If it doesn't match, it is invalid and if we have an empty stack at the end, it is valid."
+    },
+    {
+      "question_id": "os.translation_lookaside_buffer.easy1",
+      "subject": "os",
+      "difficulty": "easy",
+      "question": "Explain what a Translation Look-aside Buffer (TLB) is and why it is used.",
+      "answer": "A TLB is a small but fast cache in the CPU's MMU that stores recent translations of virtual memory to physical memory addresses. This helps us avoid repeated access to the page table in memory."
+    }
+  ]
+}

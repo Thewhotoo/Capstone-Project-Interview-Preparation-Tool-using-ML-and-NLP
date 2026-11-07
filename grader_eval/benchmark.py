@@ -15,6 +15,8 @@ Answer sets (all labelled per key point covered/partial/missing + an `overall` 0
                                         LLM-drafted labels corrected by each member
   human    human_set/gold.json          real answers typed by people, each labelled blind by two
                                         others (human_eval.py); the set to report as human-graded
+  human_answers  human_set/human_answers.json  28 real answers typed by the team (no LLM), labelled
+                                        by Claude Opus 5.5 (label_source); a test set, never tuned on
 
 The team set is split by question id (crc32 parity) into "tune" and "test" halves, so the same
 question never sits in both. Tune thresholds on `team_tune`; report `team_test`.
@@ -140,6 +142,9 @@ def load_sets() -> dict[str, list[dict]]:
     gold = HERE / "human_set" / "gold.json"   # real answers, blind human labels (human_eval.py)
     if gold.exists():
         sets["human"] = json.loads(gold.read_text(encoding="utf-8"))
+    real = HERE / "human_set" / "human_answers.json"   # answers typed by the team, labelled by an LLM
+    if real.exists():
+        sets["human_answers"] = json.loads(real.read_text(encoding="utf-8"))
     sets["fresh"] = [x for x in team if x["author"] in FRESH_AUTHORS]
     team = [x for x in team if x["author"] not in FRESH_AUTHORS]
     sets["team_tune"] = [x for x in team if zlib.crc32(x["question_id"].encode()) % 2 == 0]
@@ -147,11 +152,12 @@ def load_sets() -> dict[str, list[dict]]:
     return sets
 
 
-def _stale(question_id: str, q, basis: dict) -> bool:
+def _stale(row: dict, q, basis: dict) -> bool:
     """True when the question or its key points changed since the answer was labelled
-    (the labels no longer describe this question). Sets labelled later (human) aren't in
-    the basis and are never stale."""
-    b = basis.get(question_id)
+    (the labels no longer describe this question). A row may record the question it was
+    labelled on ("labelled_on"); otherwise label_basis.json is used, and questions not in
+    it are never stale."""
+    b = row.get("labelled_on") or basis.get(row["question_id"])
     return b is not None and (b["question"] != q.text or b["key_points"] != [k.point for k in q.key_points])
 
 
@@ -162,7 +168,7 @@ def evaluate(rows: list[dict], bank: dict, judge=None, basis: dict | None = None
         q = bank.get(x["question_id"])
         if q is None:
             continue
-        if basis and _stale(x["question_id"], q, basis):
+        if basis and _stale(x, q, basis):
             stale += 1
             continue
         g = grade_answer(q, x["answer"])

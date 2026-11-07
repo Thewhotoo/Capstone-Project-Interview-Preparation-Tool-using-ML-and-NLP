@@ -1,0 +1,55 @@
+{
+  "person": "surya",
+  "how_to": "Replace each \"answer here\" with your own answer, typed the way you would say it in an interview. Do not look anything up. Leave it to skip a question.",
+  "questions": [
+    {
+      "question_id": "cn.icmp.medium2",
+      "subject": "cn",
+      "difficulty": "medium",
+      "question": "How does ICMP support network diagnostics, and what are two specific examples of ICMP messages used in this role?",
+      "answer": "ICMP is used to check for whethere devices are reachable or not. It reports if there any errors in the communcation. Examples : 1) Echo Request : Used by ping command to check whether another device is reachable or not . 2)Destination Unreahable : it is basically sent  when packet does not reach its destination.  "
+    },
+    {
+      "question_id": "dsa.stacks_and_recursion.easy1",
+      "subject": "dsa",
+      "difficulty": "easy",
+      "question": "Explain how a stack is used in the execution of recursive functions.",
+      "answer": "Whenever a function calls itself, a new stack frame is created in the call stack, information about the function like local variables, parameters and return addresses are stored in it. Each function call is pushed onto the stack, and once it is done executing, its stack frame is popped and the control is returned to the previous function call."
+    },
+    {
+      "question_id": "ooad.abstract_classes.hard2",
+      "subject": "ooad",
+      "difficulty": "hard",
+      "question": "What are the implications of an abstract class being unable to be instantiated, and how does this affect its role in an inheritance hierarchy?",
+      "answer": "An abstract class cannot be instantiated, that means objects cannot be creataed of that class. It is used as a base class for other classes to inherit , for example animal can be an abstract class and dog,cat can inherit from it. The child classes inherit the properties and methods of the abstract class and are required to implement the abstract methods defined in the abstract class.This helps in code reusability."
+    },
+    {
+      "question_id": "os.deadlock_conditions.medium1",
+      "subject": "os",
+      "difficulty": "medium",
+      "question": "Explain how the four deadlock conditions are interdependent in the occurrence of a deadlock.",
+      "answer": "The four conditions for deadlock are mutual exclusion, hold and wait, no preemption, and circular wait. These conditions are interdependent because all the conditions must be present for a deadlock to occur, even if any one of the condition is not fulfilled, deadlock wont occur."
+    },
+    {
+      "question_id": "dbms.primary_key.hard2",
+      "subject": "dbms",
+      "difficulty": "hard",
+      "question": "Explain how the primary key of a weak entity set is determined, and what role the identifying relationship plays in this process.",
+      "answer": "A weak entity does not have a primary key of it own to unqiuely identift the rows and columns in the table . Its primary key is combination of Primary key of its owner and its own parital key. Identifying relationship connects the weak enitity to the stron entity."
+    },
+    {
+      "question_id": "ooad.singleton_pattern.easy1",
+      "subject": "ooad",
+      "difficulty": "easy",
+      "question": "Explain how the Singleton pattern ensures that only one instance of a class is created in Java.",
+      "answer": "This is achieved by making the constructor of the class private, so that objects cannot be created from outside the class. A static method is provided to get the instance of the class, and providing a public static method that returns the same instance whenever it is called."
+    },
+    {
+      "question_id": "os.page_faults.hard2",
+      "subject": "os",
+      "difficulty": "hard",
+      "question": "What is the role of page-fault frequency in managing memory allocation, and how does it affect the behavior of a process when the system is under memory pressure?",
+      "answer": "Page fault frequency refers to how often the process deals with page faults during execution. Based on this frequency, the Os decides whether to allocated  more or less frame  to the process in phyiscal memmory. 1) if the page fault frequency is high , process does not have enough frames so Os will provide more frames to it. 2) if the page fault  frequncy is too low , it means the process  have more frames than required , so Os try allocate those frame to other processes.  "
+    }
+  ]
+}
